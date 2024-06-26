@@ -1,0 +1,271 @@
+<html>
+  <head>
+    <title>Road Lights Simualtor</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      tr {
+        height: 65px;
+      }
+
+      td {
+        border: 1;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+      }
+
+      .red {
+        color: red;
+      }
+
+      .yellow {
+        color: yellow;
+      }
+
+      .green {
+        color: limegreen;
+      }
+
+      .grey {
+        color: grey;
+      }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
+  </head>
+
+  <body>
+    <img src="Background.png" style="width: 1372px" />
+    <div id="lights">
+      <div
+        class="p-1"
+        style="
+          position: absolute;
+          left: 450px;
+          top: 590px;
+          background-color: black;
+        "
+      >
+        <i class="bi bi-circle-fill" style="color: black"></i
+        ><i class="bi bi-circle-fill red" id="south-red"></i
+        ><i class="bi bi-circle-fill" style="color: black"></i>
+        <br />
+        <i class="bi bi-circle-fill grey" id="south-left-yellow"></i
+        ><i class="bi bi-circle-fill yellow" id="south-yellow"></i
+        ><i class="bi bi-circle-fill grey" id="south-right-yellow"></i>
+        <br />
+        <i class="bi bi-arrow-left-circle-fill grey" id="south-left-green"></i
+        ><i class="bi bi-circle-fill green" id="south-green"></i
+        ><i class="bi bi-arrow-right-circle-fill grey" id="south-right-green"></i>
+      </div>
+      <div
+        class="p-1"
+        style="
+          position: absolute;
+          left: 720px;
+          top: 230px;
+          background-color: black;
+        "
+      >
+        <i class="bi bi-arrow-left-circle-fill grey" id="north-right-green"></i
+        ><i class="bi bi-circle-fill green" id="north-green"></i
+        ><i class="bi bi-arrow-right-circle-fill grey" id="north-left-green"></i>
+        <br />
+        <i class="bi bi-circle-fill grey" id="north-left-yellow"></i
+        ><i class="bi bi-circle-fill yellow" id="north-yellow"></i
+        ><i class="bi bi-circle-fill grey" id="north-right-yellow"></i>
+        <br />
+        <i class="bi bi-circle-fill grey" style="color: black"></i
+        ><i class="bi bi-circle-fill red" id="north-red"></i
+        ><i class="bi bi-circle-fill grey" style="color: black"></i>
+      </div>
+      <div
+        class="p-1"
+        style="
+          position: absolute;
+          left: 400px;
+          top: 280px;
+          background-color: black;
+        "
+      >
+        <i class="bi bi-arrow-up-circle-fill grey" id="west-left-green"></i
+        ><i class="bi bi-circle-fill grey" id="west-left-yellow"></i>
+        <br />
+        <i class="bi bi-circle-fill green" id="west-green"></i
+        ><i class="bi bi-circle-fill yellow" id="west-yellow"></i
+        ><i class="bi bi-circle-fill red" id="west-red"></i>
+
+        <br />
+
+        <i class="bi bi-arrow-down-circle-fill grey" id="west-right-green"></i
+        ><i class="bi bi-circle-fill grey" id="west-right-yellow"></i>
+      </div>
+      <div
+        class="p-1"
+        style="
+          position: absolute;
+          left: 740px;
+          top: 550px;
+          background-color: black;
+        "
+      >
+        <i class="bi bi-circle-fill red" id="east-red"></i
+        ><i class="bi bi-circle-fill yellow" id="east-yellow"></i
+        ><i class="bi bi-circle-fill green" id="east-green"></i>
+        <br />
+
+        <i class="bi bi-circle-fill" style="color: black"></i
+        ><i class="bi bi-circle-fill grey" id="east-left-yellow"></i
+        ><i class="bi bi-arrow-down-circle-fill grey" id="east-left-green"></i>
+      </div>
+    </div>
+    <script>
+      changeColour("north", "red", "grey");
+      changeColour("north", "yellow", "grey");
+      changeColour("north", "green", "grey");
+
+      changeColour("east", "red", "grey");
+      changeColour("east", "yellow", "grey");
+      changeColour("east", "green", "grey");
+
+      changeColour("south", "red", "grey");
+      changeColour("south", "yellow", "grey");
+      changeColour("south", "green", "grey");
+
+      changeColour("west", "red", "grey");
+      changeColour("west", "yellow", "grey");
+      changeColour("west", "green", "grey");
+
+      function changeColour(dir, light, colour) {
+        $("#" + dir + "-" + light)
+          .removeClass(light)
+          .removeClass("grey")
+          .addClass(colour);
+      }
+
+      function changeTurns(direct, lig, col, turn) {
+        $("#" + direct + "-" + turn + "-" + lig)
+          .removeClass(lig)
+          .removeClass("grey")
+          .addClass(col);
+      }
+
+      changeColour("east", "green", "green");
+      changeColour("west", "green", "green");
+      changeTurns("east", "green", "green","left")
+      changeTurns("west", "green", "green","left")
+      changeTurns("west", "green", "green","right")
+
+      changeColour("north", "red", "red");
+      changeColour("south", "red", "red");
+      changeTurns("north", "green", "grey","left")
+      changeTurns("north", "green", "grey","right")
+
+      time = 0;
+
+      setInterval(clock, 1000);
+      function clock() {
+        time = time + 1;
+        if (time == 7) {
+          changeTurns("east", "green", "grey","left")
+          changeColour("east", "green", "grey");
+          changeColour("west", "green", "grey");
+          changeTurns("west", "green", "grey","right")
+          changeTurns("west", "green", "grey","left")
+
+          changeTurns("east", "yellow", "yellow","left")
+          changeColour("east", "yellow", "yellow");
+          changeColour("west", "yellow", "yellow");
+          changeTurns("west", "yellow", "yellow","right")
+          changeTurns("west", "yellow", "yellow","left")
+
+        }
+
+        if (time == 10) {
+          changeTurns("east", "yellow", "grey","left")
+          changeTurns("west", "yellow", "grey","right")
+          changeTurns("west", "yellow", "grey","left")
+          changeColour("east", "yellow", "grey");
+          changeColour("west", "yellow", "grey");
+          changeColour("east", "red", "red");
+          changeColour("west", "red", "red");
+          changeTurns("north", "green", "green","left")
+          changeTurns("north", "green", "green","right")
+          changeTurns("south", "green", "green","left")
+          changeTurns("south", "green", "green","right")
+          changeColour("north", "green", "green");
+          changeColour("south", "green", "green");
+          
+          changeColour("north", "red", "grey");
+          changeColour("south", "red", "grey");
+        }
+
+        if (time == 17) {
+          changeTurns("north", "green", "grey","left")
+          changeTurns("north", "green", "grey","right")
+          changeTurns("south", "green", "grey","left")
+          changeTurns("south", "green", "grey","right")
+
+          changeColour("north", "green", "grey");
+          changeColour("south", "green", "grey");
+          changeColour("north", "yellow", "yellow");
+          changeColour("south", "yellow", "yellow");
+        
+          changeTurns("north", "yellow", "yellow","left")
+          changeTurns("north", "yellow", "yellow","right")
+          changeTurns("south", "yellow", "yellow","left")
+          changeTurns("south", "yellow", "yellow","right")
+
+        }
+
+        if (time == 20) {
+          changeColour("north", "yellow", "grey");
+          changeColour("south", "yellow", "grey");
+          changeTurns("north", "yellow", "grey","left")
+          changeTurns("north", "yellow", "grey","right")
+          changeTurns("south", "yellow", "grey","left")
+          changeTurns("south", "yellow", "grey","right")
+
+          changeColour("north", "red", "red");
+          changeColour("south", "red", "red");
+          
+          changeTurns("east", "green", "green","left")
+          changeTurns("west", "green", "green","right")
+          changeTurns("west", "green", "green","left")
+
+          changeColour("east", "green", "green");
+          changeColour("west", "green", "green");
+          changeColour("east", "red", "grey");
+          changeColour("west", "red", "grey");
+        
+          time = 0;
+        }
+      }
+    </script>
+  </body>
+</html>

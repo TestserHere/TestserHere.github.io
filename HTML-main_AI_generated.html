@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traffic Light Simulator</title>
+    <style>
+      .traffic-light {
+        width: 50px;
+        height: 150px;
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+      }
+      .light {
+        width: 40px;
+        height: 40px;
+        background-color: #111;
+        border-radius: 50%;
+        margin: 10px auto;
+      }
+      .red {
+        background-color: red;
+      }
+      .yellow {
+        background-color: yellow;
+      }
+      .green {
+        background-color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="north" class="traffic-light">
+      <div class="light" id="north-red"></div>
+      <div class="light" id="north-yellow"></div>
+      <div class="light" id="north-green"></div>
+    </div>
+
+    <div id="east" class="traffic-light">
+      <div class="light" id="east-red"></div>
+      <div class="light" id="east-yellow"></div>
+      <div class="light" id="east-green"></div>
+    </div>
+
+    <div id="south" class="traffic-light">
+      <div class="light" id="south-red"></div>
+      <div class="light" id="south-yellow"></div>
+      <div class="light" id="south-green"></div>
+    </div>
+
+    <div id="west" class="traffic-light">
+      <div class="light" id="west-red"></div>
+      <div class="light" id="west-yellow"></div>
+      <div class="light" id="west-green"></div>
+    </div>
+
+    <script>
+      const northLights = ["north-red", "north-yellow", "north-green"];
+      const eastLights = ["east-red", "east-yellow", "east-green"];
+      const southLights = ["south-red", "south-yellow", "south-green"];
+      const westLights = ["west-red", "west-yellow", "west-green"];
+
+      const allLights = [northLights, eastLights, southLights, westLights];
+
+      function turnOffAllLights() {
+        allLights.forEach((lightArray) => {
+          lightArray.forEach((light) =>
+            document
+              .getElementById(light)
+              .classList.remove("red", "yellow", "green")
+          );
+        });
+      }
+
+      function setLights(northColor, eastColor, southColor, westColor) {
+        turnOffAllLights();
+        document.getElementById(northLights[0]).classList.add(northColor);
+        document.getElementById(eastLights[0]).classList.add(eastColor);
+        document.getElementById(southLights[0]).classList.add(southColor);
+        document.getElementById(westLights[0]).classList.add(westColor);
+      }
+
+      // Simulate traffic signals with a timing function
+      function trafficLightSequence() {
+        setLights("red", "green", "red", "red");
+        setTimeout(() => setLights("red", "yellow", "red", "red"), 3000); // Change to yellow after 3 seconds
+        setTimeout(() => setLights("green", "red", "red", "red"), 6000); // Change to green/red after 6 seconds
+        setTimeout(() => setLights("yellow", "red", "red", "red"), 9000); // Change to yellow after 9 seconds
+        setTimeout(() => setLights("red", "red", "green", "red"), 12000); // Change to red/green after 12 seconds
+        setTimeout(() => setLights("red", "red", "yellow", "red"), 15000); // Change to red/yellow after 15 seconds
+
+        // Loop the sequence after 18 seconds
+        setTimeout(trafficLightSequence, 18000);
+      }
+
+      // Start the sequence
+      trafficLightSequence();
+    </script>
+  </body>
+</html>

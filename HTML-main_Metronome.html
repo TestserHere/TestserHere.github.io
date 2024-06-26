@@ -1,0 +1,71 @@
+<html>
+<head>
+    <title>Metronome</title>
+    <style> 
+    body {
+        font-family: "Poppins", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+      }
+    </style>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <!--choose one to use! <link href="https://fonts.cdnfonts.com/css/bus-stop-2" rel="stylesheet" /> -->
+    <link
+      href="https://fonts.cdnfonts.com/css/edit-undo-brk"
+      rel="stylesheet"
+    />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
+
+</head>
+<body>
+    <p id="text">80</p>
+    <button id="start" class="btn btn-secondary" onclick="start()">Start</button>
+    <button id="stop" class="btn btn-secondary" onclick="stop()">Stop</button>
+    <br />
+    <input id="input" style="width: 120px;" type="number" min="1" max="208" >
+    <br />
+    <button id="refresh" style="width: 120px" class="btn btn-secondary" onclick="sync()">Refresh</button>
+    
+<script>
+  $("#input").val(1)
+  $("#stop").attr("disabled" , true)
+  function start() {
+    $("#start").attr("disabled" , true)
+    $("#stop").attr("disabled" , false)
+  
+    
+  }
+
+  function stop() {
+    $("#start").attr("disabled" , false)
+    $("#stop").attr("disabled" , true)
+  }
+  function sync() {
+    v = $("#input").val()
+    $("#text").text(v)
+  }
+</script>    
+</body>
+</html>
