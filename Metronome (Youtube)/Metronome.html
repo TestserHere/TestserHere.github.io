@@ -40,32 +40,8 @@
 
 </head>
 <body>
-    <p id="text">80</p>
-    <button id="start" class="btn btn-secondary" onclick="start()">Start</button>
-    <button id="stop" class="btn btn-secondary" onclick="stop()">Stop</button>
-    <br />
-    <input id="input" style="width: 120px;" type="number" min="1" max="208" >
-    <br />
-    <button id="refresh" style="width: 120px" class="btn btn-secondary" onclick="sync()">Refresh</button>
     
-<script>
-  $("#input").val(1)
-  $("#stop").attr("disabled" , true)
-  function start() {
-    $("#start").attr("disabled" , true)
-    $("#stop").attr("disabled" , false)
-  
-    
-  }
-
-  function stop() {
-    $("#start").attr("disabled" , false)
-    $("#stop").attr("disabled" , true)
-  }
-  function sync() {
-    v = $("#input").val()
-    $("#text").text(v)
-  }
+<script src="./app.js">
 </script>    
 </body>
 </html>
