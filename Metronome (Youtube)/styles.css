@@ -36,3 +36,16 @@ body {
     text-transform: uppercase;
     text-align: center;
 }
+.tempo-settings {
+    display: flex;
+    justify-content: space-between;
+}
+.tempo-settings .adjust-tempo-btn {
+    width: 30px;
+    height: 50px;
+    font-size: 40px;
+    border-radius: 50%;
+    border:1px solid #ddd;
+    text-align: center;
+    cursor: pointer;
+}
