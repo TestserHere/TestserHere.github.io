@@ -80,3 +80,25 @@ function updateMetronome() {
     tempoText.textContent = tempoTextString;
 
 }
+
+function validateTempo() {
+    if (bpm <= 20) { return };
+    if (bpm >= 280) { return };
+}
+
+function playClick() {
+    console.log(count);
+    if (count === beatsPerMeasure) {
+        count = 0;
+    }
+    if (count === 0) {
+        click1.play();
+        click1.currentTime = 0;
+    } else {
+        click2.play();
+        click2.currentTime =0;
+    }
+    count++;
+}
+
+const metronome = newTimer(playClick, 60000 / bpm, { immediate: true })
