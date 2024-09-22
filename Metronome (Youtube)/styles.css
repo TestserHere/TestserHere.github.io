@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap');
 * {
-    padding: 0;
     margin: 0;
+    padding: 0;
 }
 
 body {
-    font-family:"Raleway", sans-serif;
+    font-family: 'Raleway', sans-serif;
     color: #525252;
     user-select: none;
 }
@@ -15,17 +15,17 @@ body {
     align-items: center;
     height: 100vh;
 }
-.metronome{
+.metronome {
     display: flex;
-    flex-direction: colum;
+    flex-direction: column;
     width: 300px;
     height: 250px;
     justify-content: space-between;
 }
 .bpm-display {
-    width: 100px;
+    width: 100%;
     text-align: center;
-    color:#fa545c;
+    color: #fa545c;
     font-weight: bold;
 }
 .bpm-display .tempo {
@@ -36,16 +36,18 @@ body {
     text-transform: uppercase;
     text-align: center;
 }
+
 .tempo-settings {
     display: flex;
     justify-content: space-between;
 }
+
 .tempo-settings .adjust-tempo-btn {
     width: 30px;
-    height: 50px;
+    height: 30px;
     font-size: 40px;
     border-radius: 50%;
-    border:1px solid #ddd;
+    border: 1px solid #ddd;
     text-align: center;
     cursor: pointer;
 }
