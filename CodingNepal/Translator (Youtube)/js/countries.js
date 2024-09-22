@@ -1,4 +1,4 @@
-const countries = {
+const _countries = {
     "am-ET": "Amharic",
     "ar-SA": "Arabic",
     "be-BY": "Bielarus",
@@ -98,3 +98,10 @@ const countries = {
     "zu-ZA": "Zulu",
     "zh-CN": "Chinese"
 }
+
+const sortedCountries = Object.entries(_countries).sort((a, b) => {
+    return a[1].localeCompare(b[1]); // Sort by value (language names)
+});
+
+// Convert the sorted array back to an object (optional)
+const countries = Object.fromEntries(sortedCountries);
