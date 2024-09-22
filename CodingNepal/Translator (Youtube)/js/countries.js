@@ -95,5 +95,6 @@ const countries = {
     "wo-SN": "Wolof",
     "xh-ZA": "Xhosa",
     "yi-YD": "Yiddish",
-    "zu-ZA": "Zulu"
+    "zu-ZA": "Zulu",
+    "zh-CN": "Chinese"
 }
