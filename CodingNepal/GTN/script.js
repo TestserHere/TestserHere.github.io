@@ -2,7 +2,7 @@ const input = document.querySelector("input"), guess = document.querySelector(".
 
 input.focus();
 
-let randomNum = MAth.floor(Math.random() * 100); 
+let randomNum = Math.floor(Math.random() * 100); 
 chance = 10;
 
 checkButton.addEventListener("click", () => {
