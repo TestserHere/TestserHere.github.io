@@ -27,9 +27,9 @@ const textToSpeech = () => {
     }
 
     setInterval(() => {
-        if (!synth.speakiong && !isSpeaking) {
+        if (!synth.speaking && !isSpeaking) {
             isSpeaking = true;
-            button.innerText = "Read It Out!";
+            button.innerText = "Convert to Speech";
         };
     });
 };
