@@ -7,7 +7,7 @@ const textToSpeech = () => {
     const text = textarea.value;
 
     if (!synth.speaking && text) {
-        SpeechSynthesisUtterance(text);
+        const utternace = new SpeechSynthesisUtterance(text);
         synth.speak(utternace);
     }
 
