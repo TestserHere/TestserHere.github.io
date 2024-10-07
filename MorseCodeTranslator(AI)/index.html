@@ -4,17 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Morse Code Translator</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Morse Code Translator</h1>
         
+        <!-- Speed Control -->
+        <label for="speedInput">Speed (ms):</label>
+        <input type="number" id="speedInput" value="300" min="100" step="50">
+
+        <!-- Text to Morse Code -->
         <textarea id="textInput" placeholder="Enter text here"></textarea>
         <button id="translateToMorseButton">Translate to Morse Code</button>
         <h2>Morse Code Output:</h2>
         <p id="morseOutput"></p>
 
+        <!-- Morse Code to Text -->
         <textarea id="morseInput" placeholder="Enter Morse code here"></textarea>
         <button id="translateToTextButton">Translate to Text</button>
         <h2>Text Output:</h2>

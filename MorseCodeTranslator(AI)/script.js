@@ -64,6 +64,7 @@ const dashSound = new Audio('dash.wav');
 
 document.getElementById('translateToMorseButton').addEventListener('click', async () => {
     const inputText = document.getElementById('textInput').value.toUpperCase();
+    const speed = parseInt(document.getElementById('speedInput').value);
     let morseOutput = '';
 
     for (let char of inputText) {
@@ -77,9 +78,9 @@ document.getElementById('translateToMorseButton').addEventListener('click', asyn
                 } else if (symbol === '-') {
                     await dashSound.play();
                 }
-                await sleep(300);
+                await sleep(speed); // Use the speed variable
             }
-            await sleep(700);
+            await sleep(speed * 2); // Space between letters
         } else {
             morseOutput += '? ';
         }
@@ -97,7 +98,7 @@ document.getElementById('translateToTextButton').addEventListener('click', () =>
         if (textDictionary[morseChar]) {
             textOutput += textDictionary[morseChar];
         } else {
-            textOutput += '?'; 
+            textOutput += '?'; // Unknown Morse code
         }
     }
 
