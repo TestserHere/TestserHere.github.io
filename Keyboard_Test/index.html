@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Keyboard Test</title>        
+        <title>Keyboard Test</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale:1.0">
+        <title>2048</title>
+        <link rel="stylesheet" href="./style.css">
+        <script src="./code.js"></script>               
     </head>
     <body>
         <div class="keyboard_l1">
             <div id="keyboard_`"></div>
-            <div id="keyboard_1"></div>
+            <span id="keyboard_1" style="color:white">1</span>
             <div id="keyboard_2"></div>
             <div id="keyboard_3"></div>
             <div id="keyboard_4"></div>  
@@ -75,5 +80,9 @@
             <div id="keyboard_ArrowDown"></div>
             <div id="keyboard_ArrowRight"></div>
         </div>    
+        <span>Test</span>
     </body>
+    <script>
+        keyUpdate();
+    </script>
 </html>
