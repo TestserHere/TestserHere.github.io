@@ -1,21 +1,77 @@
-div {
-    border:1px solid red;
-    height:20px;
-    width:20px;
-    color:transparent;
-    display: inline-block;
+h1 {
     text-align: center;
 }
 
-#keyboard_Backspace {
-    width:40px;
+div {
+    border-radius: 32.5px;
+    border:1px solid black;
+    height:26px;
+    width:26px;
+    color:transparent;
+    display: inline-block;
+    color:black;
+    font-size:20px;
 }
+
+section {
+    text-align: center;
+    margin-top: 10px;
+}
+
+#keyboard_Backspace {
+    width:91px;
+}
+
+#keyboard_tab {
+    width:52px;
+}
+
+#keyboard_backslash {
+    width:58.5px;
+}
+
 
 #keyboard_Caps {
-    width:45px;
+    width:97.5px;
 }
 
-#keyboard_Backspace {
+#keyboard_Enter {
     width:70px;
 }
 
+#keyboard_Shift1 {
+    width:58.5px;
+}
+
+#keyboard_Shift2 {
+    width:58.5px;
+}
+
+
+#keyboard_Control1 {
+    width:52px;
+}
+
+#keyboard_Option1 {
+    width:52px;
+}
+
+#keyboard_Command1 {
+    width:52px;
+}
+
+#keyboard_Space {
+    width:95px;
+}
+
+#keyboard_Control2 {
+    width:52px;
+}
+
+#keyboard_Option2 {
+    width:52px;
+}
+
+#keyboard_Command2 {
+    width:52px;
+}
