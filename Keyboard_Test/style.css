@@ -2,6 +2,10 @@ h1 {
     text-align: center;
 }
 
+h6 {
+    text-align: center;
+}
+
 div {
     border-radius: 32.5px;
     border:1px solid black;
