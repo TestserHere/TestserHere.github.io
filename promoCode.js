@@ -18,11 +18,35 @@ function check() {
         window.open("https://balwynps-vic.compass.education/login.aspx?sessionstate=disabled",'_blank');        
     } else if (promoCode == "BHScompass") {
         console.log("code BHScompass!");
-        window.open("https://balwynhs-vic.compass.education/login.aspx?sessionstate=disabled",'_blank')
-    } else if(promoCode == "ALLCODES") {
+        window.open("https://balwynhs-vic.compass.education/login.aspx?sessionstate=disabled",'_blank');
+    } else if (promoCode == "Gimkit") {
+        console.log("code Gimkit!");
+        window.open("https://gimkit.com", '_blank');
+    } else if (promoCode == "GimkitCode") {
+        console.log("code GimkitCode!");
+        window.open("https://www.gimkit.com/join",'_blank');
+    } else if (promoCode == "Blooket") {
+        console.log("code Blooket!");
+        window.open("https://www.blooket.com",'_blank');
+    } else if (promoCode == "BlooketCode") {
+        console.log("code BlooketCode!");
+        window.open("https://play.blooket.com/play",'_blank');
+    } else if (promoCode == "Kahoot") {
+        console.log("code Kahoot!");
+        window.open("https://kahoot.com",'_blank');
+    } else if (promoCode == "KahootCode") {
+        console.log("code KahootCode!");
+        window.open("https://kahoot.it",'_blank');
+    }
+    
+    
+    
+    
+    
+    else if(promoCode == "ALLCODES") {
         console.log ("code allcode!");
         window.open("https://testserhere.github.io/codes.html", '_blank');
-    }
+    } 
     
     
      
