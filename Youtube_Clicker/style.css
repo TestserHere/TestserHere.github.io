@@ -1,5 +1,12 @@
-div {
-    height:20px;
-    width:20px;
+body {
     text-align: center;
+}
+
+button {
+    border:transparent;
+    background-color: transparent;
+}
+
+#1Point {
+    position:absolute;
 }
