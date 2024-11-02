@@ -6,6 +6,20 @@
         <link rel="stylesheet" href="./style.css">
         <meta name="viewport" contect="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+        <script>
+            document.addEventListener("keydown", function (event){
+            if (event.ctrlKey){
+              event.preventDefault();
+            }
+            if(event.keyCode == 123){
+              event.preventDefault();
+            }
+            
+            document.addEventListener('contextmenu', 
+            event => event.preventDefault()
+            );
+            });
+          </script>
     </head>
     <body>
         <div class="container">
