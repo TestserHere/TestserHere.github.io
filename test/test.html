@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open App Example</title>
+</head>
+<body>
+    <button id="openApp">Open My App</button>
+
+    <script>
+        document.getElementById('openApp').addEventListener('click', function() {
+            window.location.href = 'myapp://'; // Replace with your app's URL scheme
+        });
+    </script>
+</body>
+</html>
