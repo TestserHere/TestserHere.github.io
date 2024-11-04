@@ -1,6 +1,6 @@
 document.getElementById('openApp').addEventListener('click', function() {
     var appUrl = 'robloxmobile://'; // Replace with your app's URL scheme
-    var fallbackUrl = 'https://apps.apple.com/us/app/roblox/id431946152';
+    var fallbackUrl = 'https://apps.apple.com/app/id431946152';
     
     var timeout = setTimeout(function() {
         window.location.href = fallbackUrl; // Redirect to App Store after a delay
