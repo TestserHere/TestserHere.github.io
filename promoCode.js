@@ -49,6 +49,10 @@ function check() {
         console.log("code KahootCode!");
         window.open("https://kahoot.it",'_blank');
         document.getElementById("input").value = "";
+    } else if(promoCode == "3D") {
+        console.log("code 3D!");
+        window.open("https://testserhere.github.io/3D_object.html", '_blank');
+        document.getElementById("input").vlue = "";
     }
     
     
