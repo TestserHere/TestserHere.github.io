@@ -7,17 +7,12 @@
 </head>
 <body>
     <button id="openAppStore" class="btn btn-outline-secondary">Open App Store</button>
-    <button id="openYoutube" class="btn btn-outline-secondary">Open Youtube</button>
 
 
     <script>
         document.getElementById('openAppStore').addEventListener('click', function() {
             var appStoreUrl = 'itms-apps://itunes.apple.com';
             window.location.href = appStoreUrl;
-        });
-        document.getElementById('openYoutube').addEventListener('click', function() {
-            var youtubeUrl = 'youtube://www.youtube.com/watch?v=KM9flJ0i9BM';
-            window.location.href = youtubeUrl;
         });
     </script>
 </body>
