@@ -19,14 +19,24 @@
             var youtubeUrl = 'youtube://www.youtube.com';
             window.location.href = youtubeUrl;
         });
-        document.getElementById('openAppStore').addEventListener('click', function() {
-            var appStoreUrl = 'itms-apps://itunes.apple.com';
-            window.location.href = appStoreUrl;
-        });
-        document.getElementById('openAppStore').addEventListener('click', function() {
-            var appStoreUrl = 'itms-apps://itunes.apple.com';
-            window.location.href = appStoreUrl;
-        });
+        function openYouTube(videoId) {
+            // Create the YouTube app URL
+            const appUrl = `youtube://www.youtube.com/watch?v=${videoId}`;
+            // Create the web URL as a fallback
+            const webUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+            // Try to open the app first
+            window.location.href = appUrl;
+
+            // Fallback to the web URL after a short delay
+            setTimeout(() => {
+                window.location.href = webUrl;
+            }, 2000); // Adjust delay as needed
+        }
+
+        // Example usage
+        openYouTube('KM9flJ0i9BM'); // Replace with your video ID
+
     </script>
 </body>
 </html>
