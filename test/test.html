@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Open App Example</title>
+    <title>Open App Store Example</title>
 </head>
 <body>
-    <button id="openApp">Open My App</button>
+    <button id="openAppStore">Open App Store</button>
 
     <script>
-        document.getElementById('openApp').addEventListener('click', function() {
-            window.location.href = 'robloxmobile://'; // Replace with your app's URL scheme
+        document.getElementById('openAppStore').addEventListener('click', function() {
+            // Replace 'YOUR_APP_ID' with the actual App Store app ID
+            var appStoreUrl = 'itms-apps://itunes.apple.com';
+            window.location.href = appStoreUrl;
         });
     </script>
 </body>
