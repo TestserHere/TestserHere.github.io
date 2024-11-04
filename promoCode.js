@@ -53,6 +53,10 @@ function check() {
         console.log("code 3D!");
         window.open("https://testserhere.github.io/3D_object.html", '_blank');
         document.getElementById("input").vlue = "";
+    } else if(promoCode == "OpenApp") {
+        console.log("code OpenApp!");
+        window.open("https://testserhere.github.io/openApp/openApp.html", '_blank');
+        document.getElementById("input").vlue = "";        
     }
     
     
