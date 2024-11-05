@@ -6,8 +6,9 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-color: #222;
-    color: #fff;
+    background-color: #70c5ce; /* Sky-blue background */
+    color: white;
+    text-align: center;
 }
 
 #game-container {
@@ -15,8 +16,8 @@ body {
 }
 
 canvas {
-    background-color: #000;
-    border: 2px solid #fff;
+    background-color: #fff;
+    border: 2px solid #000;
 }
 
 #score {
