@@ -1,0 +1,31 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+#game-container {
+    width: 420px;
+    margin: 50px auto;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+canvas {
+    background-color: #222;
+    border: 5px solid #fff;  /* Add a border to the canvas */
+    display: block;  /* Ensure canvas is a block-level element */
+    margin: 0 auto;  /* Center the canvas */
+}
+
+#score {
+    font-size: 1.2em;
+    margin-top: 10px;
+    color: #fff;
+}
