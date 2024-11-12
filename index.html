@@ -59,34 +59,112 @@
         )
           return false;
       };
+
+      function themeDark() {
+        document.getElementById("navbar").classList.remove("navbar-light");
+        document.getElementById("navbar").classList.add("navbar-dark");
+        document.getElementById("image").src = "icons/icon1.png";
+        document.getElementById("body").style.backgroundColor = "black";
+        document.getElementById("navbar").style.backgroundColor = "black";
+        document.getElementById("body").style.color = "white";
+      } 
+      function themeLight() {
+        document.getElementById("navbar").classList.remove("navbar-dark");
+        document.getElementById("navbar").classList.add("navbar-light");
+        document.getElementById("image").src = "icons/icon3.png";
+        document.getElementById("body").style.backgroundColor = "white";
+        document.getElementById("navbar").style.backgroundColor = "white";
+        document.getElementById("body").style.color = "black";
+      } 
+      function themeBlue() {
+        document.getElementById("navbar").classList.remove("navbar-dark");
+        document.getElementById("navbar").classList.add("navbar-light");
+        document.getElementById("image").src = "icons/icon2.png";
+        document.getElementById("body").style.backgroundColor = "#3888CB";
+        document.getElementById("navbar").style.backgroundColor = "#3888CB";
+        document.getElementById("body").style.color = "white";
+      }  
     </script>
   </head>
-  <body>
+  <body id="body">
+    <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#"></a>
+          <img src="icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item" id="Home">
+                <a class="nav-link active" aria-current="page" href="#">Home</a>
+              </li>
+              <li class="nav-item dropdown" id="projects">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Projects
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="https://testserhere.github.io/Calculator.html">Calculator</a></li>
+                  <li><a class="dropdown-item" href="https://testserhere.github.io/counting_game/countingGame.html">Counting Game</a></li>
+                  <li><a class="dropdown-item" href="https://testserhere.github.io/Elevator.html">Elevator</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><a class="dropdown-item" href="https://testserhere.github.io/Keyboard_Test/">Keyboard Test</a></li>
+                  <li><a class="dropdown-item" href="#">Another action</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#">Something else here</a></li>
+                </ul>
+              </li>
+
+              <!-- <li class="nav-item dropdown" id="Themes">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Settings
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="nav-link disabled" style="color:grey;">Theme</a></li>
+                  <li><a class="dropdown-item" onclick="themeDark();">Light</a></li>
+                  <li><a class="dropdown-item" onclick="themeLight();">Dark</a></li>
+                  <li><a class="dropdown-item" onclick="themeBlue();">Blue</a></li>
+                </ul>
+              </li> -->
+
+            </ul>
+            <form class="d-flex" role="search" id="search">
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+          </div>
+      </div>
+    </nav>
     <p>Hello, here are all my coding!</p>
-    <a href="Calculator.html" class="btn btn-outline-secondary">Calculator</a>
-    <a href="counting_game/countingGame.html" class="btn btn-outline-secondary"
-      >Counting Game</a
-    >
-    <a href="Elevator.html" class="btn btn-outline-secondary">Elevator</a>
-    <a href="Stopwatch.html" class="btn btn-outline-secondary">Stopwatch</a>
-    <a href="Timer.html" class="btn btn-outline-secondary">Timer</a>
-    <a href="Metronome (Youtube)/index.html" class="btn btn-outline-secondary">Metronome</a>
-    <a href="./CodingNepal/Translator (Youtube)/index.html" class="btn btn-outline-secondary">Translator</a>
-    <a href="./CodingNepal/GTN/index.html" class="btn btn-outline-secondary">Guess The Number</a>
-    <a href="./CodingNepal/Text-To-Speech/index.html" class="btn btn-outline-secondary">Text-To-Speech Converter</a>
-    <a href="./MorseCodeTranslator(AI)/index.html" class="btn btn-outline-secondary">Morse Code Translator</a>
-    <a href="./Tic_Tac_Toe(Youtube)/index.html" class="btn btn-outline-secondary">Tic Tac Toe Game</a>
-    <a href="./piano/index.html" class="btn btn-outline-secondary">Piano</a>
-    <a href="./2048/index.html" class="btn btn-outline-secondary">2048</a>
-    <a href="./Keyboard_Test/index.html" class="btn btn-outline-secondary">Keyboard Test</a>
-    <a href="./snake_game/index.html" class="btn btn-outline-secondary">Snake Game</a>
-    <a href="./memory_game/index.html" class="btn btn-outline-secondary">Memory Game</a>
-    <a href="./pong_game/index.html" class="btn btn-outline-secondary">Pong Game</a>
-    <a href="./breakout/index.html" class="btn btn-outline-secondary">Breakout Game</a>
-    <a href="./flappy_bird/index.html" class="btn btn-outline-secondary">Flappy Bird</a>
-    <a href="./candy_crush/index.html" class="btn btn-outline-secondary">Candy Crush</a>
-    <input id="input" type="text" style="position:absolute; top:940px; left:0px; width:200px;" autocomplete="off">
-    <button style="position:absolute; top:940px; left:200px;" onclick="check();">Promo Code</button>
-    <p style="position: absolute; top:980px; left:0px; visibility: hidden;" id="wrongCode"><i class="bi bi-exclamation-triangle"></i> Wrong Code!</p>
+    <div id="links">
+      <a href="Calculator.html" class="btn btn-outline-secondary">Calculator</a>
+      <a href="counting_game/countingGame.html" class="btn btn-outline-secondary"
+        >Counting Game</a
+      >
+      <a href="Elevator.html" class="btn btn-outline-secondary">Elevator</a>
+      <a href="Stopwatch.html" class="btn btn-outline-secondary">Stopwatch</a>
+      <a href="Timer.html" class="btn btn-outline-secondary">Timer</a>
+      <a href="Metronome (Youtube)/index.html" class="btn btn-outline-secondary">Metronome</a>
+      <a href="./CodingNepal/Translator (Youtube)/index.html" class="btn btn-outline-secondary">Translator</a>
+      <a href="./CodingNepal/GTN/index.html" class="btn btn-outline-secondary">Guess The Number</a>
+      <a href="./CodingNepal/Text-To-Speech/index.html" class="btn btn-outline-secondary">Text-To-Speech Converter</a>
+      <a href="./MorseCodeTranslator(AI)/index.html" class="btn btn-outline-secondary">Morse Code Translator</a>
+      <a href="./Tic_Tac_Toe(Youtube)/index.html" class="btn btn-outline-secondary">Tic Tac Toe Game</a>
+      <a href="./piano/index.html" class="btn btn-outline-secondary">Piano</a>
+      <a href="./2048/index.html" class="btn btn-outline-secondary">2048</a>
+      <a href="./Keyboard_Test/index.html" class="btn btn-outline-secondary">Keyboard Test</a>
+      <a href="./snake_game/index.html" class="btn btn-outline-secondary">Snake Game</a>
+      <a href="./memory_game/index.html" class="btn btn-outline-secondary">Memory Game</a>
+      <a href="./pong_game/index.html" class="btn btn-outline-secondary">Pong Game</a>
+      <a href="./breakout/index.html" class="btn btn-outline-secondary">Breakout Game</a>
+      <a href="./flappy_bird/index.html" class="btn btn-outline-secondary">Flappy Bird</a>
+      <a href="./candy_crush/index.html" class="btn btn-outline-secondary">Candy Crush</a>
+    </div>
+    <input id="input" type="text" style="position:absolute; top:920px; left:0px; width:200px;" autocomplete="off">
+    <button style="position:absolute; top:920px; left:200px;" onclick="check();">Promo Code</button>
+    <p style="position: absolute; top:960px; left:0px; visibility: hidden;" id="wrongCode"><i class="bi bi-exclamation-triangle"></i> Wrong Code!</p>
   </body>
 </html>

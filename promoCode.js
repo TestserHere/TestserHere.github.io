@@ -52,11 +52,15 @@ function check() {
     } else if(promoCode == "3D") {
         console.log("code 3D!");
         window.open("https://testserhere.github.io/3D_object.html", '_blank');
-        document.getElementById("input").vlue = "";
+        document.getElementById("input").value = "";
     } else if(promoCode == "OpenApp") {
         console.log("code OpenApp!");
         window.open("https://testserhere.github.io/openApp/openApp.html", '_blank');
-        document.getElementById("input").vlue = "";        
+        document.getElementById("input").value = "";        
+    } else if(promoCode == "Logo") {
+        console.log("logo");
+        window.open("https://www.hubspot.com/brand-kit-generator/final/7defe3cf-d527-459d-beab-7ffaf8824bb3?hubs_content=www.hubspot.com%2Fbrand-kit-generator%2Ficon-maker&hubs_content-cta=cta_form&company=TestserHere", '_blank');
+        document.getElementById("input").value = "";
     }
     
     
