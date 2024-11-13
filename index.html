@@ -60,36 +60,43 @@
           return false;
       };
 
-      function themeDark() {
-        document.getElementById("navbar").classList.remove("navbar-light");
-        document.getElementById("navbar").classList.add("navbar-dark");
-        document.getElementById("image").src = "icons/icon1.png";
-        document.getElementById("body").style.backgroundColor = "black";
-        document.getElementById("navbar").style.backgroundColor = "black";
-        document.getElementById("body").style.color = "white";
-      } 
-      function themeLight() {
-        document.getElementById("navbar").classList.remove("navbar-dark");
-        document.getElementById("navbar").classList.add("navbar-light");
-        document.getElementById("image").src = "icons/icon3.png";
-        document.getElementById("body").style.backgroundColor = "white";
-        document.getElementById("navbar").style.backgroundColor = "white";
-        document.getElementById("body").style.color = "black";
-      } 
-      function themeBlue() {
-        document.getElementById("navbar").classList.remove("navbar-dark");
-        document.getElementById("navbar").classList.add("navbar-light");
-        document.getElementById("image").src = "icons/icon2.png";
-        document.getElementById("body").style.backgroundColor = "#3888CB";
-        document.getElementById("navbar").style.backgroundColor = "#3888CB";
-        document.getElementById("body").style.color = "white";
-      }
+      function changeTheme(theme) {
+        const navbar = document.getElementById('navbar');
 
+        // Reset classes on navbar
+        navbar.className = 'navbar navbar-expand-lg';
+
+        // Apply the selected theme
+        if (theme === 'light') {
+            navbar.classList.add('navbar-light');
+            navbar.setAttribute('data-bs-theme', 'light');
+            document.getElementById("navbar").style.backgroundColor = "white";
+            document.getElementById("image").src = "icons/icon3.png";
+            document.getElementById("body").style.backgroundColor = "white";
+            document.getElementById("Text").style.color = "black";
+
+        } else if (theme === 'dark') {
+            navbar.classList.add('navbar-dark');
+            navbar.setAttribute('data-bs-theme', 'dark');
+            document.getElementById("navbar").style.backgroundColor = "black";
+            document.getElementById("image").src = "icons/icon1.png";
+            document.getElementById("body").style.backgroundColor = "black";
+            document.getElementById("Text").style.color = "white";
+         
+        } else if (theme === 'blue') {
+            navbar.classList.add('navbar-dark');
+            navbar.setAttribute('data-bs-theme', 'light');
+            document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
+            document.getElementById("image").src = "icons/icon2.png";
+            document.getElementById("body").style.backgroundColor = "rgba(56,136,203,255)";
+            document.getElementById("Text").style.color = "white";
+        }
+      }
       function search() {
         console.log("searching!");
-        let Search = document.getElementById("Search");
-        sessionStorage.setItem("Search", Search)
-        window.open("https://testserhere.github.io/Search.html", "_blank");
+        let keyword = document.getElementById("keyword").value;
+        sessionStorage.setItem("keyword", keyword);
+        window.open("Search.html", "_blank");
         
       }
     </script>
@@ -126,50 +133,49 @@
                 </ul>
               </li>
 
-              <!-- <li class="nav-item dropdown" id="Themes">
+              <li class="nav-item dropdown" id="Themes">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Settings
+                  Change Themes
                 </a>
                 <ul class="dropdown-menu">
-                  <li><a class="nav-link disabled" style="color:grey;">Theme</a></li>
-                  <li><a class="dropdown-item" onclick="themeDark();">Light</a></li>
-                  <li><a class="dropdown-item" onclick="themeLight();">Dark</a></li>
-                  <li><a class="dropdown-item" onclick="themeBlue();">Blue</a></li>
+                  <li><a class="dropdown-item" onclick="changeTheme('light');">Light Theme</a></li>
+                  <li><a class="dropdown-item" onclick="changeTheme('dark');">Dark Theme</a></li>
+                  <li><a class="dropdown-item" onclick="changeTheme('blue');">Blue Theme</a></li>
                 </ul>
-              </li> -->
+              </li>
 
             </ul>
             <form class="d-flex" role="search" onsubmit="event.preventDefault()">
-              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-              <button class="btn btn-outline-success" onclick="search();" id="Search">Search</button>
+              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="keyword">
+              <button class="btn btn-success" onclick="search();" id="Search">Search</button>
             </form>
           </div>
       </div>
     </nav>
-    <p>Hello, here are all my coding!</p>
+    <p id="Text">Hello, here are all my coding!</p>
     <div id="links">
-      <a href="Calculator.html" class="btn btn-outline-secondary">Calculator</a>
-      <a href="counting_game/countingGame.html" class="btn btn-outline-secondary"
+      <a href="Calculator.html" class="btn btn-secondary">Calculator</a>
+      <a href="counting_game/countingGame.html" class="btn btn-secondary"
         >Counting Game</a
       >
-      <a href="Elevator.html" class="btn btn-outline-secondary">Elevator</a>
-      <a href="Stopwatch.html" class="btn btn-outline-secondary">Stopwatch</a>
-      <a href="Timer.html" class="btn btn-outline-secondary">Timer</a>
-      <a href="Metronome (Youtube)/index.html" class="btn btn-outline-secondary">Metronome</a>
-      <a href="./CodingNepal/Translator (Youtube)/index.html" class="btn btn-outline-secondary">Translator</a>
-      <a href="./CodingNepal/GTN/index.html" class="btn btn-outline-secondary">Guess The Number</a>
-      <a href="./CodingNepal/Text-To-Speech/index.html" class="btn btn-outline-secondary">Text-To-Speech Converter</a>
-      <a href="./MorseCodeTranslator(AI)/index.html" class="btn btn-outline-secondary">Morse Code Translator</a>
-      <a href="./Tic_Tac_Toe(Youtube)/index.html" class="btn btn-outline-secondary">Tic Tac Toe Game</a>
-      <a href="./piano/index.html" class="btn btn-outline-secondary">Piano</a>
-      <a href="./2048/index.html" class="btn btn-outline-secondary">2048</a>
-      <a href="./Keyboard_Test/index.html" class="btn btn-outline-secondary">Keyboard Test</a>
-      <a href="./snake_game/index.html" class="btn btn-outline-secondary">Snake Game</a>
-      <a href="./memory_game/index.html" class="btn btn-outline-secondary">Memory Game</a>
-      <a href="./pong_game/index.html" class="btn btn-outline-secondary">Pong Game</a>
-      <a href="./breakout/index.html" class="btn btn-outline-secondary">Breakout Game</a>
-      <a href="./flappy_bird/index.html" class="btn btn-outline-secondary">Flappy Bird</a>
-      <a href="./candy_crush/index.html" class="btn btn-outline-secondary">Candy Crush</a>
+      <a href="Elevator.html" class="btn btn-secondary">Elevator</a>
+      <a href="Stopwatch.html" class="btn btn-secondary">Stopwatch</a>
+      <a href="Timer.html" class="btn btn-secondary">Timer</a>
+      <a href="Metronome (Youtube)/index.html" class="btn btn-secondary">Metronome</a>
+      <a href="./CodingNepal/Translator (Youtube)/index.html" class="btn btn-secondary">Translator</a>
+      <a href="./CodingNepal/GTN/index.html" class="btn btn-secondary">Guess The Number</a>
+      <a href="./CodingNepal/Text-To-Speech/index.html" class="btn btn-secondary">Text-To-Speech Converter</a>
+      <a href="./MorseCodeTranslator(AI)/index.html" class="btn btn-secondary">Morse Code Translator</a>
+      <a href="./Tic_Tac_Toe(Youtube)/index.html" class="btn btn-secondary">Tic Tac Toe Game</a>
+      <a href="./piano/index.html" class="btn btn-secondary">Piano</a>
+      <a href="./2048/index.html" class="btn btn-secondary">2048</a>
+      <a href="./Keyboard_Test/index.html" class="btn btn-secondary">Keyboard Test</a>
+      <a href="./snake_game/index.html" class="btn btn-secondary">Snake Game</a>
+      <a href="./memory_game/index.html" class="btn btn-secondary">Memory Game</a>
+      <a href="./pong_game/index.html" class="btn btn-secondary">Pong Game</a>
+      <a href="./breakout/index.html" class="btn btn-secondary">Breakout Game</a>
+      <a href="./flappy_bird/index.html" class="btn btn-secondary">Flappy Bird</a>
+      <a href="./candy_crush/index.html" class="btn btn-secondary">Candy Crush</a>
     </div>
     <input id="input" type="text" style="position:absolute; top:920px; left:0px; width:200px;" autocomplete="off">
     <button style="position:absolute; top:920px; left:200px;" onclick="check();">Promo Code</button>
