@@ -83,7 +83,12 @@
         document.getElementById("body").style.backgroundColor = "#3888CB";
         document.getElementById("navbar").style.backgroundColor = "#3888CB";
         document.getElementById("body").style.color = "white";
-      }  
+      }
+      
+      function Search() {
+        let Search = document.getElementByid("Search");
+        window.location = "https://testserhere.github.io/Search.html";
+      }
     </script>
   </head>
   <body id="body">
@@ -133,7 +138,7 @@
             </ul>
             <form class="d-flex" role="search" id="search">
               <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-              <button class="btn btn-outline-success" type="submit">Search</button>
+              <button class="btn btn-outline-success" type="submit" onclick="Search();" id="Search">Search</button>
             </form>
           </div>
       </div>
