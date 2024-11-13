@@ -84,10 +84,13 @@
         document.getElementById("navbar").style.backgroundColor = "#3888CB";
         document.getElementById("body").style.color = "white";
       }
-      
-      function Search() {
-        let Search = document.getElementByid("Search");
-        window.open = "https://testserhere.github.io/Search.html";
+
+      function search() {
+        console.log("searching!");
+        let Search = document.getElementById("Search");
+        sessionStorage.setItem("Search", Search)
+        window.open("https://testserhere.github.io/Search.html", "_blank");
+        
       }
     </script>
   </head>
@@ -136,9 +139,9 @@
               </li> -->
 
             </ul>
-            <form class="d-flex" role="search" id="search">
+            <form class="d-flex" role="search" onsubmit="event.preventDefault()">
               <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-              <button class="btn btn-outline-success" type="submit" onclick="Search();" id="Search">Search</button>
+              <button class="btn btn-outline-success" onclick="search();" id="Search">Search</button>
             </form>
           </div>
       </div>
