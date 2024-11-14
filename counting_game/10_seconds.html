@@ -37,32 +37,12 @@
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
-            <script>
-              // Disable right-click
-              document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-              function ctrlShiftKey(e, keyCode) {
-                return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
-              }
-
-              document.onkeydown = (e) => {
-                // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
-                if (
-                  event.keyCode === 123 ||
-                  ctrlShiftKey(e, 'I') ||
-                  ctrlShiftKey(e, 'J') ||
-                  ctrlShiftKey(e, 'C') ||
-                  (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
-                )
-                  return false;
-              };
-            </script>
     </head>
     <body>
         <h2>10 second challenge</h2>
         <p>Count 10 seconds, when you think it's 10 seconds, press the <b>Finish</b> button!</p>
-        <button id="start" class="btn btn-outline-secondary" onclick="start()">Start!</button>
-        <button id="finish" class="btn btn-outline-secondary" onclick="finish()">Finish</button>
+        <button id="start" class="btn btn-outline-secondary" onclick="start();">Start!</button>
+        <button id="finish" class="btn btn-outline-secondary" onclick="finish();">Finish</button>
 
         <div id="history"></div>
 
@@ -70,6 +50,7 @@
         recordHistory = 0
         $("#start").prop("disabled" , false)
         $("#finish").prop("disabled" , true)
+
         function start() {
             startTime = new Date().valueOf()
             $("#start").prop("disabled" , true)
