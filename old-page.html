@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+        />
+        <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet"
+        />
+        <link
+        href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+        rel="stylesheet"
+        />
+        <!--choose one to use! <link href="https://fonts.cdnfonts.com/css/bus-stop-2" rel="stylesheet" /> -->
+        <link
+        href="https://fonts.cdnfonts.com/css/edit-undo-brk"
+        rel="stylesheet"
+        />
+
+        <style>
+        tr {
+            height: 65px;
+        }
+
+        td {
+            border: 1;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        #display span {
+            font-family: "Edit Undo BRK";
+            font-weight: 400;
+            font-style: normal;
+            color: black;
+        }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
+        <script>
+        // Disable right-click
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        function ctrlShiftKey(e, keyCode) {
+            return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
+        }
+
+        document.onkeydown = (e) => {
+            // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
+            if (
+            event.keyCode === 123 ||
+            ctrlShiftKey(e, 'I') ||
+            ctrlShiftKey(e, 'J') ||
+            ctrlShiftKey(e, 'C') ||
+            (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
+            )
+            return false;
+        };
+    </script>
+    </head>
+    <body>
+        <p>Hello, here are my coding!</p>
+        <a class="btn btn-outline-secondary" href="Calculator.html">Calculator</a>
+        <a class="btn btn-outline-secondary" href="counting_game/countingGame.html">Counting Game</a>
+        <a class="btn btn-outline-secondary" href="Elevator.html">Elevator</a>
+        <a class="btn btn-outline-secondary" href="Stopwatch.html">Stopwatch</a>
+        <a class="btn btn-outline-secondary" href="Timer.html">Timer</a>
+        <a class="btn btn-outline-secondary" herf="Metronome%20(Youtube)/index.html">Metronome</a>
+        <a class="btn btn-outline-secondary" href="CodingNepal/Translator (Youtube)/index.html">Translator</a>
+        <a class="btn btn-outline-secondary" href="CodingNepal/GTN/index.html">Guess The Number</a>
+        <a class="btn btn-outline-secondary" href="CodingNepal/Text-To-Speech/index.html">Text to Speech</a>
+        <a class="btn btn-outline-secondary" href="MorseCodeTranslator(AI)/index.html">Morse Code Translator</a>
+        <a class="btn btn-outline-secondary" href="Tic_Tac_Toe(Youtube)/index.html">Tic Tac Toe</a>
+        <a class="btn btn-outline-secondary" href="piano/index.html">Piano</a>
+        <a class="btn btn-outline-secondary" href="2048/index.html">2048</a>
+        <a class="btn btn-outline-secondary" href="Keyboard_Test/index.html">Keyboard Test</a>
+        <a class="btn btn-outline-secondary" href="snake_game/index.html">Snake Game</a>
+        <a class="btn btn-outline-secondary" href="memory_game/index.html">Memory Game</a>
+        <a class="btn btn-outline-secondary" href="pong_game/index.html">Pong Game</a>
+        <a class="btn btn-outline-secondary" href="breakout/index.html">Breakout Game</a>
+        <a class="btn btn-outline-secondary" href="flappy_bird/index.html">Flappy Bird</a>
+        <a class="btn btn-outline-secondary" href="candy_crush/index.html">Candy Crush</a>
+        <a class="btn btn-outline-secondary" href="promocode/index.html">Promo Codes</a>
+
+    </body>
+</html>

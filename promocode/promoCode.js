@@ -61,6 +61,10 @@ function check() {
         console.log("logo");
         window.open("https://www.hubspot.com/brand-kit-generator/final/7defe3cf-d527-459d-beab-7ffaf8824bb3?hubs_content=www.hubspot.com%2Fbrand-kit-generator%2Ficon-maker&hubs_content-cta=cta_form&company=TestserHere", '_blank');
         document.getElementById("input").value = "";
+    } else if(promoCode == "Old Page") {
+        console.log("code Old Page");
+        window.open("/old-page.html");
+        document.getElementById("input").value = "";
     }
     
     
