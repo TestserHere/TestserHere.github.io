@@ -58,46 +58,6 @@
         )
           return false;
       };
-
-      function changeTheme(theme) {
-        const navbar = document.getElementById('navbar');
-
-        // Reset classes on navbar
-        navbar.className = 'navbar navbar-expand-lg';
-
-        // Apply the selected theme
-        if (theme === 'light') {
-            navbar.classList.add('navbar-light');
-            navbar.setAttribute('data-bs-theme', 'light');
-            document.getElementById("navbar").style.backgroundColor = "white";
-            document.getElementById("image").src = "icons/icon3.png";
-            document.getElementById("body").style.backgroundColor = "white";
-            document.getElementById("Text").style.color = "black";
-
-        } else if (theme === 'dark') {
-            navbar.classList.add('navbar-dark');
-            navbar.setAttribute('data-bs-theme', 'dark');
-            document.getElementById("navbar").style.backgroundColor = "black";
-            document.getElementById("image").src = "icons/icon1.png";
-            document.getElementById("body").style.backgroundColor = "black";
-            document.getElementById("Text").style.color = "white";
-         
-        } else if (theme === 'blue') {
-            navbar.classList.add('navbar-dark');
-            navbar.setAttribute('data-bs-theme', 'light');
-            document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
-            document.getElementById("image").src = "icons/icon2.png";
-            document.getElementById("body").style.backgroundColor = "rgba(56,136,203,255)";
-            document.getElementById("Text").style.color = "white";
-        }
-      }
-      function search() {
-        console.log("searching!");
-        let keyword = document.getElementById("keyword").value;
-        sessionStorage.setItem("keyword", keyword);
-        window.open("Search.html", "_blank");
-        
-      }
     </script>
   </head>
   <body id="body">
