@@ -91,32 +91,28 @@
           navbar.classList.add('navbar-light');
           navbar.setAttribute('data-bs-theme', 'light');
           document.getElementById("navbar").style.backgroundColor = "white";
-          document.getElementById("image").src = "icons/icon3.png";
+          document.getElementById("image").src = "home_things/home/icons/icon3.png";
 
       } else if (theme === 'dark') {
           navbar.classList.add('navbar-dark');
           navbar.setAttribute('data-bs-theme', 'dark');
           document.getElementById("navbar").style.backgroundColor = "black";
-          document.getElementById("image").src = "icons/icon1.png";
+          document.getElementById("image").src = "home_things/home/icons/icon1.png";
         
       } else if (theme === 'blue') {
           navbar.classList.add('navbar-dark');
           navbar.setAttribute('data-bs-theme', 'light');
           document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
-          document.getElementById("image").src = "icons/icon2.png";
+          document.getElementById("image").src = "home_things/home/icons/icon2.png";
 
-      } else if (theme === 'transparent') {
-          navbar.classList.add('bg-transparent');
-          navbar.setAttribute('data-bs-theme', 'light');
-          document.getElementById("navbar").style.backgroundColor = "transparent";
-          document.getElementById("image").src = "icons/icon3_transparent.png";
       }
     }
     function search() {
       console.log("searching!");
       let keyword = document.getElementById("keyword").value;
       sessionStorage.setItem("keyword", keyword);
-      window.open("Search.html", "_blank");
+      document.getElementById("keyword").vaule = "";
+      window.open("/Search/Search.html", "_blank");
       
     }
 
@@ -168,7 +164,7 @@
     <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
         <div class="container-fluid">
             <a class="navbar-brand" href="#"></a>
-            <img src="icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
+            <img src="home_things/home/icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -233,13 +229,12 @@
                     <li><a class="dropdown-item" onclick="changeTheme('light');">Light Theme</a></li>
                     <li><a class="dropdown-item" onclick="changeTheme('dark');">Dark Theme</a></li>
                     <li><a class="dropdown-item" onclick="changeTheme('blue');">Blue Theme</a></li>
-                    <li><a class="dropdown-item" onclick="changeTheme('transparent');">Transparent Theme</a></li>
                     </ul>
                 </li>
     
                 </ul>
                 <form class="d-flex" role="search" onsubmit="event.preventDefault()">
-                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="keyword" autocomplete="off">
+                <input class="form-control me-2" type="search" placeholder="Search On Google..." aria-label="Search" id="keyword" autocomplete="off">
                 <button class="btn btn-success" onclick="search();" id="Search">Search</button>
                 </form>
             </div>
@@ -247,7 +242,7 @@
     </nav>
 
   <!-- Iframe to Load Pages Dynamically -->
-  <iframe id="contentIframe" src="home.html" title="Content" name="content" style="width:device-width;"></iframe>
+  <iframe id="contentIframe" src="home_things/home.html" title="Content" name="content" style="width:device-width;"></iframe>
 
   <!-- Bootstrap JS (for dropdown functionality) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
