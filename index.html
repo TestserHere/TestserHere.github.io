@@ -1,200 +1,206 @@
-<html>
-  <head>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      tr {
-        height: 65px;
-      }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Set the iframe to take up the full width and height */
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+      margin-top: 20px;
+    }
+  </style>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    tr {
+      height: 65px;
+    }
 
-      td {
-        border: 1;
-      }
+    td {
+      border: 1;
+    }
 
-      body {
-        font-family: "Poppins", sans-serif;
-        font-weight: 400;
-        font-style: normal;
-      }
-    </style>
+    body {
+      font-family: "Poppins", sans-serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+  </style>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
-    <script>
-      // Disable right-click
-      document.addEventListener('contextmenu', (e) => e.preventDefault());
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-      function ctrlShiftKey(e, keyCode) {
-        return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
-      }
+    function ctrlShiftKey(e, keyCode) {
+      return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
+    }
 
-      document.onkeydown = (e) => {
-        // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
-        if (
-          event.keyCode === 123 ||
-          ctrlShiftKey(e, 'I') ||
-          ctrlShiftKey(e, 'J') ||
-          ctrlShiftKey(e, 'C') ||
-          (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
-        )
-          return false;
-      };
+    document.onkeydown = (e) => {
+      // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
+      if (
+        event.keyCode === 123 ||
+        ctrlShiftKey(e, 'I') ||
+        ctrlShiftKey(e, 'J') ||
+        ctrlShiftKey(e, 'C') ||
+        (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
+      )
+        return false;
+    };
 
-      function changeTheme(theme) {
-        const navbar = document.getElementById('navbar');
+    function changeTheme(theme) {
+      const navbar = document.getElementById('navbar');
 
-        // Reset classes on navbar
-        navbar.className = 'navbar navbar-expand-lg';
+      // Reset classes on navbar
+      navbar.className = 'navbar navbar-expand-lg';
 
-        // Apply the selected theme
-        if (theme === 'light') {
-            navbar.classList.add('navbar-light');
-            navbar.setAttribute('data-bs-theme', 'light');
-            document.getElementById("navbar").style.backgroundColor = "white";
-            document.getElementById("image").src = "icons/icon3.png";
-            document.getElementById("body").style.backgroundColor = "white";
-            document.getElementById("Text").style.color = "black";
+      // Apply the selected theme
+      if (theme === 'light') {
+          navbar.classList.add('navbar-light');
+          navbar.setAttribute('data-bs-theme', 'light');
+          document.getElementById("navbar").style.backgroundColor = "white";
+          document.getElementById("image").src = "icons/icon3.png";
 
-        } else if (theme === 'dark') {
-            navbar.classList.add('navbar-dark');
-            navbar.setAttribute('data-bs-theme', 'dark');
-            document.getElementById("navbar").style.backgroundColor = "black";
-            document.getElementById("image").src = "icons/icon1.png";
-            document.getElementById("body").style.backgroundColor = "black";
-            document.getElementById("Text").style.color = "white";
-         
-        } else if (theme === 'blue') {
-            navbar.classList.add('navbar-dark');
-            navbar.setAttribute('data-bs-theme', 'light');
-            document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
-            document.getElementById("image").src = "icons/icon2.png";
-            document.getElementById("body").style.backgroundColor = "rgba(56,136,203,255)";
-            document.getElementById("Text").style.color = "white";
-        }
-      }
-      function search() {
-        console.log("searching!");
-        let keyword = document.getElementById("keyword").value;
-        sessionStorage.setItem("keyword", keyword);
-        window.open("Search.html", "_blank");
+      } else if (theme === 'dark') {
+          navbar.classList.add('navbar-dark');
+          navbar.setAttribute('data-bs-theme', 'dark');
+          document.getElementById("navbar").style.backgroundColor = "black";
+          document.getElementById("image").src = "icons/icon1.png";
         
+      } else if (theme === 'blue') {
+          navbar.classList.add('navbar-dark');
+          navbar.setAttribute('data-bs-theme', 'light');
+          document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
+          document.getElementById("image").src = "icons/icon2.png";
       }
-    </script>
-  </head>
-  <body id="body">
+    }
+    function search() {
+      console.log("searching!");
+      let keyword = document.getElementById("keyword").value;
+      sessionStorage.setItem("keyword", keyword);
+      window.open("Search.html", "_blank");
+      
+    }
+  </script>
+</head>
+<body>
     <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="#"></a>
-          <img src="icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item" id="Home">
-                <a class="nav-link active" aria-current="page" href="#">Home</a>
-              </li>
-              <li class="nav-item" id="About">
-                <a class="nav-link active" aria-current="page" href="/about.html">About</a>
-              </li>
-              <!-- <li class="nav-item" id="Services">
-                <a class="nav-link active" aria-current="page" href="#">Services</a>
-              </li> -->
-              <li class="nav-item" id="Contact">
-                <a class="nav-link active" aria-current="page" href="/contact.html">Contact</a>
-              </li>
-              <li class="nav-item dropdown" id="projects">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Projects
-                </a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/Calculator.html">Calculator</a></li>
-                  <li><a class="dropdown-item" href="/counting_game/countingGame.html">Counting Game</a></li>
-                  <li><a class="dropdown-item" href="/Elevator.html">Elevator</a></li>
-                  <li><a class="dropdown-item" href="/Stopwatch.html">Stopwatch</a></li>
-                  <li><a class="dropdown-item" href="/Timer.html">Timer</a></li>
-                  <li><a class="dropdown-item" href="/Metronome%20(Youtube)/index.html">Metronome</a></li>
-                  <li><a class="dropdown-item" href="/CodingNepal/Translator%20(Youtube)/index.html">Translator</a></li>
-                  <li><a class="dropdown-item" href="/CodingNepal/GTN/index.html">Guess The Number</a></li>
-                  <li><a class="dropdown-item" href="/CodingNepal/Text-To-Speech/index.html">Text to Speech</a></li>
-                  <li><a class="dropdown-item" href="/MorseCodeTranslator(AI)/index.html">Morse Code Translator</a></li>
-                  <li><a class="dropdown-item" href="/Tic_Tac_Toe(Youtube)/index.html">Tic Tac Toe</a></li>
-                  <li><a class="dropdown-item" href="/piano/index.html">Piano</a></li>
-                  <li><a class="dropdown-item" href="/2048/index.html">2048</a></li>
-                  <li><a class="dropdown-item" href="/Keyboard_Test/index.html">Keyboard Test</a></li>
-                  <li><a class="dropdown-item" href="/snake_game/index.html">Snake Game</a></li>
-                  <li><a class="dropdown-item" href="/memory_game/index.html">Memory Game</a></li>
-                  <li><a class="dropdown-item" href="/pong_game/index.html">Pong Game</a></li>
-                  <li><a class="dropdown-item" href="/breakout/index.html">Breakout Game</a></li>
-                  <li><a class="dropdown-item" href="/flappy_bird/index.html">Flappy Bird</a></li>
-                  <li><a class="dropdown-item" href="/candy_crush/index.html">Candy Crush</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/promocode/index.html">Promo Code</a></li>
-
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"></a>
+            <img src="icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item" id="Home">
+                    <a class="nav-link active" aria-current="page" href="#">Home</a>
+                </li>
+                <li class="nav-item" id="About">
+                    <a class="nav-link active" aria-current="page" href="/about.html">About</a>
+                </li>
+                <!-- <li class="nav-item" id="Services">
+                    <a class="nav-link active" aria-current="page" href="#">Services</a>
+                </li> -->
+                <li class="nav-item" id="Contact">
+                    <a class="nav-link active" aria-current="page" href="/contact.html">Contact</a>
+                </li>
+                <li class="nav-item dropdown" id="projects">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Projects
+                    </a>
+                    <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="loadPage('Calculator.html')">Calculator</a></li>
+                    <li><hr class="dropdown-divider"></li>
+    
+                    <li><a class="dropdown-item disabled">Counting Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/10_seconds.html')">ㅤ10 seconds</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/20_seconds.html')">ㅤ20 seconds</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/30_seconds')">ㅤ30 seconds</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/1_minute')">ㅤ1 minute</a></li>
+                    <li><hr class="dropdown-divider"></li>
+    
+                    <li><a class="dropdown-item" onclick="loadPage('Elevator.html')">Elevator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Stopwatch.html')">Stopwatch</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Timer.html')">Timer</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Metronome%20(Youtube)/index.html')">Metronome</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('CodingNepal/Translator%20(Youtube)/index.html')">Translator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Guess The Number</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Text to Speech</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Morse Code Translator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Tic Tac Toe</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Piano</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">2048</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Keyboard Test</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Snake Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Memory Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Pong Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Breakout Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Flappy Bird</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Candy Crush</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" onclick="loadPage('')">Promo Code</a></li>
+    
+                    </ul>
+                </li>
+    
+                <li class="nav-item dropdown" id="Themes">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Change Themes
+                    </a>
+                    <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="changeTheme('light');">Light Theme</a></li>
+                    <li><a class="dropdown-item" onclick="changeTheme('dark');">Dark Theme</a></li>
+                    <li><a class="dropdown-item" onclick="changeTheme('blue');">Blue Theme</a></li>
+                    </ul>
+                </li>
+    
                 </ul>
-              </li>
-
-              <li class="nav-item dropdown" id="Themes">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Change Themes
-                </a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" onclick="changeTheme('light');">Light Theme</a></li>
-                  <li><a class="dropdown-item" onclick="changeTheme('dark');">Dark Theme</a></li>
-                  <li><a class="dropdown-item" onclick="changeTheme('blue');">Blue Theme</a></li>
-                </ul>
-              </li>
-
-            </ul>
-            <form class="d-flex" role="search" onsubmit="event.preventDefault()">
-              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="keyword" autocomplete="off">
-              <button class="btn btn-success" onclick="search();" id="Search">Search</button>
-            </form>
-          </div>
-      </div>
+                <form class="d-flex" role="search" onsubmit="event.preventDefault()">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="keyword" autocomplete="off">
+                <button class="btn btn-success" onclick="search();" id="Search">Search</button>
+                </form>
+            </div>
+        </div>
     </nav>
 
-  <!-- <p id="Text">Hello, here are all my coding!</p> -->
-    <!-- <a href="Calculator.html" class="btn btn-secondary">Calculator</a>
-    <a href="counting_game/countingGame.html" class="btn btn-secondary"
-      >Counting Game</a
-    >
-    <a href="Elevator.html" class="btn btn-secondary">Elevator</a>
-    <a href="Stopwatch.html" class="btn btn-secondary">Stopwatch</a>
-    <a href="Timer.html" class="btn btn-secondary">Timer</a>
-    <a href="Metronome (Youtube)/index.html" class="btn btn-secondary">Metronome</a>
-    <a href="./CodingNepal/Translator (Youtube)/index.html" class="btn btn-secondary">Translator</a>
-    <a href="./CodingNepal/GTN/index.html" class="btn btn-secondary">Guess The Number</a>
-    <a href="./CodingNepal/Text-To-Speech/index.html" class="btn btn-secondary">Text-To-Speech Converter</a>
-    <a href="./MorseCodeTranslator(AI)/index.html" class="btn btn-secondary">Morse Code Translator</a>
-    <a href="./Tic_Tac_Toe(Youtube)/index.html" class="btn btn-secondary">Tic Tac Toe Game</a>
-    <a href="./piano/index.html" class="btn btn-secondary">Piano</a>
-    <a href="./2048/index.html" class="btn btn-secondary">2048</a>
-    <a href="./Keyboard_Test/index.html" class="btn btn-secondary">Keyboard Test</a>
-    <a href="./snake_game/index.html" class="btn btn-secondary">Snake Game</a>
-    <a href="./memory_game/index.html" class="btn btn-secondary">Memory Game</a>
-    <a href="./pong_game/index.html" class="btn btn-secondary">Pong Game</a>
-    <a href="./breakout/index.html" class="btn btn-secondary">Breakout Game</a>
-    <a href="./flappy_bird/index.html" class="btn btn-secondary">Flappy Bird</a>
-    <a href="./candy_crush/index.html" class="btn btn-secondary">Candy Crush</a> -->
-  </body>
+  <!-- Iframe to Load Pages Dynamically -->
+  <iframe id="contentIframe" src="home.html" title="Content" name="content" style="width:1000px"></iframe>
+
+  <!-- Bootstrap JS (for dropdown functionality) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- JavaScript to handle dynamic loading of pages in iframe -->
+  <script>
+    function loadPage(page) {
+      // Change the iframe's src attribute to load the selected page
+      document.getElementById('contentIframe').src = page;
+    }
+  </script>
+</body>
 </html>
