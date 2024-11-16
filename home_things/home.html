@@ -59,7 +59,7 @@
     </head>
     <body id="page-top">
 
-<!-- Main Modal -->
+ <!-- Main Modal -->
 <div class="modal fade" id="exampleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -84,20 +84,21 @@
                 <div class="d-flex flex-column align-items-center">
                     <!-- Old GUI Image -->
                     <div class="text-center mb-3">
-                        <img src="home/img/old-gui.png" alt="Old GUI" class="img-fluid clickable-img" 
+                        <img src="old-gui.jpg" alt="Old GUI" class="img-fluid clickable-img" 
                              style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;" 
-                             data-img-src="home/img/old-gui.png">
+                             data-img-src="old-gui.jpg">
                         <p class="mt-2">Old GUI</p>
                     </div>
 
                     <!-- New GUI Image -->
                     <div class="text-center">
-                        <img src="home/img/new-gui.png" alt="New GUI" class="img-fluid clickable-img" 
+                        <img src="new-gui.jpg" alt="New GUI" class="img-fluid clickable-img" 
                              style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;" 
-                             data-img-src="home/img/new-gui.png">
+                             data-img-src="new-gui.jpg">
                         <p class="mt-2">New GUI</p>
                     </div>
                 </div>
+                <hr>
             </div>
 
             <!-- Modal Footer -->
@@ -118,6 +119,7 @@
         </div>
     </div>
 </div>
+
         <!-- Masthead-->
         <header class="masthead">
             <div class="container px-4 px-lg-5 h-100">
@@ -272,23 +274,23 @@
                         <!-- to get an API token!-->
                         <form action="https://formspree.io/f/xvgorjjn" method="POST">
                             <div class="form-floating mb-3">
-                                <input class="form-control" id="name" name="name" type="text" placeholder="Enter your name..." required />
+                                <input class="form-control" id="name" name="name" type="text" placeholder="Enter your name..." required  autocomplete="off"/>
                                 <label for="name">Full name</label>
                             </div>
                             <div class="form-floating mb-3">
-                                <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required />
+                                <input class="form-control" id="email" name="email" type="email" placeholder="name@example.com" required  autocomplete="off"/>
                                 <label for="email">Email address</label>
                             </div>
                             <div class="form-floating mb-3">
-                                <input class="form-control" id="phone" name="phone" type="tel" placeholder="(123) 456-7890" />
+                                <input class="form-control" id="phone" name="phone" type="tel" placeholder="(123) 456-7890"  autocomplete="off"/>
                                 <label for="phone">Phone number</label>
                             </div>
                             <div class="form-floating mb-3">
-                                <textarea class="form-control" id="message" name="message" placeholder="Enter your message here..." style="height: 10rem" required></textarea>
+                                <textarea class="form-control" id="message" name="message" placeholder="Enter your message here..." style="height: 10rem" required  autocomplete="off"></textarea>
                                 <label for="message">Message</label>
                             </div>
                             <div class="d-grid">
-                                <button class="btn btn-primary btn-xl" type="submit">Submit</button>
+                                <button class="btn btn-primary btn-xl" type="submit"  autocomplete="off">Submit</button>
                             </div>
                         </form>
                         
