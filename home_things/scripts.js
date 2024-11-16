@@ -59,6 +59,45 @@ window.addEventListener('DOMContentLoaded', event => {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    const myModal = new bootstrap.Modal(document.getElementById('exampleModal'));
-    myModal.show();
-})
+    const mainModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    const previewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+    const previewImage = document.getElementById('previewImage');
+
+    // Check if the user has already seen the modal
+    if (localStorage.getItem('hasSeenModal') === 'true') {
+        return; // Don't show the modal if it has already been seen
+    }
+
+    // Open the main modal if the user hasn't seen it
+    mainModal.show();
+
+    // Open image preview on image click
+    document.querySelectorAll('.clickable-img').forEach(img => {
+        img.addEventListener('click', function () {
+            previewImage.src = this.getAttribute('data-img-src');
+            previewModal.show();
+        });
+    });
+
+    // Toggle zoom on the preview image
+    previewImage.addEventListener('click', function () {
+        this.classList.toggle('zoomed');
+    });
+
+    // Reopen main modal when preview modal is dismissed
+    document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function () {
+        mainModal.show();
+    });
+
+    // When the modal is closed, store in localStorage to prevent future showing
+    document.querySelector('.btn-close').addEventListener('click', function () {
+        localStorage.setItem('hasSeenModal', 'true');
+    });
+
+    // Ensure backdrops are removed after modals are hidden
+    function removeBackdrops() {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    }
+    document.getElementById('exampleModal').addEventListener('hidden.bs.modal', removeBackdrops);
+    document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', removeBackdrops);
+});
