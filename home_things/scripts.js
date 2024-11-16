@@ -1,5 +1,9 @@
 window.addEventListener('DOMContentLoaded', event => {
 
+    var modal = new bootstrap.Modal(document.getElementById('exampleModal'));
+    modal.show();
+
+
     // Navbar shrink function
     var navbarShrink = function () {
         const navbarCollapsible = document.body.querySelector('#mainNav');
@@ -54,15 +58,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
     const previewImage = document.getElementById('previewImage');
 
-    // Check if the user has already seen the modal
-    if (localStorage.getItem('hasSeenModal') === 'true') {
-        return; // Don't show the modal if it has already been seen
-    }
+    // // Check if the user has already seen the modal
+    // if (localStorage.getItem('hasSeenModal') === 'true') {
+    //     return; // Don't show the modal if it has already been seen
+    // }
 
-    // Open the main modal if the user hasn't seen it
-    mainModal.show();
+    // // Open the main modal if the user hasn't seen it
+    // mainModal.show();
 
     // Open image preview on image click
+    
     document.querySelectorAll('.clickable-img').forEach(img => {
         img.addEventListener('click', function () {
             previewImage.src = this.getAttribute('data-img-src');
