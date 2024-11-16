@@ -59,7 +59,66 @@
     </head>
     <body id="page-top">
 
+         <!-- Main Modal -->
+<div class="modal fade" id="exampleModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Welcome to Version 2.0</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <p>Version 2.0 comes with several exciting updates:</p>
+                <ul>
+                    <li>New GUI enhancements for a smoother user experience.</li>
+                    <li>Improved performance and bug fixes.</li>
+                    <li>Additional features to customize your workflow.</li>
+                </ul>
+                <hr>
+                <p>We hope you enjoy these updates! Let us know your feedback.</p>
+
+                <!-- Image Comparison Section -->
+                <div class="d-flex flex-column align-items-center">
+                    <!-- Old GUI Image -->
+                    <div class="text-center mb-3">
+                        <img src="old-gui.jpg" alt="Old GUI" class="img-fluid clickable-img" 
+                             style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;" 
+                             data-img-src="old-gui.jpg">
+                        <p class="mt-2">Old GUI</p>
+                    </div>
+
+                    <!-- New GUI Image -->
+                    <div class="text-center">
+                        <img src="new-gui.jpg" alt="New GUI" class="img-fluid clickable-img" 
+                             style="max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 8px; cursor: pointer;" 
+                             data-img-src="new-gui.jpg">
+                        <p class="mt-2">New GUI</p>
+                    </div>
+                </div>
+                <hr>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <img src="" id="previewImage" alt="Preview" class="img-fluid zoomable" style="width: 100%; height: auto;">
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- Masthead-->
         <header class="masthead">
