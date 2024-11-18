@@ -86,6 +86,15 @@
 //     document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', removeBackdrops);
 // });
 
+/*!
+* Start Bootstrap - Creative v7.0.7 (https://startbootstrap.com/theme/creative)
+* Copyright 2013-2023 Start Bootstrap
+* Licensed under MIT (https://github.com/StartBootstrap/startbootstrap-creative/blob/master/LICENSE)
+*/
+//
+// Scripts
+// 
+
 document.addEventListener('DOMContentLoaded', () => {
     // Bootstrap Modals
     const mainModal = new bootstrap.Modal(document.getElementById('exampleModal'));
@@ -115,9 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Activate SimpleLightbox for portfolio items
-    new SimpleLightbox({
+    const a = new SimpleLightbox({
         elements: '#portfolio a.portfolio-box',
     });
+    console.log(11, SimpleLightbox, a)
 
     mainModal.show();
 
@@ -155,3 +165,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('exampleModal').addEventListener('hidden.bs.modal', removeBackdrops);
     document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', removeBackdrops);
 });
+
+
