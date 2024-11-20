@@ -1,109 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="description" content="" />
-        <meta name="author" content="" />
-        <title>TestserHere</title>
-        <!-- Favicon-->
-        <link rel="icon" type="image/x-icon" href="home/icons/website1.jpg" />
-        <!-- Bootstrap Icons-->
-        <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-        crossorigin="anonymous"
-      />
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-      />
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-        rel="stylesheet"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
-        rel="stylesheet"
-      />
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.css" rel="stylesheet" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Styles (Optional) -->
+    <style>
+        .about-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+        }
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        .team-photo {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+        }
+    </style>
+</head>
+<body>
 
-        <!-- Core theme CSS (includes Bootstrap)-->
-        <link href="styles.css" rel="stylesheet" />
-        <style>
-            .modal-title {
-            font-family: 'Poppins', serif;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        .modal-body {
-            font-family: 'Poppins', sans-serif;
-            font-size: 16px;
-        }
-        .modal-body ul {
-            font-family: 'Poppins', monospace;
-            font-size: 14px;
-        }
+    <!-- About Section -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h2 class="section-title">Hi, I'm Testser.</h2>
+                <p>Welcome to my little corner of the internet! This website is a fun space where I share my thoughts, interests, and random things I enjoy.</p>
+                <p>Whether you're here because you're curious or stumbled upon my site by accident, I hope you find something that makes you smile. Here, you'll find all kinds of things, from creative projects to personal stories, and maybe even some weird facts!</p>
+            </div>
+            <div class="col-md-6">
+                <img src="https://via.placeholder.com/600x400" alt="Fun Image" class="about-image">
+            </div>
+        </div>
+    </div>
 
-        .zoomable {
-            transition: transform 0.3s ease;
-            cursor: zoom-in;
-        }
+    <!-- My Story Section -->
+    <div class="container my-5">
+        <h2 class="section-title">Why I Created This Website</h2>
+        <p>Well, I’ve always had a thing for building websites and sharing stuff that I find interesting. This site is a bit of a mix of my hobbies, thoughts, and things I find cool. There’s no major goal here—just a fun space to express myself and connect with like-minded people!</p>
+        <p>It all started as a personal project, but over time, I’ve decided to make it public and share it with the world. Who knows? Maybe you’ll find something here that you like too!</p>
+    </div>
 
-        .zoomed {
-            transform: scale(2); /* Adjust zoom level */
-            cursor: zoom-out;
-        }
-        </style>
-    </head>
-    <body id="body">
-sav
-        <!-- Masthead
-        <header class="masthead">
-            <div class="container px-4 px-lg-5 h-100">
-                <div class="row gx-4 gx-lg-5 h-100 align-items-center justify-content-center text-center">
-                    <div class="col-lg-8 align-self-end">
-                        <h1 class="text-white font-weight-bold">Welcome to the world of coding!</h1>
-                        <hr class="divider" />
-                    </div>
-                    <div class="col-lg-8 align-self-baseline">
-                        <p class="text-white-75 mb-5">This is testserhere.github.io, where I will have updates and cool projects presented to you.</p>
-                        <a class="btn btn-primary btn-xl" href="#about">Find Out More</a>
+    <!-- My Interests Section -->
+    <div class="container my-5">
+        <h2 class="section-title">A Few Things I Love</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/200" class="card-img-top" alt="Interest 1">
+                    <div class="card-body">
+                        <h5 class="card-title">Gaming</h5>
+                        <p class="card-text">I’m a huge fan of gaming, whether it’s console, PC, or mobile games. You’ll probably find some game reviews or just random gaming-related musings here!</p>
                     </div>
                 </div>
             </div>
-        </header> -->
-        <!-- About-->
-        <section class="page-section bg-primary" id="about">
-            <div class="container px-4 px-lg-5">
-                <div class="row gx-4 gx-lg-5 justify-content-center">
-                    <div class="col-lg-8 text-center">
-                        <h2 class="text-white mt-0">I make coding projects!</h2>
-                        <hr class="divider divider-light" />
-                        <p class="text-white-75 mb-4">I can make Javascript, Html, Css, Python, C++ language projects, so please, feel free to make suggestions and feedbacks.</p>
-                        <a class="btn btn-light btn-xl" href="#services">What Do I Do?</a>
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/200" class="card-img-top" alt="Interest 2">
+                    <div class="card-body">
+                        <h5 class="card-title">Photography</h5>
+                        <p class="card-text">I love capturing moments, whether it’s through my camera or phone. You might see some of my photos sprinkled around the site, just to share the beauty I see.</p>
                     </div>
                 </div>
             </div>
-        </section>
-        <!-- Call to action-->
-        <section class="page-section bg-dark text-white">
-            <div class="container px-4 px-lg-5 text-center">
-                <h2 class="mb-4">Visit my Github website!</h2>
-                <a class="btn btn-light btn-xl" href="https://github.com/TestserHere/TestserHere.github.io" target="_parent">Go Now!</a>
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="https://via.placeholder.com/200" class="card-img-top" alt="Interest 3">
+                    <div class="card-body">
+                        <h5 class="card-title">Writing</h5>
+                        <p class="card-text">Writing is one of my favorite things to do. I write about everything from personal experiences to fiction. If you like random stories, you’re in the right place!</p>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
+    </div>
+
+    <!-- Meet Me Section -->
+    <div class="container my-5">
+        <h2 class="section-title">About Me</h2>
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <img src="https://via.placeholder.com/150" alt="Your Photo" class="team-photo mb-3">
+                <h5>Testser</h5>
+                <p>Just a person who enjoys the little things in life, like gaming, photography, and writing random stuff on the internet!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action Section -->
+    <div class="container text-center my-5">
+        <h3>Let's Connect!</h3>
+        <p>If you enjoy what you see here, feel free to reach out or follow me on social media. I’m always up for chatting with cool people!</p>
+        <a href="contact.html" class="btn btn-primary">Get in Touch</a>
+    </div>
         <!-- Footer-->
         <footer class="bg-light py-5">
             <div class="container px-4 px-lg-5"><div class="small text-center text-muted">Copyright &copy; 2024 - testserhere.github.io</div></div>
         </footer>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/SimpleLightbox/2.1.0/simpleLightbox.min.js"></script>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-        <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
-    </body>
+    <!-- Bootstrap JS & Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+</body>
 </html>
