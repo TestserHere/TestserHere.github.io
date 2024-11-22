@@ -9,7 +9,7 @@ let birdX = 50;
 let birdWidth = 20;
 let birdHeight = 20;
 let birdVelocity = 0;
-let birdGravity = 0.7;
+let birdGravity = 0.6;
 let birdFlap = -7; // Flap speed
 let birdFlapInterval = 0;
 
