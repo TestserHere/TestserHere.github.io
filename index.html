@@ -161,7 +161,6 @@
   </script>
 </head>
 <body>
-
     <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
         <div class="container-fluid">
             <a class="navbar-brand" href="#"></a>
@@ -241,6 +240,50 @@
             </div>
         </div>
     </nav>
+
+    <!-- <div id="chatbot-container">
+      <iframe
+        src="https://www.chatbase.co/chatbot-iframe/4W5mAo_yZTVK2Dz_UDiXE"
+        id="chatbot-iframe"
+        frameborder="0">
+      </iframe>
+    </div>
+    
+    <style>
+      /* Container for the chatbot iframe */
+      #chatbot-container {
+        position: fixed; /* Makes the window stay in place while scrolling */
+        bottom: 20px;    /* Distance from the bottom of the page */
+        right: 20px;     /* Distance from the right of the page */
+        width: 350px;    /* Width of the floating window */
+        height: 500px;   /* Height of the floating window */
+        z-index: 1000;   /* Ensures it appears above other elements */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds shadow for better visibility */
+        border-radius: 10px; /* Rounded corners */
+        overflow: hidden;    /* Prevents content overflow */
+        background-color: white; /* Background color (optional) */
+      }
+    
+      /* Styling the iframe itself */
+      #chatbot-iframe {
+        width: 100%;  /* Full width of the container */
+        height: 100%; /* Full height of the container */
+      }
+    </style>
+     -->
+
+    <script>
+      window.embeddedChatbotConfig = {
+      chatbotId: "4W5mAo_yZTVK2Dz_UDiXE",
+      domain: "www.chatbase.co"
+      }
+      </script>
+      <script
+      src="https://www.chatbase.co/embed.min.js"
+      chatbotId="4W5mAo_yZTVK2Dz_UDiXE"
+      domain="www.chatbase.co"
+      defer>
+      </script>
 
   <!-- Iframe to Load Pages Dynamically -->
   <iframe id="contentIframe" src="home_things/home.html" title="Content" name="content" style="width:device-width;"></iframe>
