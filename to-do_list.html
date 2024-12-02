@@ -32,6 +32,9 @@
             background: #c82333;
         }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
 </head>
 <body>
 
@@ -122,10 +125,10 @@
             if (username && !users[username]) {
                 users[username] = password;
                 localStorage.setItem('users', JSON.stringify(users));
-                alert('Registration successful! Please login.');
+                bootbox.bootbox.alert('Registration successful! Please login.');
                 switchToLogin.click();
             } else {
-                alert('Username already exists or invalid!');
+                bootbox.alert('Username already exists or invalid!');
             }
         });
 
@@ -142,7 +145,7 @@
                 todoContainer.style.display = 'block';
                 loadTasks();
             } else {
-                alert('Invalid username or password!');
+                bootbox.alert('Invalid username or password!');
             }
         });
 
@@ -164,7 +167,7 @@
                 delete tasks[currentUser];
                 localStorage.setItem('tasks', JSON.stringify(tasks));
 
-                alert("Your account and tasks have been deleted.");
+                bootbox.alert("Your account and tasks have been deleted.");
                 logoutBtn.click();
             }
         });
