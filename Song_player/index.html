@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Player with Playlist</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+
+        .player-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .playlist {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .playlist li {
+            cursor: pointer;
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .playlist li:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .playlist li.playing {
+            background-color: #007bff; /* Highlight color */
+            color: white;
+        }
+
+        .player-controls {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .player-controls button {
+            font-size: 20px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .player-controls .play-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .player-controls .pause-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .player-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .player-info h4 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .player-info p {
+            color: #777;
+            margin: 0;
+        }
+
+        /* Custom Progress Bar Styles */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.1s;
+        }
+
+        .dragging {
+            cursor: pointer;
+        }
+
+        /* Time Display Styles */
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .current-time,
+        .total-time {
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Song Image */
+        .song-image {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="player-container">
+            <!-- Song Information -->
+            <div class="player-info">
+                <h4 id="currentSongTitle">Select a song to play</h4>
+                <p id="currentArtist">Artist</p>
+            </div>
+
+            <!-- Song Image -->
+            <img id="songImage" class="song-image" src="./img/default.jpg" alt="Song Cover">
+
+            <!-- Playlist -->
+            <ul class="playlist">
+                <li data-url="./audio/[SPOTDOWNLOADER.COM] 'Bout You" data-title="'Bout You" data-artist="SUPER JUNIOR - D&E" data-image="">
+                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
+                </li>
+                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
+                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
+                </li>
+                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
+                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
+                </li>
+                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
+                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
+                </li>
+                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
+                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
+                </li>
+                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
+                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                </li>
+                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
+                </li>
+            </ul>
+
+            <!-- Audio Player -->
+            <audio id="audioPlayer">
+                <source id="audioSource" src="" type="audio/mp3">
+                Your browser does not support the audio element.
+            </audio>
+
+            <!-- Custom Progress Bar -->
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+
+            <!-- Time Display -->
+            <div class="time-display">
+                <span id="currentTime" class="current-time">00:00</span>
+                <span id="totalTime" class="total-time">00:00</span>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="player-controls">
+                <button id="prevBtn" class="btn btn-info">
+                    <i class="bi bi-skip-start"></i>
+                </button>
+                <button id="playPauseBtn" class="play-button btn">
+                    <i class="bi bi-play-fill"></i>
+                </button>
+                <button id="nextBtn" class="btn btn-info">
+                    <i class="bi bi-skip-end"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS & jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        const audioPlayer = document.getElementById("audioPlayer");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const audioSource = document.getElementById("audioSource");
+        const songTitle = document.getElementById("currentSongTitle");
+        const artistName = document.getElementById("currentArtist");
+        const playlist = document.querySelectorAll(".playlist li");
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        const progressBar = document.getElementById("progressBar");
+        const progressContainer = document.querySelector(".progress-container");
+        const currentTimeDisplay = document.getElementById("currentTime");
+        const totalTimeDisplay = document.getElementById("totalTime");
+        const songImage = document.getElementById("songImage");
+
+        let currentSongIndex = -1;
+        let isDragging = false;
+
+        // Format time in MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins < 10 ? '0' + mins : mins}:${secs < 10 ? '0' + secs : secs}`;
+        }
+
+        // Play the selected song
+        function playSong(index) {
+            const song = playlist[index];
+            const songUrl = song.getAttribute("data-url");
+            const title = song.getAttribute("data-title");
+            const artist = song.getAttribute("data-artist");
+            const imageUrl = song.getAttribute("data-image");
+
+            audioSource.src = songUrl;
+            songTitle.textContent = title;
+            artistName.textContent = artist;
+            songImage.src = imageUrl;  // Update the song image
+
+            audioPlayer.load();
+            audioPlayer.play();
+
+            currentSongIndex = index;
+
+            // Highlight the current song in the playlist
+            playlist.forEach((item) => item.classList.remove("playing"));
+            song.classList.add("playing");
+
+            // Toggle Play/Pause button state
+            playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+            playPauseBtn.classList.remove("play-button");
+            playPauseBtn.classList.add("pause-button");
+        }
+
+        // Pause the song
+        function pauseSong() {
+            audioPlayer.pause();
+            playPauseBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+            playPauseBtn.classList.remove("pause-button");
+            playPauseBtn.classList.add("play-button");
+        }
+
+        // Handle Playlist Item Click
+        playlist.forEach((item, index) => {
+            item.addEventListener("click", () => {
+                playSong(index);
+            });
+        });
+
+        // Handle Play/Pause Button
+        playPauseBtn.addEventListener("click", () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                playPauseBtn.classList.remove("play-button");
+                playPauseBtn.classList.add("pause-button");
+            } else {
+                pauseSong();
+            }
+        });
+
+        // Handle Next Button
+        nextBtn.addEventListener("click", () => {
+            if (currentSongIndex < playlist.length - 1) {
+                playSong(currentSongIndex + 1);
+            } else {
+                playSong(0); // Loop back to first song
+            }
+        });
+
+        // Handle Prev Button
+        prevBtn.addEventListener("click", () => {
+            if (currentSongIndex > 0) {
+                playSong(currentSongIndex - 1);
+            } else {
+                playSong(playlist.length - 1); // Loop back to last song
+            }
+        });
+
+        // Update the progress bar and time display
+        audioPlayer.addEventListener("timeupdate", () => {
+            if (!isDragging) {
+                const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.style.width = progressPercent + "%";
+                currentTimeDisplay.textContent = formatTime(audioPlayer.currentTime);
+            }
+        });
+
+        // Update total time when the song is loaded
+        audioPlayer.addEventListener("loadeddata", () => {
+            totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
+        });
+
+        // Click on the progress bar to jump to a specific time
+        progressContainer.addEventListener("click", (e) => {
+            const offsetX = e.offsetX;
+            const width = progressContainer.offsetWidth;
+            const clickPercent = (offsetX / width) * 100;
+            audioPlayer.currentTime = (clickPercent / 100) * audioPlayer.duration;
+        });
+
+        // Dragging the progress bar
+        progressBar.addEventListener("mousedown", () => {
+            isDragging = true;
+        });
+
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (isDragging) {
+                const offsetX = e.clientX - progressContainer.offsetLeft;
+                const width = progressContainer.offsetWidth;
+                const percent = (offsetX / width) * 100;
+                progressBar.style.width = percent + "%";
+                audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
+            }
+        });
+
+    </script>
+
+</body>
+</html>
