@@ -36,15 +36,20 @@
             margin: 0;
             border-bottom: 1px solid #ddd;
             margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .playlist li {
+            font-family: 'Arial', sans-serif;
+            font-size: 18px;
+            color: #333;
             cursor: pointer;
             padding: 12px 15px;
             margin-bottom: 5px;
             background-color: #f1f1f1;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .playlist li:hover {
@@ -55,6 +60,10 @@
         .playlist li.playing {
             background-color: #007bff; /* Highlight color */
             color: white;
+        }
+
+        .playlist li i {
+            margin-right: 10px;
         }
 
         .player-controls {
@@ -155,59 +164,23 @@
             <img id="songImage" class="song-image" src="./img/default.jpg" alt="Song Cover">
 
             <!-- Playlist -->
-            <ul class="playlist">
-                <li data-url="./audio/[SPOTDOWNLOADER.COM] 'Bout You" data-title="'Bout You" data-artist="SUPER JUNIOR - D&E" data-image="">
-                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
+            <ul class="playlist" id="playlist">
+                <li data-url="./audio/1.mp3" data-title="'Bout You" data-artist="SUPER JUNIOR - D&E" data-image="">
+                    <i class="bi bi-music-note"></i> 'Bout You - SUPER JUNIOR - D&E
                 </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
-                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
+                <li data-url="./audio/2.mp3" data-title="Sky Full Of Stars" data-artist="Artist 2" data-image="">
+                    <i class="bi bi-music-note"></i> Sky Full Of Stars - Artist 2
                 </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                <li data-url="./audio/3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="">
                     <i class="bi bi-music-note"></i> Song 3 - Artist 3
                 </li>
-                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
+                <li data-url="./audio/4.mp3" data-title="" data-artist="" data-image="./img/1.jpg">
                     <i class="bi bi-music-note"></i> Song 1 - Artist 1
                 </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
+                <li data-url="./audio/5.mp3" data-title="Song 2" data-artist="Artist 2" data-image="">
                     <i class="bi bi-music-note"></i> Song 2 - Artist 2
                 </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
-                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
-                </li>
-                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
-                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
-                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
-                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
-                </li>
-                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
-                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
-                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
-                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
-                </li>
-                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
-                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
-                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
-                    <i class="bi bi-music-note"></i> Song 3 - Artist 3
-                </li>
-                <li data-url="./audio/1.mp3" data-title="Young For You" data-artist="GALA" data-image="./img/1.jpg">
-                    <i class="bi bi-music-note"></i> Song 1 - Artist 1
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" data-title="Song 2" data-artist="Artist 2" data-image="https://via.placeholder.com/400x400?text=Song+2">
-                    <i class="bi bi-music-note"></i> Song 2 - Artist 2
-                </li>
-                <li data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" data-title="Song 3" data-artist="Artist 3" data-image="https://via.placeholder.com/400x400?text=Song+3">
+                <li data-url="./audio/6.mp3" data-title="Song 3" data-artist="Artist 3" data-image="">
                     <i class="bi bi-music-note"></i> Song 3 - Artist 3
                 </li>
             </ul>
@@ -387,7 +360,6 @@
                 audioPlayer.currentTime = (percent / 100) * audioPlayer.duration;
             }
         });
-
     </script>
 
 </body>
