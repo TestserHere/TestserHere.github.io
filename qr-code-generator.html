@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+        }
+        .modal-dialog {
+            max-width: 500px;
+            margin: 1.75rem auto;
+        }
+        .modal-content {
+            padding: 20px;
+            border-radius: 15px;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            border: none;
+            transition: background-color 0.3s;
+            color:white;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">QR Code Generator</h1>
+        <input type="text" id="input" class="form-control mb-2" placeholder="Enter a URL or Text">
+        <button onclick="generateQRCode()" class="btn btn-custom btn-block"><b>Generate QR Code</b></button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="qrModal" tabindex="-1" role="dialog" aria-labelledby="qrModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="qrModalLabel">Your QR Code</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="qrCodeImage" src="" alt="QR Code" class="img-fluid rounded">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        async function generateQRCode() {
+            const input = document.getElementById('input').value;
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            const qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+            
+            if (input) {
+                const encodedUrl = encodeURIComponent(input);
+                const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodedUrl}&size=300x300`;
+                qrCodeImage.src = qrCodeUrl;
+                qrModal.show();
+            } else {
+                alert('Please enter a URL or text.');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -65,10 +65,11 @@ function check() {
         console.log("code Old Page");
         window.open("/old-page.html");
         document.getElementById("input").value = "";
+    } else if(promoCode == "Song Player") {
+        console.log("code Song Player");
+        window.open("/Song_player/index.html");
+        document.getElementById("input").value = "";
     }
-    
-    
-    
     
     
     else if(promoCode == "ALLCODES") {
