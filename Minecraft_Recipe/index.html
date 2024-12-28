@@ -1,11 +1,12 @@
+</html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Crafting Recipes</title>
+    <title>Minecraft Sword Recipes</title>
     <style>
-        body {
+              body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -128,23 +129,24 @@
     </style>
 </head>
 <body>
-    <h1>Minecraft Crafting Recipes</h1>
+    <h1>Minecraft Sword Recipes</h1>
     <div class="items-container">
-        <!-- Example Item -->
+        <!-- Sword Items -->
         <div class="item" data-item="wooden_sword">
-          <img src="./wooden_sword.png" alt="Wooden Sword">
+            <img src="images/wooden_sword.png" alt="Wooden Sword">
         </div>
-        <div class="item" data-item="wooden_sword">
-          <img src="./wooden_sword.png" alt=" Sword">
+        <div class="item" data-item="stone_sword">
+            <img src="images/stone_sword.png" alt="Stone Sword">
         </div>
-        <div class="item" data-item="wooden_sword">
-          <img src="./wooden_sword.png" alt="Wooden Sword">
+        <div class="item" data-item="iron_sword">
+            <img src="images/iron_sword.png" alt="Iron Sword">
         </div>
-        <div class="item" data-item="wooden_sword">
-          <img src="wooden_sword.png" alt="Wooden Sword">
+        <div class="item" data-item="diamond_sword">
+            <img src="images/diamond_sword.png" alt="Diamond Sword">
         </div>
-      
-        <!-- Add more items as needed -->
+        <div class="item" data-item="golden_sword">
+            <img src="images/golden_sword.png" alt="Golden Sword">
+        </div>
     </div>
 
     <!-- Modal for Crafting Recipe -->
@@ -163,11 +165,47 @@
             wooden_sword: {
                 name: "Wooden Sword",
                 grid: [
-                    ["stick", "", ""],
-                    ["stick", "", ""],
-                    ["", "plank", ""]
+                    ["", "plank", ""],
+                    ["", "plank", ""],
+                    ["", "stick", ""]
                 ],
                 result: "wooden_sword.png"
+            },
+            stone_sword: {
+                name: "Stone Sword",
+                grid: [
+                    ["", "cobblestone", ""],
+                    ["", "cobblestone", ""],
+                    ["", "stick", ""]
+                ],
+                result: "stone_sword.png"
+            },
+            iron_sword: {
+                name: "Iron Sword",
+                grid: [
+                    ["", "iron_ingot", ""],
+                    ["", "iron_ingot", ""],
+                    ["", "stick", ""]
+                ],
+                result: "iron_sword.png"
+            },
+            diamond_sword: {
+                name: "Diamond Sword",
+                grid: [
+                    ["", "diamond", ""],
+                    ["", "diamond", ""],
+                    ["", "stick", ""]
+                ],
+                result: "diamond_sword.png"
+            },
+            golden_sword: {
+                name: "Golden Sword",
+                grid: [
+                    ["", "gold_ingot", ""],
+                    ["", "gold_ingot", ""],
+                    ["", "stick", ""]
+                ],
+                result: "golden_sword.png"
             }
         };
 
@@ -189,13 +227,13 @@
                         <div class="crafting-table">
                             ${recipe.grid.map(row =>
                                 row.map(cell =>
-                                    `<div class="cell">${cell ? `<img src="${cell}.png" alt="${cell}">` : ""}</div>`
+                                    `<div class="cell">${cell ? `<img src="images/${cell}.png" alt="${cell}">` : ""}</div>`
                                 ).join("")
                             ).join("")}
                         </div>
                         <div class="result">
                             <p>Output:</p>
-                            <div class="output"><img src="${recipe.result}" alt="${recipe.name}"></div>
+                            <div class="output"><img src="images/${recipe.result}" alt="${recipe.name}"></div>
                         </div>
                     `;
                     modal.classList.add('active');
