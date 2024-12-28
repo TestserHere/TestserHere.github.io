@@ -1,18 +1,219 @@
-<!-- // Disable right-click
-document.addEventListener('contextmenu', (e) => e.preventDefault());
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Crafting Recipes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #87CEEB;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-function ctrlShiftKey(e, keyCode) {
-  return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
-}
+        h1 {
+            margin-top: 20px;
+            color: #2F4F4F;
+        }
 
-document.onkeydown = (e) => {
-  // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
-  if (
-    event.keyCode === 123 ||
-    ctrlShiftKey(e, 'I') ||
-    ctrlShiftKey(e, 'J') ||
-    ctrlShiftKey(e, 'C') ||
-    (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
-  )
-    return false;
-}; -->
+        .items-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .item {
+            width: 80px;
+            height: 80px;
+            background-color: #D3D3D3;
+            border: 2px solid #A9A9A9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .item:hover {
+            transform: scale(1.1);
+        }
+
+        .item img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #FFF;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .modal-content .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #FF6347;
+            color: #FFF;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            line-height: 30px;
+        }
+
+        .crafting-table {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #D3D3D3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #A9A9A9;
+        }
+
+        .result {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result .output {
+            width: 70px;
+            height: 70px;
+            background-color: #FFD700;
+            border: 2px solid #DAA520;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Minecraft Crafting Recipes</h1>
+    <div class="items-container">
+        <!-- Example Item -->
+        <div class="item" data-item="wooden_sword">
+          <img src="./wooden_sword.png" alt="Wooden Sword">
+        </div>
+        <div class="item" data-item="wooden_sword">
+          <img src="./wooden_sword.png" alt=" Sword">
+        </div>
+        <div class="item" data-item="wooden_sword">
+          <img src="./wooden_sword.png" alt="Wooden Sword">
+        </div>
+        <div class="item" data-item="wooden_sword">
+          <img src="wooden_sword.png" alt="Wooden Sword">
+        </div>
+      
+        <!-- Add more items as needed -->
+    </div>
+
+    <!-- Modal for Crafting Recipe -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="close" id="closeModal">×</button>
+            <div id="recipeContent">
+                <!-- Recipe content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Recipe Data
+        const recipes = {
+            wooden_sword: {
+                name: "Wooden Sword",
+                grid: [
+                    ["stick", "", ""],
+                    ["stick", "", ""],
+                    ["", "plank", ""]
+                ],
+                result: "wooden_sword.png"
+            }
+        };
+
+        const itemsContainer = document.querySelector('.items-container');
+        const modal = document.getElementById('modal');
+        const closeModalButton = document.getElementById('closeModal');
+        const recipeContent = document.getElementById('recipeContent');
+
+        // Open modal with recipe
+        itemsContainer.addEventListener('click', (e) => {
+            const itemElement = e.target.closest('.item');
+            if (itemElement) {
+                const itemKey = itemElement.dataset.item;
+                const recipe = recipes[itemKey];
+
+                if (recipe) {
+                    recipeContent.innerHTML = `
+                        <h2>${recipe.name}</h2>
+                        <div class="crafting-table">
+                            ${recipe.grid.map(row =>
+                                row.map(cell =>
+                                    `<div class="cell">${cell ? `<img src="${cell}.png" alt="${cell}">` : ""}</div>`
+                                ).join("")
+                            ).join("")}
+                        </div>
+                        <div class="result">
+                            <p>Output:</p>
+                            <div class="output"><img src="${recipe.result}" alt="${recipe.name}"></div>
+                        </div>
+                    `;
+                    modal.classList.add('active');
+                }
+            }
+        });
+
+        // Close modal
+        closeModalButton.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        // Close modal when clicking outside of content
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
