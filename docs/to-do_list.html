@@ -116,70 +116,15 @@
         // Utility function to hash passwords (basic MD5-style simulation)
         const hashPassword = password => btoa(password);
 
-        /**
-         * Stores a key-value pair in the backend.
-         * @param {string} key - The key to set.
-         * @param {string} value - The value to set.
-         * @returns {Promise<string>} - A success message or error message.
-         */
-        async function mySetItem(key, value) {
-        if (!key || value === undefined) {
-            throw new Error('Key and value are required.');
-        }
-
-        try {
-            const response = await fetch(`/setItem`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ key, value }),
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-            return result.message;
-            } else {
-            throw new Error(result.error);
-            }
-        } catch (error) {
-            throw new Error(`Failed to set item: ${error.message}`);
-        }
-        }
-
-        /**
-         * Retrieves a value from the backend by key.
-         * @param {string} key - The key to retrieve.
-         * @returns {Promise<string>} - The value associated with the key or an error message.
-         */
-        async function myGetItem(key) {
-        if (!key) {
-            throw new Error('Key is required.');
-        }
-
-        try {
-            const response = await fetch(`/getItem/${key}`);
-            const result = await response.json();
-
-            if (response.ok) {
-            return result.value;
-            } else {
-            throw new Error(result.error);
-            }
-        } catch (error) {
-            throw new Error(`Failed to get item: ${error.message}`);
-        }
-        }
-
         // Register user
         registerBtn.addEventListener('click', () => {
             const username = registerUsername.value.trim();
             const password = hashPassword(registerPassword.value.trim());
-            const users = JSON.parse(myGetItem('users')) || {};
+            const users = JSON.parse(localStorage.getItem('users')) || {};
 
             if (username && !users[username]) {
                 users[username] = password;
-                mySetItem('users', JSON.stringify(users));
+                localStorage.setItem('users', JSON.stringify(users));
                 bootbox.bootbox.alert('Registration successful! Please login.');
                 switchToLogin.click();
             } else {
@@ -191,7 +136,7 @@
         loginBtn.addEventListener('click', () => {
             const username = loginUsername.value.trim();
             const password = hashPassword(loginPassword.value.trim());
-            const users = JSON.parse(myGetItem('users')) || {};
+            const users = JSON.parse(localStorage.getItem('users')) || {};
 
             if (users[username] === password) {
                 currentUser = username;
@@ -214,13 +159,13 @@
         // Delete user account
         deleteAccountBtn.addEventListener('click', () => {
             if (confirm("Are you sure you want to delete your account? This action is irreversible.")) {
-                const users = JSON.parse(myGetItem('users')) || {};
+                const users = JSON.parse(localStorage.getItem('users')) || {};
                 delete users[currentUser];
-                mySetItem('users', JSON.stringify(users));
+                localStorage.setItem('users', JSON.stringify(users));
 
-                const tasks = JSON.parse(myGetItem('tasks')) || {};
+                const tasks = JSON.parse(localStorage.getItem('tasks')) || {};
                 delete tasks[currentUser];
-                mySetItem('tasks', JSON.stringify(tasks));
+                localStorage.setItem('tasks', JSON.stringify(tasks));
 
                 bootbox.alert("Your account and tasks have been deleted.");
                 logoutBtn.click();
@@ -229,19 +174,19 @@
 
         // Task management
         const loadTasks = () => {
-            const tasks = JSON.parse(myGetItem('tasks')) || {};
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || {};
             const userTasks = tasks[currentUser] || [];
             taskList.innerHTML = '';
             userTasks.forEach(task => addTaskToDOM(task, false));
         };
 
         const saveTasks = () => {
-            const tasks = JSON.parse(myGetItem('tasks')) || {};
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || {};
             tasks[currentUser] = Array.from(taskList.children).map(task => ({
                 text: task.querySelector('.task-text').textContent,
                 completed: task.querySelector('.task-checkbox').checked
             }));
-            mySetItem('tasks', JSON.stringify(tasks));
+            localStorage.setItem('tasks', JSON.stringify(tasks));
         };
 
         const addTaskToDOM = (task, save = true) => {
