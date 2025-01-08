@@ -4,7 +4,7 @@ const path = require('path');
 const app = express();
 
 // Middleware to serve static files
-app.use(express.static(path.join(__dirname, 'docs')));
+app.use(express.static('docs'));
 
 // Routes
 app.get('/test', (req, res) => {
