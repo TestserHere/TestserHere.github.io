@@ -55,15 +55,17 @@
                     <input type="number" id="num-digits" class="form-control" min="1" required>
                 </div>
                 <div class="mb-3">
-                    <label for="question-type" class="form-label">Question Type</label>
-                    <select id="question-type" class="form-select" required>
-                        <option value="">Select a type</option>
-                        <option value="addition">Addition</option>
-                        <option value="subtraction">Subtraction</option>
-                        <option value="multiplication">Multiplication</option>
-                        <option value="division">Division</option>
-                        <option value="random">Random</option>
-                    </select>
+                    <label class="form-label">Question Types</label><br>
+                    <input type="checkbox" id="addition" class="form-check-input"> 
+                    <label for="addition" class="form-check-label">Addition</label><br>
+                    <input type="checkbox" id="subtraction" class="form-check-input"> 
+                    <label for="subtraction" class="form-check-label">Subtraction</label><br>
+                    <input type="checkbox" id="multiplication" class="form-check-input"> 
+                    <label for="multiplication" class="form-check-label">Multiplication</label><br>
+                    <input type="checkbox" id="division" class="form-check-input"> 
+                    <label for="division" class="form-check-label">Division</label><br>
+                    <input type="checkbox" id="random" class="form-check-input"> 
+                    <label for="random" class="form-check-label">Random</label><br>
                 </div>
                 <div class="mb-3">
                     <label for="timer-checkbox" class="form-check-label">Enable Timer</label>
@@ -106,12 +108,18 @@
         startQuizButton.addEventListener('click', () => {
             const numQuestions = document.getElementById('num-questions').value;
             const numDigits = document.getElementById('num-digits').value;
-            const questionType = document.getElementById('question-type').value;
             const timerEnabled = timerCheckbox.checked;
             const timerDuration = document.getElementById('timer-duration').value;
 
-            if (!numQuestions || !numDigits || !questionType) {
-                showAlert('danger', 'Please fill in all fields.');
+            const selectedTypes = [];
+            if (document.getElementById('addition').checked) selectedTypes.push('addition');
+            if (document.getElementById('subtraction').checked) selectedTypes.push('subtraction');
+            if (document.getElementById('multiplication').checked) selectedTypes.push('multiplication');
+            if (document.getElementById('division').checked) selectedTypes.push('division');
+            if (document.getElementById('random').checked) selectedTypes.push('random');
+
+            if (!numQuestions || !numDigits || selectedTypes.length === 0) {
+                showAlert('danger', 'Please fill in all fields and select at least one equation type.');
                 return;
             }
 
@@ -120,7 +128,7 @@
                 return;
             }
 
-            generateQuiz(numQuestions, numDigits, questionType);
+            generateQuiz(numQuestions, numDigits, selectedTypes);
             mainPage.classList.add('d-none');
             quizPage.classList.remove('d-none');
 
@@ -145,7 +153,7 @@
             }, 1000);
         }
 
-        function generateQuiz(numQuestions, numDigits, questionType) {
+        function generateQuiz(numQuestions, numDigits, selectedTypes) {
             questionsContainer.innerHTML = '';
             const max = Math.pow(10, numDigits) - 1;
             const min = Math.pow(10, numDigits - 1);
@@ -157,12 +165,9 @@
                 let num1, num2, correctAnswer = 0;
                 let questionText = '';
 
-                if (questionType === 'random') {
-                    const randomOperation = ['addition', 'subtraction', 'multiplication', 'division'][Math.floor(Math.random() * 4)];
-                    ({ questionText, correctAnswer } = generateQuestion(randomOperation, min, max));
-                } else {
-                    ({ questionText, correctAnswer } = generateQuestion(questionType, min, max));
-                }
+                const questionType = selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
+
+                ({ questionText, correctAnswer } = generateQuestion(questionType, min, max));
 
                 questionElement.innerHTML = `
                     <label class="form-label">${i + 1}. ${questionText}</label>
@@ -248,4 +253,3 @@
     </script>
 </body>
 </html>
-    
