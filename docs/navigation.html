@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map with Routing, Location Tracking, and Speedometer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input {
+      width: 250px;
+    }
+    #speedometer {
+      position: absolute;
+      top: 93%;
+      left: 93%;
+      z-index: 1000;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <input type="text" id="startAddress" placeholder="Enter start address or 'my location'">
+    <input type="text" id="destinationAddress" placeholder="Enter destination address">
+    <button id="startRouteBtn">Start Route</button>
+    <button id="getLocationBtn">Show My Location</button>
+  </div>
+
+  <div id="speedometer">Speed: 0 km/h</div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+  <script>
+    // Initialize the map centered in Melbourne
+    const map = L.map('map').setView([-37.8136, 144.9631], 13); // Melbourne coordinates
+
+    // Use OpenStreetMap tiles (standard OSM style)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Initialize routing control
+    let routingControl = L.Routing.control({
+      routeWhileDragging: true,
+      createMarker: function() { return null; }, // Remove markers from the route
+    }).addTo(map);
+
+    // Function to get coordinates using Nominatim API
+    async function getCoordinates(address) {
+      const encodedAddress = encodeURIComponent(address);
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.length > 0) {
+          return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        } else {
+          throw new Error('Address not found');
+        }
+      } catch (error) {
+        console.error('Error fetching coordinates:', error);
+        alert(`Error: Unable to fetch coordinates for "${address}".`);
+        return null;
+      }
+    }
+
+    // Function to get user's current location
+    function getUserLocation() {
+      return new Promise((resolve, reject) => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        } else {
+          reject("Geolocation is not supported by this browser.");
+        }
+      });
+    }
+
+    // Function to create user location icon
+    function createUserLocationIcon(rotation = 0) {
+      return L.icon({
+        iconUrl: 'https://freeiconshop.com/wp-content/uploads/edd/location-arrow-flat.png',
+        iconSize: [40, 40], 
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40],
+        className: 'rotating-icon',
+      });
+    }
+
+    // Function to create start location icon
+    function createStartLocationIcon() {
+      return L.icon({
+        iconUrl: 'https://images.ctfassets.net/3prze68gbwl1/assetglossary-17su9wok1ui0z7w/c4c4bdcdf0d0f86447d3efc450d1d081/map-marker.png', // Start location icon
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40],
+      });
+    }
+
+    // Function to create end location icon
+    function createEndLocationIcon() {
+      return L.icon({
+        iconUrl: 'https://images.ctfassets.net/3prze68gbwl1/assetglossary-17su9wok1ui0z7w/c4c4bdcdf0d0f86447d3efc450d1d081/map-marker.png', // End location icon
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -40],
+      });
+    }
+
+    // Function to start the route using the start and destination coordinates
+    async function startRoute(startCoords) {
+      const destinationAddress = document.getElementById('destinationAddress').value;
+
+      if (!destinationAddress) {
+        alert('Please enter a destination address!');
+        return;
+      }
+
+      // Get coordinates for the destination
+      const destinationCoords = await getCoordinates(destinationAddress);
+
+      if (destinationCoords) {
+        routingControl.setWaypoints([
+          L.latLng(startCoords[0], startCoords[1]), 
+          L.latLng(destinationCoords[0], destinationCoords[1]),
+        ]);
+
+        // Add markers for start and destination points with their respective icons
+        L.marker(startCoords, { icon: createStartLocationIcon() }).addTo(map)
+          .bindPopup("<b>Start Point:</b>").openPopup();
+
+        L.marker(destinationCoords, { icon: createEndLocationIcon() }).addTo(map)
+          .bindPopup("<b>Destination:</b>").openPopup();
+
+        map.fitBounds([startCoords, destinationCoords]);
+      }
+    }
+
+    // Event listener for the "Start Route" button
+    document.getElementById('startRouteBtn').addEventListener('click', async function () {
+      const startAddress = document.getElementById('startAddress').value;
+
+      if (startAddress.toLowerCase() === "my location") {
+        try {
+          const position = await getUserLocation();
+          const startCoords = [position.coords.latitude, position.coords.longitude];
+          
+          // Start route using user's current location
+          startRoute(startCoords);
+        } catch (error) {
+          alert("Error retrieving your location: " + error.message);
+        }
+      } else {
+        const startCoords = await getCoordinates(startAddress);
+        
+        if (startCoords) {
+          startRoute(startCoords);
+        } else {
+          alert('Invalid start address');
+        }
+      }
+    });
+
+    // Event listener for the "Show My Location" button
+    document.getElementById('getLocationBtn').addEventListener('click', async function () {
+      try {
+        navigator.geolocation.watchPosition(function(position) {
+          const userCoords = [position.coords.latitude, position.coords.longitude];
+          const speed = position.coords.speed ? position.coords.speed * 3.6 : 0; // Speed in km/h
+
+          // Update speedometer display
+          document.getElementById('speedometer').innerText = `Speed: ${speed.toFixed(2)} km/h`;
+
+          // Update user's location on the map
+          if (!window.userLocationMarker) {
+            window.userLocationMarker = L.marker(userCoords, { icon: createUserLocationIcon() }).addTo(map)
+              .bindPopup("<b>Your Location</b>").openPopup();
+          } else {
+            window.userLocationMarker.setLatLng(userCoords);
+          }
+
+          // Center the map to user's location
+          map.setView(userCoords, 13);
+        });
+      } catch (error) {
+        alert("Error retrieving your location: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
