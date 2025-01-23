@@ -62,6 +62,7 @@
     <input type="text" id="destinationAddress" placeholder="Enter destination address">
     <button id="startRouteBtn">Start Route</button>
     <button id="getLocationBtn">Show My Location</button>
+    <button id="endRouteBtn">End Route</button>
   </div>
 
   <div id="speedometer">Speed: 0 km/h</div>
@@ -227,6 +228,27 @@
         alert("Error retrieving your location: " + error.message);
       }
     });
+
+        // Function to clear the current route and associated markers
+    function endRoute() {
+    if (routingControl) {
+        map.removeControl(routingControl); // Remove the routing control from the map
+        routingControl = null; // Reset the routing control
+    }
+
+    // Remove all markers (if any were added during the route)
+    map.eachLayer(function (layer) {
+        if (layer instanceof L.Marker && !layer._popup) {
+        map.removeLayer(layer); // Remove markers that are not popup-bound (start/end markers)
+        }
+    });
+
+    alert("Route has been cleared.");
+    window.location.reload();
+    }
+
+    // Event listener for the "End Route" button
+    document.getElementById('endRouteBtn').addEventListener('click', endRoute);
   </script>
 </body>
 </html>
