@@ -178,13 +178,24 @@
             number1 = getRandomInt1(min1, max1);
             number2 = getRandomInt2(min2, max2);
 
-            if (Random == true) {
-                generateEquation();
+            // Fix subtraction: Ensure second number is <= first number
+            if (finalEquation === "-") {
+                if (number2 > number1) {
+                    let temp = number1;
+                    number1 = number2;
+                    number2 = temp;
+                }
             }
 
+            // Fix division: Ensure no division by zero and ensure result is whole number
             if (finalEquation === "÷") {
-                number2 = getRandomInt2(min2, max2) || 1;
-                number1 = number2 * Math.floor(Math.random() * (max1 / number2 - min1 / number2 + 1)) + number2;
+                number2 = getRandomInt2(min2, max2);
+                // Prevent division by zero
+                if (number2 === 0) {
+                    number2 = 1; // Ensuring a valid division
+                }
+                // Ensure division results in a whole number
+                number1 = number2 * getRandomInt1(min1, max1);
             }
 
             console.log(number1);
