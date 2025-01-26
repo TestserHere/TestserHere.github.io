@@ -41,7 +41,7 @@
 </head>
 <body>
     <div class="card shadow">
-        <div id="alert-container"></div> <!-- Container for alerts -->
+        <div id="alert-container"></div>
         
         <div id="main-page" class="d-block">
             <h1 class="text-center">Math Quiz</h1>
@@ -162,8 +162,8 @@
                 const questionElement = document.createElement('div');
                 questionElement.classList.add('mb-3');
 
-                let num1, num2, correctAnswer = 0;
                 let questionText = '';
+                let correctAnswer = 0;
 
                 const questionType = selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
 
@@ -180,8 +180,8 @@
         }
 
         function generateQuestion(type, min, max) {
-            const num1 = Math.floor(Math.random() * (max - min + 1)) + min;
-            const num2 = Math.floor(Math.random() * (max - min + 1)) + min;
+            let num1 = Math.floor(Math.random() * (max - min + 1)) + min;
+            let num2 = Math.floor(Math.random() * (max - min + 1)) + min;
             let questionText = '';
             let correctAnswer = 0;
 
@@ -190,18 +190,25 @@
                     questionText = `${num1} + ${num2}`;
                     correctAnswer = num1 + num2;
                     break;
+
                 case 'subtraction':
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];
+                    }
                     questionText = `${num1} - ${num2}`;
                     correctAnswer = num1 - num2;
                     break;
+
                 case 'multiplication':
                     questionText = `${num1} × ${num2}`;
                     correctAnswer = num1 * num2;
                     break;
+
                 case 'division':
-                    const divisor = num2 || 1;
-                    questionText = `${num1 * divisor} ÷ ${divisor}`;
-                    correctAnswer = num1;
+                    const divisor = Math.floor(Math.random() * (max - min + 1)) + min;
+                    const dividend = divisor * Math.floor(Math.random() * (max - min + 1)) + min;
+                    questionText = `${dividend} ÷ ${divisor}`;
+                    correctAnswer = dividend / divisor;
                     break;
             }
 
@@ -248,7 +255,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             `;
             alertContainer.appendChild(alert);
-            setTimeout(() => alert.remove(), 5000); // Remove alert after 5 seconds
+            setTimeout(() => alert.remove(), 5000);
         }
     </script>
 </body>
