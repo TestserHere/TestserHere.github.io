@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake Call & Message Simulator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      margin-top: 20px;
+    }
+    .tab-content {
+      margin-top: 20px;
+    }
+    .preview {
+      margin-top: 20px;
+    }
+    .call-preview {
+      width: 100%;
+      max-width: 400px;
+      background: #000;
+      color: #fff;
+      border-radius: 15px;
+      padding: 20px;
+      margin: 0 auto;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .call-preview .name {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+    .call-preview .status {
+      color: #bbb;
+      font-size: 1rem;
+    }
+    .message-preview {
+      width: 100%;
+      max-width: 400px;
+      background: #e5e5ea;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 0 auto;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .message-preview .name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    .message-preview .message {
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      color: #000;
+    }
+    .message-preview .status {
+      color: gray;
+      font-size: 0.8rem;
+      margin-top: 5px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center">Fake Call & Message Simulator</h1>
+
+    <ul class="nav nav-tabs" id="simulatorTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="call-tab" data-bs-toggle="tab" data-bs-target="#call" type="button" role="tab" aria-controls="call" aria-selected="true">Fake Call</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="message-tab" data-bs-toggle="tab" data-bs-target="#message" type="button" role="tab" aria-controls="message" aria-selected="false">Fake Message</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="simulatorTabsContent">
+      <!-- Fake Call Tab -->
+      <div class="tab-pane fade show active" id="call" role="tabpanel" aria-labelledby="call-tab">
+        <form id="callForm">
+          <div class="mb-3">
+            <label for="callerName" class="form-label">Caller Name</label>
+            <input type="text" id="callerName" class="form-control" placeholder="Enter caller name" required>
+          </div>
+          <div class="mb-3">
+            <label for="callTime" class="form-label">Time</label>
+            <input type="time" id="callTime" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Preview Call</button>
+        </form>
+        <div id="callPreview" class="preview"></div>
+      </div>
+
+      <!-- Fake Message Tab -->
+      <div class="tab-pane fade" id="message" role="tabpanel" aria-labelledby="message-tab">
+        <form id="messageForm">
+          <div class="mb-3">
+            <label for="senderName" class="form-label">Sender Name</label>
+            <input type="text" id="senderName" class="form-control" placeholder="Enter sender name" required>
+          </div>
+          <div class="mb-3">
+            <label for="messageTime" class="form-label">Time</label>
+            <input type="time" id="messageTime" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="messageContent" class="form-label">Message Content</label>
+            <textarea id="messageContent" class="form-control" placeholder="Enter message content" rows="3" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Preview Message</button>
+        </form>
+        <div id="messagePreview" class="preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Call Preview Logic
+    const callForm = document.getElementById('callForm');
+    const callPreview = document.getElementById('callPreview');
+
+    callForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const callerName = document.getElementById('callerName').value;
+      const callTime = document.getElementById('callTime').value;
+
+      callPreview.innerHTML = `
+        <div class="call-preview">
+          <p class="name">${callerName}</p>
+          <p class="status">Incoming Call - ${callTime}</p>
+        </div>
+      `;
+    });
+
+    // Message Preview Logic
+    const messageForm = document.getElementById('messageForm');
+    const messagePreview = document.getElementById('messagePreview');
+
+    messageForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const senderName = document.getElementById('senderName').value;
+      const messageTime = document.getElementById('messageTime').value;
+      const messageContent = document.getElementById('messageContent').value;
+
+      messagePreview.innerHTML = `
+        <div class="message-preview">
+          <p class="name">${senderName}</p>
+          <div class="message">${messageContent}</div>
+          <p class="status">Sent at ${messageTime}</p>
+        </div>
+      `;
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
