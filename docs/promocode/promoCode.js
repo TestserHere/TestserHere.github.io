@@ -69,6 +69,10 @@ function check() {
         console.log("code Song Player");
         window.open("/Song_player/index.html");
         document.getElementById("input").value = "";
+    } else if(promoCode == "Chinese Quiz") {
+        console.log("code Chinese Quiz!");
+        window.open("/chinese_quiz.html");
+        document.getElementById("input").value = ";"
     }
     
     

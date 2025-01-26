@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Words Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-section, .result-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Page 1: Input Section -->
+        <div class="card input-section">
+            <div class="card-body">
+                <h1 class="card-title text-center">Chinese Words Quiz</h1>
+                <form id="inputForm">
+                    <div class="mb-3">
+                        <label for="wordsInput" class="form-label">Enter Chinese Words (one per line)</label>
+                        <textarea id="wordsInput" class="form-control" rows="5" placeholder="Enter Chinese words..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="wordCount" class="form-label">Number of Words to Quiz</label>
+                        <input type="number" id="wordCount" class="form-control" placeholder="Enter number of words to quiz">
+                    </div>
+                    <button type="button" id="startQuiz" class="btn btn-primary w-100">Start Quiz</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Page 2: Quiz Section -->
+        <div class="card quiz-section">
+            <div class="card-body">
+                <h1 class="card-title text-center">Quiz</h1>
+                <div class="question mb-4"></div>
+                <div class="options d-grid gap-2"></div>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="card result-section">
+            <div class="card-body">
+                <h1 class="card-title text-center">Results</h1>
+                <div class="result text-center"></div>
+                <button id="restartQuiz" class="btn btn-secondary mt-4 w-100">Restart Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const startQuizButton = document.getElementById('startQuiz');
+        const restartQuizButton = document.getElementById('restartQuiz');
+        const wordsInput = document.getElementById('wordsInput');
+        const wordCountInput = document.getElementById('wordCount');
+        const inputSection = document.querySelector('.input-section');
+        const quizSection = document.querySelector('.quiz-section');
+        const resultSection = document.querySelector('.result-section');
+        const questionElement = document.querySelector('.question');
+        const optionsElement = document.querySelector('.options');
+        const resultElement = document.querySelector('.result');
+
+        let words = [];
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let quizWords = [];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function playSound(word) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'zh-CN';
+            speechSynthesis.speak(utterance);
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= quizWords.length) {
+                quizSection.style.display = 'none';
+                resultSection.style.display = 'block';
+                resultElement.textContent = `Quiz finished! You got ${correctAnswers} out of ${quizWords.length} correct.`;
+                return;
+            }
+
+            const correctWord = quizWords[currentQuestionIndex];
+            const options = shuffle([correctWord, ...shuffle(words).slice(0, 3)].slice(0, 4));
+
+            questionElement.textContent = `What word matches this sound?`;
+            playSound(correctWord);
+
+            optionsElement.innerHTML = '';
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'btn btn-outline-primary';
+                button.addEventListener('click', () => {
+                    if (option === correctWord) {
+                        correctAnswers++;
+                    }
+                    currentQuestionIndex++;
+                    showQuestion();
+                });
+                optionsElement.appendChild(button);
+            });
+        }
+
+        startQuizButton.addEventListener('click', () => {
+            const inputText = wordsInput.value.trim();
+            const wordCount = parseInt(wordCountInput.value);
+
+            if (!inputText) {
+                alert('Please enter some words to start the quiz!');
+                return;
+            }
+
+            if (isNaN(wordCount) || wordCount <= 0) {
+                alert('Please enter a valid number of words to quiz!');
+                return;
+            }
+
+            words = inputText.split('\n').map(word => word.trim()).filter(word => word);
+
+            if (wordCount > words.length) {
+                alert(`You only entered ${words.length} words. Please adjust the word count.`);
+                return;
+            }
+
+            quizWords = shuffle(words).slice(0, wordCount);
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+
+            inputSection.style.display = 'none';
+            quizSection.style.display = 'block';
+            showQuestion();
+        });
+
+        restartQuizButton.addEventListener('click', () => {
+            inputSection.style.display = 'block';
+            quizSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            wordsInput.value = '';
+            wordCountInput.value = '';
+        });
+    </script>
+</body>
+</html>
