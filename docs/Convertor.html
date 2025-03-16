@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>180° Image Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #f8f9fa; }
+        #panorama { width: 100%; height: 90vh; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .container { text-align: center; margin-top: 20px; }
+        .btn-group { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-3 text-primary">180° Image Viewer</h1>
+        <input type="file" id="fileInput" class="form-control mb-3 w-50 mx-auto" accept="image/*">
+        <div id="panorama"></div>
+        <div class="btn-group">
+            <button id="zoomIn" class="btn btn-primary">Zoom In</button>
+            <button id="zoomOut" class="btn btn-secondary">Zoom Out</button>
+            <button id="fullscreen" class="btn btn-success">Fullscreen</button>
+        </div>
+    </div>
+
+    <script>
+        let viewer;
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        let aspectRatio = img.width / img.height;
+                        let haov = 180;
+                        let vaov = haov / aspectRatio;
+
+                        if (viewer) {
+                            viewer.destroy();
+                        }
+
+                        viewer = pannellum.viewer('panorama', {
+                            type: 'equirectangular',
+                            panorama: e.target.result,
+                            autoLoad: true,
+                            haov: haov,
+                            vaov: vaov,
+                            pitch: 0,
+                            yaw: 0,
+                            hfov: 110
+                        });
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            if (viewer) viewer.setHfov(viewer.getHfov() - 10);
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            if (viewer) viewer.setHfov(viewer.getHfov() + 10);
+        });
+
+        document.getElementById('fullscreen').addEventListener('click', () => {
+            let elem = document.getElementById('panorama');
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { 
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { 
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { 
+                elem.msRequestFullscreen();
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
