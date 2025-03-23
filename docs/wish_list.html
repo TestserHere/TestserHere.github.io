@@ -22,14 +22,36 @@
             color: gray;
         }
     </style>
+</head>
+<body class="container mt-5">
+    <h2 class="text-primary">My Wish List</h2>
+    
+    <div id="lock" class="card p-4 mx-auto shadow" style="max-width: 400px;">
+        <p class="mb-2">Enter password to view:</p>
+        <input type="password" id="password" class="form-control" placeholder="Enter password">
+        <button class="btn btn-primary mt-2" onclick="checkPassword()">Unlock</button>
+    </div>
+    
+    <div id="wishlist" class="mt-4">
+        <div class="card p-4 mx-auto shadow" style="max-width: 400px;">
+            <div class="input-group mb-3">
+                <input type="text" id="newItem" class="form-control" placeholder="Add a new wish">
+                <button class="btn btn-primary" onclick="addItem()">Add</button>
+            </div>
+            <ul id="wishlist-items" class="list-group"></ul>
+        </div>
+    </div>
+    
     <script>
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyAlBSSI-2v6qNifpMs-Ggd7VFhEoZx1ahk",
+            authDomain: "wishlist-342dc.firebaseapp.com",
+            projectId: "wishlist-342dc",
+            storageBucket: "wishlist-342dc.firebasestorage.app",
+            messagingSenderId: "830506359869",
+            appId: "1:830506359869:web:7f87ab41308b1dbeb7de54",
+            measurementId: "G-H98SN0G2TZ"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -57,11 +79,14 @@
                     completed: li.querySelector("span").classList.contains("completed")
                 });
             });
-            db.collection("wishlist").doc("userWishlist").set({ items });
+            db.collection("wishlist").doc("userWishlist").set({ items })
+            .then(() => console.log("Wishlist saved successfully!"))
+            .catch(error => console.error("Error saving wishlist:", error));
         }
         
         function loadWishlist() {
-            db.collection("wishlist").doc("userWishlist").get().then(doc => {
+            db.collection("wishlist").doc("userWishlist").get()
+            .then(doc => {
                 if (doc.exists) {
                     const list = document.getElementById("wishlist-items");
                     list.innerHTML = "";
@@ -78,7 +103,8 @@
                         list.appendChild(li);
                     });
                 }
-            });
+            })
+            .catch(error => console.error("Error fetching wishlist:", error));
         }
         
         function addItem() {
@@ -112,24 +138,5 @@
             saveWishlist();
         }
     </script>
-</head>
-<body class="container mt-5">
-    <h2 class="text-primary">My Wish List</h2>
-    
-    <div id="lock" class="card p-4 mx-auto shadow" style="max-width: 400px;">
-        <p class="mb-2">Enter password to view:</p>
-        <input type="password" id="password" class="form-control" placeholder="Enter password">
-        <button class="btn btn-primary mt-2" onclick="checkPassword()">Unlock</button>
-    </div>
-    
-    <div id="wishlist" class="mt-4">
-        <div class="card p-4 mx-auto shadow" style="max-width: 400px;">
-            <div class="input-group mb-3">
-                <input type="text" id="newItem" class="form-control" placeholder="Add a new wish">
-                <button class="btn btn-primary" onclick="addItem()">Add</button>
-            </div>
-            <ul id="wishlist-items" class="list-group"></ul>
-        </div>
-    </div>
 </body>
 </html>
