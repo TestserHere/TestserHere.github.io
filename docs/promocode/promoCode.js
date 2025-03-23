@@ -72,7 +72,11 @@ function check() {
     } else if(promoCode == "Chinese Quiz") {
         console.log("code Chinese Quiz!");
         window.open("/chinese_quiz.html");
-        document.getElementById("input").value = ";"
+        document.getElementById("input").value = "";
+    } else if(promoCode == "Wishlist") {
+        console.log("code Wishlist!");
+        window.open("/wish_list.html");
+        document.getElementById("input").value = "";
     }
     
     
