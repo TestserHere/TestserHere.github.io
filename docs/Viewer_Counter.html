@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viewer Counter</title>
+    <style>
+        body {
+            height: 200vh; /* Just for scrolling effect */
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .counter-section {
+            margin-top: 100vh;
+            padding: 50px;
+            background-color: #f0f0f0;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Scroll Down to See Your Viewer Number</h1>
+    
+    <div class="counter-section" id="viewerCounter">
+        Loading viewer count...
+    </div>
+
+    <script>
+        function updateVisitorCount() {
+            fetch('https://api.countapi.xyz/hit/your-unique-namespace/visits')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('viewerCounter').innerText = `You are visitor number: ${data.value}`;
+                })
+                .catch(error => console.error('Error fetching viewer count:', error));
+        }
+
+        function handleScroll() {
+            const counterSection = document.getElementById('viewerCounter');
+            const rect = counterSection.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom >= 0) {
+                updateVisitorCount();
+                window.removeEventListener('scroll', handleScroll);
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll);
+    </script>
+
+</body>
+</html>
