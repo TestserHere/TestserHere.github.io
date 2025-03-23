@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wish List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #wishlist {
+            display: none;
+            margin-top: 20px;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        function checkPassword() {
+            const password = document.getElementById("password").value;
+            const correctPassword = atob("dGVzdHNlcmhlcmU="); // Encoded password
+            
+            if (password === correctPassword) {
+                document.getElementById("lock").style.display = "none";
+                document.getElementById("wishlist").style.display = "block";
+                loadWishlist();
+            } else {
+                alert("Incorrect password. Try again.");
+            }
+        }
+        
+        function saveWishlist() {
+            const list = document.getElementById("wishlist-items");
+            const items = [];
+            list.querySelectorAll("li").forEach(li => {
+                items.push({
+                    text: li.querySelector("span").textContent,
+                    completed: li.querySelector("span").classList.contains("completed")
+                });
+            });
+            db.collection("wishlist").doc("userWishlist").set({ items });
+        }
+        
+        function loadWishlist() {
+            db.collection("wishlist").doc("userWishlist").get().then(doc => {
+                if (doc.exists) {
+                    const list = document.getElementById("wishlist-items");
+                    list.innerHTML = "";
+                    doc.data().items.forEach(item => {
+                        const li = document.createElement("li");
+                        li.className = "list-group-item d-flex justify-content-between align-items-center";
+                        li.innerHTML = `
+                            <span class="${item.completed ? 'completed' : ''}">${item.text}</span>
+                            <div>
+                                <button class="btn btn-success btn-sm me-2" onclick="markAsFinished(this)">✔</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteItem(this)">✖</button>
+                            </div>
+                        `;
+                        list.appendChild(li);
+                    });
+                }
+            });
+        }
+        
+        function addItem() {
+            const itemText = document.getElementById("newItem").value;
+            if (itemText.trim() === "") return;
+            
+            const list = document.getElementById("wishlist-items");
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.innerHTML = `
+                <span>${itemText}</span>
+                <div>
+                    <button class="btn btn-success btn-sm me-2" onclick="markAsFinished(this)">✔</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem(this)">✖</button>
+                </div>
+            `;
+            list.appendChild(li);
+            document.getElementById("newItem").value = "";
+            saveWishlist();
+        }
+        
+        function markAsFinished(button) {
+            const item = button.parentElement.parentElement;
+            item.querySelector("span").classList.toggle("completed");
+            saveWishlist();
+        }
+        
+        function deleteItem(button) {
+            const item = button.parentElement.parentElement;
+            item.remove();
+            saveWishlist();
+        }
+    </script>
+</head>
+<body class="container mt-5">
+    <h2 class="text-primary">My Wish List</h2>
+    
+    <div id="lock" class="card p-4 mx-auto shadow" style="max-width: 400px;">
+        <p class="mb-2">Enter password to view:</p>
+        <input type="password" id="password" class="form-control" placeholder="Enter password">
+        <button class="btn btn-primary mt-2" onclick="checkPassword()">Unlock</button>
+    </div>
+    
+    <div id="wishlist" class="mt-4">
+        <div class="card p-4 mx-auto shadow" style="max-width: 400px;">
+            <div class="input-group mb-3">
+                <input type="text" id="newItem" class="form-control" placeholder="Add a new wish">
+                <button class="btn btn-primary" onclick="addItem()">Add</button>
+            </div>
+            <ul id="wishlist-items" class="list-group"></ul>
+        </div>
+    </div>
+</body>
+</html>
