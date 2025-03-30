@@ -17,7 +17,7 @@
         }
         #controls {
             position: fixed;
-            top: 20px;
+            top: 80px; /* Changed from 20px to 80px */
             left: 50%;
             transform: translateX(-50%);
             z-index: 20;
@@ -63,6 +63,52 @@
             border-radius: 50%;
             text-align: center;
         }
+        #url-input-container {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 21;
+            display: flex;
+            gap: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        #url-input {
+            width: 300px;
+            height: 2.5rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 0.5em;
+            font-size: 1rem;
+            color: #333;
+        }
+        #load-url-button {
+            height: 2.5rem;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        #load-url-button:hover {
+            background-color: #444;
+        }
+        #error-message {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 22;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -73,6 +119,10 @@
         <i class="bi bi-upload"></i> Upload Video
     </button>
     <input type="file" id="file-upload" accept="video/*">
+    <div id="url-input-container">
+        <input type="text" id="url-input" placeholder="Enter video URL" />
+        <button id="load-url-button">Load URL</button>
+    </div>
     <div id="controls">
         <button id="pause-resume-button" class="btn btn-dark">
             <i class="bi bi-pause-fill"></i>
@@ -101,6 +151,7 @@
     </a-scene>
     <div id="vr-container">
     </div>
+    <div id="error-message" style="display:none;"></div>
     <script>
         var vid = document.getElementById('vid');
         var playButton = document.getElementById('play-button');
@@ -109,29 +160,93 @@
         var volumeControl = document.getElementById('volume-control');
         var uploadButton = document.getElementById('upload-button');
         var fileInput = document.getElementById('file-upload');
+        var urlInput = document.getElementById('url-input');
+        var loadUrlButton = document.getElementById('load-url-button');
+        var errorMessageElement = document.getElementById('error-message');
 
-        let duration = 0; // Store the video duration
+        let duration = 0;
         let metadataLoaded = false;
         let videoPlaying = false;
+        let loadAttempted = false;
+        let seeking = false;
+        let currentSource = ''; // Keep track of the current video source
 
 
         function updateProgressBar() {
-            if (metadataLoaded && duration > 0) {
+            if (metadataLoaded && duration > 0 && !seeking) {
                 var value = (vid.currentTime / duration) * 100;
                 progressBar.value = value;
             }
         }
 
+        function showErrorMessage(message) {
+            errorMessageElement.textContent = message;
+            errorMessageElement.style.display = 'block';
+        }
+
+        function hideErrorMessage() {
+            errorMessageElement.style.display = 'none';
+        }
+
+        function loadVideoSource(source) {
+            if (!source) {
+                showErrorMessage("Please provide a video source (URL or file).");
+                return;
+            }
+            hideErrorMessage();
+            // Check if the source has changed
+            if (currentSource !== source) {
+                vid.src = source;
+                currentSource = source; // Update the current source
+                metadataLoaded = false;
+                videoPlaying = false;
+                loadAttempted = true;
+
+                // Remove previous event listeners to avoid conflicts
+                vid.removeEventListener('loadedmetadata', handleMetadata);
+                vid.removeEventListener('error', handleError);
+
+                vid.addEventListener('loadedmetadata', handleMetadata);
+                vid.addEventListener('error', handleError);
+
+                playButton.style.display = 'none';
+                pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
+            } else if (!videoPlaying) {
+                // If the source is the same but video is not playing, ensure play button is hidden
+                playButton.style.display = 'none';
+            }
+        }
+
+        function handleMetadata() {
+            duration = vid.duration;
+            metadataLoaded = true;
+            updateProgressBar();
+            if (videoPlaying) {
+                vid.play();
+            }
+        }
+
+        function handleError(error) {
+            console.error("Error loading video:", error);
+            showErrorMessage("Failed to load video. Please check the URL or file.");
+            loadAttempted = false;
+            vid.src = '';
+            currentSource = ''; // Reset source on error
+            metadataLoaded = false;
+            videoPlaying = false;
+            playButton.style.display = 'block'; // Show play button again to allow re-selection
+            pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>'; // Ensure pause/resume button shows pause icon
+        }
+
+
         playButton.addEventListener("click", function(e) {
             this.style.display = 'none';
+            if (!metadataLoaded && !loadAttempted) {
+                showErrorMessage("Please upload a video or enter a URL.");
+                return;
+            }
             if (!metadataLoaded) {
-                vid.addEventListener('loadedmetadata', function() {
-                    duration = vid.duration;
-                    metadataLoaded = true;
-                    videoPlaying = true;
-                    updateProgressBar();
-                    vid.play();
-                });
+                vid.addEventListener('loadedmetadata', handleMetadata);
              }else{
                 vid.play();
                 videoPlaying = true;
@@ -145,9 +260,11 @@
                 this.innerHTML = '<i class="bi bi-play-fill"></i>';
                 videoPlaying = false;
             } else {
-                vid.play();
-                this.innerHTML = '<i class="bi bi-pause-fill"></i>';
-                videoPlaying = true;
+                if (metadataLoaded || loadAttempted) {
+                    vid.play();
+                    this.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                    videoPlaying = true;
+                }
             }
         });
 
@@ -158,20 +275,14 @@
         fileInput.addEventListener("change", function(event) {
             var file = event.target.files[0];
             if (file) {
-                var videoUrl = URL.createObjectURL(file);
-                vid.src = videoUrl;
-                metadataLoaded = false;
-                videoPlaying = false;
-                vid.addEventListener('loadedmetadata', function() {
-                    duration = vid.duration;
-                    metadataLoaded = true;
-                    updateProgressBar();
-                    vid.play();
-                    videoPlaying = true;
-                });
-                playButton.style.display = 'none';
-                pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                var videoURL = URL.createObjectURL(file);
+                loadVideoSource(videoURL);
             }
+        });
+
+        loadUrlButton.addEventListener("click", function() {
+            var videoURL = urlInput.value;
+            loadVideoSource(videoURL);
         });
 
         vid.addEventListener('timeupdate', function() {
@@ -180,8 +291,13 @@
 
         progressBar.addEventListener('input', function() {
             if (metadataLoaded && duration > 0) {
+                seeking = true;
                 var seekTime = (progressBar.value / 100) * duration;
                 vid.currentTime = seekTime;
+                vid.addEventListener('seeked', () => {
+                    seeking = false;
+                    updateProgressBar();
+                }, { once: true });
             }
         });
 
@@ -206,12 +322,6 @@
                 document.onmouseup = null;
             };
         };
-
-        vid.addEventListener('loadedmetadata', function() {
-            progressBar.value = 0;
-            duration = vid.duration;
-            metadataLoaded = true;
-        });
     </script>
 </body>
 </html>
