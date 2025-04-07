@@ -17,7 +17,7 @@
         }
         #controls {
             position: fixed;
-            top: 80px; /* Changed from 20px to 80px */
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 20;
@@ -132,26 +132,13 @@
     </div>
     <a-scene id="vr-scene">
         <a-assets>
-            <video
-                id="vid"
-                src=""
-                crossorigin="anonymous"
-                autoplay="false"
-                loop="true"
-                style="display: none"
-            ></video>
+            <video id="vid" src="" crossorigin="anonymous" autoplay="false" loop="true" style="display: none"></video>
         </a-assets>
-        <a-entity
-            id="vr-video"
-            geometry="primitive: sphere; radius: 5000; segmentsWidth: 64; segmentsHeight: 64;"
-            material="shader: flat; src: #vid;"
-            scale="-1 1 1"
-        >
-        </a-entity>
+        <a-entity id="vr-video" geometry="primitive: sphere; radius: 5000; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src: #vid;" scale="-1 1 1"></a-entity>
     </a-scene>
-    <div id="vr-container">
-    </div>
+    <div id="vr-container"></div>
     <div id="error-message" style="display:none;"></div>
+
     <script>
         var vid = document.getElementById('vid');
         var playButton = document.getElementById('play-button');
@@ -163,14 +150,13 @@
         var urlInput = document.getElementById('url-input');
         var loadUrlButton = document.getElementById('load-url-button');
         var errorMessageElement = document.getElementById('error-message');
+        var currentSource = ''; // To track the current video source
 
         let duration = 0;
         let metadataLoaded = false;
         let videoPlaying = false;
         let loadAttempted = false;
         let seeking = false;
-        let currentSource = ''; // Keep track of the current video source
-
 
         function updateProgressBar() {
             if (metadataLoaded && duration > 0 && !seeking) {
@@ -194,26 +180,50 @@
                 return;
             }
             hideErrorMessage();
-            // Check if the source has changed
-            if (currentSource !== source) {
-                vid.src = source;
-                currentSource = source; // Update the current source
-                metadataLoaded = false;
-                videoPlaying = false;
-                loadAttempted = true;
 
-                // Remove previous event listeners to avoid conflicts
-                vid.removeEventListener('loadedmetadata', handleMetadata);
-                vid.removeEventListener('error', handleError);
+            // If source is a YouTube URL, embed it in an iframe
+            if (source.includes("youtube.com/watch")) {
+                var videoId = new URL(source).searchParams.get("v");
+                if (videoId) {
+                    var iframe = document.createElement("iframe");
+                    iframe.width = "100%";
+                    iframe.height = "100%";
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+                    iframe.frameBorder = "0";
+                    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                    iframe.allowFullscreen = true;
 
-                vid.addEventListener('loadedmetadata', handleMetadata);
-                vid.addEventListener('error', handleError);
-
-                playButton.style.display = 'none';
-                pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
-            } else if (!videoPlaying) {
-                // If the source is the same but video is not playing, ensure play button is hidden
-                playButton.style.display = 'none';
+                    // Clear the previous video player and append the iframe
+                    var vrScene = document.querySelector('a-scene');
+                    vrScene.innerHTML = '';  // Clear the previous content
+                    var entity = document.createElement('a-entity');
+                    entity.setAttribute('geometry', 'primitive: plane; width: 16; height: 9');
+                    entity.setAttribute('material', 'src: #youtube-embed');
+                    entity.setAttribute('position', '0 1 -4');
+                    vrScene.appendChild(entity);
+                    entity.appendChild(iframe);
+                } else {
+                    showErrorMessage("Invalid YouTube URL.");
+                }
+            } else {
+                // If it's a regular file or other video URL
+                if (currentSource !== source) {
+                    vid.src = source;
+                    currentSource = source;
+                    metadataLoaded = false;
+                    videoPlaying = false;
+                    loadAttempted = true;
+                    vid.addEventListener('loadedmetadata', handleMetadata);
+                    vid.addEventListener('error', handleError);
+                    playButton.style.display = 'none';
+                    pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
+                    
+                    // Update A-Frame video source
+                    let vrVideoEntity = document.querySelector('#vr-video');
+                    vrVideoEntity.setAttribute('material', 'src: #vid');
+                } else if (!videoPlaying) {
+                    playButton.style.display = 'none';
+                }
             }
         }
 
@@ -234,10 +244,9 @@
             currentSource = ''; // Reset source on error
             metadataLoaded = false;
             videoPlaying = false;
-            playButton.style.display = 'block'; // Show play button again to allow re-selection
-            pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>'; // Ensure pause/resume button shows pause icon
+            playButton.style.display = 'block';
+            pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
         }
-
 
         playButton.addEventListener("click", function(e) {
             this.style.display = 'none';
@@ -247,10 +256,10 @@
             }
             if (!metadataLoaded) {
                 vid.addEventListener('loadedmetadata', handleMetadata);
-             }else{
+            } else {
                 vid.play();
                 videoPlaying = true;
-             }
+            }
             pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
         }, false);
 
