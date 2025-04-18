@@ -1,254 +1,889 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Testser Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    #map {
-      height: 100vh;
-      width: 100%;
-    }
-    #controls {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-      background-color: rgba(255, 255, 255, 0.7);
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-    }
-    input, button {
-      padding: 8px;
-      margin: 5px 0;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #4c72af;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0035c8;
-    }
-    input {
-      width: 250px;
-    }
-    #speedometer {
-      position: absolute;
-      top: 93%;
-      left: 93%;
-      z-index: 1000;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 10px;
-      border-radius: 8px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+        .search-box {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .search-input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        .directions-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .direction-step {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .direction-step:hover {
+            background-color: #f8f9fa;
+        }
+        .direction-step.active {
+            background-color: #e8f0fe;
+        }
+        .step-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a73e8;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+        }
+        .step-text {
+            flex: 1;
+        }
+        .step-distance {
+            color: #666;
+            font-size: 14px;
+        }
+        .navigation-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .control-button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-button:hover {
+            background: #1557b0;
+        }
+        .location-button {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .location-button:hover {
+            background: #f8f9fa;
+        }
+        .zoom-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        .zoom-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .zoom-button:hover {
+            background: #f8f9fa;
+        }
+        .zoom-button:first-child {
+            border-bottom: 1px solid #eee;
+        }
+        .route-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+            width: 200px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-  <div id="controls">
-    <input type="text" id="startAddress" placeholder="Enter start address or 'my location'">
-    <input type="text" id="destinationAddress" placeholder="Enter destination address">
-    <button id="startRouteBtn">Start Route</button>
-    <button id="getLocationBtn">Show My Location</button>
-    <button id="endRouteBtn">End Route</button>
-  </div>
+    <div id="map"></div>
+    <div class="search-box">
+        <input type="text" id="start" class="search-input" placeholder="Choose starting point">
+        <input type="text" id="end" class="search-input" placeholder="Choose destination">
+    </div>
+    <div class="directions-panel" id="directionsPanel">
+        <h3 style="margin: 0 0 15px 0;">Directions</h3>
+        <div id="directionsList"></div>
+    </div>
+    <div class="navigation-controls">
+        <button class="control-button" onclick="startRoute()">
+            <span>Start Navigation</span>
+        </button>
+        <button class="control-button" onclick="endRoute()">
+            <span>End Navigation</span>
+        </button>
+    </div>
+    <div class="route-info" id="routeInfo" style="display: none;">
+        <div>Distance: <span id="distance">0</span> km</div>
+        <div>Duration: <span id="duration">0</span> min</div>
+        <div>ETA: <span id="eta">--:--</span></div>
+    </div>
+    <button class="location-button" onclick="showMyLocation()" title="Show my location">
+        <span style="font-size: 20px;">📍</span>
+    </button>
+    <div class="zoom-controls">
+        <button class="zoom-button" onclick="map.zoomIn()">+</button>
+        <button class="zoom-button" onclick="map.zoomOut()">−</button>
+    </div>
 
-  <div id="speedometer">Speed: 0 km/h</div>
-  <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script>
+        let map;
+        let routingControl;
+        let currentLocationMarker;
+        let watchId;
+        let startMarker;
+        let endMarker;
+        let currentStep = 0;
+        let directions = [];
+        let voiceEnabled = false;
+        let lastAnnouncedStep = -1;
+        let speechSynthesis = window.speechSynthesis;
+        let lastPosition = null;
+        let turnAnnounced = false;
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+        function initMap() {
+            map = L.map('map').setView([-37.8136, 144.9631], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-  <script>
-    // Initialize the map centered in Melbourne
-    const map = L.map('map').setView([-37.8136, 144.9631], 13); // Melbourne coordinates
+            // Initialize markers with Google Maps-like styling
+            startMarker = L.marker([0, 0], {
+                icon: L.divIcon({
+                    className: 'start-marker',
+                    html: `
+                        <div style="
+                            background-color: #1a73e8;
+                            width: 30px;
+                            height: 30px;
+                            border-radius: 50%;
+                            border: 3px solid white;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-weight: bold;
+                            font-size: 16px;
+                        ">A</div>
+                    `,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                }),
+                draggable: true
+            }).on('dragend', function() {
+                updateRoute();
+            });
 
-    // Use OpenStreetMap tiles (standard OSM style)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
+            endMarker = L.marker([0, 0], {
+                icon: L.divIcon({
+                    className: 'end-marker',
+                    html: `
+                        <div style="
+                            background-color: #ea4335;
+                            width: 30px;
+                            height: 30px;
+                            border-radius: 50%;
+                            border: 3px solid white;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-weight: bold;
+                            font-size: 16px;
+                        ">B</div>
+                    `,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                }),
+                draggable: true
+            }).on('dragend', function() {
+                updateRoute();
+            });
 
-    // Initialize routing control
-    let routingControl = L.Routing.control({
-      routeWhileDragging: true,
-      createMarker: function() { return null; }, // Remove markers from the route
-    }).addTo(map);
+            currentLocationMarker = L.marker([0, 0], {
+                icon: L.divIcon({
+                    className: 'current-location-marker',
+                    html: `
+                        <div style="
+                            background-color: #1a73e8;
+                            width: 20px;
+                            height: 20px;
+                            border-radius: 50%;
+                            border: 2px solid white;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                        "></div>
+                    `,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            });
 
-    // Function to get coordinates using Nominatim API
-    async function getCoordinates(address) {
-      const encodedAddress = encodeURIComponent(address);
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`;
+            // Add click handler to map for setting markers
+            map.on('click', function(e) {
+                if (!startMarker.getLatLng().equals([0, 0])) {
+                    endMarker.setLatLng(e.latlng).addTo(map);
+                    document.getElementById('end').value = 'Selected on map';
+                    updateRoute();
+                } else {
+                    startMarker.setLatLng(e.latlng).addTo(map);
+                    document.getElementById('start').value = 'Selected on map';
+                }
+            });
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.length > 0) {
-          return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        } else {
-          throw new Error('Address not found');
+            // Initialize routing control with OSRM service
+            routingControl = L.Routing.control({
+                waypoints: [],
+                routeWhileDragging: true,
+                show: true,
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                showAlternatives: false,
+                createMarker: function(i, waypoint) {
+                    return i === 0 ? startMarker : endMarker;
+                },
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1',
+                    profile: 'car',
+                    timeout: 30000
+                })
+            }).addTo(map);
+
+            // Add route found event handler
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const route = routes[0];
+                
+                // Update route info
+                const distanceElement = document.getElementById('distance');
+                const durationElement = document.getElementById('duration');
+                const etaElement = document.getElementById('eta');
+                const routeInfoElement = document.getElementById('routeInfo');
+                
+                if (distanceElement) distanceElement.textContent = (route.summary.totalDistance / 1000).toFixed(1);
+                if (durationElement) durationElement.textContent = Math.round(route.summary.totalTime / 60);
+                
+                const now = new Date();
+                const eta = new Date(now.getTime() + route.summary.totalTime * 1000);
+                if (etaElement) etaElement.textContent = eta.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                if (routeInfoElement) routeInfoElement.style.display = 'block';
+
+                generateDirections(route);
+                document.getElementById('directionsPanel').style.display = 'block';
+            });
+
+            // Add error handler
+            routingControl.on('routingerror', function(e) {
+                console.error('Routing error:', e.error);
+                alert('Could not find a route between the selected points. Please try different locations.');
+            });
         }
-      } catch (error) {
-        console.error('Error fetching coordinates:', error);
-        alert(`Error: Unable to fetch coordinates for "${address}".`);
-        return null;
-      }
-    }
 
-    // Function to get user's current location
-    function getUserLocation() {
-      return new Promise((resolve, reject) => {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        } else {
-          reject("Geolocation is not supported by this browser.");
+        function speak(text) {
+            if (voiceEnabled && speechSynthesis) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                speechSynthesis.speak(utterance);
+            }
         }
-      });
-    }
 
-    // Function to create user location icon
-    function createUserLocationIcon(rotation = 0) {
-      return L.icon({
-        iconUrl: 'https://freeiconshop.com/wp-content/uploads/edd/location-arrow-flat.png',
-        iconSize: [40, 40], 
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -40],
-        className: 'rotating-icon',
-      });
-    }
-
-    // Function to create start location icon
-    function createStartLocationIcon() {
-      return L.icon({
-        iconUrl: 'https://images.ctfassets.net/3prze68gbwl1/assetglossary-17su9wok1ui0z7w/c4c4bdcdf0d0f86447d3efc450d1d081/map-marker.png', // Start location icon
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -40],
-      });
-    }
-
-    // Function to create end location icon
-    function createEndLocationIcon() {
-      return L.icon({
-        iconUrl: 'https://images.ctfassets.net/3prze68gbwl1/assetglossary-17su9wok1ui0z7w/c4c4bdcdf0d0f86447d3efc450d1d081/map-marker.png', // End location icon
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -40],
-      });
-    }
-
-    // Function to start the route using the start and destination coordinates
-    async function startRoute(startCoords) {
-      const destinationAddress = document.getElementById('destinationAddress').value;
-
-      if (!destinationAddress) {
-        alert('Please enter a destination address!');
-        return;
-      }
-
-      // Get coordinates for the destination
-      const destinationCoords = await getCoordinates(destinationAddress);
-
-      if (destinationCoords) {
-        routingControl.setWaypoints([
-          L.latLng(startCoords[0], startCoords[1]), 
-          L.latLng(destinationCoords[0], destinationCoords[1]),
-        ]);
-
-        // Add markers for start and destination points with their respective icons
-        L.marker(startCoords, { icon: createStartLocationIcon() }).addTo(map)
-          .bindPopup("<b>Start Point:</b>").openPopup();
-
-        L.marker(destinationCoords, { icon: createEndLocationIcon() }).addTo(map)
-          .bindPopup("<b>Destination:</b>").openPopup();
-
-        map.fitBounds([startCoords, destinationCoords]);
-      }
-    }
-
-    // Event listener for the "Start Route" button
-    document.getElementById('startRouteBtn').addEventListener('click', async function () {
-      const startAddress = document.getElementById('startAddress').value;
-
-      if (startAddress.toLowerCase() === "my location") {
-        try {
-          const position = await getUserLocation();
-          const startCoords = [position.coords.latitude, position.coords.longitude];
-          
-          // Start route using user's current location
-          startRoute(startCoords);
-        } catch (error) {
-          alert("Error retrieving your location: " + error.message);
+        function toggleVoiceGuidance() {
+            voiceEnabled = !voiceEnabled;
+            document.getElementById('voiceToggle').textContent = voiceEnabled ? 'Disable Voice Guidance' : 'Enable Voice Guidance';
+            if (voiceEnabled && currentStep < directions.length) {
+                announceNextTurn();
+            }
         }
-      } else {
-        const startCoords = await getCoordinates(startAddress);
-        
-        if (startCoords) {
-          startRoute(startCoords);
-        } else {
-          alert('Invalid start address');
+
+        function repeatInstruction() {
+            if (currentStep < directions.length) {
+                announceNextTurn();
+            }
         }
-      }
-    });
 
-    // Event listener for the "Show My Location" button
-    document.getElementById('getLocationBtn').addEventListener('click', async function () {
-      try {
-        navigator.geolocation.watchPosition(function(position) {
-          const userCoords = [position.coords.latitude, position.coords.longitude];
-          const speed = position.coords.speed ? position.coords.speed * 3.6 : 0; // Speed in km/h
-
-          // Update speedometer display
-          document.getElementById('speedometer').innerText = `Speed: ${speed.toFixed(2)} km/h`;
-
-          // Update user's location on the map
-          if (!window.userLocationMarker) {
-            window.userLocationMarker = L.marker(userCoords, { icon: createUserLocationIcon() }).addTo(map)
-              .bindPopup("<b>Your Location</b>").openPopup();
-          } else {
-            window.userLocationMarker.setLatLng(userCoords);
-          }
-
-          // Center the map to user's location
-          map.setView(userCoords, 13);
-        });
-      } catch (error) {
-        alert("Error retrieving your location: " + error.message);
-      }
-    });
-
-        // Function to clear the current route and associated markers
-    function endRoute() {
-    if (routingControl) {
-        map.removeControl(routingControl); // Remove the routing control from the map
-        routingControl = null; // Reset the routing control
-    }
-
-    // Remove all markers (if any were added during the route)
-    map.eachLayer(function (layer) {
-        if (layer instanceof L.Marker && !layer._popup) {
-        map.removeLayer(layer); // Remove markers that are not popup-bound (start/end markers)
+        function announceNextTurn() {
+            if (currentStep < directions.length) {
+                const instruction = directions[currentStep];
+                const distance = Math.round(instruction.distance / 1000 * 10) / 10;
+                const message = `In ${distance} kilometers, ${instruction.text}`;
+                
+                const nextTurn = document.getElementById('nextTurn');
+                const distanceToTurn = document.getElementById('distanceToTurn');
+                
+                if (nextTurn) {
+                    nextTurn.textContent = `Next turn: ${instruction.text}`;
+                }
+                if (distanceToTurn) {
+                    distanceToTurn.textContent = `Distance: ${distance} km`;
+                }
+                
+                if (voiceEnabled && speechSynthesis) {
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    speechSynthesis.speak(utterance);
+                }
+                
+                lastAnnouncedStep = currentStep;
+                turnAnnounced = true;
+            }
         }
-    });
 
-    alert("Route has been cleared.");
-    window.location.reload();
-    }
+        function updateRoute() {
+            const startLatLng = startMarker.getLatLng();
+            const endLatLng = endMarker.getLatLng();
 
-    // Event listener for the "End Route" button
-    document.getElementById('endRouteBtn').addEventListener('click', endRoute);
-  </script>
+            if (!startLatLng.equals([0, 0]) && !endLatLng.equals([0, 0])) {
+                routingControl.setWaypoints([
+                    startLatLng,
+                    endLatLng
+                ]);
+            }
+        }
+
+        function startRoute() {
+            const startAddress = document.getElementById('start').value;
+            const endAddress = document.getElementById('end').value;
+
+            if (!startAddress || !endAddress) {
+                alert('Please enter both start and end locations or select points on the map');
+                return;
+            }
+
+            // Clear existing markers if they exist
+            if (startMarker) map.removeLayer(startMarker);
+            if (endMarker) map.removeLayer(endMarker);
+
+            // Geocode addresses and update route
+            geocodeAddress(startAddress, endAddress);
+        }
+
+        function generateDirections(route) {
+            const directionsList = document.getElementById('directionsList');
+            directionsList.innerHTML = '';
+            directions = [];
+
+            route.instructions.forEach((instruction, index) => {
+                const step = document.createElement('div');
+                step.className = 'direction-step';
+                
+                // Create step icon
+                const icon = document.createElement('div');
+                icon.className = 'step-icon';
+                icon.textContent = index + 1;
+                
+                // Create step text container
+                const textContainer = document.createElement('div');
+                textContainer.className = 'step-text';
+                
+                // Create main instruction text
+                const mainText = document.createElement('div');
+                mainText.textContent = instruction.text;
+                
+                // Create distance text
+                const distance = document.createElement('div');
+                distance.className = 'step-distance';
+                const distanceKm = Math.round(instruction.distance / 1000 * 10) / 10;
+                distance.textContent = `${distanceKm} km`;
+                
+                // Assemble the step
+                textContainer.appendChild(mainText);
+                textContainer.appendChild(distance);
+                step.appendChild(icon);
+                step.appendChild(textContainer);
+                
+                // Add click handler
+                step.onclick = () => highlightStep(index, instruction);
+                
+                directionsList.appendChild(step);
+                directions.push(instruction);
+            });
+        }
+
+        function highlightStep(index, instruction) {
+            const steps = document.querySelectorAll('.direction-step');
+            steps.forEach((step, i) => {
+                step.classList.toggle('active', i === index);
+            });
+            currentStep = index;
+            
+            // Get the coordinates for this step
+            const coordinates = instruction.coordinates || [];
+            if (coordinates.length > 0) {
+                const [lng, lat] = coordinates[0];
+                map.setView([lat, lng], 16);
+            }
+            
+            // Update navigation info
+            const distance = Math.round(instruction.distance / 1000 * 10) / 10;
+            const distanceToTurn = document.getElementById('distanceToTurn');
+            const nextTurn = document.getElementById('nextTurn');
+            
+            if (distanceToTurn) {
+                distanceToTurn.textContent = `Distance: ${distance} km`;
+            }
+            if (nextTurn) {
+                nextTurn.textContent = `Next turn: ${instruction.text}`;
+            }
+            
+            // Announce turn if voice is enabled
+            if (voiceEnabled && !turnAnnounced) {
+                announceNextTurn();
+            }
+        }
+
+        function toggleDirections() {
+            const panel = document.getElementById('directionsPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateTrafficInfo() {
+            const trafficLevels = ['Light', 'Moderate', 'Heavy'];
+            const colors = ['traffic-green', 'traffic-yellow', 'traffic-red'];
+            const randomIndex = Math.floor(Math.random() * 3);
+            
+            const trafficLight = document.querySelector('.traffic-light');
+            trafficLight.className = 'traffic-light ' + colors[randomIndex];
+            document.querySelector('#trafficInfo span').textContent = 'Traffic: ' + trafficLevels[randomIndex];
+        }
+
+        function geocodeAddress(startAddress, endAddress) {
+            const geocode = (address, isStart) => {
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data[0]) {
+                            const latLng = L.latLng(data[0].lat, data[0].lon);
+                            if (isStart) {
+                                startMarker.setLatLng(latLng).addTo(map);
+                            } else {
+                                endMarker.setLatLng(latLng).addTo(map);
+                            }
+                            updateRoute();
+                        }
+                    });
+            };
+
+            geocode(startAddress, true);
+            geocode(endAddress, false);
+        }
+
+        function showMyLocation() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+
+            // First try to get a high-accuracy position with validation
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    handleLocationSuccess(position);
+                },
+                error => {
+                    console.log('GPS location failed, trying IP-based geolocation...');
+                    getIPLocation();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000, // Shorter timeout for GPS
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function getIPLocation() {
+            // Try to get location from IP address
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.latitude && data.longitude) {
+                        const position = {
+                            coords: {
+                                latitude: data.latitude,
+                                longitude: data.longitude,
+                                accuracy: 5000, // Approximate accuracy for IP-based location
+                                altitude: null,
+                                altitudeAccuracy: null,
+                                heading: null,
+                                speed: null
+                            },
+                            timestamp: Date.now()
+                        };
+                        handleLocationSuccess(position);
+                    } else {
+                        throw new Error('IP location not available');
+                    }
+                })
+                .catch(error => {
+                    console.error('IP location failed:', error);
+                    handleGeolocationError({
+                        code: 2,
+                        message: 'Location information unavailable'
+                    });
+                });
+        }
+
+        function handleLocationSuccess(position) {
+            // Validate and correct coordinates if needed
+            const correctedPosition = validateAndCorrectCoordinates(position);
+            const latLng = L.latLng(correctedPosition.coords.latitude, correctedPosition.coords.longitude);
+            
+            // Add accuracy circle
+            if (currentLocationMarker) {
+                map.removeLayer(currentLocationMarker);
+            }
+            
+            currentLocationMarker = L.circleMarker(latLng, {
+                radius: 10,
+                fillColor: '#1a73e8',
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            // Add accuracy indicator
+            const accuracyCircle = L.circle(latLng, {
+                radius: correctedPosition.coords.accuracy,
+                color: '#1a73e8',
+                fillColor: '#1a73e8',
+                fillOpacity: 0.1,
+                weight: 1
+            }).addTo(map);
+
+            // Center and zoom map
+            map.setView(latLng, 16);
+            
+            // Start watching position with appropriate accuracy settings
+            watchId = navigator.geolocation.watchPosition(
+                position => {
+                    const correctedPosition = validateAndCorrectCoordinates(position);
+                    const latLng = L.latLng(correctedPosition.coords.latitude, correctedPosition.coords.longitude);
+                    
+                    // Update marker and accuracy circle
+                    currentLocationMarker.setLatLng(latLng);
+                    accuracyCircle.setLatLng(latLng);
+                    accuracyCircle.setRadius(correctedPosition.coords.accuracy);
+                    
+                    // Update speed with validation
+                    const speed = correctedPosition.coords.speed ? 
+                        Math.max(0, correctedPosition.coords.speed * 3.6) : 0;
+                    const speedElement = document.getElementById('speed');
+                    if (speedElement) {
+                        speedElement.textContent = Math.round(speed);
+                    }
+                    
+                    // Update current step based on location
+                    if (routingControl && directions.length > 0) {
+                        updateNavigationSteps(latLng);
+                    }
+
+                    lastPosition = correctedPosition;
+                },
+                error => {
+                    console.log('Continuous location tracking failed, using last known position');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 30000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function validateAndCorrectCoordinates(position) {
+            // Basic coordinate validation
+            let lat = position.coords.latitude;
+            let lng = position.coords.longitude;
+            
+            // Check if coordinates are within valid ranges
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                console.warn('Invalid coordinates detected, attempting to correct');
+                // If coordinates are invalid, try to correct them
+                lat = Math.max(-90, Math.min(90, lat));
+                lng = Math.max(-180, Math.min(180, lng));
+            }
+
+            // Create a new position object with corrected coordinates
+            return {
+                coords: {
+                    latitude: lat,
+                    longitude: lng,
+                    accuracy: position.coords.accuracy,
+                    altitude: position.coords.altitude,
+                    altitudeAccuracy: position.coords.altitudeAccuracy,
+                    heading: position.coords.heading,
+                    speed: position.coords.speed
+                },
+                timestamp: position.timestamp
+            };
+        }
+
+        function updateNavigationSteps(latLng) {
+            if (!directions || directions.length === 0) return;
+
+            const currentPoint = latLng;
+            let closestStep = currentStep;
+            let minDistance = Infinity;
+            
+            // Find the closest step to current position
+            directions.forEach((step, index) => {
+                const coordinates = step.coordinates || [];
+                if (coordinates.length > 0) {
+                    const [lng, lat] = coordinates[0];
+                    const stepPoint = L.latLng(lat, lng);
+                    const distance = currentPoint.distanceTo(stepPoint);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestStep = index;
+                    }
+                }
+            });
+
+            // Update current step if we've moved to a new one
+            if (closestStep !== currentStep) {
+                currentStep = closestStep;
+                highlightStep(currentStep, directions[currentStep]);
+                
+                // Announce next turn if voice is enabled and we're approaching a turn
+                if (voiceEnabled && !turnAnnounced && minDistance < 1000) {
+                    announceNextTurn();
+                }
+            }
+
+            // Update distance to next turn
+            if (currentStep < directions.length) {
+                const nextTurnDistance = Math.round(minDistance / 1000 * 10) / 10;
+                const distanceToTurn = document.getElementById('distanceToTurn');
+                if (distanceToTurn) {
+                    distanceToTurn.textContent = `Distance: ${nextTurnDistance} km`;
+                }
+                
+                // Reset turn announcement flag when we're far from the turn
+                if (minDistance > 1000) {
+                    turnAnnounced = false;
+                }
+            }
+        }
+
+        function handleGeolocationError(error) {
+            let errorMessage = 'Error getting your location: ';
+            let retryMessage = '';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += 'Location permission denied.';
+                    retryMessage = 'Please enable location services in your browser settings and refresh the page.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += 'Location information unavailable.';
+                    retryMessage = 'Please check your device\'s location settings and try again.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += 'GPS signal not available.';
+                    retryMessage = 'Using approximate location based on your IP address. For better accuracy, please enable GPS or move to an area with better reception.';
+                    getIPLocation(); // Automatically try IP-based location
+                    return; // Don't show error message for timeout
+                default:
+                    errorMessage += 'An unknown error occurred.';
+                    retryMessage = 'Please try refreshing the page and ensuring location services are enabled.';
+                    break;
+            }
+            
+            // Show error with retry button
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                z-index: 1000;
+                text-align: center;
+            `;
+            
+            errorDiv.innerHTML = `
+                <p style="margin: 0 0 10px 0;">${errorMessage}</p>
+                <p style="margin: 0 0 10px 0; color: #666;">${retryMessage}</p>
+                <button onclick="showMyLocation()" style="
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">Try Again</button>
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Remove error message after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 10000);
+            
+            console.error('Geolocation error:', error);
+        }
+
+        // Add a function to manually update location
+        function updateLocation() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+            showMyLocation();
+        }
+
+        function endRoute() {
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            if (currentLocationMarker) {
+                map.removeLayer(currentLocationMarker);
+            }
+
+            // Reset display elements with null checks
+            const speedElement = document.getElementById('speed');
+            const distanceElement = document.getElementById('distance');
+            const durationElement = document.getElementById('duration');
+            const etaElement = document.getElementById('eta');
+            const nextTurnElement = document.getElementById('nextTurn');
+            const distanceToTurnElement = document.getElementById('distanceToTurn');
+            const directionsPanel = document.getElementById('directionsPanel');
+            const routeInfo = document.getElementById('routeInfo');
+            const navigationMode = document.getElementById('navigationMode');
+            const startInput = document.getElementById('start');
+            const endInput = document.getElementById('end');
+
+            if (speedElement) speedElement.textContent = '0';
+            if (distanceElement) distanceElement.textContent = '0';
+            if (durationElement) durationElement.textContent = '0';
+            if (etaElement) etaElement.textContent = '--:--';
+            if (nextTurnElement) nextTurnElement.textContent = 'Next turn: --';
+            if (distanceToTurnElement) distanceToTurnElement.textContent = 'Distance: --';
+            if (directionsPanel) directionsPanel.style.display = 'none';
+            if (routeInfo) routeInfo.style.display = 'none';
+            if (navigationMode) navigationMode.style.display = 'none';
+            if (startInput) startInput.value = '';
+            if (endInput) endInput.value = '';
+
+            directions = [];
+            currentStep = 0;
+            lastAnnouncedStep = -1;
+            turnAnnounced = false;
+
+            if (speechSynthesis) {
+                speechSynthesis.cancel();
+            }
+
+            if (startMarker) {
+                map.removeLayer(startMarker);
+            }
+            if (endMarker) {
+                map.removeLayer(endMarker);
+            }
+        }
+
+        // Initialize map when page loads
+        window.onload = initMap;
+    </script>
 </body>
 </html>
