@@ -20,6 +20,8 @@
         body { background: var(--background-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .test-container { background: #fff; padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow); max-width: 600px; width: 90%; }
         h1 { text-align: center; margin-bottom: 1rem; color: var(--primary-color); }
+        .level-container { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        #level-select { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
         .stats { display: flex; justify-content: space-between; margin-bottom: 1rem; }
         .stats div { font-size: 1rem; }
         #text-display { background: #fff; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; margin-bottom: 1rem; line-height: 1.6; }
@@ -38,6 +40,14 @@
 <body>
     <div class="test-container">
         <h1>中文打字测试</h1>
+        <div class="level-container">
+            <label for="level-select">难度等级：</label>
+            <select id="level-select">
+                <option value="easy">简单</option>
+                <option value="medium">中等</option>
+                <option value="hard">困难</option>
+            </select>
+        </div>
         <div class="stats">
             <div>时间: <span id="timer">60</span>s</div>
             <div>字符数: <span id="cpm">0</span> CPM</div>
@@ -52,13 +62,35 @@
         <div class="result" id="result"></div>
     </div>
     <script>
-        const textSamples = [
-            '今天天气很好，我们一起去公园散步。',
-            '学习中文需要坚持和努力。',
-            '生活就像一盒巧克力，你永远不知道下一块会是什么味道。',
-            '希望你享受这个中文打字测试！',
-            '编程可以创造无限可能。'
-        ];
+        const textSamples = {
+            easy: [
+                '学习中文需要坚持和努力。',
+                '编程可以创造无限可能。',
+                '我喜欢喝咖啡。',
+                '今天我去买菜。',
+                '猫在窗台上睡觉。'
+            ],
+            medium: [
+                '今天天气很好，我们一起去公园散步。',
+                '希望你享受这个中文打字测试！',
+                '周末我和朋友一起去看电影。',
+                '这本书讲述了一个感人的爱情故事。',
+                '因为天气太热，我们决定去海边度假。'
+            ],
+            hard: [
+                '生活就像一盒巧克力，你永远不知道下一块会是什么味道。',
+                '世界上最遥远的距离不是生与死，而是我就站在你面前，你却不知道我爱你。',
+                '她站在桥上，远远看着初升的太阳，心中充满希望。',
+                '在图书馆里，他静静地翻阅着那些发黄的古籍，沉浸在历史的长河中。',
+                '无论风雨如何改变人生轨迹，我们都要坚定地走下去。'
+            ]
+        };
+        let currentLevel = 'easy';
+        const levelSelect = document.getElementById('level-select');
+        levelSelect.addEventListener('change', (e) => {
+            currentLevel = e.target.value;
+            resetTest();
+        });
         let currentText = '';
         let timerInterval;
         let timeLeft = 60;
@@ -74,8 +106,9 @@
         const resultEl = document.getElementById('result');
 
         function loadNewText() {
-            const idx = Math.floor(Math.random() * textSamples.length);
-            currentText = textSamples[idx];
+            const samples = textSamples[currentLevel];
+            const idx = Math.floor(Math.random() * samples.length);
+            currentText = samples[idx];
             textDisplay.innerHTML = '';
             currentText.split('').forEach((char, i) => {
                 const span = document.createElement('span');
