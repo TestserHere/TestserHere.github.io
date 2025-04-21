@@ -177,13 +177,35 @@
             max-height: 80vh;
             overflow-y: auto;
         }
+        /* Autocomplete suggestions list */
+        .suggestions {
+            list-style: none;
+            margin: 4px 0 0 0;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .suggestions li {
+            padding: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .suggestions li:hover {
+            background: #f0f0f0;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div class="search-box">
         <input type="text" id="start" class="search-input" placeholder="Choose starting point">
+        <ul id="start-suggestions" class="suggestions"></ul>
         <input type="text" id="end" class="search-input" placeholder="Choose destination">
+        <ul id="end-suggestions" class="suggestions"></ul>
     </div>
     <div class="directions-panel" id="directionsPanel">
         <h3 style="margin: 0 0 15px 0;">Directions</h3>
@@ -326,14 +348,21 @@
                 addWaypoints: false,
                 draggableWaypoints: false,
                 fitSelectedRoutes: true,
-                showAlternatives: false,
+                showAlternatives: true,
+                altLineOptions: {
+                    styles: [
+                        { color: '#1a73e8', opacity: 0.7, weight: 5 },
+                        { color: '#1a73e8', opacity: 0.5, weight: 5, dashArray: '10,10' }
+                    ]
+                },
                 createMarker: function(i, waypoint) {
                     return i === 0 ? startMarker : endMarker;
                 },
                 router: L.Routing.osrmv1({
                     serviceUrl: 'https://router.project-osrm.org/route/v1',
                     profile: 'car',
-                    timeout: 30000
+                    timeout: 30000,
+                    routingOptions: { alternatives: true }
                 })
             }).addTo(map);
 
@@ -358,6 +387,12 @@
                 if (routeInfoElement) routeInfoElement.style.display = 'block';
 
                 generateDirections(route);
+                document.getElementById('directionsPanel').style.display = 'block';
+            });
+
+            // When user clicks an alternative route, update directions
+            routingControl.on('routeselected', function(e) {
+                generateDirections(e.route);
                 document.getElementById('directionsPanel').style.display = 'block';
             });
 
@@ -446,6 +481,9 @@
 
             // Geocode addresses and update route
             geocodeAddress(startAddress, endAddress);
+            // Hide search menu when navigation starts
+            const searchBox = document.querySelector('.search-box');
+            if (searchBox) searchBox.style.display = 'none';
         }
 
         function generateDirections(route) {
@@ -880,10 +918,62 @@
             if (endMarker) {
                 map.removeLayer(endMarker);
             }
+            // Show search menu again after ending navigation
+            const searchBoxEnd = document.querySelector('.search-box');
+            if (searchBoxEnd) searchBoxEnd.style.display = 'flex';
+        }
+
+        // Autocomplete setup for start/end inputs
+        function setupAutocomplete(inputId, suggestionsId, isStart) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+            input.addEventListener('input', async () => {
+                const query = input.value.trim();
+                suggestions.innerHTML = '';
+                if (!query) return;
+                // limit to current map view for nearby results
+                const bounds = map.getBounds();
+                const viewbox = `${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()},${bounds.getSouth()}`;
+                try {
+                    const res = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&viewbox=${viewbox}&bounded=1&limit=5`
+                    );
+                    const places = await res.json();
+                    places.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item.display_name;
+                        li.addEventListener('click', () => {
+                            setLocationFromSuggestion(item, isStart);
+                            suggestions.innerHTML = '';
+                        });
+                        suggestions.appendChild(li);
+                    });
+                } catch (err) {
+                    console.error('Autocomplete error:', err);
+                }
+            });
+        }
+
+        // Set marker and input from a suggestion
+        function setLocationFromSuggestion(item, isStart) {
+            const latLng = L.latLng(item.lat, item.lon);
+            if (isStart) {
+                startMarker.setLatLng(latLng).addTo(map);
+                document.getElementById('start').value = item.display_name;
+            } else {
+                endMarker.setLatLng(latLng).addTo(map);
+                document.getElementById('end').value = item.display_name;
+            }
+            updateRoute();
         }
 
         // Initialize map when page loads
-        window.onload = initMap;
+        window.onload = () => {
+            initMap();
+            // setup autocomplete after map init
+            setupAutocomplete('start', 'start-suggestions', true);
+            setupAutocomplete('end', 'end-suggestions', false);
+        };
     </script>
 </body>
 </html>
