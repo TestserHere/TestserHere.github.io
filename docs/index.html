@@ -8,68 +8,66 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    body {
+      cursor: url('./cursors/default.png'), auto !important;
+    }
+
+    input[type="text"], textarea {
+      cursor: url('./cursors/textcursor.png'), text !important;
+    }
+
+    a, button {
+      cursor: url('./cursors/handpointing.png'), pointer !important;
+    }
+
+    .help {
+      cursor: url('./cursors/help.png'), help !important;
+    }
+
+    .wait, .loading {
+      cursor: url('./cursors/beachball.png'), wait !important;
+    }
+
+    .progress {
+      cursor: url('./cursors/busy.png'), progress !important;
+    }
+
+    .crosshair {
+      cursor: url('./cursors/cross.png'), crosshair !important;
+    }
+
+    .move {
+      cursor: url('./cursors/move.png'), move !important;
+    }
+
+    .not-allowed, .disabled {
+      cursor: url('./cursors/notallowed.png'), not-allowed !important;
+    }
+
+    .grab {
+      cursor: url('./cursors/handopen.png'), grab !important;
+    }
+
+    .grabbing {
+      cursor: url('./cursors/handgrabbing.png'), grabbing !important;
+    }
+
+    .resize-horizontal {
+      cursor: url('./cursors/resizewesteast.png'), ew-resize !important;
+    }
+
+    .resize-vertical {
+      cursor: url('./cursors/resizenorthsouth.png'), ns-resize !important;
+    }
+
+    .resize-diagonal-1 {
+      cursor: url('./cursors/resizenorthwestsoutheast.png'), nesw-resize !important;
+    }
+
+    .resize-diagonal-2 {
+      cursor: url('./cursors/resizenortheastsouthwest.png'), nwse-resize !important;
+    }
     
-  body {
-    cursor: url('./cursors/default.png'), auto !important;
-  }
-
-  input[type="text"], textarea {
-    cursor: url('./cursors/textcursor.png'), text !important;
-  }
-
-  a, button {
-    cursor: url('./cursors/handpointing.png'), pointer !important;
-  }
-
-  .help {
-    cursor: url('./cursors/help.png'), help !important;
-  }
-
-  .wait, .loading {
-    cursor: url('./cursors/beachball.png'), wait !important;
-  }
-
-  .progress {
-    cursor: url('./cursors/busy.png'), progress !important;
-  }
-
-  .crosshair {
-    cursor: url('./cursors/cross.png'), crosshair !important;
-  }
-
-  .move {
-    cursor: url('./cursors/move.png'), move !important;
-  }
-
-  .not-allowed, .disabled {
-    cursor: url('./cursors/notallowed.png'), not-allowed !important;
-  }
-
-  .grab {
-    cursor: url('./cursors/handopen.png'), grab !important;
-  }
-
-  .grabbing {
-    cursor: url('./cursors/handgrabbing.png'), grabbing !important;
-  }
-
-  .resize-horizontal {
-    cursor: url('./cursors/resizewesteast.png'), ew-resize !important;
-  }
-
-  .resize-vertical {
-    cursor: url('./cursors/resizenorthsouth.png'), ns-resize !important;
-  }
-
-  .resize-diagonal-1 {
-    cursor: url('./cursors/resizenorthwestsoutheast.png'), nesw-resize !important;
-  }
-
-  .resize-diagonal-2 {
-    cursor: url('./cursors/resizenortheastsouthwest.png'), nwse-resize !important;
-  }
-
-
     #embed-preview-iframe {
       height:600px;
     }
@@ -209,6 +207,64 @@
 
       }
     }
+
+    const backAllCursors = (parent) => {
+      Array.from(parent.children).forEach((element) => {
+        // backup original cursor, if not backed up already
+        if (!element.getAttribute('data-macos-cursor')) {
+          const macOsCursor = getComputedStyle(element).cursor;
+
+          if (element.id === 'navbarSupportedContent') {
+            console.log(element.id, macOsCursor)
+          }
+
+          if (macOsCursor) {
+            element.setAttribute('data-macos-cursor', macOsCursor);
+            element.setAttribute('data-system-cursor', macOsCursor.split(',').pop().trim()); // => pointer
+          } else {
+            element.setAttribute('data-macos-cursor', 'auto');
+            element.setAttribute('data-system-cursor', 'auto');
+          }
+        }
+
+        // recursively
+        backAllCursors(element);
+      });
+    }
+
+    function setCursor(cursor) {
+      console.log(cursor);
+
+      const setChildrenCursor = (parent, cursor) => {
+        Array.from(parent.children).forEach((element) => {
+          if (cursor === "ipadOS") {
+            element.style.setProperty('cursor', 'none', 'important');
+          } else if (cursor === "macOS") {
+            element.style.setProperty('cursor', element.getAttribute('data-macos-cursor'), 'important');
+          } else if (cursor === "system") {
+            element.style.setProperty('cursor', element.getAttribute('data-system-cursor'), 'important');
+          }
+
+          // recursively
+          setChildrenCursor(element, cursor);
+        })
+      }
+
+      // set browser cursor
+      setChildrenCursor(document.body, cursor);
+
+      // set fake cursor
+      if (cursor === "ipadOS") {
+        import("https://unpkg.com/ipad-cursor@latest").then(cursorModule => {
+          cursorModule.initCursor();
+        });
+      } else {
+        import("https://unpkg.com/ipad-cursor@latest").then(cursorModule => {
+          cursorModule.disposeCursor();
+        }); 
+      }
+    }
+
     function search() {
       console.log("searching!");
       let keyword = document.getElementById("keyword").value;
@@ -259,6 +315,9 @@
       }
     }
 
+    document.addEventListener('DOMContentLoaded', function () {
+      backAllCursors(document.body);
+    });
 
   </script>
 </head>
@@ -355,11 +414,22 @@
                     <li><a class="dropdown-item" onclick="changeTheme('blue');">Blue Theme</a></li>
                     </ul>
                 </li>
+
+                <li class="nav-item dropdown" id="Cursor">
+                  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Cursors
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="setCursor('macOS')">macOS Cursor</a></li>
+                    <li><a class="dropdown-item" onclick="setCursor('ipadOS')">ipadOS Cursor</a></li>
+                    <li><a class="dropdown-item" onclick="setCursor('system')">System Cursor</a></li>
+                  </ul>
+                </li>
     
                 </ul>
                 <form class="d-flex" role="search" onsubmit="event.preventDefault()">
                 <input class="form-control me-2" type="search" placeholder="Search On Google..." aria-label="Search" id="keyword" autocomplete="off">
-                <button class="btn btn-success" onclick="search();" id="Search">Search</button>
+                <button class="btn btn-success" onclick="search();" id="Search" data-cursor="block">Search</button>
                 </form>
             </div>
         </div>
