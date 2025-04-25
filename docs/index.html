@@ -207,64 +207,7 @@
 
       }
     }
-
-    const backAllCursors = (parent) => {
-      Array.from(parent.children).forEach((element) => {
-        // backup original cursor, if not backed up already
-        if (!element.getAttribute('data-macos-cursor')) {
-          const macOsCursor = getComputedStyle(element).cursor;
-
-          if (element.id === 'navbarSupportedContent') {
-            console.log(element.id, macOsCursor)
-          }
-
-          if (macOsCursor) {
-            element.setAttribute('data-macos-cursor', macOsCursor);
-            element.setAttribute('data-system-cursor', macOsCursor.split(',').pop().trim()); // => pointer
-          } else {
-            element.setAttribute('data-macos-cursor', 'auto');
-            element.setAttribute('data-system-cursor', 'auto');
-          }
-        }
-
-        // recursively
-        backAllCursors(element);
-      });
-    }
-
-    function setCursor(cursor) {
-      console.log(cursor);
-
-      const setChildrenCursor = (parent, cursor) => {
-        Array.from(parent.children).forEach((element) => {
-          if (cursor === "ipadOS") {
-            element.style.setProperty('cursor', 'none', 'important');
-          } else if (cursor === "macOS") {
-            element.style.setProperty('cursor', element.getAttribute('data-macos-cursor'), 'important');
-          } else if (cursor === "system") {
-            element.style.setProperty('cursor', element.getAttribute('data-system-cursor'), 'important');
-          }
-
-          // recursively
-          setChildrenCursor(element, cursor);
-        })
-      }
-
-      // set browser cursor
-      setChildrenCursor(document.body, cursor);
-
-      // set fake cursor
-      if (cursor === "ipadOS") {
-        import("https://unpkg.com/ipad-cursor@latest").then(cursorModule => {
-          cursorModule.initCursor();
-        });
-      } else {
-        import("https://unpkg.com/ipad-cursor@latest").then(cursorModule => {
-          cursorModule.disposeCursor();
-        }); 
-      }
-    }
-
+    
     function search() {
       console.log("searching!");
       let keyword = document.getElementById("keyword").value;
@@ -314,12 +257,8 @@
         }
       }
     }
-
-    document.addEventListener('DOMContentLoaded', function () {
-      backAllCursors(document.body);
-    });
-
   </script>
+<script src="/cursor.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
