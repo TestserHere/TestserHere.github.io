@@ -19,6 +19,7 @@
   }
 
   function setCursor(cursor) {
+
     const setChildrenCursor = (parent, cursor) => {
       Array.from(parent.children).forEach((element) => {
         if (cursor === "ipadOS") {
