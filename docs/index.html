@@ -324,26 +324,26 @@
 <body>
     <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#"></a>
+            <a class="navbar-brand" href="#" data-cursor="block"></a>
             <img src="home_things/home/icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item" id="Home">
+                <li class="nav-item" id="Home" data-cursor="block">
                     <a class="nav-link active" aria-current="page" href="https://testserhere.github.io">Home</a>
                 </li>
-                <li class="nav-item" id="About">
+                <li class="nav-item" id="About" data-cursor="block">
                     <a class="nav-link active" aria-current="page" onclick="loadPage('about.html')">About</a>
                 </li>
                 <!-- <li class="nav-item" id="Services">
                     <a class="nav-link active" aria-current="page" href="#">Services</a>
                 </li> -->
-                <li class="nav-item" id="Contact">
+                <li class="nav-item" id="Contact" data-cursor="block">
                     <a class="nav-link active" aria-current="page" onclick="loadPage('contact.html')">Contact</a>
                 </li>
-                <li class="nav-item dropdown" id="projects">
+                <li class="nav-item dropdown" id="projects" data-cursor="block">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Projects
                     </a>
@@ -404,7 +404,7 @@
                     </ul>
                 </li>
     
-                <li class="nav-item dropdown" id="Themes">
+                <li class="nav-item dropdown" id="Themes" data-cursor="block">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Change Themes
                     </a>
@@ -415,7 +415,7 @@
                     </ul>
                 </li>
 
-                <li class="nav-item dropdown" id="Cursor">
+                <li class="nav-item dropdown" id="Cursor" data-cursor="block">
                   <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Cursors
                   </a>
@@ -428,7 +428,7 @@
     
                 </ul>
                 <form class="d-flex" role="search" onsubmit="event.preventDefault()">
-                <input class="form-control me-2" type="search" placeholder="Search On Google..." aria-label="Search" id="keyword" autocomplete="off">
+                <input class="form-control me-2" type="search" placeholder="Search On Google..." aria-label="Search" id="keyword" autocomplete="off" data-cursor="text">
                 <button class="btn btn-success" onclick="search();" id="Search" data-cursor="block">Search</button>
                 </form>
             </div>
