@@ -34,6 +34,37 @@
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="styles.css" rel="stylesheet" />
         <style>
+
+            
+
+            body.dark {
+                background: #121212;
+                color: white;
+            }
+            
+            body.blue {
+                background:rgba(56,136,203,255); /* Light blue background */
+                color: #003366; /* Dark blue text */
+            }
+
+            body.blue img {
+                filter: brightness(0.9) saturate(1.2) hue-rotate(180deg);
+            }
+
+            body.dark img {
+                filter: invert(1) hue-rotate(180deg);
+            }
+            
+            body.white {
+                background:none;
+                color:none;
+            }
+
+            body {
+                background: white;
+                color: black;
+            }
+
             body {
                 cursor: url('../cursors/default.png'), auto !important;
             }

@@ -86,3 +86,20 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', removeBackdrops);
 });
 
+window.addEventListener('message', (event) => {
+    if (event.data === 'toggle-dark-mode') {
+      document.body.classList.toggle('dark');
+    }
+  });
+
+window.addEventListener('message', (event) => {
+if (event.data === 'toggle-blue-theme') {
+    document.body.classList.toggle('blue');
+}
+});
+
+window.addEventListener('message', (event) => {
+    if (event.data === 'toggle-white-theme') {
+        document.body.classList.toggle('white');
+    }
+    });

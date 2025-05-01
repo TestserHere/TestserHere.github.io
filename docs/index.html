@@ -190,6 +190,9 @@
           document.getElementById("navbar").style.backgroundColor = "white";
           document.getElementById("image").src = "home_things/home/icons/icon3.png";
           document.getElementById("popupButton").style.backgroundColor = "#007bff";
+          const iframe = document.getElementById('contentIframe');
+          iframe.contentWindow.postMessage('toggle-white-theme', '*');
+
 
       } else if (theme === 'dark') {
           navbar.classList.add('navbar-dark');
@@ -197,6 +200,10 @@
           document.getElementById("navbar").style.backgroundColor = "black";
           document.getElementById("image").src = "home_things/home/icons/icon1.png";
           document.getElementById("popupButton").style.backgroundColor = "black";
+          
+          const iframe = document.getElementById('contentIframe');
+          iframe.contentWindow.postMessage('toggle-dark-mode', '*');
+
         
       } else if (theme === 'blue') {
           navbar.classList.add('navbar-dark');
@@ -204,6 +211,8 @@
           document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
           document.getElementById("image").src = "home_things/home/icons/icon2.png";
           document.getElementById("popupButton").style.backgroundColor = "rgba(56,136,203,255)";
+          const iframe = document.getElementById('contentIframe');
+          iframe.contentWindow.postMessage('toggle-blue-theme', '*');
 
       }
     }
@@ -257,6 +266,7 @@
         }
       }
     }
+
   </script>
 <script src="/cursor.js"></script>
 </head>
