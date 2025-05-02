@@ -1,302 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pickaxe AI</title>
-    <style>
-        :root {
-            --background-color: #343541;
-            --chat-background: #444654;
-            --text-color: #FFFFFF;
-            --input-background: #40414F;
-            --border-color: #565869;
-            --hover-color: #2A2B32;
-            --button-color: #19C37D;
-            --error-color: #ff4444;
-        }
+  <meta charset="UTF-8">
+  <title>Pickaxe Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
+    header {
+      background-color: #4f46e5;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: bold;
+    }
 
-        body {
-            background-color: var(--background-color);
-            color: var(--text-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
 
-        .header {
-            text-align: center;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--background-color);
-        }
+    .chat-iframe {
+      width: 100%;
+      max-width: 900px;
+      height: -100%;
+      border: 1px solid rgba(0, 0, 0, 1);
+      border-radius: 10px;
+      transition: 0.3s;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+    }
 
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
+    .chat-iframe:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
 
-        .messages-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 2rem 0;
-        }
-
-        .message {
-            padding: 1.5rem;
-            display: flex;
-            justify-content: center;
-        }
-
-        .message-content {
-            max-width: 800px;
-            width: 100%;
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-
-        .user-message {
-            background-color: var(--background-color);
-        }
-
-        .assistant-message {
-            background-color: var(--chat-background);
-        }
-
-        .error-message {
-            color: var(--error-color);
-            text-align: center;
-            padding: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .input-container {
-            padding: 1rem;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--background-color);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .input-form {
-            max-width: 800px;
-            margin: 0 auto;
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .message-input {
-            flex-grow: 1;
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
-            background-color: var(--input-background);
-            color: var(--text-color);
-            font-size: 1rem;
-            resize: none;
-            min-height: 44px;
-            max-height: 200px;
-        }
-
-        .message-input:focus {
-            outline: none;
-            border-color: var(--button-color);
-        }
-
-        .send-button {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--button-color);
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: opacity 0.2s;
-        }
-
-        .send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .loading-dots {
-            display: flex;
-            gap: 0.3rem;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--background-color);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--hover-color);
-        }
-    </style>
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Pickaxe AI</h1>
-    </div>
 
-    <div class="messages-container" id="messages">
-        <!-- Messages will be inserted here -->
-    </div>
+  <header>
+    Testser's Chatbot
+  </header>
 
-    <div class="input-container">
-        <form class="input-form" id="messageForm">
-            <input
-                type="text"
-                id="messageInput"
-                class="message-input"
-                placeholder="Send a message..."
-                autocomplete="off"
-            >
-            <button type="submit" class="send-button" id="sendButton">
-                Send
-            </button>
-        </form>
-    </div>
+  <main>
+    <iframe 
+      src="https://embed.pickaxeproject.com/axe?id=Testsers_Chatbot_PQ7NP&mode=embed_gold&host=beta&theme=light&opacity=100&font_header=Real+Head+Pro&size_header=30&font_body=Real+Head+Pro&size_body=16&font_labels=Real+Head+Pro&size_labels=14&font_button=Real+Head+Pro&size_button=16&c_fb=FFFFFF&c_ff=FFFFFF&c_fbd=888888&c_rb=FFFFFF&c_bb=228DD7&c_bt=FFFFFF&c_t=000000&s_ffo=100&s_rbo=100&s_bbo=100&s_f=minimalist&s_b=filled&s_t=1&s_to=1&s_r=2" 
+      class="chat-iframe" 
+      frameborder="0" 
+      allow="clipboard-write">
+    </iframe>
+  </main>
 
-    <script>
-        const messagesContainer = document.getElementById('messages');
-        const messageForm = document.getElementById('messageForm');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
+  <footer>
+    Powered by Pickaxe ✨ | Embedded with by Testser
+  </footer>
 
-        // Default API key - Replace this with your actual API key
-        const API_KEY = 'YOUR_PICKAXE_AI_API_KEY';
-
-        function createMessageElement(content, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.textContent = content;
-            
-            messageDiv.appendChild(contentDiv);
-            return messageDiv;
-        }
-
-        function createErrorElement(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = message;
-            return errorDiv;
-        }
-
-        function createLoadingIndicator() {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message assistant-message';
-            
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message-content loading-dots';
-            loadingDiv.innerHTML = '<span>.</span><span>.</span><span>.</span>';
-            
-            messageDiv.appendChild(loadingDiv);
-            return messageDiv;
-        }
-
-        function scrollToBottom() {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        async function callPickaxeAI(message) {
-            const response = await fetch('https://beta.pickaxeproject.com/axe?id=Testsers_Chatbot_PQ7NP', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: message
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to get response from Pickaxe AI');
-            }
-
-            const data = await response.json();
-            return data.response || data.message || 'No response received';
-        }
-
-        messageForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const message = messageInput.value.trim();
-            if (!message) return;
-
-            // Disable input and button while processing
-            messageInput.value = '';
-            messageInput.disabled = true;
-            sendButton.disabled = true;
-
-            // Add user message
-            messagesContainer.appendChild(createMessageElement(message, true));
-            scrollToBottom();
-
-            // Add loading indicator
-            const loadingIndicator = createLoadingIndicator();
-            messagesContainer.appendChild(loadingIndicator);
-            scrollToBottom();
-
-            try {
-                // Call Pickaxe AI API
-                const response = await callPickaxeAI(message);
-                
-                // Remove loading indicator
-                messagesContainer.removeChild(loadingIndicator);
-
-                // Add AI response
-                messagesContainer.appendChild(createMessageElement(response, false));
-            } catch (error) {
-                // Remove loading indicator
-                messagesContainer.removeChild(loadingIndicator);
-                
-                // Add error message
-                messagesContainer.appendChild(createErrorElement(error.message));
-            }
-
-            scrollToBottom();
-
-            // Re-enable input and button
-            messageInput.disabled = false;
-            sendButton.disabled = false;
-            messageInput.focus();
-        });
-
-        // Handle input height adjustment
-        messageInput.addEventListener('input', () => {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = messageInput.scrollHeight + 'px';
-        });
-
-        // Initial focus
-        messageInput.focus();
-    </script>
 </body>
-</html> 
+</html>
