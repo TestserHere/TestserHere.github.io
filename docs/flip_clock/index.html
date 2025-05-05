@@ -44,7 +44,7 @@
 			.clock-container {
 				position: fixed;
 				top: 0;
-				left: 0;
+				left: 80%;
 				right: 0;
 				bottom: 0;
 				display: flex;
@@ -69,16 +69,40 @@
 			.clock .flip-clock-wrapper {
 				display: inline-block;
 			}
+			.clockface-toggle {
+				position: fixed;
+				top: 60px;
+				right: 20px;
+				padding: 10px 20px;
+				border: none;
+				border-radius: 5px;
+				background-color: #333;
+				color: white;
+				cursor: pointer;
+				transition: background-color 0.3s ease;
+				z-index: 1000;
+			}
+			.clockface-toggle:hover {
+				background-color: #444;
+			}
+			.dark-mode .clockface-toggle {
+				background-color: #666;
+			}
+			.dark-mode .clockface-toggle:hover {
+				background-color: #777;
+			}
 		</style>		
 	</head>
 	<body>
 		<button class="theme-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+		<button class="clockface-toggle" onclick="toggleClockFace()">Switch to 12 Hour</button>
 		<div class="clock-container">
 			<div class="clock"></div>
 		</div>
 
 		<script type="text/javascript">
 			var clock;
+			var is24Hour = true;
 			
 			$(document).ready(function() {
 				clock = $('.clock').FlipClock({
@@ -91,6 +115,20 @@
 				// Save preference to localStorage
 				const isDarkMode = document.body.classList.contains('dark-mode');
 				localStorage.setItem('darkMode', isDarkMode);
+			}
+
+			function toggleClockFace() {
+				if (clock) {
+					clock.stop();
+					$('.clock').empty();
+					is24Hour = !is24Hour;
+					clock = $('.clock').FlipClock({
+						clockFace: is24Hour ? 'TwentyFourHourClock' : 'TwelveHourClock',
+						autoStart: true
+					});
+					// Update button text
+					document.querySelector('.clockface-toggle').textContent = is24Hour ? 'Switch to 12 Hour' : 'Switch to 24 Hour';
+				}
 			}
 
 			// Check for saved dark mode preference
