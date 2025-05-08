@@ -1,90 +1,107 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-Frame 360° VR Video Player</title>
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: #181818;
-            color: #fff;
-            min-height: 100vh;
-        }
-        #player-container {
-            max-width: 900px;
-            margin: 40px auto 0 auto;
-            background: #222;
-            border-radius: 10px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-            padding: 2em 2em 1em 2em;
-        }
-        #file-upload {
-            display: none;
-        }
-        #upload-label {
-            margin-bottom: 1em;
-        }
-        #aframe-container {
-            width: 100%;
-            height: 500px;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #000;
-        }
-        #controls {
-            margin-top: 1em;
-            display: flex;
-            gap: 1em;
-            align-items: center;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>VR Video Player with Bootstrap Controls</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      width: 320px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
 <body>
-    <div id="player-container" class="container">
-        <h2 class="mb-4">A-Frame 360° VR Video Player</h2>
-        <label id="upload-label" class="btn btn-primary">
-            Upload 360° Video
-            <input type="file" id="file-upload" accept="video/*">
-        </label>
-        <div id="controls">
-            <button id="play-btn" class="btn btn-success" disabled>Play</button>
-            <button id="pause-btn" class="btn btn-warning" disabled>Pause</button>
-        </div>
-        <div id="aframe-container">
-            <a-scene embedded vr-mode-ui="enabled: true">
-                <a-assets>
-                    <video id="vid" crossorigin="anonymous" loop="true" webkit-playsinline playsinline style="position: absolute; left: -9999px;"></video>
-                </a-assets>
-                <a-entity geometry="primitive: sphere; radius: 5000; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src: #vid;" scale="-1 1 1"></a-entity>
-                <a-sky color="#000"></a-sky>
-            </a-scene>
-        </div>
+  <!-- Controls UI -->
+  <div id="controls" class="border">
+    <div class="mb-3">
+      <label for="videoUpload" class="form-label">Select a 360° Video</label>
+      <input class="form-control" type="file" id="videoUpload" accept="video/*" />
     </div>
-    <script>
-        const fileInput = document.getElementById('file-upload');
-        const vid = document.getElementById('vid');
-        const playBtn = document.getElementById('play-btn');
-        const pauseBtn = document.getElementById('pause-btn');
 
-        fileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const videoURL = URL.createObjectURL(file);
-                vid.src = videoURL;
-                vid.load();
-                playBtn.disabled = false;
-                pauseBtn.disabled = false;
-            }
-        });
+    <div class="mb-3">
+      <button id="playPause" class="btn btn-primary w-100">Pause</button>
+    </div>
 
-        playBtn.addEventListener('click', function() {
-            vid.play();
-        });
-        pauseBtn.addEventListener('click', function() {
-            vid.pause();
-        });
-    </script>
+    <div class="mb-3">
+      <label for="volumeSlider" class="form-label">Volume</label>
+      <input type="range" class="form-range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+    </div>
+
+    <div>
+      <label for="seekSlider" class="form-label">Seek</label>
+      <input type="range" class="form-range" id="seekSlider" min="0" max="100" value="0">
+    </div>
+  </div>
+
+  <!-- A-Frame Scene -->
+  <a-scene>
+    <a-assets>
+      <video id="video" autoplay loop crossorigin="anonymous" playsinline webkit-playsinline></video>
+    </a-assets>
+
+    <a-videosphere src="#video"></a-videosphere>
+
+    <a-entity camera look-controls position="0 1.6 0"></a-entity>
+  </a-scene>
+
+  <!-- Script -->
+  <script>
+    const fileInput = document.getElementById('videoUpload');
+    const video = document.getElementById('video');
+    const playPauseBtn = document.getElementById('playPause');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const seekSlider = document.getElementById('seekSlider');
+
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        video.src = url;
+        video.loop = false;
+        video.load();
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      }
+    });
+
+    playPauseBtn.addEventListener('click', function () {
+      if (video.paused) {
+        video.play();
+        this.textContent = 'Pause';
+      } else {
+        video.pause();
+        this.textContent = 'Play';
+      }
+    });
+
+    volumeSlider.addEventListener('input', function () {
+      video.volume = this.value;
+    });
+
+    video.addEventListener('timeupdate', function () {
+      if (!seekSlider.dragging && video.duration) {
+        const percent = (video.currentTime / video.duration) * 100;
+        seekSlider.value = percent;
+      }
+    });
+
+    seekSlider.addEventListener('mousedown', () => seekSlider.dragging = true);
+    seekSlider.addEventListener('mouseup', function () {
+      if (video.duration) {
+        const time = (this.value / 100) * video.duration;
+        video.currentTime = time;
+      }
+      seekSlider.dragging = false;
+    });
+  </script>
 </body>
 </html>
