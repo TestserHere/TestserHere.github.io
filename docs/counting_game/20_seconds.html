@@ -1,110 +1,279 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <title>20 second challenge</title>
+        <title>20 Second Challenge</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style> 
+            :root {
+                --primary: #4361ee;
+                --secondary: #3f37c9;
+                --accent: #4895ef;
+                --success: #4cc9f0;
+                --warning: #f72585;
+                --background: #f8f9fa;
+                --text: #212529;
+                --card: #ffffff;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Poppins', sans-serif;
+            }
+
             body {
-                font-family: "Poppins", sans-serif;
-                font-weight: 400;
-                font-style: normal;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 2rem;
+                color: white;
+            }
+
+            .container {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 2rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                max-width: 800px;
+                width: 100%;
+                text-align: center;
+            }
+
+            h2 {
+                font-size: 2.5rem;
+                margin-bottom: 1.5rem;
+                background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .instructions {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 1.5rem;
+                border-radius: 15px;
+                margin-bottom: 2rem;
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
+
+            .controls {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                margin-bottom: 2rem;
+            }
+
+            .btn {
+                background: rgba(255, 255, 255, 0.1);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 15px;
+                font-size: 1.2rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .btn i {
+                font-size: 1.5rem;
+            }
+
+            #history {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+
+            .alert {
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                border-radius: 15px;
+                padding: 1rem;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                animation: slideIn 0.3s ease;
+            }
+
+            .alert i {
+                font-size: 1.5rem;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .back-btn {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+                background: rgba(255, 255, 255, 0.1);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 10px;
+                text-decoration: none;
+                transition: all 0.3s ease;
+            }
+
+            .back-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: translateY(-3px);
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    padding: 1rem;
+                }
+
+                h2 {
+                    font-size: 2rem;
+                }
+
+                .controls {
+                    flex-direction: column;
+                }
+
+                .btn {
+                    width: 100%;
+                }
               }
             </style>
-            <link
-              href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-              rel="stylesheet"
-              integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-              crossorigin="anonymous"
-            />
-            <link
-              rel="stylesheet"
-              href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-            />
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-            <link
-              href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-              rel="stylesheet"
-            />
-            <link
-              href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
-              rel="stylesheet"
-            />
-            <!--choose one to use! <link href="https://fonts.cdnfonts.com/css/bus-stop-2" rel="stylesheet" /> -->
-            <link
-              href="https://fonts.cdnfonts.com/css/edit-undo-brk"
-              rel="stylesheet"
-            />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <a href="countingGame.html" class="back-btn">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <div class="container">
+            <h2>20 Second Challenge</h2>
+            <div class="instructions">
+                <p>Count 20 seconds in your head. When you think it's exactly 20 seconds, press the Finish button!</p>
+            </div>
+            <div class="controls">
+                <button id="start" class="btn" onclick="start()">
+                    <i class="bi bi-play-fill"></i>
+                    Start
+                </button>
+                <button id="finish" class="btn" onclick="finish()" disabled>
+                    <i class="bi bi-stop-fill"></i>
+                    Finish
+                </button>
+            </div>
+            <div id="history"></div>
+        </div>
         
             <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
             <script>
-              // Disable right-click
-              document.addEventListener('contextmenu', (e) => e.preventDefault());
+            let recordHistory = 0;
+            let startTime;
+            let timerInterval;
+            let elapsedTime = 0;
 
-              function ctrlShiftKey(e, keyCode) {
-                return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
-              }
+            $("#start").prop("disabled", false);
+            $("#finish").prop("disabled", true);
 
-              document.onkeydown = (e) => {
-                // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
-                if (
-                  event.keyCode === 123 ||
-                  ctrlShiftKey(e, 'I') ||
-                  ctrlShiftKey(e, 'J') ||
-                  ctrlShiftKey(e, 'C') ||
-                  (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
-                )
-                  return false;
-              };
-            </script>
-    </head>
-    <body>
-        <h2>20 second challenge</h2>
-        <p>Count 20 seconds, when you think it's 20 seconds, press the <b>Finish</b> button!</p>
-        <button id="start" class="btn btn-outline-secondary" onclick="start()">Start!</button>
-        <button id="finish" class="btn btn-outline-secondary" onclick="finish()">Finish</button>
+            function start() {
+                startTime = new Date().valueOf();
+                $("#start").prop("disabled", true);
+                $("#finish").prop("disabled", false);
+                
+                // Start timer display
+                elapsedTime = 0;
+                timerInterval = setInterval(() => {
+                    elapsedTime += 0.1;
+                    if (elapsedTime >= 20) {
+                        clearInterval(timerInterval);
+                    }
+                }, 100);
+            }
 
-        <div id="history"></div>
+            function finish() {
+                clearInterval(timerInterval);
+                const stopTime = new Date().valueOf();
+                const total = (stopTime - startTime) / 1000;
+                
+                $("#start").prop("disabled", false);
+                $("#finish").prop("disabled", true);
 
-    <script>
-        recordHistory = 0
-        $("#start").prop("disabled" , false)
-        $("#finish").prop("disabled" , true)
-        function start() {
-            startTime = new Date().valueOf()
-            $("#start").prop("disabled" , true)
-            $("#finish").prop("disabled" , false)
-          }
-        function finish() {
-            stopTime = new Date().valueOf()
-            total = (stopTime - startTime) / 1000
-            $("#start").prop("disabled" , false)
-            $("#finish").prop("disabled" , true)
-            bootbox.alert({ title: "Score", message: total + " seconds!" });
-            addRecord(total)
-        }
+                bootbox.alert({
+                    title: "Your Time",
+                    message: `<div style="text-align: center; font-size: 1.5rem;">
+                        <i class="bi bi-stopwatch"></i><br>
+                        ${total.toFixed(1)} seconds
+                    </div>`,
+                    callback: function() {
+                        addRecord(total);
+                    }
+                });
+            }
+
         function addRecord(total) {
-          recordHistory = recordHistory + 1
+                recordHistory++;
+                let icon, color, message;
 
-          if (total > 20.5) {
-          colour = "danger"
-          } 
-          else if (total > 19.5) {
-          colour = "success"
-          }
-          else if (total > 18.5) {
-            colour = "warning"
-          }
-          else {
-            colour = "secondary"
-          }
+                if (total > 21) {
+                    color = "danger";
+                    icon = "bi-x-circle";
+                    message = "Too late!";
+                } else if (total > 19) {
+                    color = "success";
+                    icon = "bi-check-circle";
+                    message = "Perfect timing!";
+                } else if (total > 17) {
+                    color = "warning";
+                    icon = "bi-exclamation-circle";
+                    message = "Close enough!";
+                } else {
+                    color = "secondary";
+                    icon = "bi-dash-circle";
+                    message = "Too early!";
+                }
 
-          div = `
-          <div class="alert alert-${colour}" role="alert">
-            [${recordHistory}] ${total} seconds
+                const div = `
+                    <div class="alert alert-${color}" role="alert">
+                        <i class="bi ${icon}"></i>
+                        <div>
+                            <strong>Attempt #${recordHistory}</strong><br>
+                            ${total.toFixed(1)} seconds<br>
+                            <small>${message}</small>
+                        </div>
           </div>
-          `
-          $("#history").append(div)
+                `;
+                $("#history").prepend(div);
         }
     </script>
     </body>

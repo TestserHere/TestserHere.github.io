@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --background-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            background: var(--background-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .text-display {
+            background: var(--background-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            min-height: 150px;
+        }
+
+        .text-display span {
+            position: relative;
+        }
+
+        .text-display span.current {
+            background: var(--primary-color);
+            color: white;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .text-display span.correct {
+            color: var(--success-color);
+        }
+
+        .text-display span.incorrect {
+            color: var(--error-color);
+            text-decoration: underline;
+        }
+
+        .input-area {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        #typing-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #typing-input:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            background: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: var(--secondary-color);
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .difficulty-btn {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .difficulty-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .results {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+        }
+
+        .results h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--background-color);
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Typing Speed Test</h1>
+        
+        <div class="difficulty-selector">
+            <div class="difficulty-btn active" data-difficulty="easy">Easy</div>
+            <div class="difficulty-btn" data-difficulty="medium">Medium</div>
+            <div class="difficulty-btn" data-difficulty="hard">Hard</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="wpm">0</div>
+                <div class="stat-label">WPM</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="accuracy">100%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="time">60</div>
+                <div class="stat-label">Seconds (Timer)</div>
+            </div>
+        </div>
+
+        <div class="text-display" id="text-display"></div>
+        
+        <div class="input-area">
+            <input type="text" id="typing-input" placeholder="Start typing when ready..." autocomplete="off">
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <div class="controls">
+            <button id="start-btn">Start Test</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+
+        <div class="results" id="results">
+            <h2>Test Complete!</h2>
+            <div class="stat">
+                <div class="stat-value" id="final-wpm">0</div>
+                <div class="stat-label">Final WPM</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="final-accuracy">0%</div>
+                <div class="stat-label">Final Accuracy</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const texts = {
+            easy: [
+                "The quick brown fox jumps over the lazy dog.",
+                "Programming is fun and challenging at the same time.",
+                "Learning to type faster can improve your productivity.",
+                "Practice makes perfect when it comes to typing.",
+                "The sun rises in the east and sets in the west."
+            ],
+            medium: [
+                "The ability to type quickly and accurately is a valuable skill in today's digital world. Many jobs require efficient typing skills.",
+                "Regular practice can significantly improve your typing speed. Start with simple exercises and gradually increase the difficulty.",
+                "Proper posture and hand positioning are essential for efficient typing. Keep your fingers on the home row for better accuracy.",
+                "Typing speed tests are a great way to measure your progress. Track your results over time to see your improvement.",
+                "Keyboard shortcuts can save you time and increase your productivity. Learn the most common shortcuts for your operating system."
+            ],
+            hard: [
+                "The intricate dance of fingers across the keyboard, each movement precise and purposeful, creates a symphony of productivity. Mastery of this skill requires dedication, practice, and an understanding of ergonomic principles.",
+                "In the realm of digital communication, typing proficiency serves as a fundamental cornerstone. The ability to translate thoughts into text with speed and accuracy is paramount in professional environments.",
+                "The evolution of typing technology has transformed the way we interact with computers. From mechanical typewriters to modern ergonomic keyboards, the pursuit of efficiency continues to drive innovation.",
+                "Cognitive science suggests that typing proficiency is not merely a motor skill but a complex interplay of visual perception, muscle memory, and mental processing. Regular practice strengthens these neural pathways.",
+                "The art of touch typing, where one types without looking at the keyboard, represents the pinnacle of typing proficiency. This skill, once mastered, becomes second nature and significantly enhances productivity."
+            ]
+        };
+
+        let currentText = '';
+        let startTime;
+        let timer;
+        let isTestActive = false;
+        let correctChars = 0;
+        let totalChars = 0;
+        let currentDifficulty = 'easy';
+
+        const textDisplay = document.getElementById('text-display');
+        const typingInput = document.getElementById('typing-input');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const wpmDisplay = document.getElementById('wpm');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const timeDisplay = document.getElementById('time');
+        const progressBar = document.getElementById('progress');
+        const results = document.getElementById('results');
+        const finalWpm = document.getElementById('final-wpm');
+        const finalAccuracy = document.getElementById('final-accuracy');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+        function getRandomText(difficulty) {
+            const textArray = texts[difficulty];
+            return textArray[Math.floor(Math.random() * textArray.length)];
+        }
+
+        function updateTextDisplay() {
+            textDisplay.innerHTML = '';
+            currentText.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                if (index === typingInput.value.length) {
+                    span.classList.add('current');
+                } else if (index < typingInput.value.length) {
+                    span.classList.add(typingInput.value[index] === char ? 'correct' : 'incorrect');
+                }
+                textDisplay.appendChild(span);
+            });
+        }
+
+        function calculateWPM() {
+            const timeElapsed = (Date.now() - startTime) / 1000 / 60; // in minutes
+            const words = correctChars / 5; // standard word length is 5 characters
+            return Math.round(words / timeElapsed);
+        }
+
+        function calculateAccuracy() {
+            return totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+        }
+
+        function updateStats() {
+            wpmDisplay.textContent = calculateWPM();
+            accuracyDisplay.textContent = `${calculateAccuracy()}%`;
+            const timeLeft = 60 - Math.floor((Date.now() - startTime) / 1000);
+            timeDisplay.textContent = timeLeft;
+            progressBar.style.width = `${((60 - timeLeft) / 60) * 100}%`;
+
+            if (timeLeft <= 0) {
+                endTest();
+            }
+        }
+
+        function startTest() {
+            currentText = getRandomText(currentDifficulty);
+            updateTextDisplay();
+            typingInput.value = '';
+            typingInput.focus();
+            startTime = Date.now();
+            isTestActive = true;
+            correctChars = 0;
+            totalChars = 0;
+            timer = setInterval(updateStats, 100);
+            startBtn.disabled = true;
+            results.style.display = 'none';
+        }
+
+        function endTest() {
+            clearInterval(timer);
+            isTestActive = false;
+            startBtn.disabled = false;
+            finalWpm.textContent = calculateWPM();
+            finalAccuracy.textContent = `${calculateAccuracy()}%`;
+            results.style.display = 'block';
+        }
+
+        function resetTest() {
+            clearInterval(timer);
+            isTestActive = false;
+            startBtn.disabled = false;
+            typingInput.value = '';
+            wpmDisplay.textContent = '0';
+            accuracyDisplay.textContent = '100%';
+            timeDisplay.textContent = '60';
+            progressBar.style.width = '0%';
+            results.style.display = 'none';
+            updateTextDisplay();
+        }
+
+        typingInput.addEventListener('input', () => {
+            if (!isTestActive) return;
+
+            const input = typingInput.value;
+            totalChars = input.length;
+            correctChars = 0;
+
+            for (let i = 0; i < input.length; i++) {
+                if (input[i] === currentText[i]) {
+                    correctChars++;
+                }
+            }
+
+            updateTextDisplay();
+
+            if (input.length === currentText.length) {
+                endTest();
+            }
+        });
+
+        startBtn.addEventListener('click', startTest);
+        resetBtn.addEventListener('click', resetTest);
+
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficultyBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentDifficulty = btn.dataset.difficulty;
+                resetTest();
+            });
+        });
+
+        // Initialize
+        resetTest();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文打字测试</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --background-color: #f5f7fa;
+            --text-color: #2c3e50;
+            --border-radius: 8px;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans SC', sans-serif; }
+        body { background: var(--background-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .test-container { background: #fff; padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow); max-width: 600px; width: 90%; }
+        h1 { text-align: center; margin-bottom: 1rem; color: var(--primary-color); }
+        .level-container { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        #level-select { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .stats div { font-size: 1rem; }
+        #text-display { background: #fff; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; margin-bottom: 1rem; line-height: 1.6; }
+        #text-display span.correct { color: var(--correct-color); }
+        #text-display span.incorrect { color: var(--incorrect-color); }
+        #text-display span.active { text-decoration: underline; }
+        #text-input { width: 100%; padding: 0.75rem; font-size: 1rem; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 1rem; resize: none; }
+        .buttons { display: flex; gap: 1rem; }
+        .btn { flex: 1; padding: 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        .btn-start { background: var(--primary-color); color: white; }
+        .btn-reset { background: var(--secondary-color); color: white; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .result { text-align: center; margin-top: 1rem; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>中文打字测试</h1>
+        <div class="level-container">
+            <label for="level-select">难度等级：</label>
+            <select id="level-select">
+                <option value="easy">简单</option>
+                <option value="medium">中等</option>
+                <option value="hard">困难</option>
+            </select>
+        </div>
+        <div class="stats">
+            <div>时间: <span id="timer">60</span>s</div>
+            <div>字符数: <span id="cpm">0</span> CPM</div>
+            <div>准确率: <span id="accuracy">0</span>%</div>
+        </div>
+        <div id="text-display"></div>
+        <textarea id="text-input" rows="3" placeholder="点击开始后这里输入…" disabled></textarea>
+        <div class="buttons">
+            <button class="btn btn-start" id="start-btn">开始测试</button>
+            <button class="btn btn-reset" id="reset-btn" disabled>重置</button>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+    <script>
+        const textSamples = {
+            easy: [
+                '学习中文需要坚持和努力。',
+                '编程可以创造无限可能。',
+                '我喜欢喝咖啡。',
+                '今天我去买菜。',
+                '猫在窗台上睡觉。'
+            ],
+            medium: [
+                '今天天气很好，我们一起去公园散步。',
+                '希望你享受这个中文打字测试！',
+                '周末我和朋友一起去看电影。',
+                '这本书讲述了一个感人的爱情故事。',
+                '因为天气太热，我们决定去海边度假。'
+            ],
+            hard: [
+                '生活就像一盒巧克力，你永远不知道下一块会是什么味道。',
+                '世界上最遥远的距离不是生与死，而是我就站在你面前，你却不知道我爱你。',
+                '她站在桥上，远远看着初升的太阳，心中充满希望。',
+                '在图书馆里，他静静地翻阅着那些发黄的古籍，沉浸在历史的长河中。',
+                '无论风雨如何改变人生轨迹，我们都要坚定地走下去。'
+            ]
+        };
+        let currentLevel = 'easy';
+        const levelSelect = document.getElementById('level-select');
+        levelSelect.addEventListener('change', (e) => {
+            currentLevel = e.target.value;
+            resetTest();
+        });
+        let currentText = '';
+        let timerInterval;
+        let timeLeft = 60;
+        let correctChars = 0;
+        let totalTyped = 0;
+        const timerEl = document.getElementById('timer');
+        const cpmEl = document.getElementById('cpm');
+        const accuracyEl = document.getElementById('accuracy');
+        const textDisplay = document.getElementById('text-display');
+        const textInput = document.getElementById('text-input');
+        const startBtn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const resultEl = document.getElementById('result');
+
+        function loadNewText() {
+            const samples = textSamples[currentLevel];
+            const idx = Math.floor(Math.random() * samples.length);
+            currentText = samples[idx];
+            textDisplay.innerHTML = '';
+            currentText.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.innerText = char;
+                if (i === 0) span.classList.add('active');
+                textDisplay.appendChild(span);
+            });
+        }
+
+        function updateStats() {
+            const elapsed = 60 - timeLeft;
+            const cpm = elapsed > 0 ? Math.round((correctChars / elapsed) * 60) : 0;
+            const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 0;
+            cpmEl.innerText = cpm;
+            accuracyEl.innerText = accuracy;
+        }
+
+        function startTest() {
+            startBtn.disabled = true;
+            resetBtn.disabled = false;
+            textInput.disabled = false;
+            textInput.value = '';
+            correctChars = 0;
+            totalTyped = 0;
+            timeLeft = 60;
+            timerEl.innerText = timeLeft;
+            resultEl.innerText = '';
+            loadNewText();
+            textInput.focus();
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                if (timeLeft <= 0) endTest();
+            }, 1000);
+        }
+
+        function handleInput() {
+            const input = textInput.value.split('');
+            const spans = textDisplay.querySelectorAll('span');
+            correctChars = 0;
+            totalTyped = input.length;
+
+            spans.forEach((span, idx) => {
+                const char = input[idx];
+                span.classList.remove('correct', 'incorrect', 'active');
+                if (char == null) {
+                } else if (char === span.innerText) {
+                    span.classList.add('correct');
+                    correctChars++;
+                } else {
+                    span.classList.add('incorrect');
+                }
+                if (idx === input.length) {
+                    span.classList.add('active');
+                }
+            });
+
+            updateStats();
+        }
+
+        function endTest() {
+            clearInterval(timerInterval);
+            textInput.disabled = true;
+            startBtn.disabled = false;
+            const finalCPM = cpmEl.innerText;
+            const finalAcc = accuracyEl.innerText;
+            resultEl.innerHTML = `测试结束！<br>CPM: <strong>${finalCPM}</strong>，准确率: <strong>${finalAcc}%</strong>`;
+        }
+
+        function resetTest() {
+            clearInterval(timerInterval);
+            textInput.disabled = true;
+            startBtn.disabled = false;
+            resetBtn.disabled = true;
+            timerEl.innerText = '60';
+            cpmEl.innerText = '0';
+            accuracyEl.innerText = '0';
+            textDisplay.innerHTML = '';
+            resultEl.innerText = '';
+            textInput.value = '';
+        }
+
+        startBtn.addEventListener('click', startTest);
+        resetBtn.addEventListener('click', resetTest);
+        textInput.addEventListener('input', handleInput);
+    </script>
+</body>
+</html> 

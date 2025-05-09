@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --background-color: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #e0e0e0;
+            --hover-color: #f5f6fa;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #5c9ce6;
+            --secondary-color: #34495e;
+            --background-color: #1a1a1a;
+            --text-color: #ffffff;
+            --border-color: #333333;
+            --hover-color: #2d2d2d;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--background-color);
+            border-right: 1px solid var(--border-color);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-bar {
+            margin-bottom: 1rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .categories {
+            margin-bottom: 1rem;
+        }
+
+        .category {
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category:hover {
+            background: var(--hover-color);
+        }
+
+        .category.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tags {
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: var(--hover-color);
+            border-radius: var(--border-radius);
+            margin: 0.25rem;
+            cursor: pointer;
+        }
+
+        .tag.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--background-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .toolbar button {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: var(--border-radius);
+        }
+
+        .toolbar button:hover {
+            background: var(--hover-color);
+        }
+
+        .editor {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--background-color);
+            color: var(--text-color);
+            resize: none;
+            min-height: 300px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .preview {
+            flex: 1;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--background-color);
+            color: var(--text-color);
+            overflow-y: auto;
+            display: none;
+        }
+
+        .preview.active {
+            display: block;
+        }
+
+        .notes-list {
+            margin-bottom: 1rem;
+        }
+
+        .note-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .note-item:hover {
+            background: var(--hover-color);
+        }
+
+        .note-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .export-options {
+            position: fixed;
+            bottom: 1rem;
+            right: 4rem;
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 0.5rem;
+            display: none;
+        }
+
+        .export-options.active {
+            display: block;
+        }
+
+        .export-option {
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .export-option:hover {
+            background: var(--hover-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="search-bar">
+                <input type="text" placeholder="Search notes..." id="search-input">
+            </div>
+            <div class="categories">
+                <div class="category active" data-category="all">
+                    <i class="bi bi-journal-text"></i>
+                    All Notes
+                </div>
+                <div class="category" data-category="work">
+                    <i class="bi bi-briefcase"></i>
+                    Work
+                </div>
+                <div class="category" data-category="personal">
+                    <i class="bi bi-person"></i>
+                    Personal
+                </div>
+                <div class="category" data-category="ideas">
+                    <i class="bi bi-lightbulb"></i>
+                    Ideas
+                </div>
+            </div>
+            <div class="tags">
+                <div class="tag" data-tag="important">Important</div>
+                <div class="tag" data-tag="todo">To-Do</div>
+                <div class="tag" data-tag="meeting">Meeting</div>
+                <div class="tag" data-tag="project">Project</div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="toolbar">
+                <button id="bold-btn" title="Bold"><i class="bi bi-type-bold"></i></button>
+                <button id="italic-btn" title="Italic"><i class="bi bi-type-italic"></i></button>
+                <button id="heading-btn" title="Heading"><i class="bi bi-type-h1"></i></button>
+                <button id="list-btn" title="List"><i class="bi bi-list-ul"></i></button>
+                <button id="link-btn" title="Link"><i class="bi bi-link"></i></button>
+                <button id="image-btn" title="Image"><i class="bi bi-image"></i></button>
+                <button id="preview-btn" title="Preview"><i class="bi bi-eye"></i></button>
+                <button id="export-btn" title="Export"><i class="bi bi-download"></i></button>
+            </div>
+            <div class="editor" id="editor" contenteditable="true"></div>
+            <div class="preview" id="preview"></div>
+        </div>
+    </div>
+
+    <div class="theme-toggle" id="theme-toggle">
+        <i class="bi bi-moon"></i>
+    </div>
+
+    <div class="export-options" id="export-options">
+        <div class="export-option" data-format="markdown">Export as Markdown</div>
+        <div class="export-option" data-format="html">Export as HTML</div>
+        <div class="export-option" data-format="text">Export as Text</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        
+        themeToggle.addEventListener('click', () => {
+            body.setAttribute('data-theme', 
+                body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'
+            );
+            themeToggle.innerHTML = body.getAttribute('data-theme') === 'dark' 
+                ? '<i class="bi bi-sun"></i>' 
+                : '<i class="bi bi-moon"></i>';
+        });
+
+        // Editor functionality
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const previewBtn = document.getElementById('preview-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const exportOptions = document.getElementById('export-options');
+        const searchInput = document.getElementById('search-input');
+
+        // Formatting buttons
+        document.getElementById('bold-btn').addEventListener('click', () => {
+            document.execCommand('bold', false, null);
+        });
+
+        document.getElementById('italic-btn').addEventListener('click', () => {
+            document.execCommand('italic', false, null);
+        });
+
+        document.getElementById('heading-btn').addEventListener('click', () => {
+            document.execCommand('formatBlock', false, 'h2');
+        });
+
+        document.getElementById('list-btn').addEventListener('click', () => {
+            document.execCommand('insertUnorderedList', false, null);
+        });
+
+        document.getElementById('link-btn').addEventListener('click', () => {
+            const url = prompt('Enter URL:');
+            if (url) {
+                document.execCommand('createLink', false, url);
+            }
+        });
+
+        document.getElementById('image-btn').addEventListener('click', () => {
+            const url = prompt('Enter image URL:');
+            if (url) {
+                document.execCommand('insertImage', false, url);
+            }
+        });
+
+        // Preview toggle
+        previewBtn.addEventListener('click', () => {
+            preview.classList.toggle('active');
+            editor.style.display = preview.classList.contains('active') ? 'none' : 'block';
+            preview.innerHTML = marked(editor.innerHTML);
+        });
+
+        // Export functionality
+        exportBtn.addEventListener('click', () => {
+            exportOptions.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.export-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const format = option.dataset.format;
+                let content = editor.innerHTML;
+                
+                if (format === 'markdown') {
+                    // Simple HTML to Markdown conversion
+                    content = content
+                        .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+                        .replace(/<em>(.*?)<\/em>/g, '*$1*')
+                        .replace(/<h2>(.*?)<\/h2>/g, '## $1')
+                        .replace(/<ul>(.*?)<\/ul>/g, '$1')
+                        .replace(/<li>(.*?)<\/li>/g, '- $1')
+                        .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
+                        .replace(/<img src="(.*?)" alt="(.*?)">/g, '![$2]($1)')
+                        .replace(/<br>/g, '\n')
+                        .replace(/<div>/g, '\n')
+                        .replace(/<\/div>/g, '');
+                } else if (format === 'text') {
+                    content = editor.innerText;
+                }
+
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `note.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                exportOptions.classList.remove('active');
+            });
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            // Implement search logic here
+        });
+
+        // Category and tag selection
+        document.querySelectorAll('.category').forEach(category => {
+            category.addEventListener('click', () => {
+                document.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
+                category.classList.add('active');
+                // Implement category filtering here
+            });
+        });
+
+        document.querySelectorAll('.tag').forEach(tag => {
+            tag.addEventListener('click', () => {
+                tag.classList.toggle('active');
+                // Implement tag filtering here
+            });
+        });
+
+        // Close export options when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!exportOptions.contains(e.target) && e.target !== exportBtn) {
+                exportOptions.classList.remove('active');
+            }
+        });
+
+        // Initialize with some sample content
+        editor.innerHTML = `
+            <h2>Welcome to Modern Notes</h2>
+            <p>This is a <strong>rich text editor</strong> with <em>markdown support</em>.</p>
+            <ul>
+                <li>Create and organize notes</li>
+                <li>Use categories and tags</li>
+                <li>Export in different formats</li>
+            </ul>
+            <p>Try the <a href="#">preview</a> mode to see your notes in markdown format!</p>
+        `;
+    </script>
+</body>
+</html> 

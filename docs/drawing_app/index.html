@@ -3,19 +3,350 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
     <title>Drawing App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --background: #f8f9fa;
+            --text: #212529;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .app-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .canvas-container {
+            position: relative;
+            margin-bottom: 2rem;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            background: white;
+            display: block;
+            border-radius: 15px;
+        }
+
+        .toolbox {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+        }
+
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #clear {
+            background: var(--warning);
+        }
+
+        #clear:hover {
+            background: #d90429;
+        }
+
+        #size {
+            font-size: 1.2rem;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 8px;
+        }
+
+        .brush-sizes {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .size-preview {
+            width: 20px;
+            height: 20px;
+            background: black;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+        }
+
+        .tool-label {
+            font-size: 0.9rem;
+            color: var(--text);
+            opacity: 0.7;
+            margin-right: 0.5rem;
+        }
+
+        .download-btn {
+            background: var(--success);
+            padding: 0.5rem 1.5rem;
+        }
+
+        .download-btn:hover {
+            background: #3a86ff;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+
+            .toolbox {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .tool-group {
+                justify-content: space-between;
+            }
+        }
+    </style>
   </head>
   <body>
-    <canvas id="canvas" width="800" height="700"></canvas>
-    <div class="toolbox">
-      <button id="decrease">-</button>
-      <span id="size">10</span>
-      <button id="increase">+</button>
-      <input type="color" id="color">
-      <button id="clear">X</button>
+    <div class="app-container">
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="600"></canvas>
+        </div>
+        <div class="toolbox">
+            <div class="tool-group">
+                <span class="tool-label">Brush Size:</span>
+                <div class="brush-sizes">
+                    <button id="decrease">-</button>
+                    <span id="size">10</span>
+                    <button id="increase">+</button>
+                    <div class="size-preview"></div>
+                </div>
+            </div>
+            <div class="tool-group">
+                <span class="tool-label">Color:</span>
+                <input type="color" id="color" value="#000000">
+            </div>
+            <div class="tool-group">
+                <button id="clear">Clear Canvas</button>
+                <button class="download-btn" id="download">Download</button>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const increaseBtn = document.getElementById('increase');
+        const decreaseBtn = document.getElementById('decrease');
+        const sizeEl = document.getElementById('size');
+        const colorEl = document.getElementById('color');
+        const clearEl = document.getElementById('clear');
+        const downloadBtn = document.getElementById('download');
+        const sizePreview = document.querySelector('.size-preview');
+
+        let size = 10;
+        let isPressed = false;
+        let color = 'black';
+        let x;
+        let y;
+
+        // Update size preview
+        function updateSizePreview() {
+            sizePreview.style.width = `${size}px`;
+            sizePreview.style.height = `${size}px`;
+        }
+
+        // Set initial size preview
+        updateSizePreview();
+
+        canvas.addEventListener('mousedown', (e) => {
+            isPressed = true;
+            x = e.offsetX;
+            y = e.offsetY;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isPressed = false;
+            x = undefined;
+            y = undefined;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isPressed) {
+                const x2 = e.offsetX;
+                const y2 = e.offsetY;
+
+                drawCircle(x2, y2);
+                drawLine(x, y, x2, y2);
+
+                x = x2;
+                y = y2;
+            }
+        });
+
+        function drawCircle(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = size * 2;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function updateSizeOnScreen() {
+            sizeEl.innerText = size;
+            updateSizePreview();
+        }
+
+        increaseBtn.addEventListener('click', () => {
+            size += 5;
+            if (size > 50) {
+                size = 50;
+            }
+            updateSizeOnScreen();
+        });
+
+        decreaseBtn.addEventListener('click', () => {
+            size -= 5;
+            if (size < 5) {
+                size = 5;
+            }
+            updateSizeOnScreen();
+        });
+
+        colorEl.addEventListener('input', (e) => {
+            color = e.target.value;
+            sizePreview.style.background = color;
+        });
+
+        clearEl.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            isPressed = true;
+            const rect = canvas.getBoundingClientRect();
+            x = e.touches[0].clientX - rect.left;
+            y = e.touches[0].clientY - rect.top;
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isPressed = false;
+            x = undefined;
+            y = undefined;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isPressed) {
+                const rect = canvas.getBoundingClientRect();
+                const x2 = e.touches[0].clientX - rect.left;
+                const y2 = e.touches[0].clientY - rect.top;
+
+                drawCircle(x2, y2);
+                drawLine(x, y, x2, y2);
+
+                x = x2;
+                y = y2;
+            }
+            e.preventDefault();
+        });
+    </script>
   </body>
 </html>

@@ -77,6 +77,10 @@ function check() {
         console.log("code Wishlist!");
         window.open("/wish_list.html");
         document.getElementById("input").value = "";
+    } else if(promoCode == "Chinese Typing Test") {
+        console.log("code Chinese Typing Test!");
+        window.open("/chinese_typing_test.html");
+        document.getElementById("input").value = "";
     }
     
     
