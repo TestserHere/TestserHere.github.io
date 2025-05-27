@@ -81,6 +81,10 @@ function check() {
         console.log("code Chinese Typing Test!");
         window.open("/chinese_typing_test.html");
         document.getElementById("input").value = "";
+    } else if(promoCode == "pyw") {
+        console.log("code pyw!");
+        window.open("/pyw/index.html");
+        document.getElementById("input").value = "";
     }
     
     
