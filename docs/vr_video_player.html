@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Draggable VR Video Player with Controls</title>
+    <title>VR Video Player</title>
     <script src="https://aframe.io/releases/latest/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93967b5412487cd94b290b/dist/aframe-master.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -114,226 +112,84 @@
     </style>
 </head>
 <body>
-    <button id="play-button" class="btn btn-dark">
-        <i class="bi bi-play-fill"></i>
-    </button>
-    <button id="upload-button" class="btn btn-dark">
-        <i class="bi bi-upload"></i> Upload Video
-    </button>
-    <input type="file" id="file-upload" accept="video/*">
-    <div id="url-input-container">
-        <input type="text" id="url-input" placeholder="Enter video URL" />
-        <button id="load-url-button">Load URL</button>
+  <!-- Controls UI -->
+  <div id="controls" class="border">
+    <div class="mb-3">
+      <label for="videoUpload" class="form-label">Select a 360° Video</label>
+      <input class="form-control" type="file" id="videoUpload" accept="video/*" />
     </div>
-    <div id="controls">
-        <button id="pause-resume-button" class="btn btn-dark">
-            <i class="bi bi-pause-fill"></i>
-        </button>
-        <input type="range" id="progress-bar" value="0" step="0.1" max="100" class="form-range">
-        <input type="range" id="volume-control" value="1" step="0.01" max="1" class="form-range">
+
+    <div class="mb-3">
+      <button id="playPause" class="btn btn-primary w-100">Pause</button>
     </div>
-    <a-scene id="vr-scene" embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: true">
+
+    <div class="mb-3">
+      <label for="volumeSlider" class="form-label">Volume</label>
+      <input type="range" class="form-range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+    </div>
+
+    <div>
+      <label for="seekSlider" class="form-label">Seek</label>
+      <input type="range" class="form-range" id="seekSlider" min="0" max="100" value="0">
+    </div>
+    <a-scene id="vr-scene">
         <a-assets>
             <video id="vid" src="" crossorigin="anonymous" autoplay="false" loop="true" style="display: none"></video>
         </a-assets>
         <a-entity id="vr-video" geometry="primitive: sphere; radius: 5000; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src: #vid;" scale="-1 1 1"></a-entity>
-        <a-entity position="0 0 -1.5" camera look-controls wasd-controls></a-entity>
     </a-scene>
     <div id="vr-container"></div>
     <div id="error-message" style="display:none;"></div>
 
-    <script>
-        var vid = document.getElementById('vid');
-        var playButton = document.getElementById('play-button');
-        var pauseResumeButton = document.getElementById('pause-resume-button');
-        var progressBar = document.getElementById('progress-bar');
-        var volumeControl = document.getElementById('volume-control');
-        var uploadButton = document.getElementById('upload-button');
-        var fileInput = document.getElementById('file-upload');
-        var urlInput = document.getElementById('url-input');
-        var loadUrlButton = document.getElementById('load-url-button');
-        var errorMessageElement = document.getElementById('error-message');
-        var currentSource = ''; // To track the current video source
+  <!-- Script -->
+  <script>
+    const fileInput = document.getElementById('videoUpload');
+    const video = document.getElementById('video');
+    const playPauseBtn = document.getElementById('playPause');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const seekSlider = document.getElementById('seekSlider');
 
-        let duration = 0;
-        let metadataLoaded = false;
-        let videoPlaying = false;
-        let loadAttempted = false;
-        let seeking = false;
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        video.src = url;
+        video.loop = false;
+        video.load();
+        video.play();
+        playPauseBtn.textContent = 'Pause';
+      }
+    });
 
-        function updateProgressBar() {
-            if (metadataLoaded && duration > 0 && !seeking) {
-                var value = (vid.currentTime / duration) * 100;
-                progressBar.value = value;
-            }
-        }
+    playPauseBtn.addEventListener('click', function () {
+      if (video.paused) {
+        video.play();
+        this.textContent = 'Pause';
+      } else {
+        video.pause();
+        this.textContent = 'Play';
+      }
+    });
 
-        function showErrorMessage(message) {
-            errorMessageElement.textContent = message;
-            errorMessageElement.style.display = 'block';
-        }
+    volumeSlider.addEventListener('input', function () {
+      video.volume = this.value;
+    });
 
-        function hideErrorMessage() {
-            errorMessageElement.style.display = 'none';
-        }
+    video.addEventListener('timeupdate', function () {
+      if (!seekSlider.dragging && video.duration) {
+        const percent = (video.currentTime / video.duration) * 100;
+        seekSlider.value = percent;
+      }
+    });
 
-        function loadVideoSource(source) {
-            if (!source) {
-                showErrorMessage("Please provide a video source (URL or file).");
-                return;
-            }
-            hideErrorMessage();
-
-            // If source is a YouTube URL, embed it in an iframe
-            if (source.includes("youtube.com/watch")) {
-                var videoId = new URL(source).searchParams.get("v");
-                if (videoId) {
-                    var iframe = document.createElement("iframe");
-                    iframe.width = "100%";
-                    iframe.height = "100%";
-                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
-                    iframe.frameBorder = "0";
-                    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-                    iframe.allowFullscreen = true;
-
-                    // Clear the previous video player and append the iframe
-                    var vrScene = document.querySelector('a-scene');
-                    vrScene.innerHTML = '';  // Clear the previous content
-                    var entity = document.createElement('a-entity');
-                    entity.setAttribute('geometry', 'primitive: plane; width: 16; height: 9');
-                    entity.setAttribute('material', 'src: #youtube-embed');
-                    entity.setAttribute('position', '0 1 -4');
-                    vrScene.appendChild(entity);
-                    entity.appendChild(iframe);
-                } else {
-                    showErrorMessage("Invalid YouTube URL.");
-                }
-            } else {
-                // If it's a regular file or other video URL
-                if (currentSource !== source) {
-                    vid.src = source;
-                    currentSource = source;
-                    metadataLoaded = false;
-                    videoPlaying = false;
-                    loadAttempted = true;
-                    vid.addEventListener('loadedmetadata', handleMetadata);
-                    vid.addEventListener('error', handleError);
-                    playButton.style.display = 'none';
-                    pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
-                    
-                    // Update A-Frame video source
-                    let vrVideoEntity = document.querySelector('#vr-video');
-                    vrVideoEntity.setAttribute('material', 'src: #vid');
-                } else if (!videoPlaying) {
-                    playButton.style.display = 'none';
-                }
-            }
-        }
-
-        function handleMetadata() {
-            duration = vid.duration;
-            metadataLoaded = true;
-            updateProgressBar();
-            if (videoPlaying) {
-                vid.play();
-            }
-        }
-
-        function handleError(error) {
-            console.error("Error loading video:", error);
-            showErrorMessage("Failed to load video. Please check the URL or file.");
-            loadAttempted = false;
-            vid.src = '';
-            currentSource = ''; // Reset source on error
-            metadataLoaded = false;
-            videoPlaying = false;
-            playButton.style.display = 'block';
-            pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
-        }
-
-        playButton.addEventListener("click", function(e) {
-            this.style.display = 'none';
-            if (!metadataLoaded && !loadAttempted) {
-                showErrorMessage("Please upload a video or enter a URL.");
-                return;
-            }
-            if (!metadataLoaded) {
-                vid.addEventListener('loadedmetadata', handleMetadata);
-            } else {
-                vid.play();
-                videoPlaying = true;
-            }
-            pauseResumeButton.innerHTML = '<i class="bi bi-pause-fill"></i>';
-        }, false);
-
-        pauseResumeButton.addEventListener("click", function() {
-            if (videoPlaying) {
-                vid.pause();
-                this.innerHTML = '<i class="bi bi-play-fill"></i>';
-                videoPlaying = false;
-            } else {
-                if (metadataLoaded || loadAttempted) {
-                    vid.play();
-                    this.innerHTML = '<i class="bi bi-pause-fill"></i>';
-                    videoPlaying = true;
-                }
-            }
-        });
-
-        uploadButton.addEventListener("click", function() {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener("change", function(event) {
-            var file = event.target.files[0];
-            if (file) {
-                var videoURL = URL.createObjectURL(file);
-                loadVideoSource(videoURL);
-            }
-        });
-
-        loadUrlButton.addEventListener("click", function() {
-            var videoURL = urlInput.value;
-            loadVideoSource(videoURL);
-        });
-
-        vid.addEventListener('timeupdate', function() {
-            updateProgressBar();
-        });
-
-        progressBar.addEventListener('input', function() {
-            if (metadataLoaded && duration > 0) {
-                seeking = true;
-                var seekTime = (progressBar.value / 100) * duration;
-                vid.currentTime = seekTime;
-                vid.addEventListener('seeked', () => {
-                    seeking = false;
-                    updateProgressBar();
-                }, { once: true });
-            }
-        });
-
-        volumeControl.addEventListener('input', function() {
-            vid.volume = volumeControl.value;
-        });
-
-        var dragElement = document.getElementById('vr-container');
-
-        dragElement.onmousedown = function(e) {
-            e.preventDefault();
-            var offsetX = e.clientX - dragElement.getBoundingClientRect().left;
-            var offsetY = e.clientY - dragElement.getBoundingClientRect().top;
-
-            document.onmousemove = function(e) {
-                dragElement.style.left = e.clientX - offsetX + 'px';
-                dragElement.style.top = e.clientY - offsetY + 'px';
-            };
-
-            document.onmouseup = function() {
-                document.onmousemove = null;
-                document.onmouseup = null;
-            };
-        };
-    </script>
+    seekSlider.addEventListener('mousedown', () => seekSlider.dragging = true);
+    seekSlider.addEventListener('mouseup', function () {
+      if (video.duration) {
+        const time = (this.value / 100) * video.duration;
+        video.currentTime = time;
+      }
+      seekSlider.dragging = false;
+    });
+  </script>
 </body>
 </html>
