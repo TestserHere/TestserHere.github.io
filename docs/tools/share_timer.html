@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⌛ Shared Countdown</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    input, button { margin: 10px; padding: 8px; width: 80%; }
+    #timer { font-size: 2em; margin-top: 20px; }
+    canvas { margin: 10px auto; display: block; }
+  </style>
+</head>
+<body>
+  <h1>⌛ Shared Countdown</h1>
+  <p>Set a deadline and generate a shareable link or QR code.</p>
+
+  <input type="datetime-local" id="deadlineInput" />
+  <button onclick="setCountdown()">Start Countdown</button>
+
+  <div id="timer">--:--:--</div>
+  <textarea id="shareURL" readonly rows="3"></textarea>
+  <button onclick="generateQR()">📷 Generate QR</button>
+  <canvas id="qrCanvas"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    const timerDisplay = document.getElementById("timer");
+    const shareURL = document.getElementById("shareURL");
+    const qrCanvas = document.getElementById("qrCanvas");
+    let countdownInterval;
+
+    function formatTimeLeft(ms) {
+      const total = Math.max(0, ms);
+      const hours = Math.floor(total / 3600000);
+      const mins = Math.floor((total % 3600000) / 60000);
+      const secs = Math.floor((total % 60000) / 1000);
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateCountdown(deadline) {
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        const now = Date.now();
+        const timeLeft = new Date(deadline).getTime() - now;
+        timerDisplay.textContent = formatTimeLeft(timeLeft);
+        if (timeLeft <= 0) clearInterval(countdownInterval);
+      }, 1000);
+    }
+
+    function setCountdown() {
+      const deadline = document.getElementById("deadlineInput").value;
+      if (!deadline) return alert("Please select a date and time.");
+      const url = `${location.origin}${location.pathname}?t=${encodeURIComponent(deadline)}`;
+      history.replaceState({}, "", url);
+      shareURL.value = url;
+      updateCountdown(deadline);
+    }
+
+    function generateQR() {
+      if (!shareURL.value) return alert("Set a countdown first.");
+      QRCode.toCanvas(qrCanvas, shareURL.value, { width: 200 }, err => {
+        if (err) alert("QR generation failed");
+      });
+    }
+
+    // Auto-load from URL if shared
+    const params = new URLSearchParams(location.search);
+    if (params.has("t")) {
+      const deadline = decodeURIComponent(params.get("t"));
+      document.getElementById("deadlineInput").value = deadline;
+      updateCountdown(deadline);
+    }
+  </script>
+</body>
+</html>
