@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📋 Clipboard Sync via QR</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; text-align: center; }
+    textarea { width: 100%; margin: 10px 0; height: 120px; font-size: 1em; }
+    button { padding: 10px 20px; margin: 10px; font-size: 1em; }
+    canvas { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📋 Clipboard Sync</h1>
+  <p>Write or paste text and share it via QR code. Scan on another device to copy.</p>
+  <textarea id="clipInput" placeholder="Write or paste text here..."></textarea>
+  <button onclick="generateQR()">Generate QR</button>
+  <button onclick="copyText()">Copy to Clipboard</button>
+  <div id="qrcode"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script>
+    function generateQR() {
+      const text = document.getElementById('clipInput').value.trim();
+      if (!text) return alert("Enter text to encode.");
+      QRCode.toCanvas(document.getElementById("qrcode"), text, function (error) {
+        if (error) console.error(error);
+      });
+    }
+
+    async function copyText() {
+      const text = document.getElementById('clipInput').value;
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("Copied to clipboard");
+      } catch (err) {
+        alert("Clipboard write failed: " + err);
+      }
+    }
+  </script>
+</body>
+</html>
