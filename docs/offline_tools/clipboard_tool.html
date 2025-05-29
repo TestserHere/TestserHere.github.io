@@ -1,41 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📋 Clipboard Sync via QR</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; text-align: center; }
-    textarea { width: 100%; margin: 10px 0; height: 120px; font-size: 1em; }
-    button { padding: 10px 20px; margin: 10px; font-size: 1em; }
-    canvas { margin-top: 10px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>📋 Clipboard Tool</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; text-align: center; }
+  textarea { width: 100%; height: 150px; font-size: 1em; margin-bottom: 10px; }
+  button { font-size: 1em; padding: 10px 20px; margin: 5px; }
+  #qrcode { margin-top: 20px; }
+  #partInfo { margin-top: 10px; font-weight: bold; }
+</style>
 </head>
 <body>
-  <h1>📋 Clipboard Sync</h1>
-  <p>Write or paste text and share it via QR code. Scan on another device to copy.</p>
-  <textarea id="clipInput" placeholder="Write or paste text here..."></textarea>
-  <button onclick="generateQR()">Generate QR</button>
-  <button onclick="copyText()">Copy to Clipboard</button>
+  <h1>📋 Clipboard Tool</h1>
+  <p>Paste large text here and generate multiple QR codes to share in parts.</p>
+  <textarea id="clipInput" placeholder="Paste or type your text here..."></textarea><br/>
+  <button onclick="generateAllQRs()">Generate QR Codes</button>
   <div id="qrcode"></div>
+  <div id="partInfo"></div>
+  <div>
+    <button onclick="prevQR()" id="prevBtn" disabled>⬅ Prev</button>
+    <button onclick="nextQR()" id="nextBtn" disabled>Next ➡</button>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
   <script>
-    function generateQR() {
-      const text = document.getElementById('clipInput').value.trim();
-      if (!text) return alert("Enter text to encode.");
-      QRCode.toCanvas(document.getElementById("qrcode"), text, function (error) {
-        if (error) console.error(error);
-      });
+    const MAX_CHUNK_SIZE = 250; // chars per QR
+    let chunks = [];
+    let currentIndex = 0;
+
+    function splitText(text, size) {
+      const arr = [];
+      for (let i = 0; i < text.length; i += size) {
+        arr.push(text.slice(i, i + size));
+      }
+      return arr;
     }
 
-    async function copyText() {
-      const text = document.getElementById('clipInput').value;
-      try {
-        await navigator.clipboard.writeText(text);
-        alert("Copied to clipboard");
-      } catch (err) {
-        alert("Clipboard write failed: " + err);
+    function generateAllQRs() {
+      const text = document.getElementById('clipInput').value.trim();
+      if (!text) {
+        alert('Please enter some text.');
+        return;
+      }
+      chunks = splitText(text, MAX_CHUNK_SIZE);
+      currentIndex = 0;
+      renderQR();
+      updateButtons();
+    }
+
+    function renderQR() {
+      const part = chunks[currentIndex];
+      // Add header like "partIndex/total|data"
+      const qrData = `Part ${currentIndex + 1}/${chunks.length}|${part}`;
+      const canvasContainer = document.getElementById('qrcode');
+      canvasContainer.innerHTML = '';
+      QRCode.toCanvas(qrData, {errorCorrectionLevel: 'M'}, function(err, canvas) {
+        if (err) {
+          alert('Error generating QR: ' + err);
+          return;
+        }
+        canvasContainer.appendChild(canvas);
+      });
+      document.getElementById('partInfo').textContent = `Part ${currentIndex + 1} of ${chunks.length}`;
+    }
+
+    function updateButtons() {
+      document.getElementById('prevBtn').disabled = currentIndex === 0;
+      document.getElementById('nextBtn').disabled = currentIndex === chunks.length - 1;
+    }
+
+    function prevQR() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderQR();
+        updateButtons();
+      }
+    }
+
+    function nextQR() {
+      if (currentIndex < chunks.length - 1) {
+        currentIndex++;
+        renderQR();
+        updateButtons();
       }
     }
   </script>
