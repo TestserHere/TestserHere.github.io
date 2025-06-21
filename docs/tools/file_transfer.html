@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📁 File Transfer Tool</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; text-align: center; }
+    input[type=file] { margin-top: 20px; }
+    textarea { width: 100%; margin: 10px 0; height: 100px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 1em; }
+    canvas { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📁 Secure File Transfer</h1>
+  <p>Select a small file to convert it into a sharable QR code or text block.</p>
+  <input type="file" id="fileInput">
+  <button onclick="generateData()">Generate</button>
+  <textarea id="dataOutput" readonly placeholder="Base64 encoded file will appear here..."></textarea>
+  <div id="qrcode"></div>
+  <button onclick="downloadDecoded()">Download Decoded File</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script>
+    let originalFileName = "download.txt";
+
+    function generateData() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return alert("Please select a file.");
+      originalFileName = file.name;
+      const reader = new FileReader();
+      reader.onload = function () {
+        const base64 = btoa(reader.result);
+        document.getElementById('dataOutput').value = base64;
+        QRCode.toCanvas(document.getElementById('qrcode'), base64.slice(0, 200), function (error) {
+          if (error) console.error(error);
+        });
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    function downloadDecoded() {
+      const base64 = document.getElementById('dataOutput').value;
+      if (!base64) return alert("Nothing to decode.");
+      try {
+        const binary = atob(base64);
+        const array = Uint8Array.from(binary, c => c.charCodeAt(0));
+        const blob = new Blob([array]);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = originalFileName;
+        link.click();
+      } catch (e) {
+        alert("Invalid data format");
+      }
+    }
+  </script>
+</body>
+</html>

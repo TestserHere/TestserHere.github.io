@@ -1,0 +1,4895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Symbol Searcher</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 50px;
+      background: #1e1e2f;
+      color: white;
+    }
+    input {
+      padding: 10px;
+      font-size: 1.2em;
+      width: 300px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 320px;
+    }
+    .symbol-card {
+      background: #2c2c3c;
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .symbol {
+      font-size: 2em;
+    }
+    button {
+      padding: 8px 12px;
+      background: #00bfa5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #008f7a;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔍 Symbol Searcher</h1>
+  <input id="search" placeholder="Type like 'right arrow'..." />
+
+  <div class="results" id="results"></div>
+
+  <script>
+    const symbols = [
+        {
+            "name": "leftwards arrow",
+            "char": "←"
+        },
+        {
+            "name": "upwards arrow",
+            "char": "↑"
+        },
+        {
+            "name": "rightwards arrow",
+            "char": "→"
+        },
+        {
+            "name": "downwards arrow",
+            "char": "↓"
+        },
+        {
+            "name": "left right arrow",
+            "char": "↔"
+        },
+        {
+            "name": "up down arrow",
+            "char": "↕"
+        },
+        {
+            "name": "north west arrow",
+            "char": "↖"
+        },
+        {
+            "name": "north east arrow",
+            "char": "↗"
+        },
+        {
+            "name": "south east arrow",
+            "char": "↘"
+        },
+        {
+            "name": "south west arrow",
+            "char": "↙"
+        },
+        {
+            "name": "leftwards arrow with stroke",
+            "char": "↚"
+        },
+        {
+            "name": "rightwards arrow with stroke",
+            "char": "↛"
+        },
+        {
+            "name": "leftwards wave arrow",
+            "char": "↜"
+        },
+        {
+            "name": "rightwards wave arrow",
+            "char": "↝"
+        },
+        {
+            "name": "leftwards two headed arrow",
+            "char": "↞"
+        },
+        {
+            "name": "upwards two headed arrow",
+            "char": "↟"
+        },
+        {
+            "name": "rightwards two headed arrow",
+            "char": "↠"
+        },
+        {
+            "name": "downwards two headed arrow",
+            "char": "↡"
+        },
+        {
+            "name": "leftwards arrow with tail",
+            "char": "↢"
+        },
+        {
+            "name": "rightwards arrow with tail",
+            "char": "↣"
+        },
+        {
+            "name": "leftwards arrow from bar",
+            "char": "↤"
+        },
+        {
+            "name": "upwards arrow from bar",
+            "char": "↥"
+        },
+        {
+            "name": "rightwards arrow from bar",
+            "char": "↦"
+        },
+        {
+            "name": "downwards arrow from bar",
+            "char": "↧"
+        },
+        {
+            "name": "up down arrow with base",
+            "char": "↨"
+        },
+        {
+            "name": "leftwards arrow with hook",
+            "char": "↩"
+        },
+        {
+            "name": "rightwards arrow with hook",
+            "char": "↪"
+        },
+        {
+            "name": "leftwards arrow with loop",
+            "char": "↫"
+        },
+        {
+            "name": "rightwards arrow with loop",
+            "char": "↬"
+        },
+        {
+            "name": "left right wave arrow",
+            "char": "↭"
+        },
+        {
+            "name": "left right arrow with stroke",
+            "char": "↮"
+        },
+        {
+            "name": "downwards zigzag arrow",
+            "char": "↯"
+        },
+        {
+            "name": "upwards arrow with tip leftwards",
+            "char": "↰"
+        },
+        {
+            "name": "upwards arrow with tip rightwards",
+            "char": "↱"
+        },
+        {
+            "name": "downwards arrow with tip leftwards",
+            "char": "↲"
+        },
+        {
+            "name": "downwards arrow with tip rightwards",
+            "char": "↳"
+        },
+        {
+            "name": "rightwards arrow with corner downwards",
+            "char": "↴"
+        },
+        {
+            "name": "downwards arrow with corner leftwards",
+            "char": "↵"
+        },
+        {
+            "name": "anticlockwise top semicircle arrow",
+            "char": "↶"
+        },
+        {
+            "name": "clockwise top semicircle arrow",
+            "char": "↷"
+        },
+        {
+            "name": "north west arrow to long bar",
+            "char": "↸"
+        },
+        {
+            "name": "leftwards arrow to bar over rightwards arrow to bar",
+            "char": "↹"
+        },
+        {
+            "name": "anticlockwise open circle arrow",
+            "char": "↺"
+        },
+        {
+            "name": "clockwise open circle arrow",
+            "char": "↻"
+        },
+        {
+            "name": "leftwards harpoon with barb upwards",
+            "char": "↼"
+        },
+        {
+            "name": "leftwards harpoon with barb downwards",
+            "char": "↽"
+        },
+        {
+            "name": "upwards harpoon with barb rightwards",
+            "char": "↾"
+        },
+        {
+            "name": "upwards harpoon with barb leftwards",
+            "char": "↿"
+        },
+        {
+            "name": "rightwards harpoon with barb upwards",
+            "char": "⇀"
+        },
+        {
+            "name": "rightwards harpoon with barb downwards",
+            "char": "⇁"
+        },
+        {
+            "name": "downwards harpoon with barb rightwards",
+            "char": "⇂"
+        },
+        {
+            "name": "downwards harpoon with barb leftwards",
+            "char": "⇃"
+        },
+        {
+            "name": "rightwards arrow over leftwards arrow",
+            "char": "⇄"
+        },
+        {
+            "name": "upwards arrow leftwards of downwards arrow",
+            "char": "⇅"
+        },
+        {
+            "name": "leftwards arrow over rightwards arrow",
+            "char": "⇆"
+        },
+        {
+            "name": "leftwards paired arrows",
+            "char": "⇇"
+        },
+        {
+            "name": "upwards paired arrows",
+            "char": "⇈"
+        },
+        {
+            "name": "rightwards paired arrows",
+            "char": "⇉"
+        },
+        {
+            "name": "downwards paired arrows",
+            "char": "⇊"
+        },
+        {
+            "name": "leftwards harpoon over rightwards harpoon",
+            "char": "⇋"
+        },
+        {
+            "name": "rightwards harpoon over leftwards harpoon",
+            "char": "⇌"
+        },
+        {
+            "name": "leftwards double arrow with stroke",
+            "char": "⇍"
+        },
+        {
+            "name": "left right double arrow with stroke",
+            "char": "⇎"
+        },
+        {
+            "name": "rightwards double arrow with stroke",
+            "char": "⇏"
+        },
+        {
+            "name": "leftwards double arrow",
+            "char": "⇐"
+        },
+        {
+            "name": "upwards double arrow",
+            "char": "⇑"
+        },
+        {
+            "name": "rightwards double arrow",
+            "char": "⇒"
+        },
+        {
+            "name": "downwards double arrow",
+            "char": "⇓"
+        },
+        {
+            "name": "left right double arrow",
+            "char": "⇔"
+        },
+        {
+            "name": "up down double arrow",
+            "char": "⇕"
+        },
+        {
+            "name": "north west double arrow",
+            "char": "⇖"
+        },
+        {
+            "name": "north east double arrow",
+            "char": "⇗"
+        },
+        {
+            "name": "south east double arrow",
+            "char": "⇘"
+        },
+        {
+            "name": "south west double arrow",
+            "char": "⇙"
+        },
+        {
+            "name": "leftwards triple arrow",
+            "char": "⇚"
+        },
+        {
+            "name": "rightwards triple arrow",
+            "char": "⇛"
+        },
+        {
+            "name": "leftwards squiggle arrow",
+            "char": "⇜"
+        },
+        {
+            "name": "rightwards squiggle arrow",
+            "char": "⇝"
+        },
+        {
+            "name": "upwards arrow with double stroke",
+            "char": "⇞"
+        },
+        {
+            "name": "downwards arrow with double stroke",
+            "char": "⇟"
+        },
+        {
+            "name": "leftwards dashed arrow",
+            "char": "⇠"
+        },
+        {
+            "name": "upwards dashed arrow",
+            "char": "⇡"
+        },
+        {
+            "name": "rightwards dashed arrow",
+            "char": "⇢"
+        },
+        {
+            "name": "downwards dashed arrow",
+            "char": "⇣"
+        },
+        {
+            "name": "leftwards arrow to bar",
+            "char": "⇤"
+        },
+        {
+            "name": "rightwards arrow to bar",
+            "char": "⇥"
+        },
+        {
+            "name": "leftwards white arrow",
+            "char": "⇦"
+        },
+        {
+            "name": "upwards white arrow",
+            "char": "⇧"
+        },
+        {
+            "name": "rightwards white arrow",
+            "char": "⇨"
+        },
+        {
+            "name": "downwards white arrow",
+            "char": "⇩"
+        },
+        {
+            "name": "upwards white arrow from bar",
+            "char": "⇪"
+        },
+        {
+            "name": "upwards white arrow on pedestal",
+            "char": "⇫"
+        },
+        {
+            "name": "upwards white arrow on pedestal with horizontal bar",
+            "char": "⇬"
+        },
+        {
+            "name": "upwards white arrow on pedestal with vertical bar",
+            "char": "⇭"
+        },
+        {
+            "name": "upwards white double arrow",
+            "char": "⇮"
+        },
+        {
+            "name": "upwards white double arrow on pedestal",
+            "char": "⇯"
+        },
+        {
+            "name": "rightwards white arrow from wall",
+            "char": "⇰"
+        },
+        {
+            "name": "north west arrow to corner",
+            "char": "⇱"
+        },
+        {
+            "name": "south east arrow to corner",
+            "char": "⇲"
+        },
+        {
+            "name": "up down white arrow",
+            "char": "⇳"
+        },
+        {
+            "name": "right arrow with small circle",
+            "char": "⇴"
+        },
+        {
+            "name": "downwards arrow leftwards of upwards arrow",
+            "char": "⇵"
+        },
+        {
+            "name": "three rightwards arrows",
+            "char": "⇶"
+        },
+        {
+            "name": "leftwards arrow with vertical stroke",
+            "char": "⇷"
+        },
+        {
+            "name": "rightwards arrow with vertical stroke",
+            "char": "⇸"
+        },
+        {
+            "name": "left right arrow with vertical stroke",
+            "char": "⇹"
+        },
+        {
+            "name": "leftwards arrow with double vertical stroke",
+            "char": "⇺"
+        },
+        {
+            "name": "rightwards arrow with double vertical stroke",
+            "char": "⇻"
+        },
+        {
+            "name": "left right arrow with double vertical stroke",
+            "char": "⇼"
+        },
+        {
+            "name": "leftwards open-headed arrow",
+            "char": "⇽"
+        },
+        {
+            "name": "rightwards open-headed arrow",
+            "char": "⇾"
+        },
+        {
+            "name": "left right open-headed arrow",
+            "char": "⇿"
+        },
+        {
+            "name": "for all",
+            "char": "∀"
+        },
+        {
+            "name": "complement",
+            "char": "∁"
+        },
+        {
+            "name": "partial differential",
+            "char": "∂"
+        },
+        {
+            "name": "there exists",
+            "char": "∃"
+        },
+        {
+            "name": "there does not exist",
+            "char": "∄"
+        },
+        {
+            "name": "empty set",
+            "char": "∅"
+        },
+        {
+            "name": "increment",
+            "char": "∆"
+        },
+        {
+            "name": "nabla",
+            "char": "∇"
+        },
+        {
+            "name": "element of",
+            "char": "∈"
+        },
+        {
+            "name": "not an element of",
+            "char": "∉"
+        },
+        {
+            "name": "small element of",
+            "char": "∊"
+        },
+        {
+            "name": "contains as member",
+            "char": "∋"
+        },
+        {
+            "name": "does not contain as member",
+            "char": "∌"
+        },
+        {
+            "name": "small contains as member",
+            "char": "∍"
+        },
+        {
+            "name": "end of proof",
+            "char": "∎"
+        },
+        {
+            "name": "n-ary product",
+            "char": "∏"
+        },
+        {
+            "name": "n-ary coproduct",
+            "char": "∐"
+        },
+        {
+            "name": "n-ary summation",
+            "char": "∑"
+        },
+        {
+            "name": "minus sign",
+            "char": "−"
+        },
+        {
+            "name": "minus-or-plus sign",
+            "char": "∓"
+        },
+        {
+            "name": "dot plus",
+            "char": "∔"
+        },
+        {
+            "name": "division slash",
+            "char": "∕"
+        },
+        {
+            "name": "set minus",
+            "char": "∖"
+        },
+        {
+            "name": "asterisk operator",
+            "char": "∗"
+        },
+        {
+            "name": "ring operator",
+            "char": "∘"
+        },
+        {
+            "name": "bullet operator",
+            "char": "∙"
+        },
+        {
+            "name": "square root",
+            "char": "√"
+        },
+        {
+            "name": "cube root",
+            "char": "∛"
+        },
+        {
+            "name": "fourth root",
+            "char": "∜"
+        },
+        {
+            "name": "proportional to",
+            "char": "∝"
+        },
+        {
+            "name": "infinity",
+            "char": "∞"
+        },
+        {
+            "name": "right angle",
+            "char": "∟"
+        },
+        {
+            "name": "angle",
+            "char": "∠"
+        },
+        {
+            "name": "measured angle",
+            "char": "∡"
+        },
+        {
+            "name": "spherical angle",
+            "char": "∢"
+        },
+        {
+            "name": "divides",
+            "char": "∣"
+        },
+        {
+            "name": "does not divide",
+            "char": "∤"
+        },
+        {
+            "name": "parallel to",
+            "char": "∥"
+        },
+        {
+            "name": "not parallel to",
+            "char": "∦"
+        },
+        {
+            "name": "logical and",
+            "char": "∧"
+        },
+        {
+            "name": "logical or",
+            "char": "∨"
+        },
+        {
+            "name": "intersection",
+            "char": "∩"
+        },
+        {
+            "name": "union",
+            "char": "∪"
+        },
+        {
+            "name": "integral",
+            "char": "∫"
+        },
+        {
+            "name": "double integral",
+            "char": "∬"
+        },
+        {
+            "name": "triple integral",
+            "char": "∭"
+        },
+        {
+            "name": "contour integral",
+            "char": "∮"
+        },
+        {
+            "name": "surface integral",
+            "char": "∯"
+        },
+        {
+            "name": "volume integral",
+            "char": "∰"
+        },
+        {
+            "name": "clockwise integral",
+            "char": "∱"
+        },
+        {
+            "name": "clockwise contour integral",
+            "char": "∲"
+        },
+        {
+            "name": "anticlockwise contour integral",
+            "char": "∳"
+        },
+        {
+            "name": "therefore",
+            "char": "∴"
+        },
+        {
+            "name": "because",
+            "char": "∵"
+        },
+        {
+            "name": "ratio",
+            "char": "∶"
+        },
+        {
+            "name": "proportion",
+            "char": "∷"
+        },
+        {
+            "name": "dot minus",
+            "char": "∸"
+        },
+        {
+            "name": "excess",
+            "char": "∹"
+        },
+        {
+            "name": "geometric proportion",
+            "char": "∺"
+        },
+        {
+            "name": "homothetic",
+            "char": "∻"
+        },
+        {
+            "name": "tilde operator",
+            "char": "∼"
+        },
+        {
+            "name": "reversed tilde",
+            "char": "∽"
+        },
+        {
+            "name": "inverted lazy s",
+            "char": "∾"
+        },
+        {
+            "name": "sine wave",
+            "char": "∿"
+        },
+        {
+            "name": "wreath product",
+            "char": "≀"
+        },
+        {
+            "name": "not tilde",
+            "char": "≁"
+        },
+        {
+            "name": "minus tilde",
+            "char": "≂"
+        },
+        {
+            "name": "asymptotically equal to",
+            "char": "≃"
+        },
+        {
+            "name": "not asymptotically equal to",
+            "char": "≄"
+        },
+        {
+            "name": "approximately equal to",
+            "char": "≅"
+        },
+        {
+            "name": "approximately but not actually equal to",
+            "char": "≆"
+        },
+        {
+            "name": "neither approximately nor actually equal to",
+            "char": "≇"
+        },
+        {
+            "name": "almost equal to",
+            "char": "≈"
+        },
+        {
+            "name": "not almost equal to",
+            "char": "≉"
+        },
+        {
+            "name": "almost equal or equal to",
+            "char": "≊"
+        },
+        {
+            "name": "triple tilde",
+            "char": "≋"
+        },
+        {
+            "name": "all equal to",
+            "char": "≌"
+        },
+        {
+            "name": "equivalent to",
+            "char": "≍"
+        },
+        {
+            "name": "geometrically equivalent to",
+            "char": "≎"
+        },
+        {
+            "name": "difference between",
+            "char": "≏"
+        },
+        {
+            "name": "approaches the limit",
+            "char": "≐"
+        },
+        {
+            "name": "geometrically equal to",
+            "char": "≑"
+        },
+        {
+            "name": "approximately equal to or the image of",
+            "char": "≒"
+        },
+        {
+            "name": "image of or approximately equal to",
+            "char": "≓"
+        },
+        {
+            "name": "colon equals",
+            "char": "≔"
+        },
+        {
+            "name": "equals colon",
+            "char": "≕"
+        },
+        {
+            "name": "ring in equal to",
+            "char": "≖"
+        },
+        {
+            "name": "ring equal to",
+            "char": "≗"
+        },
+        {
+            "name": "corresponds to",
+            "char": "≘"
+        },
+        {
+            "name": "estimates",
+            "char": "≙"
+        },
+        {
+            "name": "equiangular to",
+            "char": "≚"
+        },
+        {
+            "name": "star equals",
+            "char": "≛"
+        },
+        {
+            "name": "delta equal to",
+            "char": "≜"
+        },
+        {
+            "name": "equal to by definition",
+            "char": "≝"
+        },
+        {
+            "name": "measured by",
+            "char": "≞"
+        },
+        {
+            "name": "questioned equal to",
+            "char": "≟"
+        },
+        {
+            "name": "not equal to",
+            "char": "≠"
+        },
+        {
+            "name": "identical to",
+            "char": "≡"
+        },
+        {
+            "name": "not identical to",
+            "char": "≢"
+        },
+        {
+            "name": "strictly equivalent to",
+            "char": "≣"
+        },
+        {
+            "name": "less-than or equal to",
+            "char": "≤"
+        },
+        {
+            "name": "greater-than or equal to",
+            "char": "≥"
+        },
+        {
+            "name": "less-than over equal to",
+            "char": "≦"
+        },
+        {
+            "name": "greater-than over equal to",
+            "char": "≧"
+        },
+        {
+            "name": "less-than but not equal to",
+            "char": "≨"
+        },
+        {
+            "name": "greater-than but not equal to",
+            "char": "≩"
+        },
+        {
+            "name": "much less-than",
+            "char": "≪"
+        },
+        {
+            "name": "much greater-than",
+            "char": "≫"
+        },
+        {
+            "name": "between",
+            "char": "≬"
+        },
+        {
+            "name": "not equivalent to",
+            "char": "≭"
+        },
+        {
+            "name": "not less-than",
+            "char": "≮"
+        },
+        {
+            "name": "not greater-than",
+            "char": "≯"
+        },
+        {
+            "name": "neither less-than nor equal to",
+            "char": "≰"
+        },
+        {
+            "name": "neither greater-than nor equal to",
+            "char": "≱"
+        },
+        {
+            "name": "less-than or equivalent to",
+            "char": "≲"
+        },
+        {
+            "name": "greater-than or equivalent to",
+            "char": "≳"
+        },
+        {
+            "name": "neither less-than nor equivalent to",
+            "char": "≴"
+        },
+        {
+            "name": "neither greater-than nor equivalent to",
+            "char": "≵"
+        },
+        {
+            "name": "less-than or greater-than",
+            "char": "≶"
+        },
+        {
+            "name": "greater-than or less-than",
+            "char": "≷"
+        },
+        {
+            "name": "neither less-than nor greater-than",
+            "char": "≸"
+        },
+        {
+            "name": "neither greater-than nor less-than",
+            "char": "≹"
+        },
+        {
+            "name": "precedes",
+            "char": "≺"
+        },
+        {
+            "name": "succeeds",
+            "char": "≻"
+        },
+        {
+            "name": "precedes or equal to",
+            "char": "≼"
+        },
+        {
+            "name": "succeeds or equal to",
+            "char": "≽"
+        },
+        {
+            "name": "precedes or equivalent to",
+            "char": "≾"
+        },
+        {
+            "name": "succeeds or equivalent to",
+            "char": "≿"
+        },
+        {
+            "name": "does not precede",
+            "char": "⊀"
+        },
+        {
+            "name": "does not succeed",
+            "char": "⊁"
+        },
+        {
+            "name": "subset of",
+            "char": "⊂"
+        },
+        {
+            "name": "superset of",
+            "char": "⊃"
+        },
+        {
+            "name": "not a subset of",
+            "char": "⊄"
+        },
+        {
+            "name": "not a superset of",
+            "char": "⊅"
+        },
+        {
+            "name": "subset of or equal to",
+            "char": "⊆"
+        },
+        {
+            "name": "superset of or equal to",
+            "char": "⊇"
+        },
+        {
+            "name": "neither a subset of nor equal to",
+            "char": "⊈"
+        },
+        {
+            "name": "neither a superset of nor equal to",
+            "char": "⊉"
+        },
+        {
+            "name": "subset of with not equal to",
+            "char": "⊊"
+        },
+        {
+            "name": "superset of with not equal to",
+            "char": "⊋"
+        },
+        {
+            "name": "multiset",
+            "char": "⊌"
+        },
+        {
+            "name": "multiset multiplication",
+            "char": "⊍"
+        },
+        {
+            "name": "multiset union",
+            "char": "⊎"
+        },
+        {
+            "name": "square image of",
+            "char": "⊏"
+        },
+        {
+            "name": "square original of",
+            "char": "⊐"
+        },
+        {
+            "name": "square image of or equal to",
+            "char": "⊑"
+        },
+        {
+            "name": "square original of or equal to",
+            "char": "⊒"
+        },
+        {
+            "name": "square cap",
+            "char": "⊓"
+        },
+        {
+            "name": "square cup",
+            "char": "⊔"
+        },
+        {
+            "name": "circled plus",
+            "char": "⊕"
+        },
+        {
+            "name": "circled minus",
+            "char": "⊖"
+        },
+        {
+            "name": "circled times",
+            "char": "⊗"
+        },
+        {
+            "name": "circled division slash",
+            "char": "⊘"
+        },
+        {
+            "name": "circled dot operator",
+            "char": "⊙"
+        },
+        {
+            "name": "circled ring operator",
+            "char": "⊚"
+        },
+        {
+            "name": "circled asterisk operator",
+            "char": "⊛"
+        },
+        {
+            "name": "circled equals",
+            "char": "⊜"
+        },
+        {
+            "name": "circled dash",
+            "char": "⊝"
+        },
+        {
+            "name": "squared plus",
+            "char": "⊞"
+        },
+        {
+            "name": "squared minus",
+            "char": "⊟"
+        },
+        {
+            "name": "squared times",
+            "char": "⊠"
+        },
+        {
+            "name": "squared dot operator",
+            "char": "⊡"
+        },
+        {
+            "name": "right tack",
+            "char": "⊢"
+        },
+        {
+            "name": "left tack",
+            "char": "⊣"
+        },
+        {
+            "name": "down tack",
+            "char": "⊤"
+        },
+        {
+            "name": "up tack",
+            "char": "⊥"
+        },
+        {
+            "name": "assertion",
+            "char": "⊦"
+        },
+        {
+            "name": "models",
+            "char": "⊧"
+        },
+        {
+            "name": "true",
+            "char": "⊨"
+        },
+        {
+            "name": "forces",
+            "char": "⊩"
+        },
+        {
+            "name": "triple vertical bar right turnstile",
+            "char": "⊪"
+        },
+        {
+            "name": "double vertical bar double right turnstile",
+            "char": "⊫"
+        },
+        {
+            "name": "does not prove",
+            "char": "⊬"
+        },
+        {
+            "name": "not true",
+            "char": "⊭"
+        },
+        {
+            "name": "does not force",
+            "char": "⊮"
+        },
+        {
+            "name": "negated double vertical bar double right turnstile",
+            "char": "⊯"
+        },
+        {
+            "name": "precedes under relation",
+            "char": "⊰"
+        },
+        {
+            "name": "succeeds under relation",
+            "char": "⊱"
+        },
+        {
+            "name": "normal subgroup of",
+            "char": "⊲"
+        },
+        {
+            "name": "contains as normal subgroup",
+            "char": "⊳"
+        },
+        {
+            "name": "normal subgroup of or equal to",
+            "char": "⊴"
+        },
+        {
+            "name": "contains as normal subgroup or equal to",
+            "char": "⊵"
+        },
+        {
+            "name": "original of",
+            "char": "⊶"
+        },
+        {
+            "name": "image of",
+            "char": "⊷"
+        },
+        {
+            "name": "multimap",
+            "char": "⊸"
+        },
+        {
+            "name": "hermitian conjugate matrix",
+            "char": "⊹"
+        },
+        {
+            "name": "intercalate",
+            "char": "⊺"
+        },
+        {
+            "name": "xor",
+            "char": "⊻"
+        },
+        {
+            "name": "nand",
+            "char": "⊼"
+        },
+        {
+            "name": "nor",
+            "char": "⊽"
+        },
+        {
+            "name": "right angle with arc",
+            "char": "⊾"
+        },
+        {
+            "name": "right triangle",
+            "char": "⊿"
+        },
+        {
+            "name": "n-ary logical and",
+            "char": "⋀"
+        },
+        {
+            "name": "n-ary logical or",
+            "char": "⋁"
+        },
+        {
+            "name": "n-ary intersection",
+            "char": "⋂"
+        },
+        {
+            "name": "n-ary union",
+            "char": "⋃"
+        },
+        {
+            "name": "diamond operator",
+            "char": "⋄"
+        },
+        {
+            "name": "dot operator",
+            "char": "⋅"
+        },
+        {
+            "name": "star operator",
+            "char": "⋆"
+        },
+        {
+            "name": "division times",
+            "char": "⋇"
+        },
+        {
+            "name": "bowtie",
+            "char": "⋈"
+        },
+        {
+            "name": "left normal factor semidirect product",
+            "char": "⋉"
+        },
+        {
+            "name": "right normal factor semidirect product",
+            "char": "⋊"
+        },
+        {
+            "name": "left semidirect product",
+            "char": "⋋"
+        },
+        {
+            "name": "right semidirect product",
+            "char": "⋌"
+        },
+        {
+            "name": "reversed tilde equals",
+            "char": "⋍"
+        },
+        {
+            "name": "curly logical or",
+            "char": "⋎"
+        },
+        {
+            "name": "curly logical and",
+            "char": "⋏"
+        },
+        {
+            "name": "double subset",
+            "char": "⋐"
+        },
+        {
+            "name": "double superset",
+            "char": "⋑"
+        },
+        {
+            "name": "double intersection",
+            "char": "⋒"
+        },
+        {
+            "name": "double union",
+            "char": "⋓"
+        },
+        {
+            "name": "pitchfork",
+            "char": "⋔"
+        },
+        {
+            "name": "equal and parallel to",
+            "char": "⋕"
+        },
+        {
+            "name": "less-than with dot",
+            "char": "⋖"
+        },
+        {
+            "name": "greater-than with dot",
+            "char": "⋗"
+        },
+        {
+            "name": "very much less-than",
+            "char": "⋘"
+        },
+        {
+            "name": "very much greater-than",
+            "char": "⋙"
+        },
+        {
+            "name": "less-than equal to or greater-than",
+            "char": "⋚"
+        },
+        {
+            "name": "greater-than equal to or less-than",
+            "char": "⋛"
+        },
+        {
+            "name": "equal to or less-than",
+            "char": "⋜"
+        },
+        {
+            "name": "equal to or greater-than",
+            "char": "⋝"
+        },
+        {
+            "name": "equal to or precedes",
+            "char": "⋞"
+        },
+        {
+            "name": "equal to or succeeds",
+            "char": "⋟"
+        },
+        {
+            "name": "does not precede or equal",
+            "char": "⋠"
+        },
+        {
+            "name": "does not succeed or equal",
+            "char": "⋡"
+        },
+        {
+            "name": "not square image of or equal to",
+            "char": "⋢"
+        },
+        {
+            "name": "not square original of or equal to",
+            "char": "⋣"
+        },
+        {
+            "name": "square image of or not equal to",
+            "char": "⋤"
+        },
+        {
+            "name": "square original of or not equal to",
+            "char": "⋥"
+        },
+        {
+            "name": "less-than but not equivalent to",
+            "char": "⋦"
+        },
+        {
+            "name": "greater-than but not equivalent to",
+            "char": "⋧"
+        },
+        {
+            "name": "precedes but not equivalent to",
+            "char": "⋨"
+        },
+        {
+            "name": "succeeds but not equivalent to",
+            "char": "⋩"
+        },
+        {
+            "name": "not normal subgroup of",
+            "char": "⋪"
+        },
+        {
+            "name": "does not contain as normal subgroup",
+            "char": "⋫"
+        },
+        {
+            "name": "not normal subgroup of or equal to",
+            "char": "⋬"
+        },
+        {
+            "name": "does not contain as normal subgroup or equal",
+            "char": "⋭"
+        },
+        {
+            "name": "vertical ellipsis",
+            "char": "⋮"
+        },
+        {
+            "name": "midline horizontal ellipsis",
+            "char": "⋯"
+        },
+        {
+            "name": "up right diagonal ellipsis",
+            "char": "⋰"
+        },
+        {
+            "name": "down right diagonal ellipsis",
+            "char": "⋱"
+        },
+        {
+            "name": "element of with long horizontal stroke",
+            "char": "⋲"
+        },
+        {
+            "name": "element of with vertical bar at end of horizontal stroke",
+            "char": "⋳"
+        },
+        {
+            "name": "small element of with vertical bar at end of horizontal stroke",
+            "char": "⋴"
+        },
+        {
+            "name": "element of with dot above",
+            "char": "⋵"
+        },
+        {
+            "name": "element of with overbar",
+            "char": "⋶"
+        },
+        {
+            "name": "small element of with overbar",
+            "char": "⋷"
+        },
+        {
+            "name": "element of with underbar",
+            "char": "⋸"
+        },
+        {
+            "name": "element of with two horizontal strokes",
+            "char": "⋹"
+        },
+        {
+            "name": "contains with long horizontal stroke",
+            "char": "⋺"
+        },
+        {
+            "name": "contains with vertical bar at end of horizontal stroke",
+            "char": "⋻"
+        },
+        {
+            "name": "small contains with vertical bar at end of horizontal stroke",
+            "char": "⋼"
+        },
+        {
+            "name": "contains with overbar",
+            "char": "⋽"
+        },
+        {
+            "name": "small contains with overbar",
+            "char": "⋾"
+        },
+        {
+            "name": "z notation bag membership",
+            "char": "⋿"
+        },
+        {
+            "name": "diameter sign",
+            "char": "⌀"
+        },
+        {
+            "name": "electric arrow",
+            "char": "⌁"
+        },
+        {
+            "name": "house",
+            "char": "⌂"
+        },
+        {
+            "name": "up arrowhead",
+            "char": "⌃"
+        },
+        {
+            "name": "down arrowhead",
+            "char": "⌄"
+        },
+        {
+            "name": "projective",
+            "char": "⌅"
+        },
+        {
+            "name": "perspective",
+            "char": "⌆"
+        },
+        {
+            "name": "wavy line",
+            "char": "⌇"
+        },
+        {
+            "name": "left ceiling",
+            "char": "⌈"
+        },
+        {
+            "name": "right ceiling",
+            "char": "⌉"
+        },
+        {
+            "name": "left floor",
+            "char": "⌊"
+        },
+        {
+            "name": "right floor",
+            "char": "⌋"
+        },
+        {
+            "name": "bottom right crop",
+            "char": "⌌"
+        },
+        {
+            "name": "bottom left crop",
+            "char": "⌍"
+        },
+        {
+            "name": "top right crop",
+            "char": "⌎"
+        },
+        {
+            "name": "top left crop",
+            "char": "⌏"
+        },
+        {
+            "name": "reversed not sign",
+            "char": "⌐"
+        },
+        {
+            "name": "square lozenge",
+            "char": "⌑"
+        },
+        {
+            "name": "arc",
+            "char": "⌒"
+        },
+        {
+            "name": "segment",
+            "char": "⌓"
+        },
+        {
+            "name": "sector",
+            "char": "⌔"
+        },
+        {
+            "name": "telephone recorder",
+            "char": "⌕"
+        },
+        {
+            "name": "position indicator",
+            "char": "⌖"
+        },
+        {
+            "name": "viewdata square",
+            "char": "⌗"
+        },
+        {
+            "name": "place of interest sign",
+            "char": "⌘"
+        },
+        {
+            "name": "turned not sign",
+            "char": "⌙"
+        },
+        {
+            "name": "watch",
+            "char": "⌚"
+        },
+        {
+            "name": "hourglass",
+            "char": "⌛"
+        },
+        {
+            "name": "top left corner",
+            "char": "⌜"
+        },
+        {
+            "name": "top right corner",
+            "char": "⌝"
+        },
+        {
+            "name": "bottom left corner",
+            "char": "⌞"
+        },
+        {
+            "name": "bottom right corner",
+            "char": "⌟"
+        },
+        {
+            "name": "top half integral",
+            "char": "⌠"
+        },
+        {
+            "name": "bottom half integral",
+            "char": "⌡"
+        },
+        {
+            "name": "frown",
+            "char": "⌢"
+        },
+        {
+            "name": "smile",
+            "char": "⌣"
+        },
+        {
+            "name": "up arrowhead between two horizontal bars",
+            "char": "⌤"
+        },
+        {
+            "name": "option key",
+            "char": "⌥"
+        },
+        {
+            "name": "erase to the right",
+            "char": "⌦"
+        },
+        {
+            "name": "x in a rectangle box",
+            "char": "⌧"
+        },
+        {
+            "name": "keyboard",
+            "char": "⌨"
+        },
+        {
+            "name": "left-pointing angle bracket",
+            "char": "〈"
+        },
+        {
+            "name": "right-pointing angle bracket",
+            "char": "〉"
+        },
+        {
+            "name": "erase to the left",
+            "char": "⌫"
+        },
+        {
+            "name": "benzene ring",
+            "char": "⌬"
+        },
+        {
+            "name": "cylindricity",
+            "char": "⌭"
+        },
+        {
+            "name": "all around-profile",
+            "char": "⌮"
+        },
+        {
+            "name": "symmetry",
+            "char": "⌯"
+        },
+        {
+            "name": "total runout",
+            "char": "⌰"
+        },
+        {
+            "name": "dimension origin",
+            "char": "⌱"
+        },
+        {
+            "name": "conical taper",
+            "char": "⌲"
+        },
+        {
+            "name": "slope",
+            "char": "⌳"
+        },
+        {
+            "name": "counterbore",
+            "char": "⌴"
+        },
+        {
+            "name": "countersink",
+            "char": "⌵"
+        },
+        {
+            "name": "apl functional symbol i-beam",
+            "char": "⌶"
+        },
+        {
+            "name": "apl functional symbol squish quad",
+            "char": "⌷"
+        },
+        {
+            "name": "apl functional symbol quad equal",
+            "char": "⌸"
+        },
+        {
+            "name": "apl functional symbol quad divide",
+            "char": "⌹"
+        },
+        {
+            "name": "apl functional symbol quad diamond",
+            "char": "⌺"
+        },
+        {
+            "name": "apl functional symbol quad jot",
+            "char": "⌻"
+        },
+        {
+            "name": "apl functional symbol quad circle",
+            "char": "⌼"
+        },
+        {
+            "name": "apl functional symbol circle stile",
+            "char": "⌽"
+        },
+        {
+            "name": "apl functional symbol circle jot",
+            "char": "⌾"
+        },
+        {
+            "name": "apl functional symbol slash bar",
+            "char": "⌿"
+        },
+        {
+            "name": "apl functional symbol backslash bar",
+            "char": "⍀"
+        },
+        {
+            "name": "apl functional symbol quad slash",
+            "char": "⍁"
+        },
+        {
+            "name": "apl functional symbol quad backslash",
+            "char": "⍂"
+        },
+        {
+            "name": "apl functional symbol quad less-than",
+            "char": "⍃"
+        },
+        {
+            "name": "apl functional symbol quad greater-than",
+            "char": "⍄"
+        },
+        {
+            "name": "apl functional symbol leftwards vane",
+            "char": "⍅"
+        },
+        {
+            "name": "apl functional symbol rightwards vane",
+            "char": "⍆"
+        },
+        {
+            "name": "apl functional symbol quad leftwards arrow",
+            "char": "⍇"
+        },
+        {
+            "name": "apl functional symbol quad rightwards arrow",
+            "char": "⍈"
+        },
+        {
+            "name": "apl functional symbol circle backslash",
+            "char": "⍉"
+        },
+        {
+            "name": "apl functional symbol down tack underbar",
+            "char": "⍊"
+        },
+        {
+            "name": "apl functional symbol delta stile",
+            "char": "⍋"
+        },
+        {
+            "name": "apl functional symbol quad down caret",
+            "char": "⍌"
+        },
+        {
+            "name": "apl functional symbol quad delta",
+            "char": "⍍"
+        },
+        {
+            "name": "apl functional symbol down tack jot",
+            "char": "⍎"
+        },
+        {
+            "name": "apl functional symbol upwards vane",
+            "char": "⍏"
+        },
+        {
+            "name": "apl functional symbol quad upwards arrow",
+            "char": "⍐"
+        },
+        {
+            "name": "apl functional symbol up tack overbar",
+            "char": "⍑"
+        },
+        {
+            "name": "apl functional symbol del stile",
+            "char": "⍒"
+        },
+        {
+            "name": "apl functional symbol quad up caret",
+            "char": "⍓"
+        },
+        {
+            "name": "apl functional symbol quad del",
+            "char": "⍔"
+        },
+        {
+            "name": "apl functional symbol up tack jot",
+            "char": "⍕"
+        },
+        {
+            "name": "apl functional symbol downwards vane",
+            "char": "⍖"
+        },
+        {
+            "name": "apl functional symbol quad downwards arrow",
+            "char": "⍗"
+        },
+        {
+            "name": "apl functional symbol quote underbar",
+            "char": "⍘"
+        },
+        {
+            "name": "apl functional symbol delta underbar",
+            "char": "⍙"
+        },
+        {
+            "name": "apl functional symbol diamond underbar",
+            "char": "⍚"
+        },
+        {
+            "name": "apl functional symbol jot underbar",
+            "char": "⍛"
+        },
+        {
+            "name": "apl functional symbol circle underbar",
+            "char": "⍜"
+        },
+        {
+            "name": "apl functional symbol up shoe jot",
+            "char": "⍝"
+        },
+        {
+            "name": "apl functional symbol quote quad",
+            "char": "⍞"
+        },
+        {
+            "name": "apl functional symbol circle star",
+            "char": "⍟"
+        },
+        {
+            "name": "apl functional symbol quad colon",
+            "char": "⍠"
+        },
+        {
+            "name": "apl functional symbol up tack diaeresis",
+            "char": "⍡"
+        },
+        {
+            "name": "apl functional symbol del diaeresis",
+            "char": "⍢"
+        },
+        {
+            "name": "apl functional symbol star diaeresis",
+            "char": "⍣"
+        },
+        {
+            "name": "apl functional symbol jot diaeresis",
+            "char": "⍤"
+        },
+        {
+            "name": "apl functional symbol circle diaeresis",
+            "char": "⍥"
+        },
+        {
+            "name": "apl functional symbol down shoe stile",
+            "char": "⍦"
+        },
+        {
+            "name": "apl functional symbol left shoe stile",
+            "char": "⍧"
+        },
+        {
+            "name": "apl functional symbol tilde diaeresis",
+            "char": "⍨"
+        },
+        {
+            "name": "apl functional symbol greater-than diaeresis",
+            "char": "⍩"
+        },
+        {
+            "name": "apl functional symbol comma bar",
+            "char": "⍪"
+        },
+        {
+            "name": "apl functional symbol del tilde",
+            "char": "⍫"
+        },
+        {
+            "name": "apl functional symbol zilde",
+            "char": "⍬"
+        },
+        {
+            "name": "apl functional symbol stile tilde",
+            "char": "⍭"
+        },
+        {
+            "name": "apl functional symbol semicolon underbar",
+            "char": "⍮"
+        },
+        {
+            "name": "apl functional symbol quad not equal",
+            "char": "⍯"
+        },
+        {
+            "name": "apl functional symbol quad question",
+            "char": "⍰"
+        },
+        {
+            "name": "apl functional symbol down caret tilde",
+            "char": "⍱"
+        },
+        {
+            "name": "apl functional symbol up caret tilde",
+            "char": "⍲"
+        },
+        {
+            "name": "apl functional symbol iota",
+            "char": "⍳"
+        },
+        {
+            "name": "apl functional symbol rho",
+            "char": "⍴"
+        },
+        {
+            "name": "apl functional symbol omega",
+            "char": "⍵"
+        },
+        {
+            "name": "apl functional symbol alpha underbar",
+            "char": "⍶"
+        },
+        {
+            "name": "apl functional symbol epsilon underbar",
+            "char": "⍷"
+        },
+        {
+            "name": "apl functional symbol iota underbar",
+            "char": "⍸"
+        },
+        {
+            "name": "apl functional symbol omega underbar",
+            "char": "⍹"
+        },
+        {
+            "name": "apl functional symbol alpha",
+            "char": "⍺"
+        },
+        {
+            "name": "not check mark",
+            "char": "⍻"
+        },
+        {
+            "name": "right angle with downwards zigzag arrow",
+            "char": "⍼"
+        },
+        {
+            "name": "shouldered open box",
+            "char": "⍽"
+        },
+        {
+            "name": "bell symbol",
+            "char": "⍾"
+        },
+        {
+            "name": "vertical line with middle dot",
+            "char": "⍿"
+        },
+        {
+            "name": "insertion symbol",
+            "char": "⎀"
+        },
+        {
+            "name": "continuous underline symbol",
+            "char": "⎁"
+        },
+        {
+            "name": "discontinuous underline symbol",
+            "char": "⎂"
+        },
+        {
+            "name": "emphasis symbol",
+            "char": "⎃"
+        },
+        {
+            "name": "composition symbol",
+            "char": "⎄"
+        },
+        {
+            "name": "white square with centre vertical line",
+            "char": "⎅"
+        },
+        {
+            "name": "enter symbol",
+            "char": "⎆"
+        },
+        {
+            "name": "alternative key symbol",
+            "char": "⎇"
+        },
+        {
+            "name": "helm symbol",
+            "char": "⎈"
+        },
+        {
+            "name": "circled horizontal bar with notch",
+            "char": "⎉"
+        },
+        {
+            "name": "circled triangle down",
+            "char": "⎊"
+        },
+        {
+            "name": "broken circle with northwest arrow",
+            "char": "⎋"
+        },
+        {
+            "name": "undo symbol",
+            "char": "⎌"
+        },
+        {
+            "name": "monostable symbol",
+            "char": "⎍"
+        },
+        {
+            "name": "hysteresis symbol",
+            "char": "⎎"
+        },
+        {
+            "name": "open-circuit-output h-type symbol",
+            "char": "⎏"
+        },
+        {
+            "name": "open-circuit-output l-type symbol",
+            "char": "⎐"
+        },
+        {
+            "name": "passive-pull-down-output symbol",
+            "char": "⎑"
+        },
+        {
+            "name": "passive-pull-up-output symbol",
+            "char": "⎒"
+        },
+        {
+            "name": "direct current symbol form two",
+            "char": "⎓"
+        },
+        {
+            "name": "software-function symbol",
+            "char": "⎔"
+        },
+        {
+            "name": "apl functional symbol quad",
+            "char": "⎕"
+        },
+        {
+            "name": "decimal separator key symbol",
+            "char": "⎖"
+        },
+        {
+            "name": "previous page",
+            "char": "⎗"
+        },
+        {
+            "name": "next page",
+            "char": "⎘"
+        },
+        {
+            "name": "print screen symbol",
+            "char": "⎙"
+        },
+        {
+            "name": "clear screen symbol",
+            "char": "⎚"
+        },
+        {
+            "name": "left parenthesis upper hook",
+            "char": "⎛"
+        },
+        {
+            "name": "left parenthesis extension",
+            "char": "⎜"
+        },
+        {
+            "name": "left parenthesis lower hook",
+            "char": "⎝"
+        },
+        {
+            "name": "right parenthesis upper hook",
+            "char": "⎞"
+        },
+        {
+            "name": "right parenthesis extension",
+            "char": "⎟"
+        },
+        {
+            "name": "right parenthesis lower hook",
+            "char": "⎠"
+        },
+        {
+            "name": "left square bracket upper corner",
+            "char": "⎡"
+        },
+        {
+            "name": "left square bracket extension",
+            "char": "⎢"
+        },
+        {
+            "name": "left square bracket lower corner",
+            "char": "⎣"
+        },
+        {
+            "name": "right square bracket upper corner",
+            "char": "⎤"
+        },
+        {
+            "name": "right square bracket extension",
+            "char": "⎥"
+        },
+        {
+            "name": "right square bracket lower corner",
+            "char": "⎦"
+        },
+        {
+            "name": "left curly bracket upper hook",
+            "char": "⎧"
+        },
+        {
+            "name": "left curly bracket middle piece",
+            "char": "⎨"
+        },
+        {
+            "name": "left curly bracket lower hook",
+            "char": "⎩"
+        },
+        {
+            "name": "curly bracket extension",
+            "char": "⎪"
+        },
+        {
+            "name": "right curly bracket upper hook",
+            "char": "⎫"
+        },
+        {
+            "name": "right curly bracket middle piece",
+            "char": "⎬"
+        },
+        {
+            "name": "right curly bracket lower hook",
+            "char": "⎭"
+        },
+        {
+            "name": "integral extension",
+            "char": "⎮"
+        },
+        {
+            "name": "horizontal line extension",
+            "char": "⎯"
+        },
+        {
+            "name": "upper left or lower right curly bracket section",
+            "char": "⎰"
+        },
+        {
+            "name": "upper right or lower left curly bracket section",
+            "char": "⎱"
+        },
+        {
+            "name": "summation top",
+            "char": "⎲"
+        },
+        {
+            "name": "summation bottom",
+            "char": "⎳"
+        },
+        {
+            "name": "top square bracket",
+            "char": "⎴"
+        },
+        {
+            "name": "bottom square bracket",
+            "char": "⎵"
+        },
+        {
+            "name": "bottom square bracket over top square bracket",
+            "char": "⎶"
+        },
+        {
+            "name": "radical symbol bottom",
+            "char": "⎷"
+        },
+        {
+            "name": "left vertical box line",
+            "char": "⎸"
+        },
+        {
+            "name": "right vertical box line",
+            "char": "⎹"
+        },
+        {
+            "name": "horizontal scan line-1",
+            "char": "⎺"
+        },
+        {
+            "name": "horizontal scan line-3",
+            "char": "⎻"
+        },
+        {
+            "name": "horizontal scan line-7",
+            "char": "⎼"
+        },
+        {
+            "name": "horizontal scan line-9",
+            "char": "⎽"
+        },
+        {
+            "name": "dentistry symbol light vertical and top right",
+            "char": "⎾"
+        },
+        {
+            "name": "dentistry symbol light vertical and bottom right",
+            "char": "⎿"
+        },
+        {
+            "name": "dentistry symbol light vertical with circle",
+            "char": "⏀"
+        },
+        {
+            "name": "dentistry symbol light down and horizontal with circle",
+            "char": "⏁"
+        },
+        {
+            "name": "dentistry symbol light up and horizontal with circle",
+            "char": "⏂"
+        },
+        {
+            "name": "dentistry symbol light vertical with triangle",
+            "char": "⏃"
+        },
+        {
+            "name": "dentistry symbol light down and horizontal with triangle",
+            "char": "⏄"
+        },
+        {
+            "name": "dentistry symbol light up and horizontal with triangle",
+            "char": "⏅"
+        },
+        {
+            "name": "dentistry symbol light vertical and wave",
+            "char": "⏆"
+        },
+        {
+            "name": "dentistry symbol light down and horizontal with wave",
+            "char": "⏇"
+        },
+        {
+            "name": "dentistry symbol light up and horizontal with wave",
+            "char": "⏈"
+        },
+        {
+            "name": "dentistry symbol light down and horizontal",
+            "char": "⏉"
+        },
+        {
+            "name": "dentistry symbol light up and horizontal",
+            "char": "⏊"
+        },
+        {
+            "name": "dentistry symbol light vertical and top left",
+            "char": "⏋"
+        },
+        {
+            "name": "dentistry symbol light vertical and bottom left",
+            "char": "⏌"
+        },
+        {
+            "name": "square foot",
+            "char": "⏍"
+        },
+        {
+            "name": "return symbol",
+            "char": "⏎"
+        },
+        {
+            "name": "eject symbol",
+            "char": "⏏"
+        },
+        {
+            "name": "vertical line extension",
+            "char": "⏐"
+        },
+        {
+            "name": "metrical breve",
+            "char": "⏑"
+        },
+        {
+            "name": "metrical long over short",
+            "char": "⏒"
+        },
+        {
+            "name": "metrical short over long",
+            "char": "⏓"
+        },
+        {
+            "name": "metrical long over two shorts",
+            "char": "⏔"
+        },
+        {
+            "name": "metrical two shorts over long",
+            "char": "⏕"
+        },
+        {
+            "name": "metrical two shorts joined",
+            "char": "⏖"
+        },
+        {
+            "name": "metrical triseme",
+            "char": "⏗"
+        },
+        {
+            "name": "metrical tetraseme",
+            "char": "⏘"
+        },
+        {
+            "name": "metrical pentaseme",
+            "char": "⏙"
+        },
+        {
+            "name": "earth ground",
+            "char": "⏚"
+        },
+        {
+            "name": "fuse",
+            "char": "⏛"
+        },
+        {
+            "name": "top parenthesis",
+            "char": "⏜"
+        },
+        {
+            "name": "bottom parenthesis",
+            "char": "⏝"
+        },
+        {
+            "name": "top curly bracket",
+            "char": "⏞"
+        },
+        {
+            "name": "bottom curly bracket",
+            "char": "⏟"
+        },
+        {
+            "name": "top tortoise shell bracket",
+            "char": "⏠"
+        },
+        {
+            "name": "bottom tortoise shell bracket",
+            "char": "⏡"
+        },
+        {
+            "name": "white trapezium",
+            "char": "⏢"
+        },
+        {
+            "name": "benzene ring with circle",
+            "char": "⏣"
+        },
+        {
+            "name": "straightness",
+            "char": "⏤"
+        },
+        {
+            "name": "flatness",
+            "char": "⏥"
+        },
+        {
+            "name": "ac current",
+            "char": "⏦"
+        },
+        {
+            "name": "electrical intersection",
+            "char": "⏧"
+        },
+        {
+            "name": "decimal exponent symbol",
+            "char": "⏨"
+        },
+        {
+            "name": "black right-pointing double triangle",
+            "char": "⏩"
+        },
+        {
+            "name": "black left-pointing double triangle",
+            "char": "⏪"
+        },
+        {
+            "name": "black up-pointing double triangle",
+            "char": "⏫"
+        },
+        {
+            "name": "black down-pointing double triangle",
+            "char": "⏬"
+        },
+        {
+            "name": "black right-pointing double triangle with vertical bar",
+            "char": "⏭"
+        },
+        {
+            "name": "black left-pointing double triangle with vertical bar",
+            "char": "⏮"
+        },
+        {
+            "name": "black right-pointing triangle with double vertical bar",
+            "char": "⏯"
+        },
+        {
+            "name": "alarm clock",
+            "char": "⏰"
+        },
+        {
+            "name": "stopwatch",
+            "char": "⏱"
+        },
+        {
+            "name": "timer clock",
+            "char": "⏲"
+        },
+        {
+            "name": "hourglass with flowing sand",
+            "char": "⏳"
+        },
+        {
+            "name": "black medium left-pointing triangle",
+            "char": "⏴"
+        },
+        {
+            "name": "black medium right-pointing triangle",
+            "char": "⏵"
+        },
+        {
+            "name": "black medium up-pointing triangle",
+            "char": "⏶"
+        },
+        {
+            "name": "black medium down-pointing triangle",
+            "char": "⏷"
+        },
+        {
+            "name": "double vertical bar",
+            "char": "⏸"
+        },
+        {
+            "name": "black square for stop",
+            "char": "⏹"
+        },
+        {
+            "name": "black circle for record",
+            "char": "⏺"
+        },
+        {
+            "name": "power symbol",
+            "char": "⏻"
+        },
+        {
+            "name": "power on-off symbol",
+            "char": "⏼"
+        },
+        {
+            "name": "power on symbol",
+            "char": "⏽"
+        },
+        {
+            "name": "power sleep symbol",
+            "char": "⏾"
+        },
+        {
+            "name": "observer eye symbol",
+            "char": "⏿"
+        },
+        {
+            "name": "box drawings light horizontal",
+            "char": "─"
+        },
+        {
+            "name": "box drawings heavy horizontal",
+            "char": "━"
+        },
+        {
+            "name": "box drawings light vertical",
+            "char": "│"
+        },
+        {
+            "name": "box drawings heavy vertical",
+            "char": "┃"
+        },
+        {
+            "name": "box drawings light triple dash horizontal",
+            "char": "┄"
+        },
+        {
+            "name": "box drawings heavy triple dash horizontal",
+            "char": "┅"
+        },
+        {
+            "name": "box drawings light triple dash vertical",
+            "char": "┆"
+        },
+        {
+            "name": "box drawings heavy triple dash vertical",
+            "char": "┇"
+        },
+        {
+            "name": "box drawings light quadruple dash horizontal",
+            "char": "┈"
+        },
+        {
+            "name": "box drawings heavy quadruple dash horizontal",
+            "char": "┉"
+        },
+        {
+            "name": "box drawings light quadruple dash vertical",
+            "char": "┊"
+        },
+        {
+            "name": "box drawings heavy quadruple dash vertical",
+            "char": "┋"
+        },
+        {
+            "name": "box drawings light down and right",
+            "char": "┌"
+        },
+        {
+            "name": "box drawings down light and right heavy",
+            "char": "┍"
+        },
+        {
+            "name": "box drawings down heavy and right light",
+            "char": "┎"
+        },
+        {
+            "name": "box drawings heavy down and right",
+            "char": "┏"
+        },
+        {
+            "name": "box drawings light down and left",
+            "char": "┐"
+        },
+        {
+            "name": "box drawings down light and left heavy",
+            "char": "┑"
+        },
+        {
+            "name": "box drawings down heavy and left light",
+            "char": "┒"
+        },
+        {
+            "name": "box drawings heavy down and left",
+            "char": "┓"
+        },
+        {
+            "name": "box drawings light up and right",
+            "char": "└"
+        },
+        {
+            "name": "box drawings up light and right heavy",
+            "char": "┕"
+        },
+        {
+            "name": "box drawings up heavy and right light",
+            "char": "┖"
+        },
+        {
+            "name": "box drawings heavy up and right",
+            "char": "┗"
+        },
+        {
+            "name": "box drawings light up and left",
+            "char": "┘"
+        },
+        {
+            "name": "box drawings up light and left heavy",
+            "char": "┙"
+        },
+        {
+            "name": "box drawings up heavy and left light",
+            "char": "┚"
+        },
+        {
+            "name": "box drawings heavy up and left",
+            "char": "┛"
+        },
+        {
+            "name": "box drawings light vertical and right",
+            "char": "├"
+        },
+        {
+            "name": "box drawings vertical light and right heavy",
+            "char": "┝"
+        },
+        {
+            "name": "box drawings up heavy and right down light",
+            "char": "┞"
+        },
+        {
+            "name": "box drawings down heavy and right up light",
+            "char": "┟"
+        },
+        {
+            "name": "box drawings vertical heavy and right light",
+            "char": "┠"
+        },
+        {
+            "name": "box drawings down light and right up heavy",
+            "char": "┡"
+        },
+        {
+            "name": "box drawings up light and right down heavy",
+            "char": "┢"
+        },
+        {
+            "name": "box drawings heavy vertical and right",
+            "char": "┣"
+        },
+        {
+            "name": "box drawings light vertical and left",
+            "char": "┤"
+        },
+        {
+            "name": "box drawings vertical light and left heavy",
+            "char": "┥"
+        },
+        {
+            "name": "box drawings up heavy and left down light",
+            "char": "┦"
+        },
+        {
+            "name": "box drawings down heavy and left up light",
+            "char": "┧"
+        },
+        {
+            "name": "box drawings vertical heavy and left light",
+            "char": "┨"
+        },
+        {
+            "name": "box drawings down light and left up heavy",
+            "char": "┩"
+        },
+        {
+            "name": "box drawings up light and left down heavy",
+            "char": "┪"
+        },
+        {
+            "name": "box drawings heavy vertical and left",
+            "char": "┫"
+        },
+        {
+            "name": "box drawings light down and horizontal",
+            "char": "┬"
+        },
+        {
+            "name": "box drawings left heavy and right down light",
+            "char": "┭"
+        },
+        {
+            "name": "box drawings right heavy and left down light",
+            "char": "┮"
+        },
+        {
+            "name": "box drawings down light and horizontal heavy",
+            "char": "┯"
+        },
+        {
+            "name": "box drawings down heavy and horizontal light",
+            "char": "┰"
+        },
+        {
+            "name": "box drawings right light and left down heavy",
+            "char": "┱"
+        },
+        {
+            "name": "box drawings left light and right down heavy",
+            "char": "┲"
+        },
+        {
+            "name": "box drawings heavy down and horizontal",
+            "char": "┳"
+        },
+        {
+            "name": "box drawings light up and horizontal",
+            "char": "┴"
+        },
+        {
+            "name": "box drawings left heavy and right up light",
+            "char": "┵"
+        },
+        {
+            "name": "box drawings right heavy and left up light",
+            "char": "┶"
+        },
+        {
+            "name": "box drawings up light and horizontal heavy",
+            "char": "┷"
+        },
+        {
+            "name": "box drawings up heavy and horizontal light",
+            "char": "┸"
+        },
+        {
+            "name": "box drawings right light and left up heavy",
+            "char": "┹"
+        },
+        {
+            "name": "box drawings left light and right up heavy",
+            "char": "┺"
+        },
+        {
+            "name": "box drawings heavy up and horizontal",
+            "char": "┻"
+        },
+        {
+            "name": "box drawings light vertical and horizontal",
+            "char": "┼"
+        },
+        {
+            "name": "box drawings left heavy and right vertical light",
+            "char": "┽"
+        },
+        {
+            "name": "box drawings right heavy and left vertical light",
+            "char": "┾"
+        },
+        {
+            "name": "box drawings vertical light and horizontal heavy",
+            "char": "┿"
+        },
+        {
+            "name": "box drawings up heavy and down horizontal light",
+            "char": "╀"
+        },
+        {
+            "name": "box drawings down heavy and up horizontal light",
+            "char": "╁"
+        },
+        {
+            "name": "box drawings vertical heavy and horizontal light",
+            "char": "╂"
+        },
+        {
+            "name": "box drawings left up heavy and right down light",
+            "char": "╃"
+        },
+        {
+            "name": "box drawings right up heavy and left down light",
+            "char": "╄"
+        },
+        {
+            "name": "box drawings left down heavy and right up light",
+            "char": "╅"
+        },
+        {
+            "name": "box drawings right down heavy and left up light",
+            "char": "╆"
+        },
+        {
+            "name": "box drawings down light and up horizontal heavy",
+            "char": "╇"
+        },
+        {
+            "name": "box drawings up light and down horizontal heavy",
+            "char": "╈"
+        },
+        {
+            "name": "box drawings right light and left vertical heavy",
+            "char": "╉"
+        },
+        {
+            "name": "box drawings left light and right vertical heavy",
+            "char": "╊"
+        },
+        {
+            "name": "box drawings heavy vertical and horizontal",
+            "char": "╋"
+        },
+        {
+            "name": "box drawings light double dash horizontal",
+            "char": "╌"
+        },
+        {
+            "name": "box drawings heavy double dash horizontal",
+            "char": "╍"
+        },
+        {
+            "name": "box drawings light double dash vertical",
+            "char": "╎"
+        },
+        {
+            "name": "box drawings heavy double dash vertical",
+            "char": "╏"
+        },
+        {
+            "name": "box drawings double horizontal",
+            "char": "═"
+        },
+        {
+            "name": "box drawings double vertical",
+            "char": "║"
+        },
+        {
+            "name": "box drawings down single and right double",
+            "char": "╒"
+        },
+        {
+            "name": "box drawings down double and right single",
+            "char": "╓"
+        },
+        {
+            "name": "box drawings double down and right",
+            "char": "╔"
+        },
+        {
+            "name": "box drawings down single and left double",
+            "char": "╕"
+        },
+        {
+            "name": "box drawings down double and left single",
+            "char": "╖"
+        },
+        {
+            "name": "box drawings double down and left",
+            "char": "╗"
+        },
+        {
+            "name": "box drawings up single and right double",
+            "char": "╘"
+        },
+        {
+            "name": "box drawings up double and right single",
+            "char": "╙"
+        },
+        {
+            "name": "box drawings double up and right",
+            "char": "╚"
+        },
+        {
+            "name": "box drawings up single and left double",
+            "char": "╛"
+        },
+        {
+            "name": "box drawings up double and left single",
+            "char": "╜"
+        },
+        {
+            "name": "box drawings double up and left",
+            "char": "╝"
+        },
+        {
+            "name": "box drawings vertical single and right double",
+            "char": "╞"
+        },
+        {
+            "name": "box drawings vertical double and right single",
+            "char": "╟"
+        },
+        {
+            "name": "box drawings double vertical and right",
+            "char": "╠"
+        },
+        {
+            "name": "box drawings vertical single and left double",
+            "char": "╡"
+        },
+        {
+            "name": "box drawings vertical double and left single",
+            "char": "╢"
+        },
+        {
+            "name": "box drawings double vertical and left",
+            "char": "╣"
+        },
+        {
+            "name": "box drawings down single and horizontal double",
+            "char": "╤"
+        },
+        {
+            "name": "box drawings down double and horizontal single",
+            "char": "╥"
+        },
+        {
+            "name": "box drawings double down and horizontal",
+            "char": "╦"
+        },
+        {
+            "name": "box drawings up single and horizontal double",
+            "char": "╧"
+        },
+        {
+            "name": "box drawings up double and horizontal single",
+            "char": "╨"
+        },
+        {
+            "name": "box drawings double up and horizontal",
+            "char": "╩"
+        },
+        {
+            "name": "box drawings vertical single and horizontal double",
+            "char": "╪"
+        },
+        {
+            "name": "box drawings vertical double and horizontal single",
+            "char": "╫"
+        },
+        {
+            "name": "box drawings double vertical and horizontal",
+            "char": "╬"
+        },
+        {
+            "name": "box drawings light arc down and right",
+            "char": "╭"
+        },
+        {
+            "name": "box drawings light arc down and left",
+            "char": "╮"
+        },
+        {
+            "name": "box drawings light arc up and left",
+            "char": "╯"
+        },
+        {
+            "name": "box drawings light arc up and right",
+            "char": "╰"
+        },
+        {
+            "name": "box drawings light diagonal upper right to lower left",
+            "char": "╱"
+        },
+        {
+            "name": "box drawings light diagonal upper left to lower right",
+            "char": "╲"
+        },
+        {
+            "name": "box drawings light diagonal cross",
+            "char": "╳"
+        },
+        {
+            "name": "box drawings light left",
+            "char": "╴"
+        },
+        {
+            "name": "box drawings light up",
+            "char": "╵"
+        },
+        {
+            "name": "box drawings light right",
+            "char": "╶"
+        },
+        {
+            "name": "box drawings light down",
+            "char": "╷"
+        },
+        {
+            "name": "box drawings heavy left",
+            "char": "╸"
+        },
+        {
+            "name": "box drawings heavy up",
+            "char": "╹"
+        },
+        {
+            "name": "box drawings heavy right",
+            "char": "╺"
+        },
+        {
+            "name": "box drawings heavy down",
+            "char": "╻"
+        },
+        {
+            "name": "box drawings light left and heavy right",
+            "char": "╼"
+        },
+        {
+            "name": "box drawings light up and heavy down",
+            "char": "╽"
+        },
+        {
+            "name": "box drawings heavy left and light right",
+            "char": "╾"
+        },
+        {
+            "name": "box drawings heavy up and light down",
+            "char": "╿"
+        },
+        {
+            "name": "black square",
+            "char": "■"
+        },
+        {
+            "name": "white square",
+            "char": "□"
+        },
+        {
+            "name": "white square with rounded corners",
+            "char": "▢"
+        },
+        {
+            "name": "white square containing black small square",
+            "char": "▣"
+        },
+        {
+            "name": "square with horizontal fill",
+            "char": "▤"
+        },
+        {
+            "name": "square with vertical fill",
+            "char": "▥"
+        },
+        {
+            "name": "square with orthogonal crosshatch fill",
+            "char": "▦"
+        },
+        {
+            "name": "square with upper left to lower right fill",
+            "char": "▧"
+        },
+        {
+            "name": "square with upper right to lower left fill",
+            "char": "▨"
+        },
+        {
+            "name": "square with diagonal crosshatch fill",
+            "char": "▩"
+        },
+        {
+            "name": "black small square",
+            "char": "▪"
+        },
+        {
+            "name": "white small square",
+            "char": "▫"
+        },
+        {
+            "name": "black rectangle",
+            "char": "▬"
+        },
+        {
+            "name": "white rectangle",
+            "char": "▭"
+        },
+        {
+            "name": "black vertical rectangle",
+            "char": "▮"
+        },
+        {
+            "name": "white vertical rectangle",
+            "char": "▯"
+        },
+        {
+            "name": "black parallelogram",
+            "char": "▰"
+        },
+        {
+            "name": "white parallelogram",
+            "char": "▱"
+        },
+        {
+            "name": "black up-pointing triangle",
+            "char": "▲"
+        },
+        {
+            "name": "white up-pointing triangle",
+            "char": "△"
+        },
+        {
+            "name": "black up-pointing small triangle",
+            "char": "▴"
+        },
+        {
+            "name": "white up-pointing small triangle",
+            "char": "▵"
+        },
+        {
+            "name": "black right-pointing triangle",
+            "char": "▶"
+        },
+        {
+            "name": "white right-pointing triangle",
+            "char": "▷"
+        },
+        {
+            "name": "black right-pointing small triangle",
+            "char": "▸"
+        },
+        {
+            "name": "white right-pointing small triangle",
+            "char": "▹"
+        },
+        {
+            "name": "black right-pointing pointer",
+            "char": "►"
+        },
+        {
+            "name": "white right-pointing pointer",
+            "char": "▻"
+        },
+        {
+            "name": "black down-pointing triangle",
+            "char": "▼"
+        },
+        {
+            "name": "white down-pointing triangle",
+            "char": "▽"
+        },
+        {
+            "name": "black down-pointing small triangle",
+            "char": "▾"
+        },
+        {
+            "name": "white down-pointing small triangle",
+            "char": "▿"
+        },
+        {
+            "name": "black left-pointing triangle",
+            "char": "◀"
+        },
+        {
+            "name": "white left-pointing triangle",
+            "char": "◁"
+        },
+        {
+            "name": "black left-pointing small triangle",
+            "char": "◂"
+        },
+        {
+            "name": "white left-pointing small triangle",
+            "char": "◃"
+        },
+        {
+            "name": "black left-pointing pointer",
+            "char": "◄"
+        },
+        {
+            "name": "white left-pointing pointer",
+            "char": "◅"
+        },
+        {
+            "name": "black diamond",
+            "char": "◆"
+        },
+        {
+            "name": "white diamond",
+            "char": "◇"
+        },
+        {
+            "name": "white diamond containing black small diamond",
+            "char": "◈"
+        },
+        {
+            "name": "fisheye",
+            "char": "◉"
+        },
+        {
+            "name": "lozenge",
+            "char": "◊"
+        },
+        {
+            "name": "white circle",
+            "char": "○"
+        },
+        {
+            "name": "dotted circle",
+            "char": "◌"
+        },
+        {
+            "name": "circle with vertical fill",
+            "char": "◍"
+        },
+        {
+            "name": "bullseye",
+            "char": "◎"
+        },
+        {
+            "name": "black circle",
+            "char": "●"
+        },
+        {
+            "name": "circle with left half black",
+            "char": "◐"
+        },
+        {
+            "name": "circle with right half black",
+            "char": "◑"
+        },
+        {
+            "name": "circle with lower half black",
+            "char": "◒"
+        },
+        {
+            "name": "circle with upper half black",
+            "char": "◓"
+        },
+        {
+            "name": "circle with upper right quadrant black",
+            "char": "◔"
+        },
+        {
+            "name": "circle with all but upper left quadrant black",
+            "char": "◕"
+        },
+        {
+            "name": "left half black circle",
+            "char": "◖"
+        },
+        {
+            "name": "right half black circle",
+            "char": "◗"
+        },
+        {
+            "name": "inverse bullet",
+            "char": "◘"
+        },
+        {
+            "name": "inverse white circle",
+            "char": "◙"
+        },
+        {
+            "name": "upper half inverse white circle",
+            "char": "◚"
+        },
+        {
+            "name": "lower half inverse white circle",
+            "char": "◛"
+        },
+        {
+            "name": "upper left quadrant circular arc",
+            "char": "◜"
+        },
+        {
+            "name": "upper right quadrant circular arc",
+            "char": "◝"
+        },
+        {
+            "name": "lower right quadrant circular arc",
+            "char": "◞"
+        },
+        {
+            "name": "lower left quadrant circular arc",
+            "char": "◟"
+        },
+        {
+            "name": "upper half circle",
+            "char": "◠"
+        },
+        {
+            "name": "lower half circle",
+            "char": "◡"
+        },
+        {
+            "name": "black lower right triangle",
+            "char": "◢"
+        },
+        {
+            "name": "black lower left triangle",
+            "char": "◣"
+        },
+        {
+            "name": "black upper left triangle",
+            "char": "◤"
+        },
+        {
+            "name": "black upper right triangle",
+            "char": "◥"
+        },
+        {
+            "name": "white bullet",
+            "char": "◦"
+        },
+        {
+            "name": "square with left half black",
+            "char": "◧"
+        },
+        {
+            "name": "square with right half black",
+            "char": "◨"
+        },
+        {
+            "name": "square with upper left diagonal half black",
+            "char": "◩"
+        },
+        {
+            "name": "square with lower right diagonal half black",
+            "char": "◪"
+        },
+        {
+            "name": "white square with vertical bisecting line",
+            "char": "◫"
+        },
+        {
+            "name": "white up-pointing triangle with dot",
+            "char": "◬"
+        },
+        {
+            "name": "up-pointing triangle with left half black",
+            "char": "◭"
+        },
+        {
+            "name": "up-pointing triangle with right half black",
+            "char": "◮"
+        },
+        {
+            "name": "large circle",
+            "char": "◯"
+        },
+        {
+            "name": "white square with upper left quadrant",
+            "char": "◰"
+        },
+        {
+            "name": "white square with lower left quadrant",
+            "char": "◱"
+        },
+        {
+            "name": "white square with lower right quadrant",
+            "char": "◲"
+        },
+        {
+            "name": "white square with upper right quadrant",
+            "char": "◳"
+        },
+        {
+            "name": "white circle with upper left quadrant",
+            "char": "◴"
+        },
+        {
+            "name": "white circle with lower left quadrant",
+            "char": "◵"
+        },
+        {
+            "name": "white circle with lower right quadrant",
+            "char": "◶"
+        },
+        {
+            "name": "white circle with upper right quadrant",
+            "char": "◷"
+        },
+        {
+            "name": "upper left triangle",
+            "char": "◸"
+        },
+        {
+            "name": "upper right triangle",
+            "char": "◹"
+        },
+        {
+            "name": "lower left triangle",
+            "char": "◺"
+        },
+        {
+            "name": "white medium square",
+            "char": "◻"
+        },
+        {
+            "name": "black medium square",
+            "char": "◼"
+        },
+        {
+            "name": "white medium small square",
+            "char": "◽"
+        },
+        {
+            "name": "black medium small square",
+            "char": "◾"
+        },
+        {
+            "name": "lower right triangle",
+            "char": "◿"
+        },
+        {
+            "name": "black sun with rays",
+            "char": "☀"
+        },
+        {
+            "name": "cloud",
+            "char": "☁"
+        },
+        {
+            "name": "umbrella",
+            "char": "☂"
+        },
+        {
+            "name": "snowman",
+            "char": "☃"
+        },
+        {
+            "name": "comet",
+            "char": "☄"
+        },
+        {
+            "name": "black star",
+            "char": "★"
+        },
+        {
+            "name": "white star",
+            "char": "☆"
+        },
+        {
+            "name": "lightning",
+            "char": "☇"
+        },
+        {
+            "name": "thunderstorm",
+            "char": "☈"
+        },
+        {
+            "name": "sun",
+            "char": "☉"
+        },
+        {
+            "name": "ascending node",
+            "char": "☊"
+        },
+        {
+            "name": "descending node",
+            "char": "☋"
+        },
+        {
+            "name": "conjunction",
+            "char": "☌"
+        },
+        {
+            "name": "opposition",
+            "char": "☍"
+        },
+        {
+            "name": "black telephone",
+            "char": "☎"
+        },
+        {
+            "name": "white telephone",
+            "char": "☏"
+        },
+        {
+            "name": "ballot box",
+            "char": "☐"
+        },
+        {
+            "name": "ballot box with check",
+            "char": "☑"
+        },
+        {
+            "name": "ballot box with x",
+            "char": "☒"
+        },
+        {
+            "name": "saltire",
+            "char": "☓"
+        },
+        {
+            "name": "umbrella with rain drops",
+            "char": "☔"
+        },
+        {
+            "name": "hot beverage",
+            "char": "☕"
+        },
+        {
+            "name": "white shogi piece",
+            "char": "☖"
+        },
+        {
+            "name": "black shogi piece",
+            "char": "☗"
+        },
+        {
+            "name": "shamrock",
+            "char": "☘"
+        },
+        {
+            "name": "reversed rotated floral heart bullet",
+            "char": "☙"
+        },
+        {
+            "name": "black left pointing index",
+            "char": "☚"
+        },
+        {
+            "name": "black right pointing index",
+            "char": "☛"
+        },
+        {
+            "name": "white left pointing index",
+            "char": "☜"
+        },
+        {
+            "name": "white up pointing index",
+            "char": "☝"
+        },
+        {
+            "name": "white right pointing index",
+            "char": "☞"
+        },
+        {
+            "name": "white down pointing index",
+            "char": "☟"
+        },
+        {
+            "name": "skull and crossbones",
+            "char": "☠"
+        },
+        {
+            "name": "caution sign",
+            "char": "☡"
+        },
+        {
+            "name": "radioactive sign",
+            "char": "☢"
+        },
+        {
+            "name": "biohazard sign",
+            "char": "☣"
+        },
+        {
+            "name": "caduceus",
+            "char": "☤"
+        },
+        {
+            "name": "ankh",
+            "char": "☥"
+        },
+        {
+            "name": "orthodox cross",
+            "char": "☦"
+        },
+        {
+            "name": "chi rho",
+            "char": "☧"
+        },
+        {
+            "name": "cross of lorraine",
+            "char": "☨"
+        },
+        {
+            "name": "cross of jerusalem",
+            "char": "☩"
+        },
+        {
+            "name": "star and crescent",
+            "char": "☪"
+        },
+        {
+            "name": "farsi symbol",
+            "char": "☫"
+        },
+        {
+            "name": "adi shakti",
+            "char": "☬"
+        },
+        {
+            "name": "hammer and sickle",
+            "char": "☭"
+        },
+        {
+            "name": "peace symbol",
+            "char": "☮"
+        },
+        {
+            "name": "yin yang",
+            "char": "☯"
+        },
+        {
+            "name": "trigram for heaven",
+            "char": "☰"
+        },
+        {
+            "name": "trigram for lake",
+            "char": "☱"
+        },
+        {
+            "name": "trigram for fire",
+            "char": "☲"
+        },
+        {
+            "name": "trigram for thunder",
+            "char": "☳"
+        },
+        {
+            "name": "trigram for wind",
+            "char": "☴"
+        },
+        {
+            "name": "trigram for water",
+            "char": "☵"
+        },
+        {
+            "name": "trigram for mountain",
+            "char": "☶"
+        },
+        {
+            "name": "trigram for earth",
+            "char": "☷"
+        },
+        {
+            "name": "wheel of dharma",
+            "char": "☸"
+        },
+        {
+            "name": "white frowning face",
+            "char": "☹"
+        },
+        {
+            "name": "white smiling face",
+            "char": "☺"
+        },
+        {
+            "name": "black smiling face",
+            "char": "☻"
+        },
+        {
+            "name": "white sun with rays",
+            "char": "☼"
+        },
+        {
+            "name": "first quarter moon",
+            "char": "☽"
+        },
+        {
+            "name": "last quarter moon",
+            "char": "☾"
+        },
+        {
+            "name": "mercury",
+            "char": "☿"
+        },
+        {
+            "name": "female sign",
+            "char": "♀"
+        },
+        {
+            "name": "earth",
+            "char": "♁"
+        },
+        {
+            "name": "male sign",
+            "char": "♂"
+        },
+        {
+            "name": "jupiter",
+            "char": "♃"
+        },
+        {
+            "name": "saturn",
+            "char": "♄"
+        },
+        {
+            "name": "uranus",
+            "char": "♅"
+        },
+        {
+            "name": "neptune",
+            "char": "♆"
+        },
+        {
+            "name": "pluto",
+            "char": "♇"
+        },
+        {
+            "name": "aries",
+            "char": "♈"
+        },
+        {
+            "name": "taurus",
+            "char": "♉"
+        },
+        {
+            "name": "gemini",
+            "char": "♊"
+        },
+        {
+            "name": "cancer",
+            "char": "♋"
+        },
+        {
+            "name": "leo",
+            "char": "♌"
+        },
+        {
+            "name": "virgo",
+            "char": "♍"
+        },
+        {
+            "name": "libra",
+            "char": "♎"
+        },
+        {
+            "name": "scorpius",
+            "char": "♏"
+        },
+        {
+            "name": "sagittarius",
+            "char": "♐"
+        },
+        {
+            "name": "capricorn",
+            "char": "♑"
+        },
+        {
+            "name": "aquarius",
+            "char": "♒"
+        },
+        {
+            "name": "pisces",
+            "char": "♓"
+        },
+        {
+            "name": "white chess king",
+            "char": "♔"
+        },
+        {
+            "name": "white chess queen",
+            "char": "♕"
+        },
+        {
+            "name": "white chess rook",
+            "char": "♖"
+        },
+        {
+            "name": "white chess bishop",
+            "char": "♗"
+        },
+        {
+            "name": "white chess knight",
+            "char": "♘"
+        },
+        {
+            "name": "white chess pawn",
+            "char": "♙"
+        },
+        {
+            "name": "black chess king",
+            "char": "♚"
+        },
+        {
+            "name": "black chess queen",
+            "char": "♛"
+        },
+        {
+            "name": "black chess rook",
+            "char": "♜"
+        },
+        {
+            "name": "black chess bishop",
+            "char": "♝"
+        },
+        {
+            "name": "black chess knight",
+            "char": "♞"
+        },
+        {
+            "name": "black chess pawn",
+            "char": "♟"
+        },
+        {
+            "name": "black spade suit",
+            "char": "♠"
+        },
+        {
+            "name": "white heart suit",
+            "char": "♡"
+        },
+        {
+            "name": "white diamond suit",
+            "char": "♢"
+        },
+        {
+            "name": "black club suit",
+            "char": "♣"
+        },
+        {
+            "name": "white spade suit",
+            "char": "♤"
+        },
+        {
+            "name": "black heart suit",
+            "char": "♥"
+        },
+        {
+            "name": "black diamond suit",
+            "char": "♦"
+        },
+        {
+            "name": "white club suit",
+            "char": "♧"
+        },
+        {
+            "name": "hot springs",
+            "char": "♨"
+        },
+        {
+            "name": "quarter note",
+            "char": "♩"
+        },
+        {
+            "name": "eighth note",
+            "char": "♪"
+        },
+        {
+            "name": "beamed eighth notes",
+            "char": "♫"
+        },
+        {
+            "name": "beamed sixteenth notes",
+            "char": "♬"
+        },
+        {
+            "name": "music flat sign",
+            "char": "♭"
+        },
+        {
+            "name": "music natural sign",
+            "char": "♮"
+        },
+        {
+            "name": "music sharp sign",
+            "char": "♯"
+        },
+        {
+            "name": "west syriac cross",
+            "char": "♰"
+        },
+        {
+            "name": "east syriac cross",
+            "char": "♱"
+        },
+        {
+            "name": "universal recycling symbol",
+            "char": "♲"
+        },
+        {
+            "name": "recycling symbol for type-1 plastics",
+            "char": "♳"
+        },
+        {
+            "name": "recycling symbol for type-2 plastics",
+            "char": "♴"
+        },
+        {
+            "name": "recycling symbol for type-3 plastics",
+            "char": "♵"
+        },
+        {
+            "name": "recycling symbol for type-4 plastics",
+            "char": "♶"
+        },
+        {
+            "name": "recycling symbol for type-5 plastics",
+            "char": "♷"
+        },
+        {
+            "name": "recycling symbol for type-6 plastics",
+            "char": "♸"
+        },
+        {
+            "name": "recycling symbol for type-7 plastics",
+            "char": "♹"
+        },
+        {
+            "name": "recycling symbol for generic materials",
+            "char": "♺"
+        },
+        {
+            "name": "black universal recycling symbol",
+            "char": "♻"
+        },
+        {
+            "name": "recycled paper symbol",
+            "char": "♼"
+        },
+        {
+            "name": "partially-recycled paper symbol",
+            "char": "♽"
+        },
+        {
+            "name": "permanent paper sign",
+            "char": "♾"
+        },
+        {
+            "name": "wheelchair symbol",
+            "char": "♿"
+        },
+        {
+            "name": "die face-1",
+            "char": "⚀"
+        },
+        {
+            "name": "die face-2",
+            "char": "⚁"
+        },
+        {
+            "name": "die face-3",
+            "char": "⚂"
+        },
+        {
+            "name": "die face-4",
+            "char": "⚃"
+        },
+        {
+            "name": "die face-5",
+            "char": "⚄"
+        },
+        {
+            "name": "die face-6",
+            "char": "⚅"
+        },
+        {
+            "name": "white circle with dot right",
+            "char": "⚆"
+        },
+        {
+            "name": "white circle with two dots",
+            "char": "⚇"
+        },
+        {
+            "name": "black circle with white dot right",
+            "char": "⚈"
+        },
+        {
+            "name": "black circle with two white dots",
+            "char": "⚉"
+        },
+        {
+            "name": "monogram for yang",
+            "char": "⚊"
+        },
+        {
+            "name": "monogram for yin",
+            "char": "⚋"
+        },
+        {
+            "name": "digram for greater yang",
+            "char": "⚌"
+        },
+        {
+            "name": "digram for lesser yin",
+            "char": "⚍"
+        },
+        {
+            "name": "digram for lesser yang",
+            "char": "⚎"
+        },
+        {
+            "name": "digram for greater yin",
+            "char": "⚏"
+        },
+        {
+            "name": "white flag",
+            "char": "⚐"
+        },
+        {
+            "name": "black flag",
+            "char": "⚑"
+        },
+        {
+            "name": "hammer and pick",
+            "char": "⚒"
+        },
+        {
+            "name": "anchor",
+            "char": "⚓"
+        },
+        {
+            "name": "crossed swords",
+            "char": "⚔"
+        },
+        {
+            "name": "staff of aesculapius",
+            "char": "⚕"
+        },
+        {
+            "name": "scales",
+            "char": "⚖"
+        },
+        {
+            "name": "alembic",
+            "char": "⚗"
+        },
+        {
+            "name": "flower",
+            "char": "⚘"
+        },
+        {
+            "name": "gear",
+            "char": "⚙"
+        },
+        {
+            "name": "staff of hermes",
+            "char": "⚚"
+        },
+        {
+            "name": "atom symbol",
+            "char": "⚛"
+        },
+        {
+            "name": "fleur-de-lis",
+            "char": "⚜"
+        },
+        {
+            "name": "outlined white star",
+            "char": "⚝"
+        },
+        {
+            "name": "three lines converging right",
+            "char": "⚞"
+        },
+        {
+            "name": "three lines converging left",
+            "char": "⚟"
+        },
+        {
+            "name": "warning sign",
+            "char": "⚠"
+        },
+        {
+            "name": "high voltage sign",
+            "char": "⚡"
+        },
+        {
+            "name": "doubled female sign",
+            "char": "⚢"
+        },
+        {
+            "name": "doubled male sign",
+            "char": "⚣"
+        },
+        {
+            "name": "interlocked female and male sign",
+            "char": "⚤"
+        },
+        {
+            "name": "male and female sign",
+            "char": "⚥"
+        },
+        {
+            "name": "male with stroke sign",
+            "char": "⚦"
+        },
+        {
+            "name": "male with stroke and male and female sign",
+            "char": "⚧"
+        },
+        {
+            "name": "vertical male with stroke sign",
+            "char": "⚨"
+        },
+        {
+            "name": "horizontal male with stroke sign",
+            "char": "⚩"
+        },
+        {
+            "name": "medium white circle",
+            "char": "⚪"
+        },
+        {
+            "name": "medium black circle",
+            "char": "⚫"
+        },
+        {
+            "name": "medium small white circle",
+            "char": "⚬"
+        },
+        {
+            "name": "marriage symbol",
+            "char": "⚭"
+        },
+        {
+            "name": "divorce symbol",
+            "char": "⚮"
+        },
+        {
+            "name": "unmarried partnership symbol",
+            "char": "⚯"
+        },
+        {
+            "name": "coffin",
+            "char": "⚰"
+        },
+        {
+            "name": "funeral urn",
+            "char": "⚱"
+        },
+        {
+            "name": "neuter",
+            "char": "⚲"
+        },
+        {
+            "name": "ceres",
+            "char": "⚳"
+        },
+        {
+            "name": "pallas",
+            "char": "⚴"
+        },
+        {
+            "name": "juno",
+            "char": "⚵"
+        },
+        {
+            "name": "vesta",
+            "char": "⚶"
+        },
+        {
+            "name": "chiron",
+            "char": "⚷"
+        },
+        {
+            "name": "black moon lilith",
+            "char": "⚸"
+        },
+        {
+            "name": "sextile",
+            "char": "⚹"
+        },
+        {
+            "name": "semisextile",
+            "char": "⚺"
+        },
+        {
+            "name": "quincunx",
+            "char": "⚻"
+        },
+        {
+            "name": "sesquiquadrate",
+            "char": "⚼"
+        },
+        {
+            "name": "soccer ball",
+            "char": "⚽"
+        },
+        {
+            "name": "baseball",
+            "char": "⚾"
+        },
+        {
+            "name": "squared key",
+            "char": "⚿"
+        },
+        {
+            "name": "white draughts man",
+            "char": "⛀"
+        },
+        {
+            "name": "white draughts king",
+            "char": "⛁"
+        },
+        {
+            "name": "black draughts man",
+            "char": "⛂"
+        },
+        {
+            "name": "black draughts king",
+            "char": "⛃"
+        },
+        {
+            "name": "snowman without snow",
+            "char": "⛄"
+        },
+        {
+            "name": "sun behind cloud",
+            "char": "⛅"
+        },
+        {
+            "name": "rain",
+            "char": "⛆"
+        },
+        {
+            "name": "black snowman",
+            "char": "⛇"
+        },
+        {
+            "name": "thunder cloud and rain",
+            "char": "⛈"
+        },
+        {
+            "name": "turned white shogi piece",
+            "char": "⛉"
+        },
+        {
+            "name": "turned black shogi piece",
+            "char": "⛊"
+        },
+        {
+            "name": "white diamond in square",
+            "char": "⛋"
+        },
+        {
+            "name": "crossing lanes",
+            "char": "⛌"
+        },
+        {
+            "name": "disabled car",
+            "char": "⛍"
+        },
+        {
+            "name": "ophiuchus",
+            "char": "⛎"
+        },
+        {
+            "name": "pick",
+            "char": "⛏"
+        },
+        {
+            "name": "car sliding",
+            "char": "⛐"
+        },
+        {
+            "name": "helmet with white cross",
+            "char": "⛑"
+        },
+        {
+            "name": "circled crossing lanes",
+            "char": "⛒"
+        },
+        {
+            "name": "chains",
+            "char": "⛓"
+        },
+        {
+            "name": "no entry",
+            "char": "⛔"
+        },
+        {
+            "name": "alternate one-way left way traffic",
+            "char": "⛕"
+        },
+        {
+            "name": "black two-way left way traffic",
+            "char": "⛖"
+        },
+        {
+            "name": "white two-way left way traffic",
+            "char": "⛗"
+        },
+        {
+            "name": "black left lane merge",
+            "char": "⛘"
+        },
+        {
+            "name": "white left lane merge",
+            "char": "⛙"
+        },
+        {
+            "name": "drive slow sign",
+            "char": "⛚"
+        },
+        {
+            "name": "heavy white down-pointing triangle",
+            "char": "⛛"
+        },
+        {
+            "name": "left closed entry",
+            "char": "⛜"
+        },
+        {
+            "name": "squared saltire",
+            "char": "⛝"
+        },
+        {
+            "name": "falling diagonal in white circle in black square",
+            "char": "⛞"
+        },
+        {
+            "name": "black truck",
+            "char": "⛟"
+        },
+        {
+            "name": "restricted left entry-1",
+            "char": "⛠"
+        },
+        {
+            "name": "restricted left entry-2",
+            "char": "⛡"
+        },
+        {
+            "name": "astronomical symbol for uranus",
+            "char": "⛢"
+        },
+        {
+            "name": "heavy circle with stroke and two dots above",
+            "char": "⛣"
+        },
+        {
+            "name": "pentagram",
+            "char": "⛤"
+        },
+        {
+            "name": "right-handed interlaced pentagram",
+            "char": "⛥"
+        },
+        {
+            "name": "left-handed interlaced pentagram",
+            "char": "⛦"
+        },
+        {
+            "name": "inverted pentagram",
+            "char": "⛧"
+        },
+        {
+            "name": "black cross on shield",
+            "char": "⛨"
+        },
+        {
+            "name": "shinto shrine",
+            "char": "⛩"
+        },
+        {
+            "name": "church",
+            "char": "⛪"
+        },
+        {
+            "name": "castle",
+            "char": "⛫"
+        },
+        {
+            "name": "historic site",
+            "char": "⛬"
+        },
+        {
+            "name": "gear without hub",
+            "char": "⛭"
+        },
+        {
+            "name": "gear with handles",
+            "char": "⛮"
+        },
+        {
+            "name": "map symbol for lighthouse",
+            "char": "⛯"
+        },
+        {
+            "name": "mountain",
+            "char": "⛰"
+        },
+        {
+            "name": "umbrella on ground",
+            "char": "⛱"
+        },
+        {
+            "name": "fountain",
+            "char": "⛲"
+        },
+        {
+            "name": "flag in hole",
+            "char": "⛳"
+        },
+        {
+            "name": "ferry",
+            "char": "⛴"
+        },
+        {
+            "name": "sailboat",
+            "char": "⛵"
+        },
+        {
+            "name": "square four corners",
+            "char": "⛶"
+        },
+        {
+            "name": "skier",
+            "char": "⛷"
+        },
+        {
+            "name": "ice skate",
+            "char": "⛸"
+        },
+        {
+            "name": "person with ball",
+            "char": "⛹"
+        },
+        {
+            "name": "tent",
+            "char": "⛺"
+        },
+        {
+            "name": "japanese bank symbol",
+            "char": "⛻"
+        },
+        {
+            "name": "headstone graveyard symbol",
+            "char": "⛼"
+        },
+        {
+            "name": "fuel pump",
+            "char": "⛽"
+        },
+        {
+            "name": "cup on black square",
+            "char": "⛾"
+        },
+        {
+            "name": "white flag with horizontal middle black stripe",
+            "char": "⛿"
+        },
+        {
+            "name": "black safety scissors",
+            "char": "✀"
+        },
+        {
+            "name": "upper blade scissors",
+            "char": "✁"
+        },
+        {
+            "name": "black scissors",
+            "char": "✂"
+        },
+        {
+            "name": "lower blade scissors",
+            "char": "✃"
+        },
+        {
+            "name": "white scissors",
+            "char": "✄"
+        },
+        {
+            "name": "white heavy check mark",
+            "char": "✅"
+        },
+        {
+            "name": "telephone location sign",
+            "char": "✆"
+        },
+        {
+            "name": "tape drive",
+            "char": "✇"
+        },
+        {
+            "name": "airplane",
+            "char": "✈"
+        },
+        {
+            "name": "envelope",
+            "char": "✉"
+        },
+        {
+            "name": "raised fist",
+            "char": "✊"
+        },
+        {
+            "name": "raised hand",
+            "char": "✋"
+        },
+        {
+            "name": "victory hand",
+            "char": "✌"
+        },
+        {
+            "name": "writing hand",
+            "char": "✍"
+        },
+        {
+            "name": "lower right pencil",
+            "char": "✎"
+        },
+        {
+            "name": "pencil",
+            "char": "✏"
+        },
+        {
+            "name": "upper right pencil",
+            "char": "✐"
+        },
+        {
+            "name": "white nib",
+            "char": "✑"
+        },
+        {
+            "name": "black nib",
+            "char": "✒"
+        },
+        {
+            "name": "check mark",
+            "char": "✓"
+        },
+        {
+            "name": "heavy check mark",
+            "char": "✔"
+        },
+        {
+            "name": "multiplication x",
+            "char": "✕"
+        },
+        {
+            "name": "heavy multiplication x",
+            "char": "✖"
+        },
+        {
+            "name": "ballot x",
+            "char": "✗"
+        },
+        {
+            "name": "heavy ballot x",
+            "char": "✘"
+        },
+        {
+            "name": "outlined greek cross",
+            "char": "✙"
+        },
+        {
+            "name": "heavy greek cross",
+            "char": "✚"
+        },
+        {
+            "name": "open centre cross",
+            "char": "✛"
+        },
+        {
+            "name": "heavy open centre cross",
+            "char": "✜"
+        },
+        {
+            "name": "latin cross",
+            "char": "✝"
+        },
+        {
+            "name": "shadowed white latin cross",
+            "char": "✞"
+        },
+        {
+            "name": "outlined latin cross",
+            "char": "✟"
+        },
+        {
+            "name": "maltese cross",
+            "char": "✠"
+        },
+        {
+            "name": "star of david",
+            "char": "✡"
+        },
+        {
+            "name": "four teardrop-spoked asterisk",
+            "char": "✢"
+        },
+        {
+            "name": "four balloon-spoked asterisk",
+            "char": "✣"
+        },
+        {
+            "name": "heavy four balloon-spoked asterisk",
+            "char": "✤"
+        },
+        {
+            "name": "four club-spoked asterisk",
+            "char": "✥"
+        },
+        {
+            "name": "black four pointed star",
+            "char": "✦"
+        },
+        {
+            "name": "white four pointed star",
+            "char": "✧"
+        },
+        {
+            "name": "sparkles",
+            "char": "✨"
+        },
+        {
+            "name": "stress outlined white star",
+            "char": "✩"
+        },
+        {
+            "name": "circled white star",
+            "char": "✪"
+        },
+        {
+            "name": "open centre black star",
+            "char": "✫"
+        },
+        {
+            "name": "black centre white star",
+            "char": "✬"
+        },
+        {
+            "name": "outlined black star",
+            "char": "✭"
+        },
+        {
+            "name": "heavy outlined black star",
+            "char": "✮"
+        },
+        {
+            "name": "pinwheel star",
+            "char": "✯"
+        },
+        {
+            "name": "shadowed white star",
+            "char": "✰"
+        },
+        {
+            "name": "heavy asterisk",
+            "char": "✱"
+        },
+        {
+            "name": "open centre asterisk",
+            "char": "✲"
+        },
+        {
+            "name": "eight spoked asterisk",
+            "char": "✳"
+        },
+        {
+            "name": "eight pointed black star",
+            "char": "✴"
+        },
+        {
+            "name": "eight pointed pinwheel star",
+            "char": "✵"
+        },
+        {
+            "name": "six pointed black star",
+            "char": "✶"
+        },
+        {
+            "name": "eight pointed rectilinear black star",
+            "char": "✷"
+        },
+        {
+            "name": "heavy eight pointed rectilinear black star",
+            "char": "✸"
+        },
+        {
+            "name": "twelve pointed black star",
+            "char": "✹"
+        },
+        {
+            "name": "sixteen pointed asterisk",
+            "char": "✺"
+        },
+        {
+            "name": "teardrop-spoked asterisk",
+            "char": "✻"
+        },
+        {
+            "name": "open centre teardrop-spoked asterisk",
+            "char": "✼"
+        },
+        {
+            "name": "heavy teardrop-spoked asterisk",
+            "char": "✽"
+        },
+        {
+            "name": "six petalled black and white florette",
+            "char": "✾"
+        },
+        {
+            "name": "black florette",
+            "char": "✿"
+        },
+        {
+            "name": "white florette",
+            "char": "❀"
+        },
+        {
+            "name": "eight petalled outlined black florette",
+            "char": "❁"
+        },
+        {
+            "name": "circled open centre eight pointed star",
+            "char": "❂"
+        },
+        {
+            "name": "heavy teardrop-spoked pinwheel asterisk",
+            "char": "❃"
+        },
+        {
+            "name": "snowflake",
+            "char": "❄"
+        },
+        {
+            "name": "tight trifoliate snowflake",
+            "char": "❅"
+        },
+        {
+            "name": "heavy chevron snowflake",
+            "char": "❆"
+        },
+        {
+            "name": "sparkle",
+            "char": "❇"
+        },
+        {
+            "name": "heavy sparkle",
+            "char": "❈"
+        },
+        {
+            "name": "balloon-spoked asterisk",
+            "char": "❉"
+        },
+        {
+            "name": "eight teardrop-spoked propeller asterisk",
+            "char": "❊"
+        },
+        {
+            "name": "heavy eight teardrop-spoked propeller asterisk",
+            "char": "❋"
+        },
+        {
+            "name": "cross mark",
+            "char": "❌"
+        },
+        {
+            "name": "shadowed white circle",
+            "char": "❍"
+        },
+        {
+            "name": "negative squared cross mark",
+            "char": "❎"
+        },
+        {
+            "name": "lower right drop-shadowed white square",
+            "char": "❏"
+        },
+        {
+            "name": "upper right drop-shadowed white square",
+            "char": "❐"
+        },
+        {
+            "name": "lower right shadowed white square",
+            "char": "❑"
+        },
+        {
+            "name": "upper right shadowed white square",
+            "char": "❒"
+        },
+        {
+            "name": "black question mark ornament",
+            "char": "❓"
+        },
+        {
+            "name": "white question mark ornament",
+            "char": "❔"
+        },
+        {
+            "name": "white exclamation mark ornament",
+            "char": "❕"
+        },
+        {
+            "name": "black diamond minus white x",
+            "char": "❖"
+        },
+        {
+            "name": "heavy exclamation mark symbol",
+            "char": "❗"
+        },
+        {
+            "name": "light vertical bar",
+            "char": "❘"
+        },
+        {
+            "name": "medium vertical bar",
+            "char": "❙"
+        },
+        {
+            "name": "heavy vertical bar",
+            "char": "❚"
+        },
+        {
+            "name": "heavy single turned comma quotation mark ornament",
+            "char": "❛"
+        },
+        {
+            "name": "heavy single comma quotation mark ornament",
+            "char": "❜"
+        },
+        {
+            "name": "heavy double turned comma quotation mark ornament",
+            "char": "❝"
+        },
+        {
+            "name": "heavy double comma quotation mark ornament",
+            "char": "❞"
+        },
+        {
+            "name": "heavy low single comma quotation mark ornament",
+            "char": "❟"
+        }
+        ]
+
+    const input = document.getElementById("search");
+    const results = document.getElementById("results");
+
+    input.addEventListener("input", () => {
+      const query = input.value.toLowerCase();
+      results.innerHTML = "";
+
+      const filtered = symbols.filter(s => s.name.includes(query));
+
+      if (filtered.length === 0 && query) {
+        results.innerHTML = "<div>No results found.</div>";
+        return;
+      }
+
+      filtered.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "symbol-card";
+        div.innerHTML = `
+          <div>
+            <div class="symbol">${s.char}</div>
+            <div style="font-size: 0.9em; color: #ccc;">${s.name}</div>
+          </div>
+          <button onclick="navigator.clipboard.writeText('${s.char}')">Copy</button>
+        `;
+        results.appendChild(div);
+      });
+    });
+  </script>
+
+</body>
+</html>
