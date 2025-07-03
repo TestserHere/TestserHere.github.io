@@ -400,7 +400,21 @@
         <!-- Firebase Analytics -->
         <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics-compat.js"></script>
 
-
+        <script>
+            const firebaseConfig = {
+                apiKey: "AIzaSyBJf97-B28IflQfLB3Z3GP09NwFhq00vZI",
+                authDomain: "website-12bdc.firebaseapp.com",
+                projectId: "website-12bdc",
+                storageBucket: "website-12bdc.firebasestorage.app",
+                messagingSenderId: "312912129925",
+                appId: "1:312912129925:web:aab9b997db866bb3e01eec",
+                measurementId: "G-9GT4E8Z0EL"
+            };
+    
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const analytics = firebase.analytics();
+        </script>
 
     </body>
 </html>
