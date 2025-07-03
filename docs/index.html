@@ -286,7 +286,14 @@
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const analytics = firebase.analytics();
-  </script>
+
+  analytics.logEvent('project_switched', {
+      from: 'Index',
+      to: 'Home'
+  });
+
+</script>
+
 </head>
 <body>
     <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
