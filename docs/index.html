@@ -292,6 +292,56 @@
       to: 'Home'
   });
 
+  // Generate or get visitor ID
+  const visitorId = localStorage.getItem('visitorId') || crypto.randomUUID();
+  localStorage.setItem('visitorId', visitorId);
+
+  // Log visit start
+  const sessionRef = db.collection("visits").doc(visitorId + "_" + Date.now());
+
+  const sessionData = {
+    visitorId: visitorId,
+    startedAt: new Date().toISOString(),
+    actions: []
+  };
+
+  sessionRef.set(sessionData);
+
+  // Log actions
+  function logAction(action) {
+    sessionRef.update({
+      actions: firebase.firestore.FieldValue.arrayUnion({
+        action: action,
+        time: new Date().toISOString()
+      })
+    });
+  }
+
+  document.getElementById("About").addEventListener("click", () => {
+    logAction("Clicked About");
+  });
+
+  document.getElementById("Home").addEventListener("click", () => {
+    logAction("Clicked Home");
+  });
+
+  document.getElementById("Contact").addEventListener("click", () => {
+    logAction("Clicked Contact");
+  });
+
+  document.getElementById("Projects").addEventListener("click", () => {
+    logAction("Clicked Projects");
+  });
+
+
+  // Track when user leaves
+  window.addEventListener("beforeunload", () => {
+    sessionRef.update({
+      endedAt: new Date().toISOString()
+    });
+  });
+
+
 </script>
 
 </head>
