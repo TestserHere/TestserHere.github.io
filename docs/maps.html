@@ -28,13 +28,13 @@
 
         .controls {
             position: absolute;
-            top: 60px;
+            top: 20px;
             left: 20px;
             right: 20px;
             z-index: 1000;
             background: white;
-            border-radius: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            border-radius: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             padding: 16px;
             max-width: 500px;
         }
@@ -50,7 +50,7 @@
             flex: 1;
             padding: 12px 16px;
             border: none;
-            border-radius: 20px;
+            border-radius: 24px;
             font-size: 16px;
             outline: none;
             background: #f1f3f4;
@@ -59,7 +59,7 @@
 
         .search-box input:focus {
             background: white;
-            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
         }
 
         .search-box button {
@@ -67,7 +67,7 @@
             background: #4285f4;
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 24px;
             cursor: pointer;
             font-weight: 500;
             font-size: 14px;
@@ -84,7 +84,7 @@
             background: #34a853;
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: 24px;
             cursor: pointer;
             font-weight: 500;
             font-size: 14px;
@@ -282,31 +282,29 @@
         /* Google Maps Navigation Banner */
         .nav-banner {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 20px;
+            left: 20px;
+            right: 20px;
             background: #1a1a1a;
             color: white;
-            padding: 16px 20px;
-            z-index: 1001;
+            border-radius: 12px;
+            padding: 16px;
+            z-index: 1000;
             display: none;
-            border-bottom: 1px solid #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         .nav-banner.show {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: block;
         }
 
-        .nav-instruction-main {
+        .nav-banner-content {
             display: flex;
             align-items: center;
             gap: 12px;
-            flex: 1;
         }
 
-        .nav-arrow {
+        .nav-direction-icon {
             width: 24px;
             height: 24px;
             background: white;
@@ -314,28 +312,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 12px;
             color: #1a1a1a;
         }
 
-        .nav-text {
+        .nav-instruction-text {
             flex: 1;
         }
 
-        .nav-street {
+        .nav-main-instruction {
             font-size: 18px;
             font-weight: 500;
             margin-bottom: 2px;
         }
 
-        .nav-direction {
+        .nav-sub-instruction {
             font-size: 14px;
-            color: #ccc;
+            color: #b0b0b0;
         }
 
         .nav-voice-btn {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: white;
             border: none;
             border-radius: 50%;
@@ -352,7 +350,7 @@
             width: 24px;
             height: 24px;
             background: #4285f4;
-            border: 3px solid white;
+            border: 2px solid white;
             border-radius: 50% 50% 0 50%;
             transform: rotate(45deg);
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -372,187 +370,215 @@
         }
 
         /* Next Turn Indicator */
-        .next-turn {
+        .next-turn-indicator {
             position: absolute;
             left: 20px;
             bottom: 120px;
             background: #1a1a1a;
             color: white;
+            border-radius: 8px;
             padding: 8px 12px;
-            border-radius: 16px;
             font-size: 12px;
             font-weight: 500;
             z-index: 1000;
             display: none;
-            align-items: center;
-            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
-        .next-turn.show {
-            display: flex;
-        }
-
-        .next-turn-arrow {
-            font-size: 14px;
-        }
-
-        /* Re-center Button */
-        .recenter-btn {
-            position: absolute;
-            left: 20px;
-            bottom: 80px;
-            background: white;
-            border: none;
-            border-radius: 20px;
-            padding: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 1000;
-            display: none;
-        }
-
-        .recenter-btn.show {
+        .next-turn-indicator.show {
             display: block;
         }
 
-        .recenter-icon {
-            width: 20px;
-            height: 20px;
-            background: #4285f4;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .recenter-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0;
-            height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-bottom: 6px solid white;
-        }
-
-        /* Bottom Navigation Bar */
-        .bottom-nav {
+        /* Bottom Navigation Bar - Google Maps Style */
+        .navigation-bar {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
             background: white;
             padding: 16px 20px;
-            border-top: 1px solid #e0e0e0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s;
             z-index: 1000;
-            display: none;
+            border-radius: 20px 20px 0 0;
         }
 
-        .bottom-nav.show {
+        .navigation-bar.show {
+            transform: translateY(0);
+        }
+
+        .nav-info {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .nav-time-distance {
+            display: flex;
+            flex-direction: column;
         }
 
         .nav-time {
             font-size: 24px;
-            font-weight: 500;
-            color: #f57c00;
+            font-weight: 600;
+            color: #ea4335;
         }
 
         .nav-distance {
             font-size: 14px;
-            color: #666;
-            margin-top: 2px;
+            color: #5f6368;
         }
 
-        .nav-route-btn {
+        .nav-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.primary {
+            background: #4285f4;
+            color: white;
+        }
+
+        .nav-btn.secondary {
+            background: #f1f3f4;
+            color: #202124;
+        }
+
+        .nav-btn.exit {
+            background: #ea4335;
+            color: white;
+        }
+
+        /* Map Controls */
+        .map-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-control-btn {
             width: 40px;
             height: 40px;
-            background: #f1f3f4;
+            background: white;
             border: none;
             border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 16px;
         }
 
-        .nav-exit-btn {
-            background: #dc3545;
-            color: white;
+        .recenter-btn {
+            position: absolute;
+            left: 20px;
+            bottom: 200px;
+            background: white;
             border: none;
-            border-radius: 20px;
-            padding: 12px 20px;
-            font-weight: 500;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
     
-    <!-- Google Maps Navigation Banner -->
-    <div class="nav-banner" id="nav-banner">
-        <div class="nav-instruction-main">
-            <div class="nav-arrow" id="nav-arrow">↑</div>
-            <div class="nav-text">
-                <div class="nav-street" id="nav-street">Ready to navigate</div>
-                <div class="nav-direction" id="nav-direction">Enter destination to start</div>
-            </div>
-        </div>
-        <button class="nav-voice-btn" onclick="toggleVoice()">
-            🎤
-        </button>
-    </div>
-
-    <!-- Car Symbol -->
-    <div class="car-symbol" id="car-symbol"></div>
-
-    <!-- Next Turn Indicator -->
-    <div class="next-turn" id="next-turn">
-        <span class="next-turn-arrow">→</span>
-        <span>Then</span>
-    </div>
-
-    <!-- Re-center Button -->
-    <button class="recenter-btn" id="recenter-btn" onclick="recenterMap()">
-        <div class="recenter-icon"></div>
-    </button>
-
-    <!-- Search Controls -->
-    <div class="controls" id="controls">
+    <!-- Google Maps Style Controls -->
+    <div class="controls" id="search-controls">
         <div class="search-box">
             <input type="text" id="destination" placeholder="Search for a place or address">
             <button onclick="getDirections()">Directions</button>
         </div>
-        <button class="location-btn" onclick="getCurrentLocation()">
-            📍 Use my location
-        </button>
+                    <button class="location-btn" onclick="getCurrentLocation()">
+                📍 Get Precise Location
+            </button>
+            <button class="location-btn" onclick="improveLocationPrecision()" style="background: #fbbc04; margin-top: 8px;">
+                🎯 Improve Precision
+            </button>
         <div id="location-info">
             <p><strong>📍 Current Location:</strong></p>
             <p id="current-address">Getting your location...</p>
         </div>
     </div>
 
+    <!-- Google Maps Navigation Banner -->
+    <div class="nav-banner" id="nav-banner">
+        <div class="nav-banner-content">
+            <div class="nav-direction-icon" id="nav-direction-icon">↑</div>
+            <div class="nav-instruction-text">
+                <div class="nav-main-instruction" id="nav-main-instruction">Ready to navigate</div>
+                <div class="nav-sub-instruction" id="nav-sub-instruction">Tap to start</div>
+            </div>
+            <button class="nav-voice-btn" onclick="toggleVoice()" id="nav-voice-btn">
+                🔊
+            </button>
+        </div>
+    </div>
+
+    <!-- Car Symbol -->
+    <div class="car-symbol" id="car-symbol"></div>
+
+    <!-- Next Turn Indicator -->
+    <div class="next-turn-indicator" id="next-turn-indicator">
+        <span id="next-turn-text">Then</span> →
+    </div>
+
+    <!-- Map Controls -->
+    <div class="map-controls">
+        <button class="map-control-btn" onclick="toggleSearch()">🔍</button>
+        <button class="map-control-btn" onclick="toggleVoice()" id="voice-control">🔊</button>
+        <button class="map-control-btn" onclick="reportIssue()">⚠️</button>
+        <button class="map-control-btn" onclick="addStop()">+</button>
+    </div>
+
+    <!-- Re-center Button -->
+    <button class="recenter-btn" onclick="recenterMap()" id="recenter-btn">📍</button>
+
+    <!-- Directions Panel -->
     <div class="directions-panel" id="directions-panel">
         <h3>Directions</h3>
         <div id="directions-list"></div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <div class="bottom-nav" id="bottom-nav">
-        <div>
-            <div class="nav-time" id="nav-time">--</div>
-            <div class="nav-distance" id="nav-distance">--</div>
+    <!-- Google Maps Style Navigation Bar -->
+    <div class="navigation-bar" id="navigation-bar">
+        <div class="nav-info">
+            <div class="nav-time-distance">
+                <div class="nav-time" id="nav-time">-- min</div>
+                <div class="nav-distance" id="nav-distance">-- km</div>
+            </div>
+            <div class="nav-controls">
+                <button class="nav-btn secondary" onclick="showRouteOptions()">🛣️</button>
+                <button class="nav-btn exit" onclick="stopNavigation()">Exit</button>
+            </div>
         </div>
-        <button class="nav-route-btn" onclick="showDirections()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#666">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-        </button>
-        <button class="nav-exit-btn" onclick="stopNavigation()">Exit</button>
+        <button class="nav-btn primary" onclick="startNavigation()" id="start-nav-btn">Start Navigation</button>
     </div>
 
     <div class="status-indicator" id="status-indicator">
@@ -574,18 +600,19 @@
         let navigationActive = false;
         let voiceEnabled = false;
         let watchId;
+        let locationWatchId;
         let speechSynthesis = window.speechSynthesis;
         let currentMarker;
         let destinationMarker;
         let routeLine;
         let carSymbol;
-        let locationPermissionGranted = false;
-        let autoLocationUpdate = false;
+        let userHeading = 0;
+        let isNavigating = false;
 
         // Initialize the map
         function initMap() {
             // Create map using OpenStreetMap (free, no API key needed)
-            map = L.map('map').setView([40.7128, -74.0060], 13); // New York City default
+            map = L.map('map').setView([-37.8136, 144.9631], 13); // Melbourne default
 
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -595,93 +622,99 @@
 
             // Get current location on load
             getCurrentLocation();
+            
+            // Update car symbol position when map moves
+            map.on('move', () => {
+                if (isNavigating && currentPosition) {
+                    updateCarSymbol(currentPosition);
+                }
+            });
         }
 
-        // Get current location with high precision and persistent tracking
+        // Get current location with maximum precision
         function getCurrentLocation() {
-            showStatus('Getting precise location...');
+            showStatus('Getting maximum precision location...');
             
             if (navigator.geolocation) {
-                // Try multiple location methods for maximum accuracy
-                let locationAttempts = 0;
-                const maxAttempts = 3;
+                // Try multiple precision methods
+                let bestAccuracy = Infinity;
+                let bestPosition = null;
+                let attempts = 0;
+                const maxAttempts = 5;
+                const precisionTimeout = 30000; // 30 seconds total
                 
-                function tryGetLocation() {
-                    locationAttempts++;
+                // Method 1: Ultra-high accuracy with long timeout
+                function tryUltraPrecise() {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Ultra-precise location...`);
                     
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const accuracy = position.coords.accuracy;
-                            console.log(`Location accuracy: ${accuracy}m`);
+                            console.log(`Ultra-precise accuracy: ${accuracy}m`);
                             
-                            // If accuracy is poor, try again
-                            if (accuracy > 50 && locationAttempts < maxAttempts) {
-                                showStatus(`Improving accuracy... (${locationAttempts}/${maxAttempts})`);
-                                setTimeout(tryGetLocation, 2000);
+                            if (accuracy < bestAccuracy) {
+                                bestAccuracy = accuracy;
+                                bestPosition = position;
+                            }
+                            
+                            // If we get excellent accuracy, use it immediately
+                            if (accuracy <= 5) {
+                                useBestPosition();
                                 return;
                             }
                             
-                            currentPosition = {
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude
-                            };
-                            
-                            // Set location permission as granted
-                            locationPermissionGranted = true;
-                            
-                            // Update map view
-                            if (!navigationActive) {
-                                map.setView([currentPosition.lat, currentPosition.lng], 16);
+                            // Try next method if accuracy is still poor
+                            if (accuracy > 20 && attempts < maxAttempts) {
+                                setTimeout(tryGPSOnly, 1000);
+                            } else {
+                                useBestPosition();
                             }
-                            
-                            // Clear existing markers
-                            if (window.currentMarker) {
-                                map.removeLayer(window.currentMarker);
-                            }
-                            if (window.accuracyCircle) {
-                                map.removeLayer(window.accuracyCircle);
-                            }
-                            
-                            // Add current location marker with accuracy circle
-                            window.currentMarker = L.marker([currentPosition.lat, currentPosition.lng], {
-                                icon: L.divIcon({
-                                    className: 'current-location-marker',
-                                    html: '<div style="background: #4285f4; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
-                                    iconSize: [20, 20],
-                                    iconAnchor: [10, 10]
-                                })
-                            }).addTo(map);
-
-                            // Add accuracy circle
-                            window.accuracyCircle = L.circle([currentPosition.lat, currentPosition.lng], {
-                                radius: accuracy,
-                                color: accuracy <= 10 ? '#34a853' : accuracy <= 50 ? '#fbbc04' : '#ea4335',
-                                fillColor: accuracy <= 10 ? '#34a853' : accuracy <= 50 ? '#fbbc04' : '#ea4335',
-                                fillOpacity: 0.2,
-                                weight: 2
-                            }).addTo(map);
-
-                            // Update location info
-                            updateLocationInfo(currentPosition, accuracy);
-                            
-                            // Get address for current location
-                            getAddressFromCoords(currentPosition);
-                            
-                            // Start auto location updates if permission granted
-                            if (locationPermissionGranted && !autoLocationUpdate) {
-                                startAutoLocationUpdate();
-                            }
-                            
-                            hideStatus();
                         },
                         (error) => {
-                            console.error('Location error:', error);
-                            if (locationAttempts < maxAttempts) {
-                                showStatus(`Retrying location... (${locationAttempts}/${maxAttempts})`);
-                                setTimeout(tryGetLocation, 1000);
+                            console.error('Ultra-precise error:', error);
+                            if (attempts < maxAttempts) {
+                                setTimeout(tryGPSOnly, 1000);
                             } else {
-                                hideStatus();
-                                alert('Unable to get precise location. Please check your location settings and try again.');
+                                useBestPosition();
+                            }
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 20000,
+                            maximumAge: 0
+                        }
+                    );
+                }
+                
+                // Method 2: GPS-only approach
+                function tryGPSOnly() {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: GPS-only location...`);
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const accuracy = position.coords.accuracy;
+                            console.log(`GPS-only accuracy: ${accuracy}m`);
+                            
+                            if (accuracy < bestAccuracy) {
+                                bestAccuracy = accuracy;
+                                bestPosition = position;
+                            }
+                            
+                            // Try next method
+                            if (attempts < maxAttempts) {
+                                setTimeout(tryNetworkAssisted, 1000);
+                            } else {
+                                useBestPosition();
+                            }
+                        },
+                        (error) => {
+                            console.error('GPS-only error:', error);
+                            if (attempts < maxAttempts) {
+                                setTimeout(tryNetworkAssisted, 1000);
+                            } else {
+                                useBestPosition();
                             }
                         },
                         {
@@ -692,73 +725,316 @@
                     );
                 }
                 
-                tryGetLocation();
+                // Method 3: Network-assisted with different timeout
+                function tryNetworkAssisted() {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Network-assisted location...`);
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const accuracy = position.coords.accuracy;
+                            console.log(`Network-assisted accuracy: ${accuracy}m`);
+                            
+                            if (accuracy < bestAccuracy) {
+                                bestAccuracy = accuracy;
+                                bestPosition = position;
+                            }
+                            
+                            // Try final method
+                            if (attempts < maxAttempts) {
+                                setTimeout(tryCachedLocation, 1000);
+                            } else {
+                                useBestPosition();
+                            }
+                        },
+                        (error) => {
+                            console.error('Network-assisted error:', error);
+                            if (attempts < maxAttempts) {
+                                setTimeout(tryCachedLocation, 1000);
+                            } else {
+                                useBestPosition();
+                            }
+                        },
+                        {
+                            enableHighAccuracy: false,
+                            timeout: 10000,
+                            maximumAge: 30000
+                        }
+                    );
+                }
+                
+                // Method 4: Try cached location
+                function tryCachedLocation() {
+                    attempts++;
+                    console.log(`Attempt ${attempts}: Cached location...`);
+                    
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const accuracy = position.coords.accuracy;
+                            console.log(`Cached accuracy: ${accuracy}m`);
+                            
+                            if (accuracy < bestAccuracy) {
+                                bestAccuracy = accuracy;
+                                bestPosition = position;
+                            }
+                            
+                            useBestPosition();
+                        },
+                        (error) => {
+                            console.error('Cached location error:', error);
+                            useBestPosition();
+                        },
+                        {
+                            enableHighAccuracy: false,
+                            timeout: 5000,
+                            maximumAge: 60000
+                        }
+                    );
+                }
+                
+                // Use the best position we found
+                function useBestPosition() {
+                    if (bestPosition) {
+                        const accuracy = bestPosition.coords.accuracy;
+                        console.log(`Using best position with accuracy: ${accuracy}m`);
+                        
+                        currentPosition = {
+                            lat: bestPosition.coords.latitude,
+                            lng: bestPosition.coords.longitude
+                        };
+                        
+                        // Update user heading if available
+                        if (bestPosition.coords.heading !== null) {
+                            userHeading = bestPosition.coords.heading;
+                        }
+                        
+                        map.setView([currentPosition.lat, currentPosition.lng], 16);
+                        
+                        // Clear existing markers
+                        if (window.currentMarker) {
+                            map.removeLayer(window.currentMarker);
+                        }
+                        if (window.accuracyCircle) {
+                            map.removeLayer(window.accuracyCircle);
+                        }
+                        
+                        // Add current location marker with accuracy circle
+                        window.currentMarker = L.marker([currentPosition.lat, currentPosition.lng], {
+                            icon: L.divIcon({
+                                className: 'current-location-marker',
+                                html: '<div style="background: #4285f4; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 10]
+                            })
+                        }).addTo(map);
+
+                        // Add accuracy circle
+                        window.accuracyCircle = L.circle([currentPosition.lat, currentPosition.lng], {
+                            radius: accuracy,
+                            color: accuracy <= 5 ? '#34a853' : accuracy <= 20 ? '#fbbc04' : '#ea4335',
+                            fillColor: accuracy <= 5 ? '#34a853' : accuracy <= 20 ? '#fbbc04' : '#ea4335',
+                            fillOpacity: 0.2,
+                            weight: 2
+                        }).addTo(map);
+
+                        // Update location info
+                        updateLocationInfo(currentPosition, accuracy);
+                        
+                        // Get address for current location
+                        getAddressFromCoords(currentPosition);
+                        hideStatus();
+                        
+                        showSuccess(`Location found! Accuracy: ${accuracy.toFixed(1)}m`);
+                    } else {
+                        hideStatus();
+                        alert('Unable to get location. Please check your location settings and try again.');
+                    }
+                }
+                
+                // Start with ultra-precise method
+                tryUltraPrecise();
+                
+                // Fallback timeout
+                setTimeout(() => {
+                    if (!bestPosition) {
+                        console.log('Precision timeout reached, using best available');
+                        useBestPosition();
+                    }
+                }, precisionTimeout);
+                
             } else {
                 hideStatus();
                 alert('Geolocation is not supported by this browser.');
             }
         }
 
-        // Start automatic location updates
-        function startAutoLocationUpdate() {
-            if (autoLocationUpdate) return;
+        // Start continuous location tracking for navigation
+        function startLocationTracking() {
+            if (locationWatchId) {
+                navigator.geolocation.clearWatch(locationWatchId);
+            }
             
-            autoLocationUpdate = true;
-            watchId = navigator.geolocation.watchPosition(
+            locationWatchId = navigator.geolocation.watchPosition(
                 (position) => {
-                    if (locationPermissionGranted) {
-                        updateCurrentLocation(position);
+                    const newPosition = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Update user heading if available
+                    if (position.coords.heading !== null) {
+                        userHeading = position.coords.heading;
+                    }
+                    
+                    currentPosition = newPosition;
+                    
+                    if (isNavigating) {
+                        // Show car symbol during navigation
+                        updateCarSymbol(newPosition);
+                        updateNavigation(position);
+                    } else {
+                        // Show regular marker when not navigating
+                        updateMapLocation(newPosition, position.coords.accuracy);
                     }
                 },
                 (error) => {
-                    console.error('Auto location update error:', error);
+                    console.error('Location tracking error:', error);
                 },
                 {
                     enableHighAccuracy: true,
                     timeout: 10000,
-                    maximumAge: 5000
+                    maximumAge: 1000
                 }
             );
         }
 
-        // Update current location (for auto updates)
-        function updateCurrentLocation(position) {
-            currentPosition = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            
-            // Update marker position
+        // Update map location with car symbol
+        function updateMapLocation(position, accuracy) {
+            // Clear existing markers
             if (window.currentMarker) {
-                window.currentMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
+                map.removeLayer(window.currentMarker);
             }
-            
-            // Update accuracy circle
             if (window.accuracyCircle) {
-                window.accuracyCircle.setLatLng([currentPosition.lat, currentPosition.lng]);
-                window.accuracyCircle.setRadius(position.coords.accuracy);
+                map.removeLayer(window.accuracyCircle);
             }
             
-            // Update car symbol if in navigation
-            if (navigationActive && carSymbol) {
-                updateCarSymbol(currentPosition);
-            }
+            // Add current location marker with accuracy circle
+            window.currentMarker = L.marker([position.lat, position.lng], {
+                icon: L.divIcon({
+                    className: 'current-location-marker',
+                    html: '<div style="background: #4285f4; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+
+            // Add accuracy circle
+            window.accuracyCircle = L.circle([position.lat, position.lng], {
+                radius: accuracy,
+                color: accuracy <= 10 ? '#34a853' : accuracy <= 50 ? '#fbbc04' : '#ea4335',
+                fillColor: accuracy <= 10 ? '#34a853' : accuracy <= 50 ? '#fbbc04' : '#ea4335',
+                fillOpacity: 0.2,
+                weight: 2
+            }).addTo(map);
+
+            // Update location info
+            updateLocationInfo(position, accuracy);
+        }
+
+        // Update car symbol position and rotation
+        function updateCarSymbol(position) {
+            const carSymbol = document.getElementById('car-symbol');
+            if (!carSymbol) return;
             
-            // Update navigation if active
-            if (navigationActive) {
-                updateNavigation(position);
-            }
+            // Convert lat/lng to pixel coordinates
+            const point = map.latLngToContainerPoint([position.lat, position.lng]);
+            
+            // Position car symbol
+            carSymbol.style.left = (point.x - 12) + 'px';
+            carSymbol.style.top = (point.y - 12) + 'px';
+            carSymbol.style.transform = `rotate(${userHeading}deg)`;
+            carSymbol.style.display = 'block';
         }
 
         // Update location information display
         function updateLocationInfo(coords, accuracy) {
-            const accuracyText = accuracy <= 10 ? 'High' : accuracy <= 50 ? 'Medium' : 'Low';
-            const accuracyColor = accuracy <= 10 ? '#34a853' : accuracy <= 50 ? '#fbbc04' : '#ea4335';
+            let accuracyText, accuracyColor;
+            
+            if (accuracy <= 5) {
+                accuracyText = 'Ultra High';
+                accuracyColor = '#34a853';
+            } else if (accuracy <= 20) {
+                accuracyText = 'High';
+                accuracyColor = '#34a853';
+            } else if (accuracy <= 50) {
+                accuracyText = 'Medium';
+                accuracyColor = '#fbbc04';
+            } else {
+                accuracyText = 'Low';
+                accuracyColor = '#ea4335';
+            }
             
             document.getElementById('current-address').innerHTML = `
                 <span style="color: ${accuracyColor}; font-weight: bold;">${accuracyText} Accuracy</span> 
-                (${Math.round(accuracy)}m) - ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}
+                (${accuracy.toFixed(1)}m) - ${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}
             `;
+        }
+
+        // Improve location precision
+        function improveLocationPrecision() {
+            if (!currentPosition) {
+                showError('Please get your location first');
+                return;
+            }
+            
+            showStatus('Improving location precision...');
+            
+            // Try to get even more precise location
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const newAccuracy = position.coords.accuracy;
+                    const currentAccuracy = window.accuracyCircle ? window.accuracyCircle.getRadius() : 100;
+                    
+                    console.log(`Current accuracy: ${currentAccuracy}m, New accuracy: ${newAccuracy}m`);
+                    
+                    if (newAccuracy < currentAccuracy) {
+                        // Update with better position
+                        currentPosition = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Update marker and circle
+                        if (window.currentMarker) {
+                            window.currentMarker.setLatLng([currentPosition.lat, currentPosition.lng]);
+                        }
+                        if (window.accuracyCircle) {
+                            window.accuracyCircle.setLatLng([currentPosition.lat, currentPosition.lng]);
+                            window.accuracyCircle.setRadius(newAccuracy);
+                            window.accuracyCircle.setStyle({
+                                color: newAccuracy <= 5 ? '#34a853' : newAccuracy <= 20 ? '#fbbc04' : '#ea4335',
+                                fillColor: newAccuracy <= 5 ? '#34a853' : newAccuracy <= 20 ? '#fbbc04' : '#ea4335'
+                            });
+                        }
+                        
+                        updateLocationInfo(currentPosition, newAccuracy);
+                        showSuccess(`Precision improved! New accuracy: ${newAccuracy.toFixed(1)}m`);
+                    } else {
+                        showError(`Current accuracy (${currentAccuracy.toFixed(1)}m) is already better than new accuracy (${newAccuracy.toFixed(1)}m)`);
+                    }
+                    hideStatus();
+                },
+                (error) => {
+                    console.error('Precision improvement error:', error);
+                    showError('Could not improve precision. Try moving to an open area.');
+                    hideStatus();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 20000,
+                    maximumAge: 0
+                }
+            );
         }
 
         // Get address from coordinates with better error handling
@@ -965,16 +1241,9 @@
                         route = data;
                         displayRoute(data);
                         displayDirections(data);
+                        showNavigationBar();
                         hideStatus();
-                        showSuccess('Route found! Click "Start Navigation" to begin.');
-                        
-                        // Show start navigation button
-                        const startBtn = document.createElement('button');
-                        startBtn.className = 'location-btn';
-                        startBtn.style.marginTop = '10px';
-                        startBtn.textContent = '🚗 Start Navigation';
-                        startBtn.onclick = startNavigation;
-                        document.getElementById('controls').appendChild(startBtn);
+                        showSuccess('Route found!');
                     } else {
                         throw new Error(data.message || 'No route available');
                     }
@@ -1196,6 +1465,14 @@
         // Show navigation bar
         function showNavigationBar() {
             document.getElementById('navigation-bar').classList.add('show');
+            document.getElementById('nav-banner').classList.add('show');
+            
+            // Update navigation info
+            if (route && route.routes[0]) {
+                const leg = route.routes[0].legs[0];
+                document.getElementById('nav-time').textContent = `${Math.round(leg.duration / 60)} min`;
+                document.getElementById('nav-distance').textContent = `${(leg.distance / 1000).toFixed(1)} km`;
+            }
         }
 
         // Start navigation
@@ -1203,78 +1480,57 @@
             if (!route) return;
             
             navigationActive = true;
+            isNavigating = true;
             currentStep = 0;
             
-            // Show navigation UI
-            document.getElementById('nav-banner').classList.add('show');
-            document.getElementById('bottom-nav').classList.add('show');
-            document.getElementById('recenter-btn').classList.add('show');
-            document.getElementById('next-turn').classList.add('show');
-            document.getElementById('controls').style.display = 'none';
+            // Hide search controls
+            document.getElementById('search-controls').style.display = 'none';
             
-            // Create car symbol
-            createCarSymbol();
+            // Show car symbol
+            document.getElementById('car-symbol').style.display = 'block';
             
-            // Update navigation display
+            // Start continuous location tracking for navigation
+            startLocationTracking();
+            
+            // Update UI
+            document.getElementById('start-nav-btn').textContent = 'Navigation Active';
+            document.getElementById('start-nav-btn').disabled = true;
+            
+            // Show first instruction
             updateNavigationDisplay();
             
-            // Start voice if enabled
-            if (voiceEnabled) {
-                speakInstruction('Navigation started');
+            // Center map on user
+            if (currentPosition) {
+                map.setView([currentPosition.lat, currentPosition.lng], 18);
             }
         }
 
         // Stop navigation
         function stopNavigation() {
             navigationActive = false;
+            isNavigating = false;
             
-            // Hide navigation UI
+            // Stop continuous location tracking
+            if (locationWatchId) {
+                navigator.geolocation.clearWatch(locationWatchId);
+                locationWatchId = null;
+            }
+            
+            // Show search controls
+            document.getElementById('search-controls').style.display = 'block';
+            
+            // Hide navigation elements
             document.getElementById('nav-banner').classList.remove('show');
-            document.getElementById('bottom-nav').classList.remove('show');
-            document.getElementById('recenter-btn').classList.remove('show');
-            document.getElementById('next-turn').classList.remove('show');
-            document.getElementById('controls').style.display = 'block';
+            document.getElementById('car-symbol').style.display = 'none';
+            document.getElementById('next-turn-indicator').classList.remove('show');
             
-            // Remove car symbol
-            if (carSymbol) {
-                carSymbol.style.display = 'none';
-            }
+            // Update UI
+            document.getElementById('start-nav-btn').textContent = 'Start Navigation';
+            document.getElementById('start-nav-btn').disabled = false;
             
-            // Show success message
-            showSuccess('Navigation ended');
-        }
-
-        // Create car symbol
-        function createCarSymbol() {
-            carSymbol = document.getElementById('car-symbol');
-            carSymbol.style.display = 'block';
-            updateCarSymbol(currentPosition);
-        }
-
-        // Update car symbol position
-        function updateCarSymbol(position) {
-            if (!carSymbol || !position) return;
-            
-            const point = map.latLngToLayerPoint([position.lat, position.lng]);
-            carSymbol.style.left = (point.x - 12) + 'px';
-            carSymbol.style.top = (point.y - 12) + 'px';
-        }
-
-        // Re-center map
-        function recenterMap() {
-            if (currentPosition) {
-                map.setView([currentPosition.lat, currentPosition.lng], 16);
-            }
-        }
-
-        // Show directions panel
-        function showDirections() {
-            const directionsPanel = document.getElementById('directions-panel');
-            if (directionsPanel.classList.contains('show')) {
-                directionsPanel.classList.remove('show');
-            } else {
-                directionsPanel.classList.add('show');
-            }
+            // Reset navigation display
+            document.getElementById('nav-main-instruction').textContent = 'Ready to navigate';
+            document.getElementById('nav-sub-instruction').textContent = 'Tap to start';
         }
 
         // Update navigation
@@ -1355,45 +1611,91 @@
         // Update navigation display
         function updateNavigationDisplay() {
             if (!route || currentStep >= route.routes[0].legs[0].steps.length) {
-                document.getElementById('nav-street').textContent = 'You have arrived!';
-                document.getElementById('nav-direction').textContent = 'Destination reached';
-                document.getElementById('nav-arrow').textContent = '✓';
+                document.getElementById('nav-main-instruction').textContent = 'You have arrived!';
+                document.getElementById('nav-sub-instruction').textContent = 'Destination reached';
                 stopNavigation();
                 return;
             }
 
             const step = route.routes[0].legs[0].steps[currentStep];
-            const leg = route.routes[0].legs[0];
+            const instruction = step.maneuver.instruction || 'Continue';
+            const roadName = step.name || step.maneuver.name || '';
             
             // Update navigation banner
-            document.getElementById('nav-street').textContent = step.name || 'Continue';
-            document.getElementById('nav-direction').textContent = step.maneuver.instruction || 'Continue';
+            document.getElementById('nav-main-instruction').textContent = instruction;
+            document.getElementById('nav-sub-instruction').textContent = roadName;
             
-            // Update arrow direction
-            const arrow = document.getElementById('nav-arrow');
-            const instruction = step.maneuver.instruction || '';
-            if (instruction.includes('right')) {
-                arrow.textContent = '→';
-            } else if (instruction.includes('left')) {
-                arrow.textContent = '←';
-            } else if (instruction.includes('straight')) {
-                arrow.textContent = '↑';
-            } else {
-                arrow.textContent = '→';
-            }
+            // Update direction icon
+            updateDirectionIcon(step.maneuver.type);
             
-            // Update bottom navigation
-            const remainingDistance = leg.distance - (step.distance || 0);
-            const remainingTime = leg.duration - (step.duration || 0);
-            
-            document.getElementById('nav-time').textContent = `${Math.round(remainingTime / 60)} min`;
-            document.getElementById('nav-distance').textContent = `${(remainingDistance / 1000).toFixed(1)} km`;
-            
-            // Update next turn indicator
+            // Show next turn indicator if there's a next step
             if (currentStep < route.routes[0].legs[0].steps.length - 1) {
                 const nextStep = route.routes[0].legs[0].steps[currentStep + 1];
-                const nextArrow = document.getElementById('next-turn');
-                nextArrow.innerHTML = `<span class="next-turn-arrow">→</span><span>Then ${nextStep.maneuver.instruction}</span>`;
+                document.getElementById('next-turn-text').textContent = nextStep.maneuver.instruction || 'Then';
+                document.getElementById('next-turn-indicator').classList.add('show');
+            } else {
+                document.getElementById('next-turn-indicator').classList.remove('show');
+            }
+        }
+
+        // Update direction icon based on maneuver type
+        function updateDirectionIcon(maneuverType) {
+            const iconElement = document.getElementById('nav-direction-icon');
+            let icon = '↑';
+            
+            switch(maneuverType) {
+                case 'turn-right':
+                    icon = '→';
+                    break;
+                case 'turn-left':
+                    icon = '←';
+                    break;
+                case 'turn-slight-right':
+                    icon = '↗';
+                    break;
+                case 'turn-slight-left':
+                    icon = '↖';
+                    break;
+                case 'turn-sharp-right':
+                    icon = '↘';
+                    break;
+                case 'turn-sharp-left':
+                    icon = '↙';
+                    break;
+                case 'uturn':
+                    icon = '↻';
+                    break;
+                case 'arrive':
+                    icon = '●';
+                    break;
+                default:
+                    icon = '↑';
+            }
+            
+            iconElement.textContent = icon;
+        }
+
+        // Helper functions for map controls
+        function toggleSearch() {
+            const controls = document.getElementById('search-controls');
+            controls.style.display = controls.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function reportIssue() {
+            alert('Report issue feature coming soon!');
+        }
+
+        function addStop() {
+            alert('Add stop feature coming soon!');
+        }
+
+        function showRouteOptions() {
+            alert('Route options coming soon!');
+        }
+
+        function recenterMap() {
+            if (currentPosition) {
+                map.setView([currentPosition.lat, currentPosition.lng], 16);
             }
         }
 
