@@ -1280,6 +1280,7 @@
         let currentMarker;
         let destinationMarker;
         let routeLine;
+        let completedRouteLine;
         let locationWatchId;
         let isTracking = false;
         let currentPosition;
@@ -2263,6 +2264,9 @@
                 if (routeLine) {
                     map.removeLayer(routeLine);
                 }
+                if (completedRouteLine) {
+                    map.removeLayer(completedRouteLine);
+                }
                 if (destinationMarker) {
                     map.removeLayer(destinationMarker);
                 }
@@ -2341,16 +2345,43 @@
 
                 console.log('Final route coordinates:', coordinates);
 
-                // Create route line
+                // Create route line with completed/upcoming portions
                 if (coordinates && coordinates.length > 1) {
-                    routeLine = L.polyline(coordinates, {
-                        color: '#4285f4',
-                        weight: 6,
-                        opacity: 0.8
-                    }).addTo(map);
+                    // Split route into completed and upcoming portions
+                    const routeSegments = splitRouteByProgress(coordinates);
+                    
+                    // Display completed portion in gray
+                    if (routeSegments.completed.length > 1) {
+                        completedRouteLine = L.polyline(routeSegments.completed, {
+                            color: '#9e9e9e',
+                            weight: 6,
+                            opacity: 0.6
+                        }).addTo(map);
+                    }
+                    
+                    // Display upcoming portion in blue
+                    if (routeSegments.upcoming.length > 1) {
+                        routeLine = L.polyline(routeSegments.upcoming, {
+                            color: '#4285f4',
+                            weight: 6,
+                            opacity: 0.8
+                        }).addTo(map);
+                    } else {
+                        // If no upcoming portion, show full route in blue
+                        routeLine = L.polyline(coordinates, {
+                            color: '#4285f4',
+                            weight: 6,
+                            opacity: 0.8
+                        }).addTo(map);
+                    }
 
                     // Fit map to route
-                    map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+                    const allCoordinates = [...(routeSegments.completed.length > 0 ? routeSegments.completed : []), 
+                                           ...(routeSegments.upcoming.length > 0 ? routeSegments.upcoming : coordinates)];
+                    if (allCoordinates.length > 1) {
+                        const bounds = L.latLngBounds(allCoordinates);
+                        map.fitBounds(bounds, { padding: [20, 20] });
+                    }
                 } else {
                     // Fallback: simple line between start and end
                     const fallbackCoordinates = [
@@ -2789,11 +2820,15 @@
                 destinationMarker = null;
             }
 
-            // Remove route line
-            if (routeLine) {
-                map.removeLayer(routeLine);
-                routeLine = null;
-            }
+                    // Remove route lines
+        if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+        }
+        if (completedRouteLine) {
+            map.removeLayer(completedRouteLine);
+            completedRouteLine = null;
+        }
 
             // Remove car symbol
             if (carSymbol) {
@@ -3151,6 +3186,53 @@
             }
             
             iconElement.textContent = icon;
+        }
+
+        // Split route into completed and upcoming portions based on current position
+        function splitRouteByProgress(coordinates) {
+            if (!currentPosition || !coordinates || coordinates.length < 2) {
+                return { completed: [], upcoming: coordinates || [] };
+            }
+            
+            const completed = [];
+            const upcoming = [];
+            let closestDistance = Infinity;
+            let closestIndex = 0;
+            
+            // Find the closest point on the route to current position
+            for (let i = 0; i < coordinates.length; i++) {
+                const distance = calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    coordinates[i][0], coordinates[i][1]
+                );
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = i;
+                }
+            }
+            
+            // If we're more than 100m away from the route, don't split
+            if (closestDistance > 100) {
+                return { completed: [], upcoming: coordinates };
+            }
+            
+            // Split the route at the closest point
+            for (let i = 0; i < coordinates.length; i++) {
+                if (i <= closestIndex) {
+                    completed.push(coordinates[i]);
+                } else {
+                    upcoming.push(coordinates[i]);
+                }
+            }
+            
+            // Ensure we have at least 2 points for each segment
+            if (completed.length === 1 && upcoming.length > 0) {
+                upcoming.unshift(completed[0]);
+                completed.pop();
+            }
+            
+            return { completed, upcoming };
         }
 
         // Calculate distance between two points
