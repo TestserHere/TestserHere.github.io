@@ -564,6 +564,55 @@
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
         }
 
+        /* Follow Me Button */
+        .follow-me-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .follow-me-btn.show {
+            display: flex;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .follow-me-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(66, 133, 244, 0.4);
+            background: linear-gradient(135deg, #3367d6 0%, #2a56c6 100%);
+        }
+
+        .follow-me-btn:active {
+            transform: scale(0.95);
+        }
+
+        .follow-me-btn.following {
+            background: linear-gradient(135deg, #34a853 0%, #2d8f47 100%);
+            box-shadow: 0 4px 16px rgba(52, 168, 83, 0.3);
+        }
+
+        .follow-me-btn.following:hover {
+            background: linear-gradient(135deg, #2d8f47 0%, #2a7d3f 100%);
+            box-shadow: 0 6px 24px rgba(52, 168, 83, 0.4);
+        }
+
         .step-instruction {
             font-weight: 500;
             margin-bottom: 4px;
@@ -1014,6 +1063,14 @@
                 height: 18px;
                 font-size: 11px;
             }
+
+            .follow-me-btn {
+                bottom: 10px;
+                left: 10px;
+                width: 52px;
+                height: 52px;
+                font-size: 18px;
+            }
         }
 
         /* Extra small screens */
@@ -1129,6 +1186,9 @@
     <!-- Settings Button -->
     <button class="settings-btn" onclick="toggleSettings()" title="Settings">⚙️</button>
 
+    <!-- Follow Me Button -->
+    <button class="follow-me-btn" onclick="followMe()" title="Follow Me" id="follow-me-btn">📍</button>
+
     <!-- Settings Panel -->
     <div class="settings-panel" id="settings-panel">
         <div class="settings-header">
@@ -1186,6 +1246,11 @@
         let autocompleteResults = [];
         let selectedAutocompleteIndex = -1;
         let isAutocompleteVisible = false;
+        
+        // Follow Me variables
+        let isFollowingUser = true;
+        let lastMapCenter = null;
+        let followMeThreshold = 100; // meters - how far map can move before showing button
 
         // Initialize the map
         function initMap() {
@@ -1197,6 +1262,86 @@
 
             // Initialize speech synthesis
             initSpeechSynthesis();
+            
+            // Initialize Follow Me functionality
+            initFollowMe();
+        }
+
+        // Initialize Follow Me functionality
+        function initFollowMe() {
+            // Listen for map movement
+            map.on('moveend', checkMapPosition);
+            
+            // Set initial map center
+            lastMapCenter = map.getCenter();
+        }
+
+        // Check if map has moved away from user position
+        function checkMapPosition() {
+            if (!currentPosition || !isNavigating) return;
+            
+            const currentMapCenter = map.getCenter();
+            const distanceFromUser = calculateDistance(
+                currentPosition.lat, currentPosition.lng,
+                currentMapCenter.lat, currentMapCenter.lng
+            );
+            
+            // If map is far from user position, show Follow Me button
+            if (distanceFromUser > followMeThreshold) {
+                showFollowMeButton();
+                isFollowingUser = false;
+            } else {
+                hideFollowMeButton();
+                isFollowingUser = true;
+            }
+        }
+
+        // Show Follow Me button
+        function showFollowMeButton() {
+            const followBtn = document.getElementById('follow-me-btn');
+            if (followBtn) {
+                followBtn.classList.add('show');
+            }
+        }
+
+        // Hide Follow Me button
+        function hideFollowMeButton() {
+            const followBtn = document.getElementById('follow-me-btn');
+            if (followBtn) {
+                followBtn.classList.remove('show');
+                followBtn.classList.remove('following');
+            }
+        }
+
+        // Follow Me function
+        function followMe() {
+            if (!currentPosition) {
+                showStatus('No location available');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+            
+            // Center map on user position
+            map.setView([currentPosition.lat, currentPosition.lng], 18);
+            
+            // Update follow state
+            isFollowingUser = true;
+            lastMapCenter = map.getCenter();
+            
+            // Update button appearance
+            const followBtn = document.getElementById('follow-me-btn');
+            if (followBtn) {
+                followBtn.classList.add('following');
+                setTimeout(() => {
+                    followBtn.classList.remove('following');
+                }, 2000);
+            }
+            
+            // Show feedback
+            showStatus('Following your location');
+            setTimeout(hideStatus, 2000);
+            
+            console.log('Map centered on user position');
         }
 
         // Initialize speech synthesis
@@ -1216,7 +1361,7 @@
             }
         }
 
-        // Speak navigation instruction
+        // Speak navigation instruction with enhanced details
         function speakInstruction(instruction, distance = null, force = false) {
             if (!voiceEnabled || !speechSynthesis) return;
             
@@ -1225,9 +1370,11 @@
             
             let textToSpeak = instruction;
             
-            // Add distance if provided
+            // Add distance if provided with enhanced phrasing
             if (distance && distance > 0) {
-                if (distance < 1000) {
+                if (distance < 100) {
+                    textToSpeak = `In ${Math.round(distance)} meters, ${instruction}`;
+                } else if (distance < 1000) {
                     textToSpeak = `In ${Math.round(distance)} meters, ${instruction}`;
                 } else {
                     textToSpeak = `In ${(distance / 1000).toFixed(1)} kilometers, ${instruction}`;
@@ -1240,10 +1387,10 @@
             // Create speech utterance
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
             
-            // Configure voice settings
-            utterance.rate = 0.9; // Slightly slower for clarity
+            // Configure voice settings for better clarity
+            utterance.rate = 0.85; // Slightly slower for detailed instructions
             utterance.pitch = 1.0;
-            utterance.volume = 0.8;
+            utterance.volume = 0.9;
             
             // Try to use a good voice
             const voices = speechSynthesis.getVoices();
@@ -2267,7 +2414,7 @@
             directionsList.appendChild(directionsContent);
         }
 
-        // Get better instruction text
+        // Get better instruction text with detailed voice guidance
         function getBetterInstruction(step) {
             const maneuver = step.maneuver;
             const maneuverType = maneuver.type;
@@ -2278,45 +2425,125 @@
                 return instruction;
             }
             
-            // Generate better instruction based on maneuver type
+            // Generate detailed instruction based on maneuver type
             let betterInstruction = '';
+            let voiceInstruction = '';
             
             switch(maneuverType) {
                 case 'turn-right':
                     betterInstruction = 'Turn right';
+                    voiceInstruction = 'Turn right';
                     break;
                 case 'turn-left':
                     betterInstruction = 'Turn left';
+                    voiceInstruction = 'Turn left';
                     break;
                 case 'turn-slight-right':
                     betterInstruction = 'Slight right';
+                    voiceInstruction = 'Take a slight right turn';
                     break;
                 case 'turn-slight-left':
                     betterInstruction = 'Slight left';
+                    voiceInstruction = 'Take a slight left turn';
                     break;
                 case 'turn-sharp-right':
                     betterInstruction = 'Sharp right';
+                    voiceInstruction = 'Take a sharp right turn';
                     break;
                 case 'turn-sharp-left':
                     betterInstruction = 'Sharp left';
+                    voiceInstruction = 'Take a sharp left turn';
                     break;
                 case 'uturn':
                     betterInstruction = 'Make a U-turn';
+                    voiceInstruction = 'Make a U-turn';
+                    break;
+                case 'roundabout':
+                    betterInstruction = 'Enter roundabout';
+                    voiceInstruction = getRoundaboutInstruction(step);
+                    break;
+                case 'exit-roundabout':
+                    betterInstruction = 'Exit roundabout';
+                    voiceInstruction = 'Exit the roundabout';
                     break;
                 case 'arrive':
                     betterInstruction = 'You have arrived';
+                    voiceInstruction = 'You have arrived at your destination';
+                    break;
+                case 'merge':
+                    betterInstruction = 'Merge';
+                    voiceInstruction = 'Merge onto the road';
+                    break;
+                case 'ramp':
+                    betterInstruction = 'Take ramp';
+                    voiceInstruction = 'Take the ramp';
+                    break;
+                case 'exit':
+                    betterInstruction = 'Take exit';
+                    voiceInstruction = 'Take the exit';
+                    break;
+                case 'new-name':
+                    betterInstruction = 'Continue';
+                    voiceInstruction = 'Continue straight ahead';
                     break;
                 default:
                     betterInstruction = 'Continue';
+                    voiceInstruction = 'Continue straight ahead';
             }
             
             // Add road name if available
             const roadName = step.name || step.maneuver.name || '';
+            const nextRoad = step.maneuver.after || '';
+            
             if (roadName && maneuverType !== 'arrive') {
                 betterInstruction += ` on ${roadName}`;
+                
+                // Enhanced voice instruction with road details
+                if (nextRoad && nextRoad !== roadName) {
+                    voiceInstruction += ` onto ${nextRoad}`;
+                } else if (roadName) {
+                    voiceInstruction += ` onto ${roadName}`;
+                }
             }
             
+            // Store voice instruction for later use
+            step.voiceInstruction = voiceInstruction;
+            
             return betterInstruction;
+        }
+
+        // Get detailed roundabout instruction
+        function getRoundaboutInstruction(step) {
+            const maneuver = step.maneuver;
+            const exit = maneuver.exit || 0;
+            const roundaboutName = step.name || 'the roundabout';
+            
+            let instruction = `Enter ${roundaboutName}`;
+            
+            if (exit > 0) {
+                if (exit === 1) {
+                    instruction += ' and take the first exit';
+                } else if (exit === 2) {
+                    instruction += ' and take the second exit';
+                } else if (exit === 3) {
+                    instruction += ' and take the third exit';
+                } else {
+                    instruction += ` and take the ${exit}${getOrdinalSuffix(exit)} exit`;
+                }
+            }
+            
+            return instruction;
+        }
+
+        // Get ordinal suffix for numbers
+        function getOrdinalSuffix(num) {
+            if (num >= 11 && num <= 13) return 'th';
+            switch (num % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
         }
 
         // Highlight step on map
@@ -2362,9 +2589,11 @@
             // Show first instruction
             updateNavigationDisplay();
 
-            // Center map on user
+            // Center map on user and enable following
             if (currentPosition) {
                 map.setView([currentPosition.lat, currentPosition.lng], 18);
+                isFollowingUser = true;
+                hideFollowMeButton(); // Hide button when starting navigation
             }
 
             // Speak initial instruction
@@ -2452,13 +2681,18 @@
                             updateCarSymbol(newPosition, null);
                         }
                         
-                        // Check for route deviation and re-route if necessary
+                                                // Check for route deviation and re-route if necessary
                         if (checkRouteDeviation(newPosition)) {
                             console.log('Route deviation detected, initiating re-route');
                             rerouteFromCurrentPosition();
                         } else {
                             // Only update navigation if not re-routing
-                        updateNavigation(newPosition);
+                            updateNavigation(newPosition);
+                        }
+                        
+                        // Auto-follow user in navigation mode
+                        if (isFollowingUser) {
+                            map.setView([newPosition.lat, newPosition.lng], 18);
                         }
                     }
                 },
@@ -2508,12 +2742,14 @@
                     const stepStreet = nextStep.name || nextStep.maneuver.name || '';
                     if (currentStreet && stepStreet && currentStreet.toLowerCase().includes(stepStreet.toLowerCase())) {
                         const instruction = getBetterInstruction(nextStep);
-                        speakInstruction(instruction, distanceToNext);
+                        const voiceInstruction = nextStep.voiceInstruction || instruction;
+                        speakInstruction(voiceInstruction, distanceToNext);
                     }
                 } else if (distanceToNext <= 50) {
                     // Final alert when very close to turn
                     const instruction = getBetterInstruction(nextStep);
-                    speakInstruction(instruction, distanceToNext);
+                    const voiceInstruction = nextStep.voiceInstruction || instruction;
+                    speakInstruction(voiceInstruction, distanceToNext);
                 }
             });
         }
@@ -2635,9 +2871,10 @@
                 spokenInstructions.add(instructionKey);
                 lastStepSpoken = currentStep;
                 
-                // Speak the instruction
-                speakInstruction(instruction, null, true);
-                console.log(`Spoke instruction for step ${currentStep}: ${instruction}`);
+                // Use detailed voice instruction if available
+                const voiceInstruction = step.voiceInstruction || instruction;
+                speakInstruction(voiceInstruction, null, true);
+                console.log(`Spoke detailed instruction for step ${currentStep}: ${voiceInstruction}`);
             } else {
                 console.log(`Already spoke instruction for step ${currentStep}, skipping`);
             }
@@ -2669,6 +2906,21 @@
                     break;
                 case 'uturn':
                     icon = '↻';
+                    break;
+                case 'roundabout':
+                    icon = '⟲';
+                    break;
+                case 'exit-roundabout':
+                    icon = '⟳';
+                    break;
+                case 'merge':
+                    icon = '⇧';
+                    break;
+                case 'ramp':
+                    icon = '⇑';
+                    break;
+                case 'exit':
+                    icon = '⇓';
                     break;
                 case 'arrive':
                     icon = '●';
