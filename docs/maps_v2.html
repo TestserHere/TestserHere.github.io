@@ -613,6 +613,45 @@
             box-shadow: 0 6px 24px rgba(52, 168, 83, 0.4);
         }
 
+        /* Map Style Selector */
+        .map-style-selector {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-style-btn {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .map-style-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+            color: white;
+        }
+
+        .map-style-btn:active {
+            transform: scale(0.95);
+        }
+
         .step-instruction {
             font-weight: 500;
             margin-bottom: 4px;
@@ -1071,6 +1110,18 @@
                 height: 52px;
                 font-size: 18px;
             }
+
+            .map-style-selector {
+                bottom: 10px;
+                right: 10px;
+                gap: 6px;
+            }
+
+            .map-style-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
         }
 
         /* Extra small screens */
@@ -1189,6 +1240,15 @@
     <!-- Follow Me Button -->
     <button class="follow-me-btn" onclick="followMe()" title="Follow Me" id="follow-me-btn">📍</button>
 
+    <!-- Map Style Selector -->
+    <div class="map-style-selector">
+        <button class="map-style-btn" onclick="changeMapStyle('osm')" title="OpenStreetMap">🗺️</button>
+        <button class="map-style-btn" onclick="changeMapStyle('cartodb-light')" title="Google Maps Style (Light)">☀️</button>
+        <button class="map-style-btn" onclick="changeMapStyle('cartodb-voyager')" title="Google Maps Style (Enhanced)">🗺️</button>
+        <button class="map-style-btn" onclick="changeMapStyle('cartodb-dark')" title="Dark Theme">🌙</button>
+        <button class="map-style-btn" onclick="changeMapStyle('osm-hot')" title="Enhanced OSM">🔥</button>
+    </div>
+
     <!-- Settings Panel -->
     <div class="settings-panel" id="settings-panel">
         <div class="settings-header">
@@ -1252,14 +1312,47 @@
         let lastMapCenter = null;
         let followMeThreshold = 100; // meters - how far map can move before showing button
         let accuracyCircle = null; // Global accuracy circle variable
+        let lastVoiceAlert = {}; // Track last voice alert for each step to prevent spam
 
         // Initialize the map
         function initMap() {
             map = L.map('map').setView([-37.8136, 144.9631], 13); // Melbourne
 
+            // Multiple free map tile options - uncomment your preferred style
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
+            
+            // Alternative map styles (uncomment to use):
+            // CartoDB Positron (Google Maps style - Clean, minimal)
+            // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            //     attribution: '© CartoDB'
+            // }).addTo(map);
+            
+            // CartoDB Voyager (Google Maps style - Enhanced)
+            // L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            //     attribution: '© CartoDB'
+            // }).addTo(map);
+            
+            // CartoDB Dark Matter (Dark theme)
+            // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            //     attribution: '© CartoDB'
+            // }).addTo(map);
+            
+            // OpenStreetMap Carto (Enhanced OSM)
+            // L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            //     attribution: '© OpenStreetMap contributors'
+            // }).addTo(map);
+            
+            // OpenStreetMap France (High quality)
+            // L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            //     attribution: '© OpenStreetMap contributors'
+            // }).addTo(map);
+            
+            // OpenStreetMap Germany (Reliable)
+            // L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+            //     attribution: '© OpenStreetMap contributors'
+            // }).addTo(map);
 
             // Initialize speech synthesis
             initSpeechSynthesis();
@@ -1275,6 +1368,57 @@
             
             // Set initial map center
             lastMapCenter = map.getCenter();
+        }
+
+        // Map style selector
+        function changeMapStyle(style) {
+            // Remove existing tile layer
+            map.eachLayer((layer) => {
+                if (layer instanceof L.TileLayer) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Add new tile layer based on style
+            switch(style) {
+                case 'cartodb-light':
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© CartoDB'
+                    }).addTo(map);
+                    break;
+                case 'cartodb-voyager':
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '© CartoDB'
+                    }).addTo(map);
+                    break;
+                case 'cartodb-dark':
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© CartoDB'
+                    }).addTo(map);
+                    break;
+                case 'osm-hot':
+                    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    break;
+                case 'osm-france':
+                    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    break;
+                case 'osm-germany':
+                    L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    break;
+                default: // OpenStreetMap
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+            }
+            
+            showStatus(`Map style changed to ${style}`);
+            setTimeout(hideStatus, 2000);
         }
 
         // Check if map has moved away from user position
@@ -1418,17 +1562,17 @@
                 map.removeLayer(carSymbol);
             }
             
-            // Create a custom car icon - Google Maps Style
+            // Create a directional arrow icon that follows route direction
             const carIcon = L.divIcon({
                 className: 'car-symbol',
                 html: `
                     <div style="
-                        width: 24px;
-                        height: 24px;
+                        width: 28px;
+                        height: 28px;
                         background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
-                        border: 2px solid white;
-                        border-radius: 4px;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                        border: 3px solid white;
+                        border-radius: 50%;
+                        box-shadow: 0 3px 12px rgba(66, 133, 244, 0.4);
                         position: relative;
                         transform: rotate(${userHeading}deg);
                         transition: transform 0.5s ease-out;
@@ -1436,51 +1580,33 @@
                         align-items: center;
                         justify-content: center;
                     ">
-                        <!-- Google Maps style car body -->
+                        <!-- Main directional arrow -->
                         <div style="
                             position: absolute;
                             top: 50%;
                             left: 50%;
-                            width: 12px;
-                            height: 8px;
-                            background: white;
-                            border-radius: 2px;
+                            width: 0;
+                            height: 0;
+                            border-left: 6px solid transparent;
+                            border-right: 6px solid transparent;
+                            border-bottom: 14px solid white;
                             transform: translate(-50%, -50%);
-                            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
                         "></div>
-                        <!-- Car wheels -->
+                        <!-- Center dot for better visibility -->
                         <div style="
                             position: absolute;
                             top: 50%;
                             left: 50%;
-                            width: 14px;
-                            height: 2px;
+                            width: 6px;
+                            height: 6px;
+                            background: #4285f4;
+                            border-radius: 50%;
                             transform: translate(-50%, -50%);
-                        ">
-                            <div style="
-                                position: absolute;
-                                left: 0;
-                                top: 50%;
-                                width: 3px;
-                                height: 3px;
-                                background: white;
-                                border-radius: 50%;
-                                transform: translate(-50%, -50%);
-                                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                            "></div>
-                            <div style="
-                                position: absolute;
-                                right: 0;
-                                top: 50%;
-                                width: 3px;
-                                height: 3px;
-                                background: white;
-                                border-radius: 50%;
-                                transform: translate(50%, -50%);
-                                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                            "></div>
-                        </div>
-                        <!-- Direction indicator -->
+                            border: 1px solid white;
+                            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                        "></div>
+                        <!-- Route direction indicator (smaller arrow) -->
                         <div style="
                             position: absolute;
                             top: 50%;
@@ -1489,14 +1615,14 @@
                             height: 0;
                             border-left: 3px solid transparent;
                             border-right: 3px solid transparent;
-                            border-bottom: 6px solid white;
-                            transform: translate(-50%, -50%);
-                            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+                            border-bottom: 8px solid rgba(255, 255, 255, 0.8);
+                            transform: translate(-50%, -50%) rotate(${getRouteDirection()}deg);
+                            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
                         "></div>
                     </div>
                 `,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
             });
             
             carSymbol = L.marker([currentPosition.lat, currentPosition.lng], {
@@ -1505,6 +1631,33 @@
             }).addTo(map);
             
             console.log('Car symbol created');
+        }
+
+        // Get route direction for arrow indicator
+        function getRouteDirection() {
+            if (!route || !currentStep || !currentPosition) return 0;
+            
+            const steps = route.routes[0].legs[0].steps;
+            if (currentStep >= steps.length) return 0;
+            
+            const nextStep = steps[currentStep];
+            if (!nextStep || !nextStep.maneuver || !nextStep.maneuver.location) return 0;
+            
+            // Calculate direction to next turn
+            const nextTurnLat = nextStep.maneuver.location[1];
+            const nextTurnLng = nextStep.maneuver.location[0];
+            
+            const deltaLat = nextTurnLat - currentPosition.lat;
+            const deltaLng = nextTurnLng - currentPosition.lng;
+            
+            // Calculate heading to next turn
+            let routeHeading = Math.atan2(deltaLng, deltaLat) * 180 / Math.PI;
+            routeHeading = (routeHeading + 360) % 360;
+            
+            // Convert to map rotation (0 = East, 90 = South, 180 = West, 270 = North)
+            const mapHeading = (90 - routeHeading + 360) % 360;
+            
+            return mapHeading;
         }
 
         // Calculate heading from movement
@@ -1566,6 +1719,13 @@
                     // Add smooth transition for rotation
                     carDiv.style.transition = 'transform 0.5s ease-out';
                     carDiv.style.transform = `rotate(${userHeading}deg)`;
+                    
+                    // Update route direction indicator
+                    const routeIndicator = carDiv.querySelector('div[style*="border-bottom: 8px solid rgba(255, 255, 255, 0.8)"]');
+                    if (routeIndicator) {
+                        const routeDirection = getRouteDirection();
+                        routeIndicator.style.transform = `translate(-50%, -50%) rotate(${routeDirection}deg)`;
+                    }
                     
                     // Remove transition after animation to prevent lag
                     setTimeout(() => {
@@ -1722,6 +1882,8 @@
                     // Update car symbol if in navigation mode
                     if (isNavigating && carSymbol) {
                         updateCarSymbol(currentPosition, userHeading);
+                        // Recreate car symbol to update route direction
+                        createCarSymbol();
                     }
                     
                     // Update location info
@@ -2450,7 +2612,7 @@
             directionsList.appendChild(directionsContent);
         }
 
-        // Get better instruction text with detailed voice guidance
+        // Get better instruction text with detailed voice guidance and street names
         function getBetterInstruction(step) {
             const maneuver = step.maneuver;
             const maneuverType = maneuver.type;
@@ -2461,85 +2623,75 @@
                 return instruction;
             }
             
+            // Get street names
+            const currentRoad = step.name || step.maneuver.name || '';
+            const nextRoad = step.maneuver.after || '';
+            const turnStreet = nextRoad || currentRoad || 'the intersection';
+            
             // Generate detailed instruction based on maneuver type
             let betterInstruction = '';
             let voiceInstruction = '';
             
             switch(maneuverType) {
                 case 'turn-right':
-                    betterInstruction = 'Turn right';
-                    voiceInstruction = 'Turn right';
+                    betterInstruction = `Turn right at ${turnStreet}`;
+                    voiceInstruction = `Turn right at ${turnStreet}`;
                     break;
                 case 'turn-left':
-                    betterInstruction = 'Turn left';
-                    voiceInstruction = 'Turn left';
+                    betterInstruction = `Turn left at ${turnStreet}`;
+                    voiceInstruction = `Turn left at ${turnStreet}`;
                     break;
                 case 'turn-slight-right':
-                    betterInstruction = 'Slight right';
-                    voiceInstruction = 'Take a slight right turn';
+                    betterInstruction = `Slight right at ${turnStreet}`;
+                    voiceInstruction = `Take a slight right turn at ${turnStreet}`;
                     break;
                 case 'turn-slight-left':
-                    betterInstruction = 'Slight left';
-                    voiceInstruction = 'Take a slight left turn';
+                    betterInstruction = `Slight left at ${turnStreet}`;
+                    voiceInstruction = `Take a slight left turn at ${turnStreet}`;
                     break;
                 case 'turn-sharp-right':
-                    betterInstruction = 'Sharp right';
-                    voiceInstruction = 'Take a sharp right turn';
+                    betterInstruction = `Sharp right at ${turnStreet}`;
+                    voiceInstruction = `Take a sharp right turn at ${turnStreet}`;
                     break;
                 case 'turn-sharp-left':
-                    betterInstruction = 'Sharp left';
-                    voiceInstruction = 'Take a sharp left turn';
+                    betterInstruction = `Sharp left at ${turnStreet}`;
+                    voiceInstruction = `Take a sharp left turn at ${turnStreet}`;
                     break;
                 case 'uturn':
-                    betterInstruction = 'Make a U-turn';
-                    voiceInstruction = 'Make a U-turn';
+                    betterInstruction = `Make a U-turn at ${turnStreet}`;
+                    voiceInstruction = `Make a U-turn at ${turnStreet}`;
                     break;
                 case 'roundabout':
-                    betterInstruction = 'Enter roundabout';
+                    betterInstruction = `Enter roundabout at ${turnStreet}`;
                     voiceInstruction = getRoundaboutInstruction(step);
                     break;
                 case 'exit-roundabout':
-                    betterInstruction = 'Exit roundabout';
-                    voiceInstruction = 'Exit the roundabout';
+                    betterInstruction = `Exit roundabout onto ${turnStreet}`;
+                    voiceInstruction = `Exit the roundabout onto ${turnStreet}`;
                     break;
                 case 'arrive':
                     betterInstruction = 'You have arrived';
                     voiceInstruction = 'You have arrived at your destination';
                     break;
                 case 'merge':
-                    betterInstruction = 'Merge';
-                    voiceInstruction = 'Merge onto the road';
+                    betterInstruction = `Merge onto ${turnStreet}`;
+                    voiceInstruction = `Merge onto ${turnStreet}`;
                     break;
                 case 'ramp':
-                    betterInstruction = 'Take ramp';
-                    voiceInstruction = 'Take the ramp';
+                    betterInstruction = `Take ramp to ${turnStreet}`;
+                    voiceInstruction = `Take the ramp to ${turnStreet}`;
                     break;
                 case 'exit':
-                    betterInstruction = 'Take exit';
-                    voiceInstruction = 'Take the exit';
+                    betterInstruction = `Take exit to ${turnStreet}`;
+                    voiceInstruction = `Take the exit to ${turnStreet}`;
                     break;
                 case 'new-name':
-                    betterInstruction = 'Continue';
-                    voiceInstruction = 'Continue straight ahead';
+                    betterInstruction = `Continue on ${currentRoad}`;
+                    voiceInstruction = `Continue on ${currentRoad}`;
                     break;
                 default:
-                    betterInstruction = 'Continue';
-                    voiceInstruction = 'Continue straight ahead';
-            }
-            
-            // Add road name if available
-            const roadName = step.name || step.maneuver.name || '';
-            const nextRoad = step.maneuver.after || '';
-            
-            if (roadName && maneuverType !== 'arrive') {
-                betterInstruction += ` on ${roadName}`;
-                
-                // Enhanced voice instruction with road details
-                if (nextRoad && nextRoad !== roadName) {
-                    voiceInstruction += ` onto ${nextRoad}`;
-                } else if (roadName) {
-                    voiceInstruction += ` onto ${roadName}`;
-                }
+                    betterInstruction = `Continue on ${currentRoad}`;
+                    voiceInstruction = `Continue on ${currentRoad}`;
             }
             
             // Store voice instruction for later use
@@ -2749,6 +2901,13 @@
             );
         }
 
+        // Recreate car symbol to update route direction
+        function updateCarSymbolWithRoute() {
+            if (isNavigating && carSymbol) {
+                createCarSymbol();
+            }
+        }
+
         // Update navigation display
         function updateNavigation(userPosition) {
             if (!route || !isNavigating) return;
@@ -2767,6 +2926,8 @@
                     console.log(`Step changed from ${currentStep} to ${newCurrentStep}`);
                     currentStep = newCurrentStep;
                     updateNavigationDisplay();
+                    // Update car symbol to show new route direction
+                    updateCarSymbolWithRoute();
                 }
                 
                 // Update distance to next turn
@@ -2778,20 +2939,61 @@
 
                 document.getElementById('nav-distance').textContent = `${Math.round(distanceToNext)}m`;
                 
-                // Voice alerts based on distance and street matching
-                if (distanceToNext <= 100 && distanceToNext > 50) {
-                    // Check if we're on the correct street for this turn
-                    const stepStreet = nextStep.name || nextStep.maneuver.name || '';
-                    if (currentStreet && stepStreet && currentStreet.toLowerCase().includes(stepStreet.toLowerCase())) {
-                        const instruction = getBetterInstruction(nextStep);
-                        const voiceInstruction = nextStep.voiceInstruction || instruction;
-                        speakInstruction(voiceInstruction, distanceToNext);
+                // Smart distance-based voice alerts
+                const instruction = getBetterInstruction(nextStep);
+                const voiceInstruction = nextStep.voiceInstruction || instruction;
+                
+                // Determine when to speak based on distance and speed
+                let shouldSpeak = false;
+                let alertDistance = 0;
+                
+                if (distanceToNext <= 30) {
+                    // Final alert - very close to turn
+                    shouldSpeak = true;
+                    alertDistance = 30;
+                } else if (distanceToNext <= 100) {
+                    // Medium alert - approaching turn
+                    shouldSpeak = true;
+                    alertDistance = 100;
+                } else if (distanceToNext <= 300) {
+                    // Early alert - getting close to turn
+                    shouldSpeak = true;
+                    alertDistance = 300;
+                }
+                
+                // Check if we're on the correct street for this turn
+                const stepStreet = nextStep.name || nextStep.maneuver.name || '';
+                const isOnCorrectStreet = currentStreet && stepStreet && 
+                    (currentStreet.toLowerCase().includes(stepStreet.toLowerCase()) ||
+                     stepStreet.toLowerCase().includes(currentStreet.toLowerCase()));
+                
+                // Speak if conditions are met and we haven't spoken recently for this step
+                if (shouldSpeak && (isOnCorrectStreet || distanceToNext <= 50)) {
+                    // Check if we've already spoken for this step recently
+                    const stepKey = `${currentStep}_${alertDistance}`;
+                    const now = Date.now();
+                    const lastAlert = lastVoiceAlert[stepKey] || 0;
+                    const minInterval = distanceToNext <= 30 ? 2000 : distanceToNext <= 100 ? 5000 : 8000; // Different intervals based on distance
+                    
+                    if (now - lastAlert > minInterval) {
+                        // Add distance context to voice instruction
+                        let distanceContext = '';
+                        if (distanceToNext <= 30) {
+                            distanceContext = ' now';
+                        } else if (distanceToNext <= 100) {
+                            distanceContext = ` in ${Math.round(distanceToNext)} meters`;
+                        } else {
+                            distanceContext = ` in ${Math.round(distanceToNext)} meters`;
+                        }
+                        
+                        const finalInstruction = voiceInstruction + distanceContext;
+                        speakInstruction(finalInstruction, distanceToNext);
+                        
+                        // Record this alert
+                        lastVoiceAlert[stepKey] = now;
+                        
+                        console.log(`Voice alert: ${finalInstruction} (${distanceToNext}m away)`);
                     }
-                } else if (distanceToNext <= 50) {
-                    // Final alert when very close to turn
-                    const instruction = getBetterInstruction(nextStep);
-                    const voiceInstruction = nextStep.voiceInstruction || instruction;
-                    speakInstruction(voiceInstruction, distanceToNext);
                 }
             });
         }
