@@ -1737,15 +1737,22 @@
             return mapHeading;
         }
 
-        // Update car symbol position and rotation
+        // Update car symbol position and rotation with route snapping
         function updateCarSymbol(position, heading = null) {
             if (!carSymbol) return;
             
-            // Update position
-            carSymbol.setLatLng([position.lat, position.lng]);
+            // Get route-snapped position and direction
+            const routeData = getRouteSnappedPosition(position);
+            const snappedPosition = routeData.position;
+            const routeHeading = routeData.heading;
             
-            // Update heading if provided
-            if (heading !== null) {
+            // Update position to snapped location
+            carSymbol.setLatLng([snappedPosition.lat, snappedPosition.lng]);
+            
+            // Use route heading for car direction
+            if (routeHeading !== null) {
+                userHeading = routeHeading;
+            } else if (heading !== null) {
                 userHeading = heading;
             } else {
                 // Calculate heading from movement if GPS heading not available
@@ -1764,13 +1771,6 @@
                     carDiv.style.transition = 'transform 0.5s ease-out';
                     carDiv.style.transform = `rotate(${userHeading}deg)`;
                     
-                    // Update route direction indicator
-                    const routeIndicator = carDiv.querySelector('div[style*="border-bottom: 8px solid rgba(255, 255, 255, 0.8)"]');
-                    if (routeIndicator) {
-                        const routeDirection = getRouteDirection();
-                        routeIndicator.style.transform = `translate(-50%, -50%) rotate(${routeDirection}deg)`;
-                    }
-                    
                     // Remove transition after animation to prevent lag
                     setTimeout(() => {
                         carDiv.style.transition = 'none';
@@ -1778,7 +1778,7 @@
                 }
             }
             
-            console.log(`Car symbol rotated to ${userHeading.toFixed(1)}°`);
+            console.log(`Car symbol snapped to route at ${snappedPosition.lat.toFixed(6)}, ${snappedPosition.lng.toFixed(6)}, heading: ${userHeading.toFixed(1)}°`);
         }
 
         // Toggle voice on/off
@@ -2947,19 +2947,23 @@
                             updateCarSymbol(newPosition, null);
                         }
                         
-                        // Update accuracy circle
+                        // Update accuracy circle with snapped position
                         if (accuracyCircle) {
-                            accuracyCircle.setLatLng([newPosition.lat, newPosition.lng]);
+                            accuracyCircle.setLatLng([snappedPosition.lat, snappedPosition.lng]);
                             accuracyCircle.setRadius(position.coords.accuracy);
                         }
                         
+                        // Get route-snapped position for navigation
+                        const routeData = getRouteSnappedPosition(newPosition);
+                        const snappedPosition = routeData.position;
+                        
                         // Check for route deviation and re-route if necessary
-                        if (checkRouteDeviation(newPosition)) {
+                        if (checkRouteDeviation(snappedPosition)) {
                             console.log('Route deviation detected, initiating re-route');
                             rerouteFromCurrentPosition();
                         } else {
                             // Only update navigation if not re-routing
-                            updateNavigation(newPosition);
+                            updateNavigation(snappedPosition);
                         }
                         
                         // Auto-follow user in navigation mode
@@ -3252,6 +3256,64 @@
             }
             
             iconElement.textContent = icon;
+        }
+
+        // Get route-snapped position and heading
+        function getRouteSnappedPosition(position) {
+            if (!route || !position) {
+                return { position: position, heading: null };
+            }
+            
+            // Get route coordinates
+            const routeCoords = getRouteCoordinates(route);
+            if (!routeCoords || routeCoords.length < 2) {
+                return { position: position, heading: null };
+            }
+            
+            // Find the closest point on the route
+            let minDistance = Infinity;
+            let closestIndex = 0;
+            let closestPoint = null;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    position.lat, position.lng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
+                    closestPoint = routeCoords[i];
+                }
+            }
+            
+            // If too far from route, return original position
+            if (minDistance > 100) {
+                return { position: position, heading: null };
+            }
+            
+            // Calculate route heading at the closest point
+            let routeHeading = null;
+            if (closestIndex < routeCoords.length - 1) {
+                // Calculate heading to next point on route
+                const nextPoint = routeCoords[closestIndex + 1];
+                const deltaLat = nextPoint[0] - closestPoint[0];
+                const deltaLng = nextPoint[1] - closestPoint[1];
+                
+                // Calculate heading in degrees (0 = North, 90 = East, 180 = South, 270 = West)
+                let heading = Math.atan2(deltaLng, deltaLat) * 180 / Math.PI;
+                heading = (heading + 360) % 360;
+                
+                // Convert to map rotation (Leaflet uses different coordinate system)
+                // Map rotation: 0 = East, 90 = South, 180 = West, 270 = North
+                routeHeading = (90 - heading + 360) % 360;
+            }
+            
+            return {
+                position: { lat: closestPoint[0], lng: closestPoint[1] },
+                heading: routeHeading
+            };
         }
 
         // Split route into completed and upcoming portions based on current position
