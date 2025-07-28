@@ -58,17 +58,83 @@
                 /* iOS Safari full screen */
                 height: 100vh;
                 height: -webkit-fill-available;
+                /* Prevent content shift when address bar shows/hides */
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
             }
             
             #map {
                 /* Ensure map takes full available height */
                 height: 100vh;
                 height: -webkit-fill-available;
+                /* Prevent map from shifting */
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+        }
+
+        /* Additional mobile fixes */
+        @media screen and (max-width: 768px) {
+            body {
+                /* Prevent content shift on mobile */
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                /* Use safe area for notched devices */
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+            
+            #map {
+                /* Ensure map fills the safe area */
+                position: fixed;
+                top: env(safe-area-inset-top);
+                left: env(safe-area-inset-left);
+                right: env(safe-area-inset-right);
+                bottom: env(safe-area-inset-bottom);
+                height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
+            }
+            
+            .controls {
+                /* Adjust controls for safe area */
+                top: calc(20px + env(safe-area-inset-top));
+                left: calc(20px + env(safe-area-inset-left));
+                right: calc(20px + env(safe-area-inset-right));
+            }
+            
+            .settings-btn {
+                /* Adjust settings button for safe area */
+                bottom: calc(20px + env(safe-area-inset-bottom));
+                left: calc(20px + env(safe-area-inset-left));
+            }
+            
+            .follow-me-btn {
+                /* Adjust follow me button for safe area */
+                bottom: calc(80px + env(safe-area-inset-bottom));
+                left: calc(20px + env(safe-area-inset-left));
+            }
+            
+            .map-style-selector {
+                /* Adjust map style selector for safe area */
+                bottom: calc(20px + env(safe-area-inset-bottom));
+                right: calc(20px + env(safe-area-inset-right));
             }
         }
 
         #map {
             height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
             height: -webkit-fill-available;
             width: 100vw;
             width: 100%;
@@ -3523,12 +3589,38 @@
                 }
             }, { passive: false });
 
-            // Handle viewport changes
-            window.addEventListener('resize', function() {
-                if (map) {
-                    map.invalidateSize();
-                }
+                    // Handle viewport changes and mobile browser UI
+        window.addEventListener('resize', function() {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
+
+        // Prevent content shift on mobile browsers
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+        window.addEventListener('resize', () => {
+            vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        });
+
+        // Handle iOS Safari viewport issues
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            // Prevent zoom on input focus
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
             });
+            
+            // Handle orientation changes
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 100);
+            });
+        }
 
             // iOS Safari full-screen handling
             if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
