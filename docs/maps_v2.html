@@ -1832,17 +1832,52 @@
                 isOnRoute = minDistance <= 50; // 50m threshold for "on route"
             }
             
-            // Use route heading when on route, actual driving direction when off route
+            // Calculate target heading based on route direction
+            let targetHeading = userHeading || 0;
+            
             if (isOnRoute && routeHeading !== null) {
-                // Follow route direction
-                userHeading = routeHeading;
+                // On route - follow route direction for navigation
+                targetHeading = routeHeading;
+                console.log('Car following route direction:', targetHeading.toFixed(1) + '°');
             } else {
-                // Use GPS or movement direction
+                // Off route - use actual driving direction (GPS heading or movement)
                 if (heading !== null) {
-                    userHeading = (90 - heading + 360) % 360;
+                    // Convert GPS heading to map rotation (GPS: 0=North, 90=East, 180=South, 270=West)
+                    // Map rotation: 0=East, 90=South, 180=West, 270=North
+                    const mapHeading = (90 - heading + 360) % 360;
+                    targetHeading = mapHeading;
+                    console.log('Car using driving direction (GPS):', targetHeading.toFixed(1) + '°');
                 } else {
-                    userHeading = calculateHeadingFromMovement(position);
+                    // Fallback to movement-based heading
+                    const calculatedHeading = calculateHeadingFromMovement(position);
+                    if (calculatedHeading !== null) {
+                        targetHeading = calculatedHeading;
+                        console.log('Car using driving direction (movement):', targetHeading.toFixed(1) + '°');
+                    } else {
+                        // If no heading available, keep previous heading
+                        console.log('Car keeping previous heading:', userHeading?.toFixed(1) + '°');
+                        targetHeading = userHeading || 0;
+                    }
                 }
+            }
+            
+            // Smooth rotation logic - calculate shortest rotation path
+            let rotationAngle = targetHeading;
+            if (userHeading !== undefined) {
+                // Calculate the shortest rotation path
+                let angleDiff = targetHeading - userHeading;
+                
+                // Normalize to shortest path (-180 to 180 degrees)
+                if (angleDiff > 180) {
+                    angleDiff -= 360;
+                } else if (angleDiff < -180) {
+                    angleDiff += 360;
+                }
+                
+                // Apply smooth rotation with easing
+                const smoothFactor = 0.3; // Adjust for smoother/faster rotation
+                const newAngle = userHeading + (angleDiff * smoothFactor);
+                rotationAngle = (newAngle + 360) % 360;
             }
             
             // Update the car symbol rotation with smooth transition
@@ -1851,17 +1886,20 @@
                 const carDiv = iconElement.querySelector('.car-symbol');
                 if (carDiv) {
                     // Add smooth transition for rotation
-                    carDiv.style.transition = 'transform 0.5s ease-out';
-                    carDiv.style.transform = `rotate(${userHeading}deg)`;
+                    carDiv.style.transition = 'transform 0.8s ease-out';
+                    carDiv.style.transform = `rotate(${rotationAngle}deg)`;
                     
                     // Remove transition after animation to prevent lag
                     setTimeout(() => {
                         carDiv.style.transition = 'none';
-                    }, 500);
+                    }, 800);
                     
-                    console.log('Car symbol rotated to:', userHeading.toFixed(1) + '°');
+                    console.log('Car symbol smoothly rotated to:', rotationAngle.toFixed(1) + '° (target: ' + targetHeading.toFixed(1) + '°)');
                 }
             }
+            
+            // Update the stored heading
+            userHeading = rotationAngle;
             
             console.log(`Car symbol snapped to route at ${snappedPosition.lat.toFixed(6)}, ${snappedPosition.lng.toFixed(6)}, heading: ${userHeading.toFixed(1)}°`);
             
@@ -2781,15 +2819,17 @@
             const maneuverType = maneuver.type;
             const instruction = maneuver.instruction || '';
             
-            // If instruction is already good, use it
-            if (instruction && instruction !== 'Continue' && instruction !== 'Head') {
-                return instruction;
-            }
-            
-            // Get street names
+            // Get street names - prioritize the street we're turning onto
             const currentRoad = step.name || step.maneuver.name || '';
             const nextRoad = step.maneuver.after || '';
             const turnStreet = nextRoad || currentRoad || 'the intersection';
+            
+            // Clean up street name for better pronunciation
+            const cleanStreetName = turnStreet.replace(/^(Avenue|Street|Road|Drive|Lane|Boulevard|Way|Place|Court|Terrace|Highway|Freeway|Expressway)\s+/i, '');
+            const streetType = turnStreet.match(/^(Avenue|Street|Road|Drive|Lane|Boulevard|Way|Place|Court|Terrace|Highway|Freeway|Expressway)/i);
+            const streetTypeText = streetType ? streetType[1] : '';
+            
+            const fullStreetName = cleanStreetName + (streetTypeText ? ` ${streetTypeText}` : '');
             
             // Generate detailed instruction based on maneuver type
             let betterInstruction = '';
@@ -2797,56 +2837,56 @@
             
             switch(maneuverType) {
                 case 'turn-right':
-                    betterInstruction = `Turn right at ${turnStreet}`;
-                    voiceInstruction = `Turn right at ${turnStreet}`;
+                    betterInstruction = `Turn right at ${fullStreetName}`;
+                    voiceInstruction = `Turn right at ${fullStreetName}`;
                     break;
                 case 'turn-left':
-                    betterInstruction = `Turn left at ${turnStreet}`;
-                    voiceInstruction = `Turn left at ${turnStreet}`;
+                    betterInstruction = `Turn left at ${fullStreetName}`;
+                    voiceInstruction = `Turn left at ${fullStreetName}`;
                     break;
                 case 'turn-slight-right':
-                    betterInstruction = `Slight right at ${turnStreet}`;
-                    voiceInstruction = `Take a slight right turn at ${turnStreet}`;
+                    betterInstruction = `Slight right at ${fullStreetName}`;
+                    voiceInstruction = `Take a slight right turn at ${fullStreetName}`;
                     break;
                 case 'turn-slight-left':
-                    betterInstruction = `Slight left at ${turnStreet}`;
-                    voiceInstruction = `Take a slight left turn at ${turnStreet}`;
+                    betterInstruction = `Slight left at ${fullStreetName}`;
+                    voiceInstruction = `Take a slight left turn at ${fullStreetName}`;
                     break;
                 case 'turn-sharp-right':
-                    betterInstruction = `Sharp right at ${turnStreet}`;
-                    voiceInstruction = `Take a sharp right turn at ${turnStreet}`;
+                    betterInstruction = `Sharp right at ${fullStreetName}`;
+                    voiceInstruction = `Take a sharp right turn at ${fullStreetName}`;
                     break;
                 case 'turn-sharp-left':
-                    betterInstruction = `Sharp left at ${turnStreet}`;
-                    voiceInstruction = `Take a sharp left turn at ${turnStreet}`;
+                    betterInstruction = `Sharp left at ${fullStreetName}`;
+                    voiceInstruction = `Take a sharp left turn at ${fullStreetName}`;
                     break;
                 case 'uturn':
-                    betterInstruction = `Make a U-turn at ${turnStreet}`;
-                    voiceInstruction = `Make a U-turn at ${turnStreet}`;
+                    betterInstruction = `Make a U-turn at ${fullStreetName}`;
+                    voiceInstruction = `Make a U-turn at ${fullStreetName}`;
                     break;
                 case 'roundabout':
-                    betterInstruction = `Enter roundabout at ${turnStreet}`;
+                    betterInstruction = `Enter roundabout at ${fullStreetName}`;
                     voiceInstruction = getRoundaboutInstruction(step);
                     break;
                 case 'exit-roundabout':
-                    betterInstruction = `Exit roundabout onto ${turnStreet}`;
-                    voiceInstruction = `Exit the roundabout onto ${turnStreet}`;
+                    betterInstruction = `Exit roundabout onto ${fullStreetName}`;
+                    voiceInstruction = `Exit the roundabout onto ${fullStreetName}`;
                     break;
                 case 'arrive':
                     betterInstruction = 'You have arrived';
                     voiceInstruction = 'You have arrived at your destination';
                     break;
                 case 'merge':
-                    betterInstruction = `Merge onto ${turnStreet}`;
-                    voiceInstruction = `Merge onto ${turnStreet}`;
+                    betterInstruction = `Merge onto ${fullStreetName}`;
+                    voiceInstruction = `Merge onto ${fullStreetName}`;
                     break;
                 case 'ramp':
-                    betterInstruction = `Take ramp to ${turnStreet}`;
-                    voiceInstruction = `Take the ramp to ${turnStreet}`;
+                    betterInstruction = `Take ramp to ${fullStreetName}`;
+                    voiceInstruction = `Take the ramp to ${fullStreetName}`;
                     break;
                 case 'exit':
-                    betterInstruction = `Take exit to ${turnStreet}`;
-                    voiceInstruction = `Take the exit to ${turnStreet}`;
+                    betterInstruction = `Take exit to ${fullStreetName}`;
+                    voiceInstruction = `Take the exit to ${fullStreetName}`;
                     break;
                 case 'new-name':
                     betterInstruction = `Continue on ${currentRoad}`;
@@ -2931,7 +2971,7 @@
             // Show directions toggle
             document.getElementById('directions-toggle').classList.add('show');
 
-            // Create car symbol
+            // Create car symbol (this will be the real-time location marker)
             createCarSymbol();
 
             // Start navigation tracking
@@ -3078,10 +3118,14 @@
                         const routeData = getRouteSnappedPosition(newPosition);
                         const snappedPosition = routeData.position;
                         
-                        // Check for route deviation and re-route if necessary
+                        // Check for route deviation and automatically re-route if car is off route
                         if (checkRouteDeviation(snappedPosition)) {
-                            console.log('Route deviation detected, initiating re-route');
-                            rerouteFromCurrentPosition();
+                            console.log('Car is off route, automatically re-routing...');
+                            showStatus('Off route! Recalculating...');
+                            speakInstruction('You have gone off route. Recalculating your route.');
+                            
+                            // Automatically re-route and restart navigation
+                            autoRerouteAndRestart();
                         } else {
                             // Only update navigation if not re-routing
                             updateNavigation(snappedPosition);
@@ -3197,8 +3241,14 @@
                     }
                 }
                 
-                // Format distance display
+                // Format distance display with countdown
                 let distanceText = `${Math.round(distanceToNext)}m`;
+                
+                // Add countdown context for better visibility
+                if (distanceToNext <= 100) {
+                    const roundedDistance = Math.round(distanceToNext / 10) * 10;
+                    distanceText = `${roundedDistance}m to turn`;
+                }
                 
                 // Add context if distance is very large (might be wrong step)
                 if (distanceToNext > 1000) {
@@ -3225,26 +3275,27 @@
                 const instruction = getBetterInstruction(nextStep);
                 const voiceInstruction = nextStep.voiceInstruction || instruction;
                 
-                // Determine when to speak based on distance and speed
+                // Smart voice alerts with countdown system
                 let shouldSpeak = false;
                 let alertDistance = 0;
                 
-                if (distanceToNext <= 30) {
+                // Determine when to speak based on distance
+                if (distanceToNext <= 20) {
                     // Final alert - very close to turn
                     shouldSpeak = true;
-                    alertDistance = 30;
+                    alertDistance = 20;
                 } else if (distanceToNext <= 100) {
-                    // Medium alert - approaching turn
-                    shouldSpeak = true;
-                    alertDistance = 100;
-                } else if (distanceToNext <= 300) {
-                    // Early alert - getting close to turn
-                    shouldSpeak = true;
-                    alertDistance = 300;
+                    // Countdown alerts - every 10 meters
+                    const roundedDistance = Math.round(distanceToNext / 10) * 10;
+                    if (roundedDistance % 20 === 0 || roundedDistance === 50) { 
+                        // Speak at 100, 80, 60, 50, 40, 20
+                        shouldSpeak = true;
+                        alertDistance = roundedDistance;
+                    }
                 }
                 
-                    // Check if we're on the correct street for this turn
-                    const stepStreet = nextStep.name || nextStep.maneuver.name || '';
+                // Check if we're on the correct street for this turn
+                const stepStreet = nextStep.name || nextStep.maneuver.name || '';
                 const isOnCorrectStreet = currentStreet && stepStreet && 
                     (currentStreet.toLowerCase().includes(stepStreet.toLowerCase()) ||
                      stepStreet.toLowerCase().includes(currentStreet.toLowerCase()));
@@ -3255,20 +3306,19 @@
                     const stepKey = `${currentStep}_${alertDistance}`;
                     const now = Date.now();
                     const lastAlert = lastVoiceAlert[stepKey] || 0;
-                    const minInterval = distanceToNext <= 30 ? 2000 : distanceToNext <= 100 ? 5000 : 8000; // Different intervals based on distance
+                    const minInterval = distanceToNext <= 20 ? 1000 : 3000; // Shorter intervals for countdown
                     
                     if (now - lastAlert > minInterval) {
-                        // Add distance context to voice instruction
-                        let distanceContext = '';
-                        if (distanceToNext <= 30) {
-                            distanceContext = ' now';
-                        } else if (distanceToNext <= 100) {
-                            distanceContext = ` in ${Math.round(distanceToNext)} meters`;
+                        // Create countdown instruction
+                        let finalInstruction = '';
+                        if (distanceToNext <= 20) {
+                            // Final instruction without distance
+                            finalInstruction = voiceInstruction;
                         } else {
-                            distanceContext = ` in ${Math.round(distanceToNext)} meters`;
+                            // Countdown instruction with distance
+                            finalInstruction = `${voiceInstruction} in ${Math.round(distanceToNext)} meters`;
                         }
                         
-                        const finalInstruction = voiceInstruction + distanceContext;
                         speakInstruction(finalInstruction, distanceToNext);
                         
                         // Record this alert
@@ -3701,9 +3751,9 @@
             
             // Calculate route heading at the closest point
             let routeHeading = null;
-            if (closestIndex < routeCoords.length - 1) {
+            if (closestIndex < routeCoords.length - 5) {
                 // Calculate heading to next point on route
-                const nextPoint = routeCoords[closestIndex + 1];
+                const nextPoint = routeCoords[closestIndex + 5];
                 const deltaLat = nextPoint[0] - closestPoint[0];
                 const deltaLng = nextPoint[1] - closestPoint[1];
                 
@@ -3717,6 +3767,12 @@
                 // The car symbol should point in the direction of travel along the route
                 // Since the arrow points up by default (North), we need to adjust the rotation
                 routeHeading = (90 - heading + 360) % 360;
+                
+                // Look ahead for upcoming turns to make rotation more responsive
+                const lookAheadPoint = routeCoords[closestIndex + 5];
+                // Blend current and look-ahead heading for smoother turns
+                const blendFactor = 0.7; // 70% current, 30% look-ahead
+                routeHeading = (routeHeading * blendFactor + lookAheadMapHeading * (1 - blendFactor)) % 360;
             }
             
             return {
@@ -3829,6 +3885,13 @@
             // Check if user is too far from route
             if (minDistance > routeDeviationThreshold) {
                 console.log(`User is off route! Distance: ${minDistance.toFixed(1)}m`);
+                
+                // Show off-route indicator
+                const offRouteIndicator = document.getElementById('off-route-indicator');
+                if (offRouteIndicator) {
+                    offRouteIndicator.classList.add('show');
+                }
+                
                 showStatus(`Off route! ${Math.round(minDistance)}m from route`);
                 return true;
             } else {
@@ -3836,6 +3899,11 @@
                 const offRouteIndicator = document.getElementById('off-route-indicator');
                 if (offRouteIndicator) {
                     offRouteIndicator.classList.remove('show');
+                }
+                
+                // Reset cooldown if back on route (allows immediate re-routing if needed)
+                if (minDistance < routeDeviationThreshold / 2) {
+                    lastRerouteTime = 0;
                 }
             }
             
@@ -3863,6 +3931,28 @@
             }
             
             return coordinates;
+        }
+
+        // Automatically re-route and restart navigation when car goes off route
+        async function autoRerouteAndRestart() {
+            // Temporarily pause navigation
+            const wasNavigating = isNavigating;
+            isNavigating = false;
+            
+            // Fetch new routes from current position
+            const newRoutes = await Promise.all([
+                fetchRoute('driving', 'fastest'),
+                fetchRoute('driving', 'shortest'),
+                fetchRoute('driving', 'alternative')
+            ]);
+            
+            // Update route and restart navigation
+            if (newRoutes.length > 0) {
+                route = newRoutes[0];
+                currentStep = 0;
+                isNavigating = true;
+                updateNavigationDisplay();
+            }
         }
 
         // Re-route from current position
