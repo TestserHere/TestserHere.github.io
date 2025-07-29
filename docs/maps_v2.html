@@ -10,9 +10,8 @@
     <meta name="theme-color" content="#4285f4">
     <meta name="msapplication-TileColor" content="#4285f4">
     <meta name="msapplication-navbutton-color" content="#4285f4">
-    <title>Testser's Maps</title>
+    <title>Real-Time Maps</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="icon" href="maps.png" type="image/png">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         body {
@@ -790,6 +789,62 @@
             transition: all 0.3s ease;
         }
 
+        /* Turn indicator styles */
+        .nav-direction-icon.turn-right {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-color: #28a745;
+        }
+
+        .nav-direction-icon.turn-left {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border-color: #007bff;
+        }
+
+        .nav-direction-icon.roundabout {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #1a1a1a;
+            border-color: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        .nav-direction-icon.ramp {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            border-color: #17a2b8;
+        }
+
+        .nav-direction-icon.exit {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .nav-direction-icon.merge {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+            color: white;
+            border-color: #6f42c1;
+        }
+
+        .nav-direction-icon.straight {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: white;
+            border-color: #6c757d;
+        }
+
+        .nav-direction-icon.uturn {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+            border-color: #fd7e14;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
         .nav-direction-icon:hover {
             transform: scale(1.1);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -1283,6 +1338,8 @@
             <div class="nav-controls">
                 <button class="nav-btn" id="voice-toggle" onclick="toggleVoice()" title="Voice On">🔊</button>
                 <button class="nav-btn" onclick="toggleDirections()">📋</button>
+                <button class="nav-btn" onclick="rerouteFromCurrentPosition()" title="Re-route">🔄</button>
+                <button class="nav-btn" onclick="testDistance()" title="Test Distance">📏</button>
                 <button class="nav-btn exit" onclick="stopNavigation()">Exit</button>
             </div>
         </div>
@@ -1750,16 +1807,43 @@
             // Update position to snapped location
             carSymbol.setLatLng([snappedPosition.lat, snappedPosition.lng]);
             
-            // Use route heading for car direction
-            if (routeHeading !== null) {
+            // Determine if we're on route (within 50m)
+            const routeCoords = getRouteCoordinates(route);
+            let isOnRoute = false;
+            if (routeCoords && routeCoords.length > 0) {
+                let minDistance = Infinity;
+                for (const coord of routeCoords) {
+                    const distance = calculateDistance(
+                        position.lat, position.lng,
+                        coord[0], coord[1]
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                    }
+                }
+                isOnRoute = minDistance <= 50; // 50m threshold for "on route"
+            }
+            
+            // Use route heading when on route, actual driving direction when off route
+            if (isOnRoute && routeHeading !== null) {
+                // On route - follow route direction for navigation
                 userHeading = routeHeading;
-            } else if (heading !== null) {
-                userHeading = heading;
+                console.log('Car following route direction:', userHeading.toFixed(1) + '°');
             } else {
-                // Calculate heading from movement if GPS heading not available
+                // Off route - use actual driving direction (GPS heading or movement)
+            if (heading !== null) {
+                    // Convert GPS heading to map rotation (GPS: 0=North, 90=East, 180=South, 270=West)
+                    // Map rotation: 0=East, 90=South, 180=West, 270=North
+                    const mapHeading = (90 - heading + 360) % 360;
+                    userHeading = mapHeading;
+                    console.log('Car using driving direction (GPS):', userHeading.toFixed(1) + '°');
+            } else {
+                    // Fallback to movement-based heading
                 const calculatedHeading = calculateHeadingFromMovement(position);
                 if (calculatedHeading !== null) {
                     userHeading = calculatedHeading;
+                        console.log('Car using driving direction (movement):', userHeading.toFixed(1) + '°');
+                    }
                 }
             }
             
@@ -1857,7 +1941,7 @@
                     if (accuracyCircle) {
                         map.removeLayer(accuracyCircle);
                     }
-                    
+
                     // Add accuracy circle
                     accuracyCircle = L.circle([lat, lng], {
                         radius: accuracy,
@@ -2435,11 +2519,11 @@
                         }).addTo(map);
                     } else {
                         // If no upcoming portion, show full route in blue
-                        routeLine = L.polyline(coordinates, {
-                            color: '#4285f4',
-                            weight: 6,
-                            opacity: 0.8
-                        }).addTo(map);
+                    routeLine = L.polyline(coordinates, {
+                        color: '#4285f4',
+                        weight: 6,
+                        opacity: 0.8
+                    }).addTo(map);
                     }
 
                     // Fit map to route
@@ -2849,8 +2933,8 @@
             // Start navigation tracking
             startNavigationTracking();
 
-            // Show first instruction
-            updateNavigationDisplay();
+            // Show "continue" instruction for 2 seconds
+            showContinueInstruction();
 
             // Center map on user and enable following
             if (currentPosition) {
@@ -2860,10 +2944,53 @@
             }
 
             // Speak initial instruction
-            speakInstruction('Navigation started. Follow the route ahead.');
+            speakInstruction('Navigation started. Continue on the current road.');
 
             showStatus('Navigation started!');
             setTimeout(hideStatus, 2000);
+        }
+
+        // Show continue instruction for 2 seconds when starting navigation
+        function showContinueInstruction() {
+            const directionIcon = document.getElementById('nav-direction-icon');
+            const mainInstruction = document.getElementById('nav-main-instruction');
+            const subInstruction = document.getElementById('nav-sub-instruction');
+            
+            // Set continue instruction
+            directionIcon.textContent = '↑';
+            directionIcon.className = 'nav-direction-icon straight';
+            mainInstruction.textContent = 'Continue';
+            subInstruction.textContent = 'Stay on current road';
+            
+            // After 2 seconds, show the actual first turn instruction
+            setTimeout(() => {
+                if (isNavigating && route) {
+                    updateNavigationDisplay();
+                }
+            }, 2000);
+        }
+
+        // Test distance calculation
+        function testDistance() {
+            if (!route || !currentPosition) {
+                showStatus('No route or position available');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+            
+            const steps = route.routes[0].legs[0].steps;
+            if (steps && steps.length > 0) {
+                const nextStep = steps[0];
+                const distanceToNext = calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    nextStep.maneuver.location[1], nextStep.maneuver.location[0]
+                );
+                
+                const distanceText = `Distance: ${Math.round(distanceToNext)}m`;
+                showStatus(distanceText);
+                console.log('Test distance:', distanceText);
+                setTimeout(hideStatus, 3000);
+            }
         }
 
         // Stop navigation
@@ -2888,10 +3015,10 @@
             }
 
                     // Remove route lines
-        if (routeLine) {
-            map.removeLayer(routeLine);
-            routeLine = null;
-        }
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
         if (completedRouteLine) {
             map.removeLayer(completedRouteLine);
             completedRouteLine = null;
@@ -2993,7 +3120,31 @@
 
         // Update navigation display
         function updateNavigation(userPosition) {
-            if (!route || !isNavigating) return;
+            console.log('updateNavigation called with:', userPosition);
+            console.log('Route exists:', !!route);
+            console.log('Is navigating:', isNavigating);
+            
+            if (!route || !isNavigating) {
+                console.log('Navigation update skipped: no route or not navigating');
+                // Still update distance if we have a route but not navigating
+                if (route && userPosition) {
+                    const steps = route.routes[0].legs[0].steps;
+                    if (steps && steps.length > 0) {
+                        const nextStep = steps[0]; // Use first step
+                        const distanceToNext = calculateDistance(
+                            userPosition.lat, userPosition.lng,
+                            nextStep.maneuver.location[1], nextStep.maneuver.location[0]
+                        );
+                        const distanceText = `${Math.round(distanceToNext)}m to destination`;
+                        console.log('Non-navigation distance:', distanceText);
+                        
+                        // Update status with distance
+                        showStatus(distanceText);
+                        setTimeout(hideStatus, 3000);
+                    }
+                }
+                return;
+            }
 
             const steps = route.routes[0].legs[0].steps;
             
@@ -3013,14 +3164,66 @@
                     updateCarSymbolWithRoute();
                 }
                 
-                // Update distance to next turn
-                const nextStep = steps[currentStep];
-                const distanceToNext = calculateDistance(
-                    userPosition.lat, userPosition.lng,
+                // Show turn indicator when approaching turn (within 300m)
+                const distanceToTurn = calculateDistance(
+                    snappedPosition.lat, snappedPosition.lng,
                     nextStep.maneuver.location[1], nextStep.maneuver.location[0]
                 );
-
-                document.getElementById('nav-distance').textContent = `${Math.round(distanceToNext)}m`;
+                
+                if (distanceToTurn <= 300) {
+                    // Show specific turn instruction when approaching
+                    updateNavigationDisplay();
+                }
+                
+                // Update distance to next turn using route-snapped position
+                const nextStep = steps[currentStep];
+                console.log('Current step:', currentStep, 'Total steps:', steps.length);
+                console.log('Next step:', nextStep);
+                
+                // Get route-snapped position for accurate distance calculation
+                const routeData = getRouteSnappedPosition(userPosition);
+                const snappedPosition = routeData.position;
+                console.log('Snapped position:', snappedPosition);
+                
+                // Calculate distance to next turn using route-snapped position
+                let distanceToNext = calculateDistance(
+                    snappedPosition.lat, snappedPosition.lng,
+                    nextStep.maneuver.location[1], nextStep.maneuver.location[0]
+                );
+                console.log('Direct distance to next turn:', distanceToNext);
+                
+                // If we're on route, calculate distance along the route for more accuracy
+                if (routeData.heading !== null) {
+                    // We're on route, use route-based distance
+                    const routeDistance = calculateDistanceAlongRoute(snappedPosition, currentStep);
+                    if (routeDistance !== null) {
+                        distanceToNext = routeDistance;
+                        console.log(`Using route distance: ${distanceToNext}m (direct distance: ${calculateDistance(snappedPosition.lat, snappedPosition.lng, nextStep.maneuver.location[1], nextStep.maneuver.location[0])}m)`);
+                    }
+                }
+                
+                // Format distance display
+                let distanceText = `${Math.round(distanceToNext)}m`;
+                
+                // Add context if distance is very large (might be wrong step)
+                if (distanceToNext > 1000) {
+                    distanceText += ' (checking route...)';
+                }
+                
+                console.log('Setting distance text:', distanceText);
+                const distanceElement = document.getElementById('nav-distance');
+                if (distanceElement) {
+                    distanceElement.textContent = distanceText;
+                    console.log('Distance updated successfully');
+                } else {
+                    console.error('nav-distance element not found!');
+                }
+                
+                // Also update the distance in the directions panel if it exists
+                const directionsDistanceElement = document.querySelector('.directions-panel .nav-distance');
+                if (directionsDistanceElement) {
+                    directionsDistanceElement.textContent = distanceText;
+                }
                 
                 // Smart distance-based voice alerts
                 const instruction = getBetterInstruction(nextStep);
@@ -3044,8 +3247,8 @@
                     alertDistance = 300;
                 }
                 
-                // Check if we're on the correct street for this turn
-                const stepStreet = nextStep.name || nextStep.maneuver.name || '';
+                    // Check if we're on the correct street for this turn
+                    const stepStreet = nextStep.name || nextStep.maneuver.name || '';
                 const isOnCorrectStreet = currentStreet && stepStreet && 
                     (currentStreet.toLowerCase().includes(stepStreet.toLowerCase()) ||
                      stepStreet.toLowerCase().includes(currentStreet.toLowerCase()));
@@ -3207,56 +3410,160 @@
             }
         }
 
-        // Update direction icon
+        // Update direction icon with enhanced turn indicators
         function updateDirectionIcon(maneuverType) {
             const iconElement = document.getElementById('nav-direction-icon');
             let icon = '→';
+            let iconClass = 'nav-direction-icon';
             
             switch(maneuverType) {
                 case 'turn-right':
                     icon = '→';
+                    iconClass += ' turn-right';
                     break;
                 case 'turn-left':
                     icon = '←';
+                    iconClass += ' turn-left';
                     break;
                 case 'turn-slight-right':
                     icon = '↗';
+                    iconClass += ' turn-slight-right';
                     break;
                 case 'turn-slight-left':
                     icon = '↖';
+                    iconClass += ' turn-slight-left';
                     break;
                 case 'turn-sharp-right':
                     icon = '↘';
+                    iconClass += ' turn-sharp-right';
                     break;
                 case 'turn-sharp-left':
                     icon = '↙';
+                    iconClass += ' turn-sharp-left';
                     break;
                 case 'uturn':
-                    icon = '↻';
+                case 'uturn-left':
+                case 'uturn-right':
+                    icon = '↺';
+                    iconClass += ' uturn';
                     break;
                 case 'roundabout':
+                case 'roundabout-left':
+                case 'roundabout-right':
                     icon = '⟲';
+                    iconClass += ' roundabout';
                     break;
                 case 'exit-roundabout':
                     icon = '⟳';
+                    iconClass += ' exit-roundabout';
                     break;
                 case 'merge':
-                    icon = '⇧';
+                    icon = '↗';
+                    iconClass += ' merge';
                     break;
                 case 'ramp':
-                    icon = '⇑';
+                case 'ramp-left':
+                case 'ramp-right':
+                    icon = '↗';
+                    iconClass += ' ramp';
                     break;
                 case 'exit':
-                    icon = '⇓';
+                case 'exit-left':
+                case 'exit-right':
+                    icon = '↘';
+                    iconClass += ' exit';
+                    break;
+                case 'continue':
+                case 'straight':
+                case 'new-name':
+                    icon = '↑';
+                    iconClass += ' straight';
                     break;
                 case 'arrive':
                     icon = '●';
+                    iconClass += ' arrive';
                     break;
                 default:
                     icon = '→';
+                    iconClass += ' default';
             }
             
             iconElement.textContent = icon;
+            iconElement.className = iconClass;
+        }
+
+        // Calculate distance along route from current position to next step
+        function calculateDistanceAlongRoute(currentPosition, stepIndex) {
+            if (!route || !currentPosition) return null;
+            
+            const routeCoords = getRouteCoordinates(route);
+            if (!routeCoords || routeCoords.length < 2) return null;
+            
+            // Find the closest point on the route to current position
+            let minDistance = Infinity;
+            let closestIndex = 0;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
+                }
+            }
+            
+            // If too far from route, return null
+            if (minDistance > 100) return null;
+            
+            // Get the next step location
+            const steps = route.routes[0].legs[0].steps;
+            if (stepIndex >= steps.length) return null;
+            
+            const nextStepLocation = steps[stepIndex].maneuver.location;
+            const targetLat = nextStepLocation[1];
+            const targetLng = nextStepLocation[0];
+            
+            // Find the closest point on the route to the target
+            let targetMinDistance = Infinity;
+            let targetClosestIndex = 0;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    targetLat, targetLng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < targetMinDistance) {
+                    targetMinDistance = distance;
+                    targetClosestIndex = i;
+                }
+            }
+            
+            // Calculate distance along the route from current position to target
+            let totalDistance = 0;
+            
+            // If we're behind the target on the route
+            if (closestIndex <= targetClosestIndex) {
+                for (let i = closestIndex; i < targetClosestIndex; i++) {
+                    totalDistance += calculateDistance(
+                        routeCoords[i][0], routeCoords[i][1],
+                        routeCoords[i + 1][0], routeCoords[i + 1][1]
+                    );
+                }
+            } else {
+                // If we're ahead of the target, calculate backwards
+                for (let i = targetClosestIndex; i < closestIndex; i++) {
+                    totalDistance += calculateDistance(
+                        routeCoords[i][0], routeCoords[i][1],
+                        routeCoords[i + 1][0], routeCoords[i + 1][1]
+                    );
+                }
+            }
+            
+            return totalDistance;
         }
 
         // Get route-snapped position and heading
@@ -3382,16 +3689,23 @@
 
         // Check if user is off route and needs re-routing
         function checkRouteDeviation(userPosition) {
-            if (!route || !isNavigating) return false;
+            if (!route || !isNavigating) {
+                console.log('Not checking deviation: no route or not navigating');
+                return false;
+            }
             
             const currentTime = Date.now();
             if (currentTime - lastRerouteTime < rerouteCooldown) {
+                console.log('Deviation check skipped: still in cooldown');
                 return false; // Still in cooldown period
             }
             
             // Get route coordinates
             const routeCoords = getRouteCoordinates(route);
-            if (!routeCoords || routeCoords.length === 0) return false;
+            if (!routeCoords || routeCoords.length === 0) {
+                console.log('No route coordinates available for deviation check');
+                return false;
+            }
             
             // Find the closest point on the route
             let minDistance = Infinity;
@@ -3409,7 +3723,7 @@
                 }
             }
             
-            console.log(`Distance from route: ${minDistance.toFixed(1)}m`);
+            console.log(`Distance from route: ${minDistance.toFixed(1)}m (threshold: ${routeDeviationThreshold}m)`);
             
             // Check if user is too far from route
             if (minDistance > routeDeviationThreshold) {
@@ -3458,7 +3772,10 @@
 
         // Re-route from current position
         async function rerouteFromCurrentPosition() {
-            if (!currentPosition || !destination) return;
+            if (!currentPosition || !destination) {
+                console.log('Cannot re-route: missing current position or destination');
+                return;
+            }
             
             const currentTime = Date.now();
             if (currentTime - lastRerouteTime < rerouteCooldown) {
@@ -3478,6 +3795,8 @@
             speakInstruction('Recalculating route due to deviation');
             
             try {
+                console.log('Starting re-route from:', currentPosition, 'to:', destination);
+                
                 // Get new routes from current position
                 const newRoutes = await Promise.all([
                     fetchRoute('driving', 'fastest'),
@@ -3485,12 +3804,16 @@
                     fetchRoute('driving', 'alternative')
                 ]);
                 
-                const validRoutes = newRoutes.filter(route => route !== null);
+                console.log('Fetched routes:', newRoutes);
+                
+                const validRoutes = newRoutes.filter(route => route !== null && route.routes && route.routes.length > 0);
                 
                 if (validRoutes.length > 0) {
                     window.routes = validRoutes;
                     selectedRouteIndex = 0;
                     route = window.routes[0];
+                    
+                    console.log('Selected new route:', route);
                     
                     // Update route display
                     displayRoute(route);
@@ -3508,6 +3831,7 @@
                     
                     console.log('Successfully re-routed from current position');
                 } else {
+                    console.log('No valid routes found for re-routing');
                     showStatus('Could not find new route');
                     setTimeout(hideStatus, 2000);
                 }
@@ -3653,11 +3977,11 @@
             }, { passive: false });
 
                     // Handle viewport changes and mobile browser UI
-        window.addEventListener('resize', function() {
-            if (map) {
-                map.invalidateSize();
-            }
-        });
+            window.addEventListener('resize', function() {
+                if (map) {
+                    map.invalidateSize();
+                }
+            });
 
         // Prevent content shift on mobile browsers
         let vh = window.innerHeight * 0.01;
