@@ -135,21 +135,33 @@ class P2PVideoCall {
         const manualIP = document.getElementById('manualIP').value.trim();
         const detectedIP = document.getElementById('localIP').value.trim();
         
-        if (manualIP && manualIP !== 'IP detection failed - use manual input below') {
+        // If manual IP is provided and valid, use it
+        if (manualIP && manualIP !== 'IP detection failed - use manual input below' && manualIP !== 'Detecting IP address...') {
             return manualIP;
         }
         
+        // If detected IP is available and valid, use it
         if (detectedIP && detectedIP !== 'IP detection failed - use manual input below' && detectedIP !== 'Detecting IP address...') {
             return detectedIP;
+        }
+        
+        // If no valid IP found, return a default for local testing
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'localhost';
         }
         
         return null;
     }
 
     async startCall() {
+        console.log('Start call button clicked');
         const remoteIP = document.getElementById('remoteIP').value.trim();
         const port = document.getElementById('port').value;
         const localIP = this.getEffectiveLocalIP();
+        
+        console.log('Remote IP:', remoteIP);
+        console.log('Local IP:', localIP);
+        console.log('Port:', port);
         
         if (!remoteIP) {
             alert('Please enter the remote IP address');
@@ -162,7 +174,16 @@ class P2PVideoCall {
         }
 
         try {
+            console.log('Starting call process...');
+            // Check if permissions are already granted, if not request them
+            if (!this.localStream) {
+                console.log('Requesting permissions...');
+                await this.requestPermissions();
+            }
+            
+            console.log('Initializing media...');
             await this.initializeMedia();
+            console.log('Creating peer connection...');
             await this.createPeerConnection();
             this.showVideoPanel();
             this.updateConnectionStatus('Connecting...', 'connecting');
@@ -197,6 +218,11 @@ class P2PVideoCall {
         }
 
         try {
+            // Check if permissions are already granted, if not request them
+            if (!this.localStream) {
+                await this.requestPermissions();
+            }
+            
             await this.initializeMedia();
             await this.createPeerConnection();
             this.showVideoPanel();
@@ -523,10 +549,6 @@ class P2PVideoCall {
             // Stop the test stream
             stream.getTracks().forEach(track => track.stop());
 
-            // Enable call buttons
-            document.getElementById('startCall').disabled = false;
-            document.getElementById('joinCall').disabled = false;
-
             // Hide permission buttons
             document.getElementById('requestPermissions').style.display = 'none';
             document.getElementById('noCamera').style.display = 'none';
@@ -578,10 +600,6 @@ class P2PVideoCall {
 
             // Stop the test stream
             stream.getTracks().forEach(track => track.stop());
-
-            // Enable call buttons
-            document.getElementById('startCall').disabled = false;
-            document.getElementById('joinCall').disabled = false;
 
             // Hide permission buttons
             document.getElementById('requestPermissions').style.display = 'none';
