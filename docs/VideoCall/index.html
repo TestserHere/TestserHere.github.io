@@ -18,6 +18,31 @@
             <!-- Connection Setup -->
             <div class="connection-panel" id="connectionPanel">
                 <h2>Connection Setup</h2>
+                
+                <!-- Camera Detection -->
+                <div class="camera-detection" id="cameraDetection">
+                    <h3>Camera & Microphone Setup</h3>
+                    <div class="device-status">
+                        <div class="status-item">
+                            <i class="fas fa-video" id="cameraIcon"></i>
+                            <span id="cameraStatus">Checking camera...</span>
+                        </div>
+                        <div class="status-item">
+                            <i class="fas fa-microphone" id="micIcon"></i>
+                            <span id="micStatus">Checking microphone...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-actions">
+                        <button id="requestPermissions" class="btn btn-primary">
+                            <i class="fas fa-camera"></i> Allow Camera & Microphone
+                        </button>
+                        <button id="noCamera" class="btn btn-secondary">
+                            <i class="fas fa-user"></i> No Camera - Audio Only
+                        </button>
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <label for="localIP">Your IP Address:</label>
                     <div class="ip-input-container">
@@ -49,10 +74,10 @@
                 </div>
 
                 <div class="button-group">
-                    <button id="startCall" class="btn btn-primary">
+                    <button id="startCall" class="btn btn-primary" disabled>
                         <i class="fas fa-phone"></i> Start Call
                     </button>
-                    <button id="joinCall" class="btn btn-secondary">
+                    <button id="joinCall" class="btn btn-secondary" disabled>
                         <i class="fas fa-phone-volume"></i> Join Call
                     </button>
                 </div>
@@ -64,6 +89,9 @@
                     <div class="video-wrapper">
                         <video id="localVideo" autoplay muted playsinline></video>
                         <div class="video-label">You</div>
+                        <div class="audio-only-indicator" id="audioOnlyIndicator" style="display: none;">
+                            <i class="fas fa-user"></i> Audio Only
+                        </div>
                     </div>
                     <div class="video-wrapper">
                         <video id="remoteVideo" autoplay playsinline></video>
@@ -72,7 +100,7 @@
                 </div>
                 
                 <div class="controls">
-                    <button id="toggleVideo" class="control-btn">
+                    <button id="toggleVideo" class="control-btn" style="display: none;">
                         <i class="fas fa-video"></i>
                     </button>
                     <button id="toggleAudio" class="control-btn">

@@ -51,6 +51,79 @@ header p {
     font-size: 1.5rem;
 }
 
+.camera-detection {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border-left: 4px solid #667eea;
+}
+
+.camera-detection h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.device-status {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #e1e5e9;
+}
+
+.status-item i {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+.status-item.available {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.status-item.unavailable {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.status-item.checking {
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.permission-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.permission-actions .btn {
+    flex: 1;
+    min-width: 200px;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 .input-group {
     margin-bottom: 20px;
     position: relative;
@@ -199,6 +272,24 @@ header p {
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.9rem;
+}
+
+.audio-only-indicator {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(52, 152, 219, 0.9);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.audio-only-indicator i {
+    font-size: 1rem;
 }
 
 .controls {

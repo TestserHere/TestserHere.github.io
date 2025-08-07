@@ -11,9 +11,11 @@ class P2PVideoCall {
         
         this.isVideoEnabled = true;
         this.isAudioEnabled = true;
+        this.audioOnlyMode = false;
         
         this.initializeEventListeners();
         this.getLocalIP();
+        this.checkDeviceAvailability();
     }
 
     initializeEventListeners() {
@@ -22,6 +24,8 @@ class P2PVideoCall {
         document.getElementById('endCall').addEventListener('click', () => this.endCall());
         document.getElementById('toggleVideo').addEventListener('click', () => this.toggleVideo());
         document.getElementById('toggleAudio').addEventListener('click', () => this.toggleAudio());
+        document.getElementById('requestPermissions').addEventListener('click', () => this.requestPermissions());
+        document.getElementById('noCamera').addEventListener('click', () => this.enableAudioOnlyMode());
     }
 
     async getLocalIP() {
@@ -210,18 +214,74 @@ class P2PVideoCall {
 
     async initializeMedia() {
         try {
-            this.localStream = await navigator.mediaDevices.getUserMedia({
-                video: true,
+            let mediaConstraints = {
+                video: !this.audioOnlyMode,
                 audio: true
-            });
+            };
+
+            // If no camera is available, force audio-only mode
+            if (this.audioOnlyMode) {
+                mediaConstraints.video = false;
+            }
+
+            this.localStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
             
-            this.localVideo.srcObject = this.localStream;
-            this.localVideo.play().catch(e => console.log('Video play failed:', e));
+            if (this.localStream) {
+                // Only set video source if video is available and not in audio-only mode
+                if (!this.audioOnlyMode && this.localStream.getVideoTracks().length > 0) {
+                    this.localVideo.srcObject = this.localStream;
+                    this.localVideo.play().catch(e => console.log('Video play failed:', e));
+                } else {
+                    // Create a placeholder for audio-only mode
+                    this.createAudioOnlyPlaceholder();
+                }
+            }
             
         } catch (error) {
             console.error('Error accessing media devices:', error);
-            throw new Error('Could not access camera and microphone. Please ensure you have granted permissions.');
+            
+            if (error.name === 'NotAllowedError') {
+                throw new Error('Camera and microphone permissions were denied. Please allow permissions in your browser settings.');
+            } else if (error.name === 'NotFoundError') {
+                throw new Error('No camera or microphone found. Please check your device connections.');
+            } else {
+                throw new Error('Could not access camera and microphone: ' + error.message);
+            }
         }
+    }
+
+    createAudioOnlyPlaceholder() {
+        // Create a canvas-based placeholder for audio-only mode
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw a user icon and "Audio Only" text
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw a simple user icon
+        ctx.fillStyle = '#3498db';
+        ctx.beginPath();
+        ctx.arc(canvas.width/2, canvas.height/2 - 50, 80, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw body
+        ctx.beginPath();
+        ctx.arc(canvas.width/2, canvas.height/2 + 50, 120, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Add text
+        ctx.fillStyle = '#ecf0f1';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Audio Only Mode', canvas.width/2, canvas.height/2 + 200);
+        
+        // Convert canvas to video stream
+        const stream = canvas.captureStream(1);
+        this.localVideo.srcObject = stream;
+        this.localVideo.play().catch(e => console.log('Audio-only placeholder play failed:', e));
     }
 
     async createPeerConnection() {
@@ -313,6 +373,12 @@ class P2PVideoCall {
     }
 
     toggleVideo() {
+        if (this.audioOnlyMode) {
+            // In audio-only mode, show a message
+            alert('Video is disabled in audio-only mode');
+            return;
+        }
+        
         if (this.localStream) {
             const videoTrack = this.localStream.getVideoTracks()[0];
             if (videoTrack) {
@@ -369,6 +435,15 @@ class P2PVideoCall {
     showVideoPanel() {
         this.connectionPanel.style.display = 'none';
         this.videoPanel.style.display = 'block';
+        
+        // Handle audio-only mode display
+        if (this.audioOnlyMode) {
+            document.getElementById('audioOnlyIndicator').style.display = 'flex';
+            document.getElementById('toggleVideo').style.display = 'none';
+        } else {
+            document.getElementById('audioOnlyIndicator').style.display = 'none';
+            document.getElementById('toggleVideo').style.display = 'flex';
+        }
     }
 
     showConnectionPanel() {
@@ -379,6 +454,146 @@ class P2PVideoCall {
     updateConnectionStatus(status, className) {
         this.connectionStatus.textContent = status;
         this.connectionStatus.parentElement.className = `connection-status ${className}`;
+    }
+
+    async checkDeviceAvailability() {
+        const cameraStatus = document.getElementById('cameraStatus');
+        const micStatus = document.getElementById('micStatus');
+        const cameraIcon = document.getElementById('cameraIcon');
+        const micIcon = document.getElementById('micIcon');
+
+        try {
+            // Check if devices are available
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            const audioDevices = devices.filter(device => device.kind === 'audioinput');
+
+            // Update camera status
+            if (videoDevices.length > 0) {
+                cameraStatus.textContent = 'Camera available';
+                cameraStatus.parentElement.className = 'status-item available';
+                cameraIcon.className = 'fas fa-video';
+            } else {
+                cameraStatus.textContent = 'No camera found';
+                cameraStatus.parentElement.className = 'status-item unavailable';
+                cameraIcon.className = 'fas fa-video-slash';
+            }
+
+            // Update microphone status
+            if (audioDevices.length > 0) {
+                micStatus.textContent = 'Microphone available';
+                micStatus.parentElement.className = 'status-item available';
+                micIcon.className = 'fas fa-microphone';
+            } else {
+                micStatus.textContent = 'No microphone found';
+                micStatus.parentElement.className = 'status-item unavailable';
+                micIcon.className = 'fas fa-microphone-slash';
+            }
+
+        } catch (error) {
+            console.error('Error checking device availability:', error);
+            cameraStatus.textContent = 'Could not check camera';
+            micStatus.textContent = 'Could not check microphone';
+            cameraStatus.parentElement.className = 'status-item checking';
+            micStatus.parentElement.className = 'status-item checking';
+        }
+    }
+
+    async requestPermissions() {
+        const cameraStatus = document.getElementById('cameraStatus');
+        const micStatus = document.getElementById('micStatus');
+        const cameraIcon = document.getElementById('cameraIcon');
+        const micIcon = document.getElementById('micIcon');
+
+        try {
+            // Request permissions
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: true
+            });
+
+            // Update status
+            cameraStatus.textContent = 'Camera connected';
+            micStatus.textContent = 'Microphone connected';
+            cameraStatus.parentElement.className = 'status-item available';
+            micStatus.parentElement.className = 'status-item available';
+            cameraIcon.className = 'fas fa-video';
+            micIcon.className = 'fas fa-microphone';
+
+            // Stop the test stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Enable call buttons
+            document.getElementById('startCall').disabled = false;
+            document.getElementById('joinCall').disabled = false;
+
+            // Hide permission buttons
+            document.getElementById('requestPermissions').style.display = 'none';
+            document.getElementById('noCamera').style.display = 'none';
+
+        } catch (error) {
+            console.error('Permission denied or device not available:', error);
+            
+            if (error.name === 'NotAllowedError') {
+                cameraStatus.textContent = 'Permission denied';
+                micStatus.textContent = 'Permission denied';
+                alert('Camera and microphone permissions were denied. Please allow permissions in your browser settings.');
+            } else if (error.name === 'NotFoundError') {
+                cameraStatus.textContent = 'No camera found';
+                micStatus.textContent = 'No microphone found';
+                alert('No camera or microphone found. You can still use audio-only mode.');
+            } else {
+                cameraStatus.textContent = 'Error accessing devices';
+                micStatus.textContent = 'Error accessing devices';
+                alert('Error accessing camera and microphone: ' + error.message);
+            }
+
+            cameraStatus.parentElement.className = 'status-item unavailable';
+            micStatus.parentElement.className = 'status-item unavailable';
+            cameraIcon.className = 'fas fa-video-slash';
+            micIcon.className = 'fas fa-microphone-slash';
+        }
+    }
+
+    async enableAudioOnlyMode() {
+        try {
+            // Request only audio permissions
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: false,
+                audio: true
+            });
+
+            // Update status
+            const micStatus = document.getElementById('micStatus');
+            const micIcon = document.getElementById('micIcon');
+            micStatus.textContent = 'Microphone connected (Audio only)';
+            micStatus.parentElement.className = 'status-item available';
+            micIcon.className = 'fas fa-microphone';
+
+            const cameraStatus = document.getElementById('cameraStatus');
+            const cameraIcon = document.getElementById('cameraIcon');
+            cameraStatus.textContent = 'Audio only mode';
+            cameraStatus.parentElement.className = 'status-item unavailable';
+            cameraIcon.className = 'fas fa-user';
+
+            // Stop the test stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Enable call buttons
+            document.getElementById('startCall').disabled = false;
+            document.getElementById('joinCall').disabled = false;
+
+            // Hide permission buttons
+            document.getElementById('requestPermissions').style.display = 'none';
+            document.getElementById('noCamera').style.display = 'none';
+
+            // Set audio only mode
+            this.audioOnlyMode = true;
+
+        } catch (error) {
+            console.error('Error enabling audio-only mode:', error);
+            alert('Error accessing microphone: ' + error.message);
+        }
     }
 }
 
