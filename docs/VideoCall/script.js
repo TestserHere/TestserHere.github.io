@@ -37,6 +37,7 @@ class P2PVideoCall {
         this.signalingData = null;
         this.signalingInterval = null;
         this.iceCandidates = [];
+        this.processedMessageIds = [];
         
         console.log('Initializing event listeners...');
         this.initializeEventListeners();
@@ -68,8 +69,29 @@ class P2PVideoCall {
         }
     }
 
+    clearOldMessages() {
+        try {
+            const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
+            const now = Date.now();
+            const oneHourAgo = now - (60 * 60 * 1000); // 1 hour ago
+            
+            // Remove messages older than 1 hour
+            const recentMessages = messages.filter(msg => msg.timestamp > oneHourAgo);
+            
+            if (recentMessages.length !== messages.length) {
+                localStorage.setItem('webrtc_signaling', JSON.stringify(recentMessages));
+                console.log(`Cleared ${messages.length - recentMessages.length} old messages`);
+            }
+        } catch (error) {
+            console.error('Error clearing old messages:', error);
+        }
+    }
+
     checkForSignalingMessages() {
         try {
+            // Clear old messages first
+            this.clearOldMessages();
+            
             const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
             console.log('Checking for signaling messages. Total messages:', messages.length);
             console.log('Local peer ID:', this.localPeerId);
@@ -81,13 +103,35 @@ class P2PVideoCall {
             );
             
             console.log('Relevant messages found:', relevantMessages.length);
+            
+            // Process messages in order and remove them after processing
+            const messagesToRemove = [];
+            
             relevantMessages.forEach(message => {
+                // Check if we've already processed this message
+                if (this.processedMessageIds && this.processedMessageIds.includes(message.id)) {
+                    messagesToRemove.push(message);
+                    return;
+                }
+                
                 console.log('Processing message:', message);
                 this.handleSignalingMessage(message);
-                // Remove processed message
-                const updatedMessages = messages.filter(m => m !== message);
-                localStorage.setItem('webrtc_signaling', JSON.stringify(updatedMessages));
+                
+                // Mark message as processed
+                if (!this.processedMessageIds) {
+                    this.processedMessageIds = [];
+                }
+                this.processedMessageIds.push(message.id);
+                messagesToRemove.push(message);
             });
+            
+            // Remove processed messages
+            if (messagesToRemove.length > 0) {
+                const updatedMessages = messages.filter(m => !messagesToRemove.includes(m));
+                localStorage.setItem('webrtc_signaling', JSON.stringify(updatedMessages));
+                console.log(`Removed ${messagesToRemove.length} processed messages`);
+            }
+            
         } catch (error) {
             console.error('Error checking signaling messages:', error);
         }
@@ -563,6 +607,18 @@ class P2PVideoCall {
     async handleRemoteOffer(offer) {
         try {
             console.log('Handling remote offer...');
+            
+            // Check if we're in the right state to handle an offer
+            if (!this.peerConnection) {
+                console.log('No peer connection available, ignoring offer');
+                return;
+            }
+            
+            if (this.peerConnection.signalingState !== 'stable') {
+                console.log('Connection not in stable state, ignoring offer');
+                return;
+            }
+            
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
             
             // Process any stored ICE candidates
@@ -600,6 +656,23 @@ class P2PVideoCall {
     async handleRemoteAnswer(answer) {
         try {
             console.log('Handling remote answer...');
+            
+            // Check if we're in the right state to handle an answer
+            if (!this.peerConnection) {
+                console.log('No peer connection available, ignoring answer');
+                return;
+            }
+            
+            if (this.peerConnection.signalingState === 'have-remote-offer') {
+                console.log('Already have remote offer, ignoring duplicate answer');
+                return;
+            }
+            
+            if (this.peerConnection.signalingState === 'stable') {
+                console.log('Connection is stable, ignoring answer');
+                return;
+            }
+            
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             
             // Process any stored ICE candidates
@@ -617,22 +690,35 @@ class P2PVideoCall {
             this.updateConnectionStatus('Connected (Real WebRTC)', 'connected');
         } catch (error) {
             console.error('Error handling remote answer:', error);
-            this.updateConnectionStatus('Connection failed', 'failed');
+            // Don't update status to failed unless it's a real error
+            if (error.name !== 'InvalidStateError') {
+                this.updateConnectionStatus('Connection failed', 'failed');
+            }
         }
     }
 
     async handleRemoteIceCandidate(message) {
         try {
             console.log('Handling remote ICE candidate...');
-            if (this.peerConnection && this.peerConnection.remoteDescription) {
+            
+            if (!this.peerConnection) {
+                console.log('No peer connection available, storing ICE candidate');
+                this.iceCandidates.push(message.candidate);
+                return;
+            }
+            
+            if (this.peerConnection.remoteDescription) {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
                 console.log('Remote ICE candidate added');
             } else {
                 // Store the candidate for later if remote description isn't set yet
+                console.log('Remote description not set, storing ICE candidate');
                 this.iceCandidates.push(message.candidate);
             }
         } catch (error) {
             console.error('Error handling remote ICE candidate:', error);
+            // Store the candidate for later if there was an error
+            this.iceCandidates.push(message.candidate);
         }
     }
 
@@ -696,6 +782,10 @@ class P2PVideoCall {
         
         // Stop signaling polling
         this.stopSignalingPolling();
+        
+        // Clear processed message IDs
+        this.processedMessageIds = [];
+        this.iceCandidates = [];
         
         this.localVideo.srcObject = null;
         this.remoteVideo.srcObject = null;
