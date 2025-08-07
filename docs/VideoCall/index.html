@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Video Call</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-video"></i> P2P Video Call</h1>
+            <p>Direct peer-to-peer video calling without backend</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Connection Setup -->
+            <div class="connection-panel" id="connectionPanel">
+                <h2>Connection Setup</h2>
+                <div class="input-group">
+                    <label for="localIP">Your IP Address:</label>
+                    <div class="ip-input-container">
+                        <input type="text" id="localIP" placeholder="Detecting IP address..." readonly>
+                        <button onclick="copyToClipboard('localIP')" class="copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button onclick="detectIP()" class="detect-btn" title="Refresh IP detection">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <small class="ip-help">If IP detection fails, you can manually enter your IP address below</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="manualIP">Manual IP Address (if needed):</label>
+                    <input type="text" id="manualIP" placeholder="Enter your IP address manually (e.g., 192.168.1.100)">
+                    <small class="ip-help">Use this if automatic detection doesn't work. You can find your IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux) in terminal.</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="remoteIP">Remote IP Address:</label>
+                    <input type="text" id="remoteIP" placeholder="Enter remote IP address">
+                </div>
+
+                <div class="input-group">
+                    <label for="port">Port:</label>
+                    <input type="number" id="port" value="8080" min="1024" max="65535">
+                </div>
+
+                <div class="button-group">
+                    <button id="startCall" class="btn btn-primary">
+                        <i class="fas fa-phone"></i> Start Call
+                    </button>
+                    <button id="joinCall" class="btn btn-secondary">
+                        <i class="fas fa-phone-volume"></i> Join Call
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Call Interface -->
+            <div class="video-panel" id="videoPanel" style="display: none;">
+                <div class="video-container">
+                    <div class="video-wrapper">
+                        <video id="localVideo" autoplay muted playsinline></video>
+                        <div class="video-label">You</div>
+                    </div>
+                    <div class="video-wrapper">
+                        <video id="remoteVideo" autoplay playsinline></video>
+                        <div class="video-label">Remote</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="toggleVideo" class="control-btn">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <button id="toggleAudio" class="control-btn">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="endCall" class="control-btn end-call">
+                        <i class="fas fa-phone-slash"></i>
+                    </button>
+                </div>
+
+                <div class="connection-status">
+                    <span id="connectionStatus">Disconnected</span>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3>How to use:</h3>
+                <ol>
+                    <li>Share your IP address with the person you want to call</li>
+                    <li>Enter their IP address in the "Remote IP Address" field</li>
+                    <li>Click "Start Call" to initiate or "Join Call" to accept</li>
+                    <li>Allow camera and microphone access when prompted</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
