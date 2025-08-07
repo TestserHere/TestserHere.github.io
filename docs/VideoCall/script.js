@@ -1,13 +1,30 @@
 class P2PVideoCall {
     constructor() {
-        this.localStream = null;
-        this.remoteStream = null;
-        this.peerConnection = null;
+        console.log('P2PVideoCall constructor started');
+        
+        // Check if required elements exist
         this.localVideo = document.getElementById('localVideo');
         this.remoteVideo = document.getElementById('remoteVideo');
         this.connectionStatus = document.getElementById('connectionStatus');
         this.connectionPanel = document.getElementById('connectionPanel');
         this.videoPanel = document.getElementById('videoPanel');
+        
+        if (!this.localVideo || !this.remoteVideo || !this.connectionStatus || !this.connectionPanel || !this.videoPanel) {
+            console.error('Required elements not found:', {
+                localVideo: !!this.localVideo,
+                remoteVideo: !!this.remoteVideo,
+                connectionStatus: !!this.connectionStatus,
+                connectionPanel: !!this.connectionPanel,
+                videoPanel: !!this.videoPanel
+            });
+            return;
+        }
+        
+        console.log('All required elements found');
+        
+        this.localStream = null;
+        this.remoteStream = null;
+        this.peerConnection = null;
         
         this.isVideoEnabled = true;
         this.isAudioEnabled = true;
@@ -21,10 +38,16 @@ class P2PVideoCall {
         this.signalingInterval = null;
         this.iceCandidates = [];
         
+        console.log('Initializing event listeners...');
         this.initializeEventListeners();
+        console.log('Getting local IP...');
         this.getLocalIP();
+        console.log('Checking device availability...');
         this.checkDeviceAvailability();
+        console.log('Starting signaling polling...');
         this.startSignalingPolling();
+        
+        console.log('P2PVideoCall constructor completed');
     }
 
     generatePeerId() {
@@ -104,14 +127,55 @@ class P2PVideoCall {
     }
 
     initializeEventListeners() {
-        document.getElementById('startCall').addEventListener('click', () => this.startCall());
-        document.getElementById('joinCall').addEventListener('click', () => this.joinCall());
-        document.getElementById('endCall').addEventListener('click', () => this.endCall());
-        document.getElementById('toggleVideo').addEventListener('click', () => this.toggleVideo());
-        document.getElementById('toggleAudio').addEventListener('click', () => this.toggleAudio());
-        document.getElementById('requestPermissions').addEventListener('click', () => this.requestPermissions());
-        document.getElementById('noCamera').addEventListener('click', () => this.enableAudioOnlyMode());
-        document.getElementById('testSignaling').addEventListener('click', () => this.testSignaling());
+        console.log('Setting up event listeners...');
+        
+        const elements = {
+            startCall: document.getElementById('startCall'),
+            joinCall: document.getElementById('joinCall'),
+            endCall: document.getElementById('endCall'),
+            toggleVideo: document.getElementById('toggleVideo'),
+            toggleAudio: document.getElementById('toggleAudio'),
+            requestPermissions: document.getElementById('requestPermissions'),
+            noCamera: document.getElementById('noCamera'),
+            testSignaling: document.getElementById('testSignaling')
+        };
+        
+        // Check if all elements exist
+        for (const [name, element] of Object.entries(elements)) {
+            if (!element) {
+                console.error(`Element not found: ${name}`);
+            } else {
+                console.log(`Found element: ${name}`);
+            }
+        }
+        
+        // Add event listeners with error handling
+        if (elements.startCall) {
+            elements.startCall.addEventListener('click', () => this.startCall());
+        }
+        if (elements.joinCall) {
+            elements.joinCall.addEventListener('click', () => this.joinCall());
+        }
+        if (elements.endCall) {
+            elements.endCall.addEventListener('click', () => this.endCall());
+        }
+        if (elements.toggleVideo) {
+            elements.toggleVideo.addEventListener('click', () => this.toggleVideo());
+        }
+        if (elements.toggleAudio) {
+            elements.toggleAudio.addEventListener('click', () => this.toggleAudio());
+        }
+        if (elements.requestPermissions) {
+            elements.requestPermissions.addEventListener('click', () => this.requestPermissions());
+        }
+        if (elements.noCamera) {
+            elements.noCamera.addEventListener('click', () => this.enableAudioOnlyMode());
+        }
+        if (elements.testSignaling) {
+            elements.testSignaling.addEventListener('click', () => this.testSignaling());
+        }
+        
+        console.log('Event listeners setup completed');
     }
 
     async getLocalIP() {
@@ -884,7 +948,25 @@ async function detectIP() {
     }
 }
 
+// Test function to verify JavaScript is working
+function testJavaScript() {
+    console.log('JavaScript is working!');
+    alert('JavaScript is working!');
+    return true;
+}
+
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new P2PVideoCall();
+    console.log('DOMContentLoaded event fired');
+    testJavaScript(); // Test if JavaScript is working
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        try {
+            const app = new P2PVideoCall();
+            console.log('P2PVideoCall app initialized successfully');
+        } catch (error) {
+            console.error('Error initializing P2PVideoCall:', error);
+            alert('Error initializing app: ' + error.message);
+        }
+    }, 100);
 }); 
