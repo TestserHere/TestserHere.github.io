@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📷 QR Code Scanner + Multi-QR Reassembler</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; text-align: center; }
+    video { width: 100%; border: 1px solid #ccc; }
+    textarea { width: 100%; height: 150px; margin-top: 10px; }
+    #partsList, #singleResult { font-size: 0.9em; margin-top: 10px; color: #444; }
+  </style>
+</head>
+<body>
+  <h1>📷 QR Scanner</h1>
+  <p>Scan any QR code or a Multi-QR sequence below.</p>
+  <video id="video" autoplay></video>
+  <textarea id="output" placeholder="Scanned full text will appear here..." readonly></textarea>
+  <div id="singleResult"></div>
+  <div id="partsList"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    const video = document.getElementById("video");
+    const output = document.getElementById("output");
+    const singleResult = document.getElementById("singleResult");
+    const partsList = document.getElementById("partsList");
+    let parts = {};
+    let totalParts = 0;
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then((stream) => {
+        video.srcObject = stream;
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        function scanLoop() {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+          if (code) {
+            const text = code.data;
+            const match = text.match(/^Part (\d+)\/(\d+)\|(.*)$/);
+            if (match) {
+              const index = parseInt(match[1]) - 1;
+              totalParts = parseInt(match[2]);
+              const data = match[3];
+              if (!(index in parts)) {
+                parts[index] = data;
+                updatePartsList();
+                if (Object.keys(parts).length === totalParts) {
+                  const fullText = Array.from({ length: totalParts }, (_, i) => parts[i]).join("");
+                  output.value = fullText;
+                }
+              }
+            } else {
+              singleResult.textContent = "Single QR Result: " + text;
+              output.value = text;
+              parts = {}; totalParts = 0;
+              partsList.textContent = "";
+            }
+          }
+          requestAnimationFrame(scanLoop);
+        }
+
+        requestAnimationFrame(scanLoop);
+      })
+      .catch((err) => alert("Camera access denied or unavailable."));
+
+    function updatePartsList() {
+      const scanned = Object.keys(parts).map(n => parseInt(n) + 1).sort((a, b) => a - b);
+      partsList.textContent = `Scanned parts: ${scanned.join(", ")} of ${totalParts}`;
+    }
+  </script>
+</body>
+</html>

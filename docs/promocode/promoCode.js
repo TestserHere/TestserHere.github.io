@@ -17,15 +17,7 @@ function check() {
         console.log("code Roblox!");
         window.open("https://roblox.com",'_blank');
         document.getElementById("input").value = "";
-    } else if (promoCode == "BPScompass") {
-        console.log("code BPScompass!");
-        window.open("https://balwynps-vic.compass.education/login.aspx?sessionstate=disabled",'_blank');        
-        document.getElementById("input").value = "";
-    } else if (promoCode == "BHScompass") {
-        console.log("code BHScompass!");
-        window.open("https://balwynhs-vic.compass.education/login.aspx?sessionstate=disabled",'_blank');
-        document.getElementById("input").value = "";
-    } else if (promoCode == "Gimkit") {
+    }  else if (promoCode == "Gimkit") {
         console.log("code Gimkit!");
         window.open("https://gimkit.com", '_blank');
         document.getElementById("input").value = "";
@@ -81,18 +73,13 @@ function check() {
         console.log("code Chinese Typing Test!");
         window.open("/chinese_typing_test.html");
         document.getElementById("input").value = "";
-    }
-    
-    
-    else if(promoCode == "ALLCODES") {
-        console.log ("code allcode!");
-        window.open("https://testserhere.github.io/codes.html", '_blank');
+    } else if(promoCode == "pyw") {
+        console.log("code pyw!");
+        window.open("/pyw/index.html");
         document.getElementById("input").value = "";
-    } 
-    
-    
-     
-    
+    }
+        
+        
     
     
     else {

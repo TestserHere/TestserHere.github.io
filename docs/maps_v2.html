@@ -1,0 +1,4263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Maps">
+    <meta name="theme-color" content="#4285f4">
+    <meta name="msapplication-TileColor" content="#4285f4">
+    <meta name="msapplication-navbutton-color" content="#4285f4">
+    <title>Real-Time Maps</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* Hide Safari UI elements */
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Prevent bounce scrolling */
+            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
+            /* Full screen on iOS */
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Hide Safari address bar and navigation */
+        @media screen and (max-width: 768px) {
+            body {
+                /* Force full screen */
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+            }
+            
+            html {
+                /* Prevent zoom on input focus */
+                -webkit-text-size-adjust: 100%;
+                /* Full height */
+                height: 100%;
+                height: -webkit-fill-available;
+            }
+        }
+
+        /* iOS Safari specific styles */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                /* iOS Safari full screen */
+                height: 100vh;
+                height: -webkit-fill-available;
+                /* Prevent content shift when address bar shows/hides */
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+            
+            #map {
+                /* Ensure map takes full available height */
+                height: 100vh;
+                height: -webkit-fill-available;
+                /* Prevent map from shifting */
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+        }
+
+        /* Additional mobile fixes */
+        @media screen and (max-width: 768px) {
+            body {
+                /* Prevent content shift on mobile */
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                /* Use safe area for notched devices */
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+            
+            #map {
+                /* Ensure map fills the safe area */
+                position: fixed;
+                top: env(safe-area-inset-top);
+                left: env(safe-area-inset-left);
+                right: env(safe-area-inset-right);
+                bottom: env(safe-area-inset-bottom);
+                height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
+            }
+            
+            .controls {
+                /* Adjust controls for safe area */
+                top: calc(20px + env(safe-area-inset-top));
+                left: calc(20px + env(safe-area-inset-left));
+                right: calc(20px + env(safe-area-inset-right));
+            }
+            
+            .settings-btn {
+                /* Adjust settings button for safe area */
+                bottom: calc(20px + env(safe-area-inset-bottom));
+                left: calc(20px + env(safe-area-inset-left));
+            }
+            
+            .follow-me-btn {
+                /* Adjust follow me button for safe area */
+                bottom: calc(80px + env(safe-area-inset-bottom));
+                left: calc(20px + env(safe-area-inset-left));
+            }
+            
+            .map-style-selector {
+                /* Adjust map style selector for safe area */
+                bottom: calc(20px + env(safe-area-inset-bottom));
+                right: calc(20px + env(safe-area-inset-right));
+            }
+        }
+
+        #map {
+            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+            height: -webkit-fill-available;
+            width: 100vw;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .controls:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid rgba(66, 133, 244, 0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-box input:focus {
+            border-color: #4285f4;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 16px rgba(66, 133, 244, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .search-box button {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        }
+
+        .search-box button:hover {
+            background: linear-gradient(135deg, #3367d6 0%, #2a56c6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+        }
+
+        .search-box button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+        }
+
+        /* Autocomplete dropdown */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .autocomplete-item.selected {
+            background: rgba(66, 133, 244, 0.15);
+            border-left: 3px solid #4285f4;
+        }
+
+        .autocomplete-icon {
+            width: 20px;
+            height: 20px;
+            background: #4285f4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .autocomplete-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .autocomplete-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-subtitle {
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-highlight {
+            background: rgba(66, 133, 244, 0.2);
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        /* Loading indicator */
+        .autocomplete-loading {
+            padding: 16px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .autocomplete-loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #4285f4;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .location-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #34a853 0%, #2d8f47 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .location-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .location-btn:hover {
+            background: linear-gradient(135deg, #2d8f47 0%, #2a7d3f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 168, 83, 0.4);
+        }
+
+        .location-btn:hover::before {
+            left: 100%;
+        }
+
+        .location-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(52, 168, 83, 0.3);
+        }
+
+        .location-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .directions-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .directions-panel.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .directions-panel.show {
+            display: block;
+        }
+
+        .direction-step {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .direction-step:hover {
+            background: rgba(66, 133, 244, 0.1);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .direction-step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        /* Route Options */
+        .route-options {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .route-option {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(66, 133, 244, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .route-option.selected {
+            background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+            color: white;
+            border-color: #4285f4;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        }
+
+        .route-option:hover {
+            background: rgba(66, 133, 244, 0.1);
+            border-color: #4285f4;
+            transform: translateY(-2px);
+        }
+
+        .route-option.selected:hover {
+            background: linear-gradient(135deg, #3367d6 0%, #2a56c6 100%);
+        }
+
+        .route-option-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .route-option-details {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .route-option.selected .route-option-details {
+            opacity: 0.9;
+        }
+
+        /* Route summary enhancement */
+        .route-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border-left: 4px solid #4285f4;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .route-summary h4 {
+            margin: 0 0 8px 0;
+            color: #1a1a1a;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .route-summary-details {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .route-summary-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Settings panel */
+        .settings-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            min-width: 250px;
+        }
+
+        .settings-panel.show {
+            display: block;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+
+        .settings-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+
+        .setting-item {
+            margin-bottom: 12px;
+        }
+
+        .setting-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #1a1a1a;
+        }
+
+        .setting-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid rgba(66, 133, 244, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .setting-input:focus {
+            border-color: #4285f4;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+        }
+
+        .settings-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Follow Me Button */
+        .follow-me-btn {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .follow-me-btn.show {
+            display: flex;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .follow-me-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(66, 133, 244, 0.4);
+            background: linear-gradient(135deg, #3367d6 0%, #2a56c6 100%);
+        }
+
+        .follow-me-btn:active {
+            transform: scale(0.95);
+        }
+
+        .follow-me-btn.following {
+            background: linear-gradient(135deg, #34a853 0%, #2d8f47 100%);
+            box-shadow: 0 4px 16px rgba(52, 168, 83, 0.3);
+        }
+
+        .follow-me-btn.following:hover {
+            background: linear-gradient(135deg, #2d8f47 0%, #2a7d3f 100%);
+            box-shadow: 0 6px 24px rgba(52, 168, 83, 0.4);
+        }
+
+        /* Map Style Selector */
+        .map-style-selector {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .map-style-btn {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .map-style-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+            color: white;
+        }
+
+        .map-style-btn:active {
+            transform: scale(0.95);
+        }
+
+        .step-instruction {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .step-distance {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Navigation Mode */
+        .navigation-banner {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 20px;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .navigation-banner.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .navigation-banner.show {
+            display: block;
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-direction-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #1a1a1a;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Turn indicator styles */
+        .nav-direction-icon.turn-right {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-color: #28a745;
+        }
+
+        .nav-direction-icon.turn-left {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border-color: #007bff;
+        }
+
+        .nav-direction-icon.roundabout {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #1a1a1a;
+            border-color: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        .nav-direction-icon.ramp {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            border-color: #17a2b8;
+        }
+
+        .nav-direction-icon.exit {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .nav-direction-icon.merge {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+            color: white;
+            border-color: #6f42c1;
+        }
+
+        .nav-direction-icon.straight {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            color: white;
+            border-color: #6c757d;
+        }
+
+        .nav-direction-icon.uturn {
+            background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+            color: white;
+            border-color: #fd7e14;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .nav-direction-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-instruction-text {
+            flex: 1;
+        }
+
+        .nav-main-instruction {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .nav-sub-instruction {
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        .nav-distance {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4285f4;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #1a1a1a;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .nav-btn.exit {
+            background: linear-gradient(135deg, #ea4335 0%, #d32f2f 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(234, 67, 53, 0.3);
+        }
+
+        .nav-btn.exit:hover {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            box-shadow: 0 4px 12px rgba(234, 67, 53, 0.4);
+        }
+
+        /* Off route indicator */
+        .off-route-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            z-index: 2000;
+            display: none;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        .off-route-indicator.show {
+            display: block;
+        }
+
+        .off-route-indicator button {
+            background: white;
+            color: #ff9800;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-left: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .off-route-indicator button:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+        }
+
+        .directions-toggle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .directions-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .directions-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .directions-toggle.show {
+            display: flex;
+        }
+
+        .start-navigation-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #34a853 0%, #2d8f47 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(52, 168, 83, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-navigation-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .start-navigation-btn:hover {
+            background: linear-gradient(135deg, #2d8f47 0%, #2a7d3f 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 168, 83, 0.4);
+        }
+
+        .start-navigation-btn:hover::before {
+            left: 100%;
+        }
+
+        .start-navigation-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(52, 168, 83, 0.3);
+        }
+
+        .status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 16px;
+            z-index: 2000;
+            display: none;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            font-weight: 500;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .controls {
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                padding: 12px;
+                border-radius: 16px;
+                backdrop-filter: blur(25px);
+                -webkit-backdrop-filter: blur(25px);
+            }
+            
+            .search-box {
+                margin-bottom: 8px;
+            }
+            
+            .search-box input {
+                padding: 12px 14px;
+                font-size: 16px; /* Prevents zoom on iOS */
+                border-radius: 6px;
+            }
+            
+            .search-box button {
+                padding: 12px 16px;
+                font-size: 14px;
+                border-radius: 6px;
+                min-width: 80px;
+            }
+            
+            .location-btn {
+                padding: 12px;
+                font-size: 14px;
+                border-radius: 6px;
+            }
+            
+            .location-info {
+                font-size: 11px;
+                line-height: 1.3;
+            }
+            
+            .directions-panel {
+                bottom: 5px;
+                left: 5px;
+                right: 5px;
+                padding: 12px;
+                max-height: 40vh;
+                border-radius: 8px;
+            }
+            
+            .direction-step {
+                padding: 10px;
+                margin-bottom: 2px;
+            }
+            
+            .step-instruction {
+                font-size: 14px;
+                line-height: 1.3;
+            }
+            
+            .step-distance {
+                font-size: 11px;
+                margin-top: 2px;
+            }
+            
+            .start-navigation-btn {
+                padding: 14px;
+                font-size: 16px;
+                margin-top: 10px;
+                border-radius: 6px;
+            }
+            
+            .navigation-banner {
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                padding: 12px;
+                border-radius: 8px;
+            }
+            
+            .nav-content {
+                gap: 10px;
+            }
+            
+            .nav-direction-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            
+            .nav-main-instruction {
+                font-size: 16px;
+                line-height: 1.2;
+            }
+            
+            .nav-sub-instruction {
+                font-size: 12px;
+                line-height: 1.2;
+            }
+            
+            .nav-distance {
+                font-size: 14px;
+                min-width: 50px;
+                text-align: right;
+            }
+            
+            .nav-btn {
+                padding: 10px 12px;
+                font-size: 11px;
+                border-radius: 4px;
+            }
+            
+            .directions-toggle {
+                bottom: 5px;
+                right: 5px;
+                width: 52px;
+                height: 52px;
+                font-size: 20px;
+                border-radius: 50%;
+            }
+            
+            .status {
+                padding: 10px 16px;
+                font-size: 14px;
+                border-radius: 6px;
+                max-width: 90vw;
+                text-align: center;
+            }
+
+            .route-options {
+                gap: 6px;
+                padding-bottom: 6px;
+            }
+
+            .route-option {
+                padding: 10px 12px;
+                min-width: 100px;
+                border-radius: 10px;
+            }
+
+            .route-option-title {
+                font-size: 13px;
+            }
+
+            .route-option-details {
+                font-size: 11px;
+            }
+
+            .autocomplete-dropdown {
+                max-height: 250px;
+                border-radius: 10px;
+            }
+
+            .autocomplete-item {
+                padding: 10px 12px;
+            }
+
+            .autocomplete-title {
+                font-size: 13px;
+            }
+
+            .autocomplete-subtitle {
+                font-size: 11px;
+            }
+
+            .autocomplete-icon {
+                width: 18px;
+                height: 18px;
+                font-size: 11px;
+            }
+
+            .follow-me-btn {
+                bottom: 10px;
+                left: 10px;
+                width: 52px;
+                height: 52px;
+                font-size: 18px;
+            }
+
+            .map-style-selector {
+                bottom: 10px;
+                right: 10px;
+                gap: 6px;
+            }
+
+            .map-style-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 16px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .controls {
+                padding: 8px;
+            }
+            
+            .search-box input {
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+            
+            .search-box button {
+                padding: 10px 12px;
+                font-size: 12px;
+                min-width: 70px;
+            }
+            
+            .location-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            .nav-main-instruction {
+                font-size: 14px;
+            }
+            
+            .nav-sub-instruction {
+                font-size: 11px;
+            }
+            
+            .nav-distance {
+                font-size: 12px;
+                min-width: 40px;
+            }
+        }
+
+        /* Landscape orientation */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .directions-panel {
+                max-height: 30vh;
+            }
+            
+            .navigation-banner {
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                padding: 8px;
+            }
+            
+            .nav-main-instruction {
+                font-size: 14px;
+            }
+            
+            .nav-sub-instruction {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="destination" placeholder="Search for a destination..." autocomplete="off">
+            <button onclick="getDirections()">Get Directions</button>
+            <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+        </div>
+        <button class="location-btn" onclick="getCurrentLocation()">📍 Get My Location</button>
+        <div class="location-info" id="location-info">Click to get your location</div>
+    </div>
+
+    <div class="directions-panel" id="directions-panel">
+        <h3>Directions</h3>
+        <div id="directions-list"></div>
+        <button class="start-navigation-btn" onclick="startNavigation()" id="start-navigation-btn">
+            🚗 Start Navigation
+        </button>
+    </div>
+
+    <!-- Navigation Banner -->
+    <div class="navigation-banner" id="navigation-banner">
+        <div class="nav-content">
+            <div class="nav-direction-icon" id="nav-direction-icon">→</div>
+            <div class="nav-instruction-text">
+                <div class="nav-main-instruction" id="nav-main-instruction">Ready to navigate</div>
+                <div class="nav-sub-instruction" id="nav-sub-instruction">Tap to start</div>
+            </div>
+            <div class="nav-distance" id="nav-distance">-- m</div>
+            <div class="nav-controls">
+                <button class="nav-btn" id="voice-toggle" onclick="toggleVoice()" title="Voice On">🔊</button>
+                <button class="nav-btn" onclick="toggleDirections()">📋</button>
+                <button class="nav-btn" onclick="rerouteFromCurrentPosition()" title="Re-route">🔄</button>
+                <button class="nav-btn exit" onclick="stopNavigation()">Exit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Directions Toggle Button -->
+    <button class="directions-toggle" onclick="toggleDirections()" id="directions-toggle">
+        📋
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <!-- Off Route Indicator -->
+    <div class="off-route-indicator" id="off-route-indicator">
+        <span>⚠️ You're off route</span>
+        <button onclick="rerouteFromCurrentPosition()">Re-route</button>
+    </div>
+
+    <!-- Settings Button -->
+    <button class="settings-btn" onclick="toggleSettings()" title="Settings">⚙️</button>
+
+    <!-- Follow Me Button -->
+    <button class="follow-me-btn" onclick="followMe()" title="Follow Me" id="follow-me-btn">📍</button>
+
+    <!-- Map Style Selector -->
+    <div class="map-style-selector">
+        <button class="map-style-btn" onclick="changeMapStyle('osm')" title="OpenStreetMap">🗺️</button>
+        <button class="map-style-btn" onclick="changeMapStyle('cartodb-light')" title="Google Maps Style (Light)">☀️</button>
+        <button class="map-style-btn" onclick="changeMapStyle('cartodb-voyager')" title="Google Maps Style (Enhanced)">🗺️</button>
+        <button class="map-style-btn" onclick="changeMapStyle('cartodb-dark')" title="Dark Theme">🌙</button>
+        <button class="map-style-btn" onclick="changeMapStyle('osm-hot')" title="Enhanced OSM">🔥</button>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+            <div class="settings-title">Navigation Settings</div>
+            <button class="settings-close" onclick="toggleSettings()">×</button>
+        </div>
+        <div class="setting-item">
+            <label class="setting-label">Route Deviation Threshold (meters)</label>
+            <input type="number" class="setting-input" id="deviation-threshold" 
+                   value="50" min="10" max="200" step="10"
+                   onchange="updateDeviationThreshold()">
+            <small style="color: #666; font-size: 12px;">
+                How far off route before re-routing (10-200m)
+            </small>
+        </div>
+        <div class="setting-item">
+            <label class="setting-label">Re-route Cooldown (seconds)</label>
+            <input type="number" class="setting-input" id="reroute-cooldown" 
+                   value="10" min="5" max="30" step="5"
+                   onchange="updateRerouteCooldown()">
+            <small style="color: #666; font-size: 12px;">
+                Time between re-routes (5-30s)
+            </small>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let currentMarker;
+        let destinationMarker;
+        let routeLine;
+        let completedRouteLine;
+        let locationWatchId;
+        let isTracking = false;
+        let currentPosition;
+        let destination;
+        let route;
+        let routes = []; // Store multiple routes
+        let selectedRouteIndex = 0; // Currently selected route
+        let isNavigating = false;
+        let currentStep = 0;
+        let navigationWatchId;
+        let speechSynthesis;
+        let voiceEnabled = true;
+        let lastSpokenInstruction = '';
+        let spokenInstructions = new Set();
+        let lastStepSpoken = -1;
+        let carSymbol;
+        let userHeading = 0;
+        let routeDeviationThreshold = 50; // meters - how far off route before re-routing
+        let lastRerouteTime = 0; // Prevent too frequent re-routing
+        let rerouteCooldown = 10000; // 10 seconds between re-routes
+        
+        // Autocomplete variables
+        let autocompleteTimeout;
+        let autocompleteResults = [];
+        let selectedAutocompleteIndex = -1;
+        let isAutocompleteVisible = false;
+        
+        // Follow Me variables
+        let isFollowingUser = true;
+        let lastMapCenter = null;
+        let followMeThreshold = 100; // meters - how far map can move before showing button
+        let accuracyCircle = null; // Global accuracy circle variable
+        let lastVoiceAlert = {}; // Track last voice alert for each step to prevent spam
+
+        // Initialize the map
+        function initMap() {
+            map = L.map('map').setView([-37.8136, 144.9631], 13); // Melbourne
+
+            // Multiple free map tile options - uncomment your preferred style
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Alternative map styles (uncomment to use):
+            // CartoDB Positron (Google Maps style - Clean, minimal)
+            // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            //     attribution: '© CartoDB'
+            // }).addTo(map);
+            
+            // CartoDB Voyager (Google Maps style - Enhanced)
+            // L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            //     attribution: '© CartoDB'
+            // }).addTo(map);
+            
+            // CartoDB Dark Matter (Dark theme)
+            // L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            //     attribution: '© CartoDB'
+            // }).addTo(map);
+            
+            // OpenStreetMap Carto (Enhanced OSM)
+            // L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            //     attribution: '© OpenStreetMap contributors'
+            // }).addTo(map);
+            
+            // OpenStreetMap France (High quality)
+            // L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            //     attribution: '© OpenStreetMap contributors'
+            // }).addTo(map);
+            
+            // OpenStreetMap Germany (Reliable)
+            // L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+            //     attribution: '© OpenStreetMap contributors'
+            // }).addTo(map);
+
+            // Initialize speech synthesis
+            initSpeechSynthesis();
+            
+            // Initialize Follow Me functionality
+            initFollowMe();
+        }
+
+        // Initialize Follow Me functionality
+        function initFollowMe() {
+            // Listen for map movement
+            map.on('moveend', checkMapPosition);
+            
+            // Set initial map center
+            lastMapCenter = map.getCenter();
+        }
+
+        // Map style selector
+        function changeMapStyle(style) {
+            // Remove existing tile layer
+            map.eachLayer((layer) => {
+                if (layer instanceof L.TileLayer) {
+                    map.removeLayer(layer);
+                }
+            });
+            
+            // Add new tile layer based on style
+            switch(style) {
+                case 'cartodb-light':
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© CartoDB'
+                    }).addTo(map);
+                    break;
+                case 'cartodb-voyager':
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '© CartoDB'
+                    }).addTo(map);
+                    break;
+                case 'cartodb-dark':
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© CartoDB'
+                    }).addTo(map);
+                    break;
+                case 'osm-hot':
+                    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    break;
+                case 'osm-france':
+                    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    break;
+                case 'osm-germany':
+                    L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+                    break;
+                default: // OpenStreetMap
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+            }
+            
+            showStatus(`Map style changed to ${style}`);
+            setTimeout(hideStatus, 2000);
+        }
+
+        // Check if map has moved away from user position
+        function checkMapPosition() {
+            if (!currentPosition || !isNavigating) return;
+            
+            const currentMapCenter = map.getCenter();
+            const distanceFromUser = calculateDistance(
+                currentPosition.lat, currentPosition.lng,
+                currentMapCenter.lat, currentMapCenter.lng
+            );
+            
+            // If map is far from user position, show Follow Me button
+            if (distanceFromUser > followMeThreshold) {
+                showFollowMeButton();
+                isFollowingUser = false;
+            } else {
+                hideFollowMeButton();
+                isFollowingUser = true;
+            }
+        }
+
+        // Show Follow Me button
+        function showFollowMeButton() {
+            const followBtn = document.getElementById('follow-me-btn');
+            if (followBtn) {
+                followBtn.classList.add('show');
+            }
+        }
+
+        // Hide Follow Me button
+        function hideFollowMeButton() {
+            const followBtn = document.getElementById('follow-me-btn');
+            if (followBtn) {
+                followBtn.classList.remove('show');
+                followBtn.classList.remove('following');
+            }
+        }
+
+        // Follow Me function
+        function followMe() {
+            if (!currentPosition) {
+                showStatus('No location available');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+            
+            // Center map on user position
+            map.setView([currentPosition.lat, currentPosition.lng], 18);
+            
+            // Update follow state
+            isFollowingUser = true;
+            lastMapCenter = map.getCenter();
+            
+            // Update button appearance
+            const followBtn = document.getElementById('follow-me-btn');
+            if (followBtn) {
+                followBtn.classList.add('following');
+                setTimeout(() => {
+                    followBtn.classList.remove('following');
+                }, 2000);
+            }
+            
+            // Show feedback
+            showStatus('Following your location');
+            setTimeout(hideStatus, 2000);
+            
+            console.log('Map centered on user position');
+        }
+
+        // Initialize speech synthesis
+        function initSpeechSynthesis() {
+            if ('speechSynthesis' in window) {
+                speechSynthesis = window.speechSynthesis;
+                
+                // Wait for voices to load
+                speechSynthesis.onvoiceschanged = function() {
+                    console.log('Speech synthesis ready');
+                };
+                
+                console.log('Speech synthesis initialized');
+            } else {
+                console.log('Speech synthesis not supported');
+                voiceEnabled = false;
+            }
+        }
+
+        // Speak navigation instruction with enhanced details
+        function speakInstruction(instruction, distance = null, force = false) {
+            if (!voiceEnabled || !speechSynthesis) return;
+            
+            // Don't repeat the same instruction unless forced
+            if (instruction === lastSpokenInstruction && !force) return;
+            
+            let textToSpeak = instruction;
+            
+            // Add distance if provided with enhanced phrasing
+            if (distance && distance > 0) {
+                if (distance < 100) {
+                    textToSpeak = `In ${Math.round(distance)} meters, ${instruction}`;
+                } else if (distance < 1000) {
+                    textToSpeak = `In ${Math.round(distance)} meters, ${instruction}`;
+                } else {
+                    textToSpeak = `In ${(distance / 1000).toFixed(1)} kilometers, ${instruction}`;
+                }
+            }
+            
+            // Stop any current speech
+            speechSynthesis.cancel();
+            
+            // Create speech utterance
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // Configure voice settings for better clarity
+            utterance.rate = 0.85; // Slightly slower for detailed instructions
+            utterance.pitch = 1.0;
+            utterance.volume = 0.9;
+            
+            // Try to use a good voice
+            const voices = speechSynthesis.getVoices();
+            const preferredVoices = ['Google UK English Female', 'Google UK English Male', 'Samantha', 'Alex'];
+            
+            for (const voiceName of preferredVoices) {
+                const voice = voices.find(v => v.name.includes(voiceName));
+                if (voice) {
+                    utterance.voice = voice;
+                    break;
+                }
+            }
+            
+            // Speak the instruction
+            speechSynthesis.speak(utterance);
+            lastSpokenInstruction = instruction;
+            
+            console.log('Speaking:', textToSpeak);
+        }
+
+        // Create car symbol for navigation
+        function createCarSymbol() {
+            if (carSymbol) {
+                map.removeLayer(carSymbol);
+            }
+            
+            // Create a directional arrow icon that follows route direction
+            const carIcon = L.divIcon({
+                className: 'car-symbol',
+                html: `
+                    <div style="
+                        width: 28px;
+                        height: 28px;
+                        background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+                        border: 3px solid white;
+                        border-radius: 50%;
+                        box-shadow: 0 3px 12px rgba(66, 133, 244, 0.4);
+                        position: relative;
+                        transform: rotate(${userHeading || 0}deg);
+                        transition: transform 0.5s ease-out;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
+                        <!-- Main directional arrow -->
+                        <div style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            width: 0;
+                            height: 0;
+                            border-left: 6px solid transparent;
+                            border-right: 6px solid transparent;
+                            border-bottom: 14px solid white;
+                            transform: translate(-50%, -50%);
+                            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+                        "></div>
+                        <!-- Center dot for better visibility -->
+                        <div style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            width: 4px;
+                            height: 4px;
+                            background: white;
+                            border-radius: 50%;
+                            transform: translate(-50%, -50%);
+                        "></div>
+                    </div>
+                `,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+            
+            carSymbol = L.marker([currentPosition.lat, currentPosition.lng], {
+                icon: carIcon,
+                zIndexOffset: 1000
+            }).addTo(map);
+            
+            console.log('Car symbol created with heading:', userHeading);
+        }
+
+        // Get route direction for arrow indicator
+        function getRouteDirection() {
+            if (!route || !currentStep || !currentPosition) return 0;
+            
+            const steps = route.routes[0].legs[0].steps;
+            if (currentStep >= steps.length) return 0;
+            
+            const nextStep = steps[currentStep];
+            if (!nextStep || !nextStep.maneuver || !nextStep.maneuver.location) return 0;
+            
+            // Calculate direction to next turn
+            const nextTurnLat = nextStep.maneuver.location[1];
+            const nextTurnLng = nextStep.maneuver.location[0];
+            
+            const deltaLat = nextTurnLat - currentPosition.lat;
+            const deltaLng = nextTurnLng - currentPosition.lng;
+            
+            // Calculate heading to next turn
+            let routeHeading = Math.atan2(deltaLng, deltaLat) * 180 / Math.PI;
+            routeHeading = (routeHeading + 360) % 360;
+            
+            // Convert to map rotation (0 = East, 90 = South, 180 = West, 270 = North)
+            // The car symbol should point in the direction of travel
+            const mapHeading = (90 - routeHeading + 360) % 360;
+            
+            return mapHeading;
+        }
+
+        // Calculate heading from movement
+        let lastPosition = null;
+        function calculateHeadingFromMovement(currentPos) {
+            if (!lastPosition) {
+                lastPosition = currentPos;
+                return null;
+            }
+            
+            const deltaLat = currentPos.lat - lastPosition.lat;
+            const deltaLng = currentPos.lng - lastPosition.lng;
+            
+            // Check if we're actually moving (minimum movement threshold)
+            const movementThreshold = 0.00001; // About 1 meter
+            if (Math.abs(deltaLat) < movementThreshold && Math.abs(deltaLng) < movementThreshold) {
+                return null; // Not moving enough
+            }
+            
+            // Calculate heading in degrees (0 = North, 90 = East, 180 = South, 270 = West)
+            let heading = Math.atan2(deltaLng, deltaLat) * 180 / Math.PI;
+            
+            // Normalize to 0-360 degrees
+            heading = (heading + 360) % 360;
+            
+            // Convert to map rotation (Leaflet uses different coordinate system)
+            // Map rotation: 0 = East, 90 = South, 180 = West, 270 = North
+            const mapHeading = (90 - heading + 360) % 360;
+            
+            lastPosition = currentPos;
+            
+            console.log(`Movement heading: ${heading.toFixed(1)}°, Map heading: ${mapHeading.toFixed(1)}°`);
+            return mapHeading;
+        }
+
+        // Update car symbol position and rotation with route snapping
+        function updateCarSymbol(position, heading = null) {
+            if (!carSymbol) return;
+            
+            // Get route-snapped position and direction
+            const routeData = getRouteSnappedPosition(position);
+            const snappedPosition = routeData.position;
+            const routeHeading = routeData.heading;
+            
+            // Update position to snapped location
+            carSymbol.setLatLng([snappedPosition.lat, snappedPosition.lng]);
+            
+            // Determine if we're on route (within 50m)
+            const routeCoords = getRouteCoordinates(route);
+            let isOnRoute = false;
+            if (routeCoords && routeCoords.length > 0) {
+                let minDistance = Infinity;
+                for (const coord of routeCoords) {
+                    const distance = calculateDistance(
+                        position.lat, position.lng,
+                        coord[0], coord[1]
+                    );
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                    }
+                }
+                isOnRoute = minDistance <= 50; // 50m threshold for "on route"
+            }
+            
+            // Calculate target heading based on route direction
+            let targetHeading = userHeading || 0;
+            
+            if (isOnRoute && routeHeading !== null) {
+                // On route - follow route direction for navigation
+                targetHeading = routeHeading;
+                console.log('Car following route direction:', targetHeading.toFixed(1) + '°');
+            } else {
+                // Off route - use actual driving direction (GPS heading or movement)
+                if (heading !== null) {
+                    // Convert GPS heading to map rotation (GPS: 0=North, 90=East, 180=South, 270=West)
+                    // Map rotation: 0=East, 90=South, 180=West, 270=North
+                    const mapHeading = (90 - heading + 360) % 360;
+                    targetHeading = mapHeading;
+                    console.log('Car using driving direction (GPS):', targetHeading.toFixed(1) + '°');
+                } else {
+                    // Fallback to movement-based heading
+                    const calculatedHeading = calculateHeadingFromMovement(position);
+                    if (calculatedHeading !== null) {
+                        targetHeading = calculatedHeading;
+                        console.log('Car using driving direction (movement):', targetHeading.toFixed(1) + '°');
+                    } else {
+                        // If no heading available, keep previous heading
+                        console.log('Car keeping previous heading:', userHeading?.toFixed(1) + '°');
+                        targetHeading = userHeading || 0;
+                    }
+                }
+            }
+            
+            // Smooth rotation logic - calculate shortest rotation path
+            let rotationAngle = targetHeading;
+            if (userHeading !== undefined) {
+                // Calculate the shortest rotation path
+                let angleDiff = targetHeading - userHeading;
+                
+                // Normalize to shortest path (-180 to 180 degrees)
+                if (angleDiff > 180) {
+                    angleDiff -= 360;
+                } else if (angleDiff < -180) {
+                    angleDiff += 360;
+                }
+                
+                // Apply smooth rotation with easing
+                const smoothFactor = 0.3; // Adjust for smoother/faster rotation
+                const newAngle = userHeading + (angleDiff * smoothFactor);
+                rotationAngle = (newAngle + 360) % 360;
+            }
+            
+            // Update the car symbol rotation with smooth transition
+            const iconElement = carSymbol.getElement();
+            if (iconElement) {
+                const carDiv = iconElement.querySelector('.car-symbol');
+                if (carDiv) {
+                    // Add smooth transition for rotation
+                    carDiv.style.transition = 'transform 0.8s ease-out';
+                    carDiv.style.transform = `rotate(${rotationAngle}deg)`;
+                    
+                    // Remove transition after animation to prevent lag
+                    setTimeout(() => {
+                        carDiv.style.transition = 'none';
+                    }, 800);
+                    
+                    console.log('Car symbol smoothly rotated to:', rotationAngle.toFixed(1) + '° (target: ' + targetHeading.toFixed(1) + '°)');
+                }
+            }
+            
+            // Update the stored heading
+            userHeading = rotationAngle;
+            
+            console.log(`Car symbol snapped to route at ${snappedPosition.lat.toFixed(6)}, ${snappedPosition.lng.toFixed(6)}, heading: ${userHeading.toFixed(1)}°`);
+            
+
+        }
+
+        // Toggle voice on/off
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            const voiceBtn = document.getElementById('voice-toggle');
+            if (voiceBtn) {
+                voiceBtn.textContent = voiceEnabled ? '🔊' : '🔇';
+                voiceBtn.title = voiceEnabled ? 'Voice On' : 'Voice Off';
+            }
+            
+            if (!voiceEnabled) {
+                speechSynthesis.cancel();
+            }
+            
+            showStatus(voiceEnabled ? 'Voice enabled' : 'Voice disabled');
+            setTimeout(hideStatus, 1500);
+        }
+
+
+
+        // Get current location with high precision
+        function getCurrentLocation() {
+            showStatus('Getting your location...');
+            
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+
+                    currentPosition = { lat, lng };
+                    
+                    // Update or create marker
+                    if (currentMarker) {
+                        map.removeLayer(currentMarker);
+                    }
+                    
+                    currentMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'current-location-marker',
+                            html: `
+                                <div style="
+                                    background: linear-gradient(135deg, #4285f4 0%, #3367d6 100%);
+                                    width: 20px;
+                                    height: 20px;
+                                    border-radius: 50%;
+                                    border: 4px solid white;
+                                    box-shadow: 0 4px 16px rgba(66, 133, 244, 0.4);
+                                    position: relative;
+                                ">
+                                    <div style="
+                                        position: absolute;
+                                        top: 50%;
+                                        left: 50%;
+                                        width: 8px;
+                                        height: 8px;
+                                        background: white;
+                                        border-radius: 50%;
+                                        transform: translate(-50%, -50%);
+                                        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                                    "></div>
+                                </div>
+                            `,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        })
+                    }).addTo(map);
+
+                    // Remove existing accuracy circle if any
+                    if (accuracyCircle) {
+                        map.removeLayer(accuracyCircle);
+                    }
+
+                    // Add accuracy circle
+                    accuracyCircle = L.circle([lat, lng], {
+                        radius: accuracy,
+                        color: '#4285f4',
+                        fillColor: '#4285f4',
+                        fillOpacity: 0.1,
+                        weight: 1
+                    }).addTo(map);
+
+                    // Center map on location
+                    map.setView([lat, lng], 16);
+                    
+                    // Update location info
+                    updateLocationInfo(accuracy);
+                    
+                    // Get address
+                    getAddressFromCoords(lat, lng);
+                    
+                    hideStatus();
+                    showStatus('Location found!');
+                    setTimeout(hideStatus, 2000);
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    hideStatus();
+                    showStatus('Could not get location. Please try again.');
+                    setTimeout(hideStatus, 3000);
+                },
+                options
+            );
+        }
+
+        // Start real-time location tracking
+        function startLocationTracking() {
+            if (locationWatchId) {
+                navigator.geolocation.clearWatch(locationWatchId);
+            }
+
+            locationWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
+                    const heading = position.coords.heading;
+
+                    currentPosition = { lat, lng };
+                    
+                    // Update heading if available from GPS
+                    if (heading !== null && !isNaN(heading)) {
+                        // GPS heading is already in degrees (0 = North, 90 = East, etc.)
+                        // Convert to map rotation (0 = East, 90 = South, 180 = West, 270 = North)
+                        userHeading = (90 - heading + 360) % 360;
+                        console.log(`GPS heading: ${heading.toFixed(1)}°, Map heading: ${userHeading.toFixed(1)}°`);
+                    }
+                    
+                    // Update marker position
+                    if (currentMarker) {
+                        currentMarker.setLatLng([lat, lng]);
+                    }
+                    
+                    // Update accuracy circle
+                    if (accuracyCircle) {
+                        accuracyCircle.setLatLng([lat, lng]);
+                        accuracyCircle.setRadius(accuracy);
+                    }
+                    
+                    // Update car symbol if in navigation mode
+                    if (isNavigating && carSymbol) {
+                        updateCarSymbol(currentPosition, userHeading);
+                        // Recreate car symbol to update route direction
+                        createCarSymbol();
+                    }
+                    
+                    // Update location info
+                    updateLocationInfo(accuracy);
+                },
+                (error) => {
+                    console.error('Location tracking error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 1000
+                }
+            );
+        }
+
+        // Update location info display
+        function updateLocationInfo(accuracy) {
+            const locationInfo = document.getElementById('location-info');
+            let accuracyText = '';
+            
+            if (accuracy <= 5) {
+                accuracyText = `Ultra High (${accuracy.toFixed(1)}m)`;
+            } else if (accuracy <= 20) {
+                accuracyText = `High (${accuracy.toFixed(1)}m)`;
+            } else if (accuracy <= 50) {
+                accuracyText = `Medium (${accuracy.toFixed(1)}m)`;
+            } else {
+                accuracyText = `Low (${accuracy.toFixed(1)}m)`;
+            }
+            
+            locationInfo.textContent = `📍 Location: ${currentPosition.lat.toFixed(6)}, ${currentPosition.lng.toFixed(6)} • ${accuracyText}`;
+        }
+
+        // Get address from coordinates
+        async function getAddressFromCoords(lat, lng) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+                    timeout: 5000
+                });
+                const data = await response.json();
+                
+                if (data.display_name) {
+                    const locationInfo = document.getElementById('location-info');
+                    locationInfo.textContent += ` • ${data.display_name.split(',')[0]}`;
+                }
+            } catch (error) {
+                console.error('Error getting address:', error);
+            }
+        }
+
+        // Get directions
+        async function getDirections() {
+            const destinationInput = document.getElementById('destination').value.trim();
+            
+            if (!destinationInput) {
+                showStatus('Please enter a destination');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+
+            if (!currentPosition) {
+                showStatus('Please get your location first');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+
+            showStatus('Finding destination...');
+            
+            try {
+                // Geocode destination
+                const geocoded = await geocodeDestination(destinationInput);
+                if (!geocoded) {
+                    showStatus('Could not find destination');
+                    setTimeout(hideStatus, 2000);
+                    return;
+                }
+
+                destination = geocoded;
+                showStatus('Calculating route...');
+                
+                // Calculate route
+                await calculateRoute();
+                
+            } catch (error) {
+                console.error('Error getting directions:', error);
+                showStatus('Error getting directions');
+                setTimeout(hideStatus, 2000);
+            }
+        }
+
+        // Search for autocomplete suggestions
+        async function searchAutocomplete(query) {
+            if (!query || query.length < 2) {
+                hideAutocomplete();
+                return;
+            }
+
+            try {
+                // Show loading state
+                showAutocompleteLoading();
+
+                const searchStrategies = [
+                    query,
+                    `${query}, Melbourne`,
+                    `${query}, Victoria, Australia`
+                ];
+
+                const allResults = [];
+
+                // Search with multiple strategies
+                for (const searchTerm of searchStrategies) {
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=5&addressdetails=1`, {
+                            timeout: 5000
+                        });
+                        const data = await response.json();
+
+                        if (data && data.length > 0) {
+                            // Add results with source info
+                            data.forEach(result => {
+                                allResults.push({
+                                    ...result,
+                                    searchTerm: searchTerm,
+                                    lat: parseFloat(result.lat),
+                                    lng: parseFloat(result.lon)
+                                });
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Autocomplete search error:', error);
+                    }
+                }
+
+                // Remove duplicates and limit results
+                const uniqueResults = removeDuplicateResults(allResults);
+                autocompleteResults = uniqueResults.slice(0, 8);
+
+                displayAutocompleteResults(query);
+            } catch (error) {
+                console.error('Autocomplete error:', error);
+                hideAutocomplete();
+            }
+        }
+
+        // Remove duplicate results based on coordinates
+        function removeDuplicateResults(results) {
+            const seen = new Set();
+            return results.filter(result => {
+                const key = `${result.lat.toFixed(4)},${result.lng.toFixed(4)}`;
+                if (seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+                return true;
+            });
+        }
+
+        // Display autocomplete results
+        function displayAutocompleteResults(query) {
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            if (!dropdown) return;
+
+            if (autocompleteResults.length === 0) {
+                dropdown.innerHTML = '<div class="autocomplete-loading">No results found</div>';
+                dropdown.classList.add('show');
+                isAutocompleteVisible = true;
+                return;
+            }
+
+            dropdown.innerHTML = '';
+            selectedAutocompleteIndex = -1;
+
+            autocompleteResults.forEach((result, index) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.onclick = () => selectAutocompleteResult(result);
+                item.onmouseenter = () => selectAutocompleteItem(index);
+
+                // Highlight matching text
+                const highlightedTitle = highlightText(result.display_name, query);
+                const subtitle = getSubtitle(result);
+
+                item.innerHTML = `
+                    <div class="autocomplete-icon">📍</div>
+                    <div class="autocomplete-content">
+                        <div class="autocomplete-title">${highlightedTitle}</div>
+                        <div class="autocomplete-subtitle">${subtitle}</div>
+                    </div>
+                `;
+
+                dropdown.appendChild(item);
+            });
+
+            dropdown.classList.add('show');
+            isAutocompleteVisible = true;
+        }
+
+        // Highlight matching text in search results
+        function highlightText(text, query) {
+            if (!query) return text;
+            
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="autocomplete-highlight">$1</span>');
+        }
+
+        // Get subtitle for autocomplete item
+        function getSubtitle(result) {
+            const parts = result.display_name.split(', ');
+            if (parts.length > 2) {
+                return parts.slice(-2).join(', ');
+            }
+            return result.display_name;
+        }
+
+        // Show loading state in autocomplete
+        function showAutocompleteLoading() {
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            if (dropdown) {
+                dropdown.innerHTML = '<div class="autocomplete-loading">Searching...</div>';
+                dropdown.classList.add('show');
+                isAutocompleteVisible = true;
+            }
+        }
+
+        // Hide autocomplete dropdown
+        function hideAutocomplete() {
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+                isAutocompleteVisible = false;
+                selectedAutocompleteIndex = -1;
+            }
+        }
+
+        // Select autocomplete item with keyboard
+        function selectAutocompleteItem(index) {
+            const items = document.querySelectorAll('.autocomplete-item');
+            items.forEach((item, i) => {
+                item.classList.toggle('selected', i === index);
+            });
+            selectedAutocompleteIndex = index;
+        }
+
+        // Select autocomplete result
+        function selectAutocompleteResult(result) {
+            const input = document.getElementById('destination');
+            input.value = result.display_name;
+            hideAutocomplete();
+            
+            // Auto-trigger search
+            getDirections();
+        }
+
+        // Handle keyboard navigation in autocomplete
+        function handleAutocompleteKeyboard(event) {
+            if (!isAutocompleteVisible) return;
+
+            const items = document.querySelectorAll('.autocomplete-item');
+            
+            switch(event.key) {
+                case 'ArrowDown':
+                    event.preventDefault();
+                    selectedAutocompleteIndex = Math.min(selectedAutocompleteIndex + 1, items.length - 1);
+                    selectAutocompleteItem(selectedAutocompleteIndex);
+                    break;
+                    
+                case 'ArrowUp':
+                    event.preventDefault();
+                    selectedAutocompleteIndex = Math.max(selectedAutocompleteIndex - 1, -1);
+                    selectAutocompleteItem(selectedAutocompleteIndex);
+                    break;
+                    
+                case 'Enter':
+                    event.preventDefault();
+                    if (selectedAutocompleteIndex >= 0 && autocompleteResults[selectedAutocompleteIndex]) {
+                        selectAutocompleteResult(autocompleteResults[selectedAutocompleteIndex]);
+                    } else {
+                        getDirections();
+                    }
+                    break;
+                    
+                case 'Escape':
+                    hideAutocomplete();
+                    break;
+            }
+        }
+
+        // Geocode destination with fallback
+        async function geocodeDestination(address) {
+            const searchStrategies = [
+                address,
+                `${address}, Melbourne`,
+                `${address}, Victoria, Australia`
+            ];
+
+            for (const searchTerm of searchStrategies) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=1&addressdetails=1`, {
+                        timeout: 5000
+                    });
+                    const data = await response.json();
+
+                    if (data && data.length > 0) {
+                        const result = data[0];
+                        return {
+                            lat: parseFloat(result.lat),
+                            lng: parseFloat(result.lon),
+                            name: result.display_name
+                        };
+                    }
+                } catch (error) {
+                    console.error('Geocoding error:', error);
+                }
+            }
+
+            return null;
+        }
+
+        // Calculate multiple routes
+        async function calculateRoute() {
+            if (!currentPosition || !destination) {
+                showStatus('Please get your location and destination first');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+
+            showStatus('Calculating routes...');
+
+            try {
+                // Get multiple route alternatives
+                const routes = await Promise.all([
+                    // Fastest route (default)
+                    fetchRoute('driving', 'fastest'),
+                    // Shortest route
+                    fetchRoute('driving', 'shortest'),
+                    // Alternative route (avoiding highways)
+                    fetchRoute('driving', 'alternative')
+                ]);
+
+                // Filter out failed routes
+                const validRoutes = routes.filter(route => route !== null);
+                
+                if (validRoutes.length > 0) {
+                    window.routes = validRoutes; // Use global routes variable
+                    selectedRouteIndex = 0;
+                    route = window.routes[0]; // Set first route as default
+                    displayRouteOptions(validRoutes);
+                    displayRoute(route);
+                    displayDirections(route);
+                    showStatus(`${validRoutes.length} routes found!`);
+                    setTimeout(hideStatus, 2000);
+                } else {
+                    showStatus('No routes found');
+                    setTimeout(hideStatus, 2000);
+                }
+            } catch (error) {
+                console.error('Routing error:', error);
+                showStatus('Error calculating routes');
+                setTimeout(hideStatus, 2000);
+            }
+        }
+
+        // Fetch individual route
+        async function fetchRoute(profile, type) {
+            let url = `https://router.project-osrm.org/route/v1/${profile}/${currentPosition.lng},${currentPosition.lat};${destination.lng},${destination.lat}?overview=full&steps=true&annotations=true&geometries=geojson`;
+            
+            // Add alternatives parameter for alternative routes
+            if (type === 'alternative') {
+                url += '&alternatives=true&steps=true';
+            }
+
+            try {
+                const response = await fetch(url, { timeout: 10000 });
+                const data = await response.json();
+
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    // For alternative routes, we might get multiple routes
+                    if (type === 'alternative' && data.routes.length > 1) {
+                        // Return the first alternative route
+                        return {
+                            ...data,
+                            routes: [data.routes[1]] // Use first alternative
+                        };
+                    } else {
+                        return data;
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error(`Error fetching ${type} route:`, error);
+                return null;
+            }
+        }
+
+        // Display route on map with road-following geometry
+        function displayRoute(data) {
+            try {
+                // Clear existing route
+                if (routeLine) {
+                    map.removeLayer(routeLine);
+                }
+                if (completedRouteLine) {
+                    map.removeLayer(completedRouteLine);
+                }
+                if (destinationMarker) {
+                    map.removeLayer(destinationMarker);
+                }
+
+                // Add destination marker
+                destinationMarker = L.marker([destination.lat, destination.lng], {
+                    icon: L.divIcon({
+                        className: 'destination-marker',
+                        html: `
+                            <div style="
+                                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 50%;
+                                border: 4px solid white;
+                                box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
+                                position: relative;
+                                animation: pulse 2s infinite;
+                            ">
+                                <div style="
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    width: 10px;
+                                    height: 10px;
+                                    background: white;
+                                    border-radius: 50%;
+                                    transform: translate(-50%, -50%);
+                                    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+                                "></div>
+                            </div>
+                            <style>
+                                @keyframes pulse {
+                                    0% { transform: scale(1); }
+                                    50% { transform: scale(1.1); }
+                                    100% { transform: scale(1); }
+                                }
+                            </style>
+                        `,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    })
+                }).addTo(map);
+
+                // Try to get road-following geometry
+                let coordinates = null;
+                
+                // Method 1: Try to use GeoJSON geometry (most accurate)
+                if (data.routes[0].geometry && data.routes[0].geometry.type === 'LineString') {
+                    coordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                    console.log('Using GeoJSON geometry for road following');
+                }
+                // Method 2: Try to decode polyline geometry
+                else if (data.routes[0].geometry && typeof data.routes[0].geometry === 'string') {
+                    try {
+                        coordinates = decodePolyline(data.routes[0].geometry);
+                        console.log('Using polyline geometry for road following');
+                    } catch (e) {
+                        console.log('Polyline decode failed, trying step geometry');
+                    }
+                }
+                
+                // Method 2: Try to use step geometry if available
+                if (!coordinates && data.routes[0].legs[0].steps) {
+                    coordinates = createRouteFromStepGeometry(data.routes[0].legs[0].steps);
+                    if (coordinates && coordinates.length > 1) {
+                        console.log('Using step geometry for road following');
+                    }
+                }
+                
+                // Method 3: Fallback to step coordinates
+                if (!coordinates || coordinates.length < 2) {
+                    coordinates = createRouteFromSteps(data.routes[0].legs[0].steps);
+                    console.log('Using step coordinates as fallback');
+                }
+
+                console.log('Final route coordinates:', coordinates);
+
+                // Create route line with completed/upcoming portions
+                if (coordinates && coordinates.length > 1) {
+                    // Split route into completed and upcoming portions
+                    const routeSegments = splitRouteByProgress(coordinates);
+                    
+                    // Display completed portion in gray
+                    if (routeSegments.completed.length > 1) {
+                        completedRouteLine = L.polyline(routeSegments.completed, {
+                            color: '#9e9e9e',
+                            weight: 6,
+                            opacity: 0.6
+                        }).addTo(map);
+                    }
+                    
+                    // Display upcoming portion in blue
+                    if (routeSegments.upcoming.length > 1) {
+                        routeLine = L.polyline(routeSegments.upcoming, {
+                            color: '#4285f4',
+                            weight: 6,
+                            opacity: 0.8
+                        }).addTo(map);
+                    } else {
+                        // If no upcoming portion, show full route in blue
+                    routeLine = L.polyline(coordinates, {
+                        color: '#4285f4',
+                        weight: 6,
+                        opacity: 0.8
+                    }).addTo(map);
+                    }
+
+                    // Fit map to route
+                    const allCoordinates = [...(routeSegments.completed.length > 0 ? routeSegments.completed : []), 
+                                           ...(routeSegments.upcoming.length > 0 ? routeSegments.upcoming : coordinates)];
+                    if (allCoordinates.length > 1) {
+                        const bounds = L.latLngBounds(allCoordinates);
+                        map.fitBounds(bounds, { padding: [20, 20] });
+                    }
+                } else {
+                    // Fallback: simple line between start and end
+                    const fallbackCoordinates = [
+                        [currentPosition.lat, currentPosition.lng],
+                        [destination.lat, destination.lng]
+                    ];
+                    routeLine = L.polyline(fallbackCoordinates, {
+                        color: '#4285f4',
+                        weight: 6,
+                        opacity: 0.8
+                    }).addTo(map);
+                    map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+                }
+            } catch (error) {
+                console.error('Error displaying route:', error);
+                // Fallback: just show markers
+                if (destinationMarker) {
+                    map.fitBounds([
+                        [currentPosition.lat, currentPosition.lng],
+                        [destination.lat, destination.lng]
+                    ], { padding: [20, 20] });
+                }
+            }
+        }
+
+        // Create route from step geometry (road-following)
+        function createRouteFromStepGeometry(steps) {
+            const coordinates = [];
+            
+            // Add starting point
+            if (currentPosition) {
+                coordinates.push([currentPosition.lat, currentPosition.lng]);
+            }
+            
+            // Extract geometry from each step
+            steps.forEach(step => {
+                if (step.geometry && step.geometry.coordinates) {
+                    // Add all coordinates from step geometry
+                    step.geometry.coordinates.forEach(coord => {
+                        // OSRM uses [lng, lat] format, convert to [lat, lng] for Leaflet
+                        coordinates.push([coord[1], coord[0]]);
+                    });
+                } else if (step.maneuver && step.maneuver.location) {
+                    // Fallback to maneuver location if no geometry
+                    const location = step.maneuver.location;
+                    coordinates.push([location[1], location[0]]);
+                }
+            });
+            
+            // Add destination
+            if (destination) {
+                coordinates.push([destination.lat, destination.lng]);
+            }
+            
+            // Remove duplicate coordinates
+            const uniqueCoordinates = [];
+            coordinates.forEach(coord => {
+                const exists = uniqueCoordinates.some(existing => 
+                    Math.abs(existing[0] - coord[0]) < 0.0001 && 
+                    Math.abs(existing[1] - coord[1]) < 0.0001
+                );
+                if (!exists) {
+                    uniqueCoordinates.push(coord);
+                }
+            });
+            
+            console.log('Created road-following route with', uniqueCoordinates.length, 'points');
+            return uniqueCoordinates;
+        }
+
+        // Create route from step coordinates (reliable method)
+        function createRouteFromSteps(steps) {
+            const coordinates = [];
+            
+            // Add starting point
+            if (currentPosition) {
+                coordinates.push([currentPosition.lat, currentPosition.lng]);
+            }
+            
+            // Add step coordinates
+            steps.forEach(step => {
+                if (step.maneuver && step.maneuver.location) {
+                    const location = step.maneuver.location;
+                    // OSRM uses [lng, lat] format, convert to [lat, lng] for Leaflet
+                    coordinates.push([location[1], location[0]]);
+                }
+            });
+            
+            // Add destination
+            if (destination) {
+                coordinates.push([destination.lat, destination.lng]);
+            }
+            
+            // Remove duplicate coordinates
+            const uniqueCoordinates = [];
+            coordinates.forEach(coord => {
+                const exists = uniqueCoordinates.some(existing => 
+                    Math.abs(existing[0] - coord[0]) < 0.0001 && 
+                    Math.abs(existing[1] - coord[1]) < 0.0001
+                );
+                if (!exists) {
+                    uniqueCoordinates.push(coord);
+                }
+            });
+            
+            console.log('Created route with', uniqueCoordinates.length, 'points');
+            return uniqueCoordinates;
+        }
+
+        // Display route options
+        function displayRouteOptions(routeData) {
+            const directionsPanel = document.getElementById('directions-panel');
+            const directionsList = document.getElementById('directions-list');
+            
+            directionsPanel.classList.add('show');
+            directionsList.innerHTML = '';
+
+            // Create route options container
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'route-options';
+            
+            routeData.forEach((routeData, index) => {
+                const route = routeData.routes[0];
+                const leg = route.legs[0];
+                
+                const optionDiv = document.createElement('div');
+                optionDiv.className = `route-option ${index === 0 ? 'selected' : ''}`;
+                optionDiv.onclick = () => selectRoute(index);
+                
+                const routeType = getRouteType(index);
+                const distance = (leg.distance / 1000).toFixed(1);
+                const time = Math.round(leg.duration / 60);
+                
+                optionDiv.innerHTML = `
+                    <div class="route-option-title">${routeType}</div>
+                    <div class="route-option-details">${distance} km • ${time} min</div>
+                `;
+                
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            directionsList.appendChild(optionsContainer);
+        }
+
+        // Get route type name
+        function getRouteType(index) {
+            const types = ['Fastest', 'Shortest', 'Alternative'];
+            return types[index] || `Route ${index + 1}`;
+        }
+
+        // Select a different route
+        function selectRoute(index) {
+            if (index === selectedRouteIndex) return;
+            
+            // Update selected route
+            selectedRouteIndex = index;
+            route = window.routes[index];
+            
+            // Update route options UI
+            document.querySelectorAll('.route-option').forEach((option, i) => {
+                option.classList.toggle('selected', i === index);
+            });
+            
+            // Update map and directions
+            displayRoute(route);
+            displayDirections(route);
+            
+            showStatus(`Switched to ${getRouteType(index)} route`);
+            setTimeout(hideStatus, 1500);
+        }
+
+        // Display directions
+        function displayDirections(data) {
+            const directionsList = document.getElementById('directions-list');
+            
+            // Clear existing directions (but keep route options)
+            const existingDirections = directionsList.querySelector('.directions-content');
+            if (existingDirections) {
+                existingDirections.remove();
+            }
+
+            const route = data.routes[0];
+            const leg = route.legs[0];
+            const steps = leg.steps;
+
+            // Create directions content container
+            const directionsContent = document.createElement('div');
+            directionsContent.className = 'directions-content';
+
+            // Add enhanced route summary
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'route-summary';
+            summaryDiv.innerHTML = `
+                <h4>${getRouteType(selectedRouteIndex)} Route</h4>
+                <div class="route-summary-details">
+                    <div class="route-summary-item">
+                        <span>📏</span>
+                        <span>${(leg.distance / 1000).toFixed(1)} km</span>
+                    </div>
+                    <div class="route-summary-item">
+                        <span>⏱️</span>
+                        <span>${Math.round(leg.duration / 60)} min</span>
+                    </div>
+                    <div class="route-summary-item">
+                        <span>🚗</span>
+                        <span>${steps.length} steps</span>
+                    </div>
+                </div>
+            `;
+            directionsContent.appendChild(summaryDiv);
+
+            steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'direction-step';
+                stepDiv.onclick = () => highlightStep(index, step);
+                
+                // Get better instruction text
+                const instruction = getBetterInstruction(step);
+                const distance = step.distance || 0;
+                const duration = step.duration || 0;
+                
+                // Get road names
+                const currentRoad = step.name || step.maneuver.name || '';
+                const nextRoad = step.maneuver.after || '';
+                
+                stepDiv.innerHTML = `
+                    <div class="step-instruction">${instruction}</div>
+                    <div class="step-distance">${distance.toFixed(0)}m • ${Math.round(duration)}s</div>
+                    ${currentRoad ? `<div style="font-size: 12px; color: #888; margin-top: 2px;">${currentRoad}${nextRoad && nextRoad !== currentRoad ? ` → ${nextRoad}` : ''}</div>` : ''}
+                `;
+                
+                directionsContent.appendChild(stepDiv);
+            });
+
+            // Add directions content to the list
+            directionsList.appendChild(directionsContent);
+        }
+
+        // Get better instruction text with detailed voice guidance and street names
+        function getBetterInstruction(step) {
+            const maneuver = step.maneuver;
+            const maneuverType = maneuver.type;
+            const instruction = maneuver.instruction || '';
+            
+            // Get street names - prioritize the street we're turning onto
+            const currentRoad = step.name || step.maneuver.name || '';
+            const nextRoad = step.maneuver.after || '';
+            const turnStreet = nextRoad || currentRoad || 'the intersection';
+            
+            // Clean up street name for better pronunciation
+            const cleanStreetName = turnStreet.replace(/^(Avenue|Street|Road|Drive|Lane|Boulevard|Way|Place|Court|Terrace|Highway|Freeway|Expressway)\s+/i, '');
+            const streetType = turnStreet.match(/^(Avenue|Street|Road|Drive|Lane|Boulevard|Way|Place|Court|Terrace|Highway|Freeway|Expressway)/i);
+            const streetTypeText = streetType ? streetType[1] : '';
+            
+            const fullStreetName = cleanStreetName + (streetTypeText ? ` ${streetTypeText}` : '');
+            
+            // Generate detailed instruction based on maneuver type
+            let betterInstruction = '';
+            let voiceInstruction = '';
+            
+            switch(maneuverType) {
+                case 'turn-right':
+                    betterInstruction = `Turn right at ${fullStreetName}`;
+                    voiceInstruction = `Turn right at ${fullStreetName}`;
+                    break;
+                case 'turn-left':
+                    betterInstruction = `Turn left at ${fullStreetName}`;
+                    voiceInstruction = `Turn left at ${fullStreetName}`;
+                    break;
+                case 'turn-slight-right':
+                    betterInstruction = `Slight right at ${fullStreetName}`;
+                    voiceInstruction = `Take a slight right turn at ${fullStreetName}`;
+                    break;
+                case 'turn-slight-left':
+                    betterInstruction = `Slight left at ${fullStreetName}`;
+                    voiceInstruction = `Take a slight left turn at ${fullStreetName}`;
+                    break;
+                case 'turn-sharp-right':
+                    betterInstruction = `Sharp right at ${fullStreetName}`;
+                    voiceInstruction = `Take a sharp right turn at ${fullStreetName}`;
+                    break;
+                case 'turn-sharp-left':
+                    betterInstruction = `Sharp left at ${fullStreetName}`;
+                    voiceInstruction = `Take a sharp left turn at ${fullStreetName}`;
+                    break;
+                case 'uturn':
+                    betterInstruction = `Make a U-turn at ${fullStreetName}`;
+                    voiceInstruction = `Make a U-turn at ${fullStreetName}`;
+                    break;
+                case 'roundabout':
+                    betterInstruction = `Enter roundabout at ${fullStreetName}`;
+                    voiceInstruction = getRoundaboutInstruction(step);
+                    break;
+                case 'exit-roundabout':
+                    betterInstruction = `Exit roundabout onto ${fullStreetName}`;
+                    voiceInstruction = `Exit the roundabout onto ${fullStreetName}`;
+                    break;
+                case 'arrive':
+                    betterInstruction = 'You have arrived';
+                    voiceInstruction = 'You have arrived at your destination';
+                    break;
+                case 'merge':
+                    betterInstruction = `Merge onto ${fullStreetName}`;
+                    voiceInstruction = `Merge onto ${fullStreetName}`;
+                    break;
+                case 'ramp':
+                    betterInstruction = `Take ramp to ${fullStreetName}`;
+                    voiceInstruction = `Take the ramp to ${fullStreetName}`;
+                    break;
+                case 'exit':
+                    betterInstruction = `Take exit to ${fullStreetName}`;
+                    voiceInstruction = `Take the exit to ${fullStreetName}`;
+                    break;
+                case 'new-name':
+                    betterInstruction = `Continue on ${currentRoad}`;
+                    voiceInstruction = `Continue on ${currentRoad}`;
+                    break;
+                default:
+                    betterInstruction = `Continue on ${currentRoad}`;
+                    voiceInstruction = `Continue on ${currentRoad}`;
+            }
+            
+            // Store voice instruction for later use
+            step.voiceInstruction = voiceInstruction;
+            
+            return betterInstruction;
+        }
+
+        // Get detailed roundabout instruction
+        function getRoundaboutInstruction(step) {
+            const maneuver = step.maneuver;
+            const exit = maneuver.exit || 0;
+            const roundaboutName = step.name || 'the roundabout';
+            
+            let instruction = `Enter ${roundaboutName}`;
+            
+            if (exit > 0) {
+                if (exit === 1) {
+                    instruction += ' and take the first exit';
+                } else if (exit === 2) {
+                    instruction += ' and take the second exit';
+                } else if (exit === 3) {
+                    instruction += ' and take the third exit';
+                } else {
+                    instruction += ` and take the ${exit}${getOrdinalSuffix(exit)} exit`;
+                }
+            }
+            
+            return instruction;
+        }
+
+        // Get ordinal suffix for numbers
+        function getOrdinalSuffix(num) {
+            if (num >= 11 && num <= 13) return 'th';
+            switch (num % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        }
+
+        // Highlight step on map
+        function highlightStep(index, step) {
+            if (step.maneuver && step.maneuver.location) {
+                const location = step.maneuver.location;
+                map.setView([location[1], location[0]], 16);
+            }
+        }
+
+        // Start navigation mode
+        function startNavigation() {
+            if (!route) {
+                showStatus('Please get directions first');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+
+            isNavigating = true;
+            currentStep = 0;
+            lastSpokenInstruction = ''; // Reset spoken instructions
+            spokenInstructions.clear(); // Reset instruction tracking
+            lastStepSpoken = -1; // Reset step tracking
+
+            // Hide search controls
+            document.querySelector('.controls').style.display = 'none';
+            
+            // Hide directions panel
+            document.getElementById('directions-panel').classList.remove('show');
+            
+            // Show navigation banner
+            document.getElementById('navigation-banner').classList.add('show');
+            
+            // Show directions toggle
+            document.getElementById('directions-toggle').classList.add('show');
+
+            // Create car symbol (this will be the real-time location marker)
+            createCarSymbol();
+
+            // Start navigation tracking
+            startNavigationTracking();
+
+            // Show "continue" instruction for 2 seconds
+            showContinueInstruction();
+
+            // Center map on user and enable following
+            if (currentPosition) {
+                map.setView([currentPosition.lat, currentPosition.lng], 18);
+                isFollowingUser = true;
+                hideFollowMeButton(); // Hide button when starting navigation
+            }
+
+            // Speak initial instruction
+            speakInstruction('Navigation started. Continue on the current road.');
+
+            showStatus('Navigation started!');
+            setTimeout(hideStatus, 2000);
+        }
+
+        // Show continue instruction for 2 seconds when starting navigation
+        function showContinueInstruction() {
+            const directionIcon = document.getElementById('nav-direction-icon');
+            const mainInstruction = document.getElementById('nav-main-instruction');
+            const subInstruction = document.getElementById('nav-sub-instruction');
+            
+            // Set continue instruction
+            directionIcon.textContent = '↑';
+            directionIcon.className = 'nav-direction-icon straight';
+            mainInstruction.textContent = 'Continue';
+            subInstruction.textContent = 'Stay on current road';
+            
+            // After 2 seconds, show the actual first turn instruction
+            setTimeout(() => {
+                if (isNavigating && route) {
+                    updateNavigationDisplay();
+                }
+            }, 2000);
+        }
+
+
+
+        // Stop navigation
+        function stopNavigation() {
+            isNavigating = false;
+
+            // Stop any ongoing speech
+            if (speechSynthesis) {
+                speechSynthesis.cancel();
+            }
+
+            // Stop navigation tracking
+            if (navigationWatchId) {
+                navigator.geolocation.clearWatch(navigationWatchId);
+                navigationWatchId = null;
+            }
+
+            // Remove destination marker (red dot)
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+
+                    // Remove route lines
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+        if (completedRouteLine) {
+            map.removeLayer(completedRouteLine);
+            completedRouteLine = null;
+        }
+
+            // Remove car symbol
+            if (carSymbol) {
+                map.removeLayer(carSymbol);
+                carSymbol = null;
+            }
+
+            // Show search controls
+            document.querySelector('.controls').style.display = 'block';
+            
+            // Hide navigation elements
+            document.getElementById('navigation-banner').classList.remove('show');
+            document.getElementById('directions-toggle').classList.remove('show');
+            document.getElementById('directions-panel').classList.remove('show');
+
+            // Clear route data
+            route = null;
+            window.routes = [];
+            selectedRouteIndex = 0;
+            destination = null;
+
+            showStatus('Navigation stopped');
+            setTimeout(hideStatus, 2000);
+        }
+
+        // Start navigation tracking
+        function startNavigationTracking() {
+            if (navigationWatchId) {
+                navigator.geolocation.clearWatch(navigationWatchId);
+            }
+
+            // Start periodic car symbol updates
+            const carUpdateInterval = setInterval(() => {
+                if (isNavigating && carSymbol && currentPosition) {
+                    // Force update car symbol direction every 2 seconds
+                    updateCarSymbol(currentPosition, null);
+                } else if (!isNavigating) {
+                    clearInterval(carUpdateInterval);
+                }
+            }, 2000);
+
+            navigationWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    if (isNavigating) {
+                        const newPosition = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        const heading = position.coords.heading;
+                        
+                        currentPosition = newPosition;
+                        
+                        // Update car symbol with heading (GPS heading takes priority)
+                        if (heading !== null && !isNaN(heading)) {
+                            // GPS heading is more accurate, use it directly
+                            const mapHeading = (90 - heading + 360) % 360;
+                            updateCarSymbol(newPosition, mapHeading);
+                        } else {
+                            // Fallback to movement-based heading
+                            updateCarSymbol(newPosition, null);
+                        }
+                        
+                        // Update accuracy circle with snapped position
+                        if (accuracyCircle) {
+                            accuracyCircle.setLatLng([snappedPosition.lat, snappedPosition.lng]);
+                            accuracyCircle.setRadius(position.coords.accuracy);
+                        }
+                        
+                        // Get route-snapped position for navigation
+                        const routeData = getRouteSnappedPosition(newPosition);
+                        const snappedPosition = routeData.position;
+                        
+                        // Check for route deviation and automatically re-route if car is off route
+                        if (checkRouteDeviation(snappedPosition)) {
+                            console.log('Car is off route, automatically re-routing...');
+                            showStatus('Off route! Recalculating...');
+                            speakInstruction('You have gone off route. Recalculating your route.');
+                            
+                            // Automatically re-route and restart navigation
+                            autoRerouteAndRestart();
+                        } else {
+                            // Only update navigation if not re-routing
+                            updateNavigation(snappedPosition);
+                        }
+                        
+                        // Auto-follow user in navigation mode
+                        if (isFollowingUser) {
+                            map.setView([newPosition.lat, newPosition.lng], 18);
+                        }
+                    }
+                },
+                (error) => {
+                    console.error('Navigation tracking error:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 500 // More frequent updates for better heading
+                }
+            );
+        }
+
+        // Recreate car symbol to update route direction
+        function updateCarSymbolWithRoute() {
+            if (isNavigating && carSymbol) {
+                // Force update car symbol with current heading
+                updateCarSymbol(currentPosition, null);
+                console.log('Car symbol updated with route direction');
+            }
+        }
+
+        // Update navigation display
+        function updateNavigation(userPosition) {
+            console.log('updateNavigation called with:', userPosition);
+            console.log('Route exists:', !!route);
+            console.log('Is navigating:', isNavigating);
+            
+            if (!route || !isNavigating) {
+                console.log('Navigation update skipped: no route or not navigating');
+                // Still update distance if we have a route but not navigating
+                if (route && userPosition) {
+                    const steps = route.routes[0].legs[0].steps;
+                    if (steps && steps.length > 0) {
+                        const nextStep = steps[0]; // Use first step
+                        const distanceToNext = calculateDistance(
+                            userPosition.lat, userPosition.lng,
+                            nextStep.maneuver.location[1], nextStep.maneuver.location[0]
+                        );
+                        const distanceText = `${Math.round(distanceToNext)}m to destination`;
+                        console.log('Non-navigation distance:', distanceText);
+                        
+                        // Update status with distance
+                        showStatus(distanceText);
+                        setTimeout(hideStatus, 3000);
+                    }
+                }
+                return;
+            }
+
+            const steps = route.routes[0].legs[0].steps;
+            
+            // Get current street name from reverse geocoding
+            getCurrentStreetName(userPosition).then(currentStreet => {
+                console.log('Current street:', currentStreet);
+                
+                // Find current step based on street name and proximity
+                let newCurrentStep = findCurrentStepByStreet(steps, currentStreet, userPosition);
+                
+                // If we found a new step, update
+                if (newCurrentStep !== currentStep && newCurrentStep < steps.length) {
+                    console.log(`Step changed from ${currentStep} to ${newCurrentStep}`);
+                    currentStep = newCurrentStep;
+                    updateNavigationDisplay();
+                    // Update car symbol to show new route direction
+                    updateCarSymbolWithRoute();
+                }
+                
+                // Update distance to next turn using route-snapped position
+                const nextStep = steps[currentStep];
+                console.log('Current step:', currentStep, 'Total steps:', steps.length);
+                console.log('Next step:', nextStep);
+                
+                // Get route-snapped position for accurate distance calculation
+                const routeData = getRouteSnappedPosition(userPosition);
+                const snappedPosition = routeData.position;
+                console.log('Snapped position:', snappedPosition);
+                
+                // Show turn indicator when approaching turn (within 300m)
+                const distanceToTurn = calculateDistance(
+                    snappedPosition.lat, snappedPosition.lng,
+                    nextStep.maneuver.location[1], nextStep.maneuver.location[0]
+                );
+                
+                if (distanceToTurn <= 300) {
+                    // Show specific turn instruction when approaching
+                    updateNavigationDisplay();
+                }
+                
+                // Calculate distance to next turn using route-snapped position
+                let distanceToNext = calculateDistance(
+                    snappedPosition.lat, snappedPosition.lng,
+                    nextStep.maneuver.location[1], nextStep.maneuver.location[0]
+                );
+                console.log('Direct distance to next turn:', distanceToNext);
+                
+                // If we're on route, use a more accurate distance calculation
+                if (routeData.heading !== null) {
+                    // Calculate distance along the route from current position to next turn
+                    const routeDistance = calculateDistanceToNextTurn(snappedPosition, currentStep);
+                    if (routeDistance !== null && routeDistance > 0) {
+                        distanceToNext = routeDistance;
+                        console.log(`Using route distance: ${distanceToNext}m (direct distance: ${calculateDistance(snappedPosition.lat, snappedPosition.lng, nextStep.maneuver.location[1], nextStep.maneuver.location[0])}m)`);
+                    }
+                }
+                
+                // Format distance display with countdown
+                let distanceText = `${Math.round(distanceToNext)}m`;
+                
+                // Add countdown context for better visibility
+                if (distanceToNext <= 100) {
+                    const roundedDistance = Math.round(distanceToNext / 10) * 10;
+                    distanceText = `${roundedDistance}m to turn`;
+                }
+                
+                // Add context if distance is very large (might be wrong step)
+                if (distanceToNext > 1000) {
+                    distanceText += ' (checking route...)';
+                }
+                
+                console.log('Setting distance text:', distanceText);
+                console.log('Distance to next turn:', Math.round(distanceToNext), 'meters');
+                const distanceElement = document.getElementById('nav-distance');
+                if (distanceElement) {
+                    distanceElement.textContent = distanceText;
+                    console.log('Distance updated successfully');
+                } else {
+                    console.error('nav-distance element not found!');
+                }
+                
+                // Also update the distance in the directions panel if it exists
+                const directionsDistanceElement = document.querySelector('.directions-panel .nav-distance');
+                if (directionsDistanceElement) {
+                    directionsDistanceElement.textContent = distanceText;
+                }
+                
+                // Smart distance-based voice alerts
+                const instruction = getBetterInstruction(nextStep);
+                const voiceInstruction = nextStep.voiceInstruction || instruction;
+                
+                // Smart voice alerts with countdown system
+                let shouldSpeak = false;
+                let alertDistance = 0;
+                
+                // Determine when to speak based on distance
+                if (distanceToNext <= 20) {
+                    // Final alert - very close to turn
+                    shouldSpeak = true;
+                    alertDistance = 20;
+                } else if (distanceToNext <= 100) {
+                    // Countdown alerts - every 10 meters
+                    const roundedDistance = Math.round(distanceToNext / 10) * 10;
+                    if (roundedDistance % 20 === 0 || roundedDistance === 50) { 
+                        // Speak at 100, 80, 60, 50, 40, 20
+                        shouldSpeak = true;
+                        alertDistance = roundedDistance;
+                    }
+                }
+                
+                // Check if we're on the correct street for this turn
+                const stepStreet = nextStep.name || nextStep.maneuver.name || '';
+                const isOnCorrectStreet = currentStreet && stepStreet && 
+                    (currentStreet.toLowerCase().includes(stepStreet.toLowerCase()) ||
+                     stepStreet.toLowerCase().includes(currentStreet.toLowerCase()));
+                
+                // Speak if conditions are met and we haven't spoken recently for this step
+                if (shouldSpeak && (isOnCorrectStreet || distanceToNext <= 50)) {
+                    // Check if we've already spoken for this step recently
+                    const stepKey = `${currentStep}_${alertDistance}`;
+                    const now = Date.now();
+                    const lastAlert = lastVoiceAlert[stepKey] || 0;
+                    const minInterval = distanceToNext <= 20 ? 1000 : 3000; // Shorter intervals for countdown
+                    
+                    if (now - lastAlert > minInterval) {
+                        // Create countdown instruction
+                        let finalInstruction = '';
+                        if (distanceToNext <= 20) {
+                            // Final instruction without distance
+                            finalInstruction = voiceInstruction;
+                        } else {
+                            // Countdown instruction with distance
+                            finalInstruction = `${voiceInstruction} in ${Math.round(distanceToNext)} meters`;
+                        }
+                        
+                        speakInstruction(finalInstruction, distanceToNext);
+                        
+                        // Record this alert
+                        lastVoiceAlert[stepKey] = now;
+                        
+                        console.log(`Voice alert: ${finalInstruction} (${distanceToNext}m away)`);
+                    }
+                }
+            });
+        }
+
+        // Get current street name using reverse geocoding
+        async function getCurrentStreetName(position) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}&zoom=18&addressdetails=1`, {
+                    timeout: 5000
+                });
+                const data = await response.json();
+                
+                if (data.address) {
+                    // Try different address fields for street name
+                    return data.address.road || 
+                           data.address.street || 
+                           data.address.highway || 
+                           data.address.name ||
+                           data.display_name.split(',')[0];
+                }
+                return null;
+            } catch (error) {
+                console.error('Error getting street name:', error);
+                return null;
+            }
+        }
+
+        // Find current step based on street name and proximity
+        function findCurrentStepByStreet(steps, currentStreet, userPosition) {
+            if (!currentStreet) {
+                // Fallback to proximity-based detection
+                return findCurrentStepByProximity(steps, userPosition);
+            }
+            
+            // First, try to find step by street name
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                const stepStreet = step.name || step.maneuver.name || '';
+                
+                if (stepStreet && currentStreet.toLowerCase().includes(stepStreet.toLowerCase())) {
+                    console.log(`Found step ${i} by street name: ${stepStreet} matches ${currentStreet}`);
+                    return i;
+                }
+            }
+            
+            // If no street match, use proximity with more conservative distance
+            return findCurrentStepByProximity(steps, userPosition);
+        }
+
+        // Find current step by proximity (fallback method)
+        function findCurrentStepByProximity(steps, userPosition) {
+            let closestStep = currentStep; // Start with current step
+            let minDistance = Infinity;
+            
+            // Check steps around current step (within 3 steps)
+            const startIndex = Math.max(0, currentStep - 2);
+            const endIndex = Math.min(steps.length - 1, currentStep + 2);
+            
+            for (let i = startIndex; i <= endIndex; i++) {
+                const step = steps[i];
+                const stepLocation = step.maneuver.location;
+                const distance = calculateDistance(
+                    userPosition.lat, userPosition.lng,
+                    stepLocation[1], stepLocation[0]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestStep = i;
+                }
+            }
+            
+            // Only advance if we're significantly closer to the next step
+            if (closestStep > currentStep) {
+                const currentStepLocation = steps[currentStep].maneuver.location;
+                const distanceToCurrent = calculateDistance(
+                    userPosition.lat, userPosition.lng,
+                    currentStepLocation[1], currentStepLocation[0]
+                );
+                
+                // Only advance if we're within 30 meters of the next step
+                if (distanceToCurrent < 30) {
+                    console.log(`Advancing step from ${currentStep} to ${closestStep} (distance: ${distanceToCurrent}m)`);
+                    return closestStep;
+                }
+            }
+            
+            return currentStep; // Stay on current step
+        }
+
+        // Update navigation display
+        function updateNavigationDisplay() {
+            if (!route || currentStep >= route.routes[0].legs[0].steps.length) {
+                document.getElementById('nav-main-instruction').textContent = 'You have arrived!';
+                document.getElementById('nav-sub-instruction').textContent = 'Destination reached';
+                document.getElementById('nav-direction-icon').textContent = '●';
+                
+                // Speak arrival message
+                speakInstruction('You have arrived at your destination.');
+                
+                stopNavigation();
+                return;
+            }
+
+            const step = route.routes[0].legs[0].steps[currentStep];
+            const instruction = getBetterInstruction(step);
+            const roadName = step.name || step.maneuver.name || '';
+            
+            // Update navigation banner
+            document.getElementById('nav-main-instruction').textContent = instruction;
+            document.getElementById('nav-sub-instruction').textContent = roadName;
+            
+            // Update direction icon
+            updateDirectionIcon(step.maneuver.type);
+            
+            // Update distance display if we have current position
+            if (currentPosition) {
+                const routeData = getRouteSnappedPosition(currentPosition);
+                const snappedPosition = routeData.position;
+                
+                // Calculate distance to next turn
+                let distanceToNext = calculateDistance(
+                    snappedPosition.lat, snappedPosition.lng,
+                    step.maneuver.location[1], step.maneuver.location[0]
+                );
+                
+                // If we're on route, use route-based distance for more accuracy
+                if (routeData.heading !== null) {
+                    const routeDistance = calculateDistanceToNextTurn(snappedPosition, currentStep);
+                    if (routeDistance !== null && routeDistance > 0) {
+                        distanceToNext = routeDistance;
+                    }
+                }
+                
+                // Format and display distance
+                const distanceText = `${Math.round(distanceToNext)}m`;
+                const distanceElement = document.getElementById('nav-distance');
+                if (distanceElement) {
+                    distanceElement.textContent = distanceText;
+                }
+            }
+            
+            // Track spoken instructions to prevent skipping
+            const instructionKey = `${currentStep}:${instruction}`;
+            if (!spokenInstructions.has(instructionKey)) {
+                spokenInstructions.add(instructionKey);
+                lastStepSpoken = currentStep;
+                
+                // Use detailed voice instruction if available
+                const voiceInstruction = step.voiceInstruction || instruction;
+                speakInstruction(voiceInstruction, null, true);
+                console.log(`Spoke detailed instruction for step ${currentStep}: ${voiceInstruction}`);
+            } else {
+                console.log(`Already spoke instruction for step ${currentStep}, skipping`);
+            }
+        }
+
+        // Update direction icon with enhanced turn indicators
+        function updateDirectionIcon(maneuverType) {
+            const iconElement = document.getElementById('nav-direction-icon');
+            let icon = '→';
+            let iconClass = 'nav-direction-icon';
+            
+            switch(maneuverType) {
+                case 'turn-right':
+                    icon = '→';
+                    iconClass += ' turn-right';
+                    break;
+                case 'turn-left':
+                    icon = '←';
+                    iconClass += ' turn-left';
+                    break;
+                case 'turn-slight-right':
+                    icon = '↗';
+                    iconClass += ' turn-slight-right';
+                    break;
+                case 'turn-slight-left':
+                    icon = '↖';
+                    iconClass += ' turn-slight-left';
+                    break;
+                case 'turn-sharp-right':
+                    icon = '↘';
+                    iconClass += ' turn-sharp-right';
+                    break;
+                case 'turn-sharp-left':
+                    icon = '↙';
+                    iconClass += ' turn-sharp-left';
+                    break;
+                case 'uturn':
+                case 'uturn-left':
+                case 'uturn-right':
+                    icon = '↺';
+                    iconClass += ' uturn';
+                    break;
+                case 'roundabout':
+                case 'roundabout-left':
+                case 'roundabout-right':
+                    icon = '⟲';
+                    iconClass += ' roundabout';
+                    break;
+                case 'exit-roundabout':
+                    icon = '⟳';
+                    iconClass += ' exit-roundabout';
+                    break;
+                case 'merge':
+                    icon = '↗';
+                    iconClass += ' merge';
+                    break;
+                case 'ramp':
+                case 'ramp-left':
+                case 'ramp-right':
+                    icon = '↗';
+                    iconClass += ' ramp';
+                    break;
+                case 'exit':
+                case 'exit-left':
+                case 'exit-right':
+                    icon = '↘';
+                    iconClass += ' exit';
+                    break;
+                case 'continue':
+                case 'straight':
+                case 'new-name':
+                    icon = '↑';
+                    iconClass += ' straight';
+                    break;
+                case 'arrive':
+                    icon = '●';
+                    iconClass += ' arrive';
+                    break;
+                default:
+                    icon = '→';
+                    iconClass += ' default';
+            }
+            
+            iconElement.textContent = icon;
+            iconElement.className = iconClass;
+        }
+
+        // Calculate distance from current position to next turn along the route
+        function calculateDistanceToNextTurn(currentPosition, stepIndex) {
+            if (!route || !currentPosition) return null;
+            
+            const routeCoords = getRouteCoordinates(route);
+            if (!routeCoords || routeCoords.length < 2) return null;
+            
+            const steps = route.routes[0].legs[0].steps;
+            if (stepIndex >= steps.length) return null;
+            
+            // Get the next turn location
+            const nextStep = steps[stepIndex];
+            const nextTurnLocation = nextStep.maneuver.location;
+            const targetLat = nextTurnLocation[1];
+            const targetLng = nextTurnLocation[0];
+            
+            // Find the closest point on the route to current position
+            let minDistance = Infinity;
+            let closestIndex = 0;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
+                }
+            }
+            
+            // If too far from route, use direct distance
+            if (minDistance > 100) {
+                return calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    targetLat, targetLng
+                );
+            }
+            
+            // Find the closest point on the route to the target turn
+            let targetMinDistance = Infinity;
+            let targetClosestIndex = 0;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    targetLat, targetLng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < targetMinDistance) {
+                    targetMinDistance = distance;
+                    targetClosestIndex = i;
+                }
+            }
+            
+            // Calculate distance along the route from current position to target turn
+            let totalDistance = 0;
+            
+            // If we're behind the target turn on the route
+            if (closestIndex <= targetClosestIndex) {
+                // Forward along route
+                for (let i = closestIndex; i < targetClosestIndex; i++) {
+                    totalDistance += calculateDistance(routeCoords[i], routeCoords[i + 1]);
+                }
+            } else {
+                // Backward along route
+                for (let i = targetClosestIndex; i < closestIndex; i++) {
+                    totalDistance += calculateDistance(routeCoords[i], routeCoords[i + 1]);
+                }
+            }
+            
+            return totalDistance;
+        }
+
+        // Calculate distance along route from current position to next step
+        function calculateDistanceAlongRoute(currentPosition, stepIndex) {
+            if (!route || !currentPosition) return null;
+            
+            const routeCoords = getRouteCoordinates(route);
+            if (!routeCoords || routeCoords.length < 2) return null;
+            
+            // Find the closest point on the route to current position
+            let minDistance = Infinity;
+            let closestIndex = 0;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
+                }
+            }
+            
+            // If too far from route, return null
+            if (minDistance > 100) return null;
+            
+            // Get the next step location
+            const steps = route.routes[0].legs[0].steps;
+            if (stepIndex >= steps.length) return null;
+            
+            const nextStepLocation = steps[stepIndex].maneuver.location;
+            const targetLat = nextStepLocation[1];
+            const targetLng = nextStepLocation[0];
+            
+            // Find the closest point on the route to the target
+            let targetMinDistance = Infinity;
+            let targetClosestIndex = 0;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    targetLat, targetLng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < targetMinDistance) {
+                    targetMinDistance = distance;
+                    targetClosestIndex = i;
+                }
+            }
+            
+            // Calculate distance along the route from current position to target
+            let totalDistance = 0;
+            
+            // If we're behind the target on the route
+            if (closestIndex <= targetClosestIndex) {
+                for (let i = closestIndex; i < targetClosestIndex; i++) {
+                    totalDistance += calculateDistance(
+                        routeCoords[i][0], routeCoords[i][1],
+                        routeCoords[i + 1][0], routeCoords[i + 1][1]
+                    );
+                }
+            } else {
+                // If we're ahead of the target, calculate backwards
+                for (let i = targetClosestIndex; i < closestIndex; i++) {
+                    totalDistance += calculateDistance(
+                        routeCoords[i][0], routeCoords[i][1],
+                        routeCoords[i + 1][0], routeCoords[i + 1][1]
+                    );
+                }
+            }
+            
+            return totalDistance;
+        }
+
+        // Get route-snapped position and heading
+        function getRouteSnappedPosition(position) {
+            if (!route || !position) {
+                return { position: position, heading: null };
+            }
+            
+            // Get route coordinates
+            const routeCoords = getRouteCoordinates(route);
+            if (!routeCoords || routeCoords.length < 2) {
+                return { position: position, heading: null };
+            }
+            
+            // Find the closest point on the route
+            let minDistance = Infinity;
+            let closestIndex = 0;
+            let closestPoint = null;
+            
+            for (let i = 0; i < routeCoords.length; i++) {
+                const distance = calculateDistance(
+                    position.lat, position.lng,
+                    routeCoords[i][0], routeCoords[i][1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestIndex = i;
+                    closestPoint = routeCoords[i];
+                }
+            }
+            
+            // If too far from route, return original position
+            if (minDistance > 100) {
+                return { position: position, heading: null };
+            }
+            
+            // Calculate route heading at the closest point
+            let routeHeading = null;
+            if (closestIndex < routeCoords.length - 5) {
+                // Calculate heading to next point on route
+                const nextPoint = routeCoords[closestIndex + 5];
+                const deltaLat = nextPoint[0] - closestPoint[0];
+                const deltaLng = nextPoint[1] - closestPoint[1];
+                
+                // Calculate heading in degrees (0 = North, 90 = East, 180 = South, 270 = West)
+                // Use atan2(deltaLng, deltaLat) for correct direction
+                let heading = Math.atan2(deltaLng, deltaLat) * 180 / Math.PI;
+                heading = (heading + 360) % 360;
+                
+                // Convert to map rotation (Leaflet uses different coordinate system)
+                // Map rotation: 0 = East, 90 = South, 180 = West, 270 = North
+                // The car symbol should point in the direction of travel along the route
+                // Since the arrow points up by default (North), we need to adjust the rotation
+                routeHeading = (90 - heading + 360) % 360;
+                
+                // Look ahead for upcoming turns to make rotation more responsive
+                const lookAheadPoint = routeCoords[closestIndex + 5];
+                // Blend current and look-ahead heading for smoother turns
+                const blendFactor = 0.7; // 70% current, 30% look-ahead
+                routeHeading = (routeHeading * blendFactor + lookAheadMapHeading * (1 - blendFactor)) % 360;
+            }
+            
+            return {
+                position: { lat: closestPoint[0], lng: closestPoint[1] },
+                heading: routeHeading
+            };
+        }
+
+        // Split route into completed and upcoming portions based on current position
+        function splitRouteByProgress(coordinates) {
+            if (!currentPosition || !coordinates || coordinates.length < 2) {
+                return { completed: [], upcoming: coordinates || [] };
+            }
+            
+            const completed = [];
+            const upcoming = [];
+            let closestDistance = Infinity;
+            let closestIndex = 0;
+            
+            // Find the closest point on the route to current position
+            for (let i = 0; i < coordinates.length; i++) {
+                const distance = calculateDistance(
+                    currentPosition.lat, currentPosition.lng,
+                    coordinates[i][0], coordinates[i][1]
+                );
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestIndex = i;
+                }
+            }
+            
+            // If we're more than 100m away from the route, don't split
+            if (closestDistance > 100) {
+                return { completed: [], upcoming: coordinates };
+            }
+            
+            // Split the route at the closest point
+            for (let i = 0; i < coordinates.length; i++) {
+                if (i <= closestIndex) {
+                    completed.push(coordinates[i]);
+                } else {
+                    upcoming.push(coordinates[i]);
+                }
+            }
+            
+            // Ensure we have at least 2 points for each segment
+            if (completed.length === 1 && upcoming.length > 0) {
+                upcoming.unshift(completed[0]);
+                completed.pop();
+            }
+            
+            return { completed, upcoming };
+        }
+
+        // Calculate distance between two points
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                     Math.cos(φ1) * Math.cos(φ2) *
+                     Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c;
+        }
+
+        // Check if user is off route and needs re-routing
+        function checkRouteDeviation(userPosition) {
+            if (!route || !isNavigating) {
+                console.log('Not checking deviation: no route or not navigating');
+                return false;
+            }
+            
+            const currentTime = Date.now();
+            if (currentTime - lastRerouteTime < rerouteCooldown) {
+                console.log('Deviation check skipped: still in cooldown');
+                return false; // Still in cooldown period
+            }
+            
+            // Get route coordinates
+            const routeCoords = getRouteCoordinates(route);
+            if (!routeCoords || routeCoords.length === 0) {
+                console.log('No route coordinates available for deviation check');
+                return false;
+            }
+            
+            // Find the closest point on the route
+            let minDistance = Infinity;
+            let closestPoint = null;
+            
+            for (const coord of routeCoords) {
+                const distance = calculateDistance(
+                    userPosition.lat, userPosition.lng,
+                    coord[0], coord[1]
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPoint = coord;
+                }
+            }
+            
+            console.log(`Distance from route: ${minDistance.toFixed(1)}m (threshold: ${routeDeviationThreshold}m)`);
+            
+            // Check if user is too far from route
+            if (minDistance > routeDeviationThreshold) {
+                console.log(`User is off route! Distance: ${minDistance.toFixed(1)}m`);
+                
+                // Show off-route indicator
+                const offRouteIndicator = document.getElementById('off-route-indicator');
+                if (offRouteIndicator) {
+                    offRouteIndicator.classList.add('show');
+                }
+                
+                showStatus(`Off route! ${Math.round(minDistance)}m from route`);
+                return true;
+            } else {
+                // Hide off-route indicator if back on route
+                const offRouteIndicator = document.getElementById('off-route-indicator');
+                if (offRouteIndicator) {
+                    offRouteIndicator.classList.remove('show');
+                }
+                
+                // Reset cooldown if back on route (allows immediate re-routing if needed)
+                if (minDistance < routeDeviationThreshold / 2) {
+                    lastRerouteTime = 0;
+                }
+            }
+            
+            return false;
+        }
+
+        // Get route coordinates for deviation checking
+        function getRouteCoordinates(routeData) {
+            if (!routeData || !routeData.routes || !routeData.routes[0]) return null;
+            
+            const route = routeData.routes[0];
+            let coordinates = [];
+            
+            // Try to get coordinates from different sources
+            if (route.geometry && route.geometry.type === 'LineString') {
+                coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+            } else if (route.geometry && typeof route.geometry === 'string') {
+                try {
+                    coordinates = decodePolyline(route.geometry);
+                } catch (e) {
+                    console.log('Failed to decode polyline for deviation check');
+                }
+            } else if (route.legs && route.legs[0] && route.legs[0].steps) {
+                coordinates = createRouteFromStepGeometry(route.legs[0].steps);
+            }
+            
+            return coordinates;
+        }
+
+        // Automatically re-route and restart navigation when car goes off route
+        async function autoRerouteAndRestart() {
+            // Temporarily pause navigation
+            const wasNavigating = isNavigating;
+            isNavigating = false;
+            
+            // Fetch new routes from current position
+            const newRoutes = await Promise.all([
+                fetchRoute('driving', 'fastest'),
+                fetchRoute('driving', 'shortest'),
+                fetchRoute('driving', 'alternative')
+            ]);
+            
+            // Update route and restart navigation
+            if (newRoutes.length > 0) {
+                route = newRoutes[0];
+                currentStep = 0;
+                isNavigating = true;
+                updateNavigationDisplay();
+            }
+        }
+
+        // Re-route from current position
+        async function rerouteFromCurrentPosition() {
+            if (!currentPosition || !destination) {
+                console.log('Cannot re-route: missing current position or destination');
+                showStatus('Cannot re-route: missing location or destination');
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+            
+            const currentTime = Date.now();
+            if (currentTime - lastRerouteTime < rerouteCooldown) {
+                console.log('Re-routing still in cooldown');
+                const remainingTime = Math.ceil((rerouteCooldown - (currentTime - lastRerouteTime)) / 1000);
+                showStatus(`Re-route cooldown: ${remainingTime}s remaining`);
+                setTimeout(hideStatus, 2000);
+                return;
+            }
+            
+            lastRerouteTime = currentTime;
+            
+            // Hide off-route indicator
+            const offRouteIndicator = document.getElementById('off-route-indicator');
+            if (offRouteIndicator) {
+                offRouteIndicator.classList.remove('show');
+            }
+            
+            showStatus('Recalculating route...');
+            speakInstruction('Recalculating route due to deviation');
+            
+            try {
+                console.log('Starting re-route from:', currentPosition, 'to:', destination);
+                
+                // Get new routes from current position
+                const newRoutes = await Promise.all([
+                    fetchRoute('driving', 'fastest'),
+                    fetchRoute('driving', 'shortest'),
+                    fetchRoute('driving', 'alternative')
+                ]);
+                
+                console.log('Fetched routes:', newRoutes);
+                
+                const validRoutes = newRoutes.filter(route => route !== null && route.routes && route.routes.length > 0);
+                
+                if (validRoutes.length > 0) {
+                    window.routes = validRoutes;
+                    selectedRouteIndex = 0;
+                    route = window.routes[0];
+                    
+                    console.log('Selected new route:', route);
+                    
+                    // Update route display
+                    displayRoute(route);
+                    displayRouteOptions(validRoutes);
+                    displayDirections(route);
+                    
+                    // Reset navigation state
+                    currentStep = 0;
+                    spokenInstructions.clear();
+                    lastStepSpoken = -1;
+                    lastVoiceAlert = {}; // Reset voice alerts
+                    
+                    // Update car symbol with new route
+                    if (carSymbol) {
+                        updateCarSymbol(currentPosition, null);
+                    }
+                    
+                    // Update navigation display with new route
+                    if (isNavigating) {
+                        updateNavigationDisplay();
+                    }
+                    
+                    showStatus('Route recalculated!');
+                    speakInstruction('Route recalculated. Follow the new route ahead.');
+                    setTimeout(hideStatus, 2000);
+                    
+                    console.log('Successfully re-routed from current position');
+                } else {
+                    console.log('No valid routes found for re-routing');
+                    showStatus('Could not find new route');
+                    speakInstruction('Unable to find new route. Please check your destination.');
+                    setTimeout(hideStatus, 2000);
+                }
+            } catch (error) {
+                console.error('Re-routing error:', error);
+                showStatus('Error recalculating route');
+                speakInstruction('Error recalculating route. Please try again.');
+                setTimeout(hideStatus, 2000);
+            }
+        }
+
+
+
+        // Toggle directions panel
+        function toggleDirections() {
+            const panel = document.getElementById('directions-panel');
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+            } else {
+                panel.classList.add('show');
+            }
+        }
+
+        // Toggle settings panel
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+            } else {
+                panel.classList.add('show');
+            }
+        }
+
+        // Update deviation threshold
+        function updateDeviationThreshold() {
+            const input = document.getElementById('deviation-threshold');
+            const value = parseInt(input.value);
+            if (value >= 10 && value <= 200) {
+                routeDeviationThreshold = value;
+                console.log(`Deviation threshold updated to ${value}m`);
+                showStatus(`Deviation threshold: ${value}m`);
+                setTimeout(hideStatus, 1500);
+            }
+        }
+
+        // Update re-route cooldown
+        function updateRerouteCooldown() {
+            const input = document.getElementById('reroute-cooldown');
+            const value = parseInt(input.value);
+            if (value >= 5 && value <= 30) {
+                rerouteCooldown = value * 1000; // Convert to milliseconds
+                console.log(`Re-route cooldown updated to ${value}s`);
+                showStatus(`Re-route cooldown: ${value}s`);
+                setTimeout(hideStatus, 1500);
+            }
+        }
+
+        // Show status message
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+        }
+
+        // Hide status message
+        function hideStatus() {
+            const status = document.getElementById('status');
+            status.style.display = 'none';
+        }
+
+        // Handle enter key in search
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            
+            // Handle autocomplete input
+            const destinationInput = document.getElementById('destination');
+            
+            destinationInput.addEventListener('input', function(e) {
+                const query = e.target.value.trim();
+                
+                // Clear previous timeout
+                if (autocompleteTimeout) {
+                    clearTimeout(autocompleteTimeout);
+                }
+                
+                // Debounce search
+                autocompleteTimeout = setTimeout(() => {
+                    searchAutocomplete(query);
+                }, 300);
+            });
+
+            // Handle keyboard navigation
+            destinationInput.addEventListener('keydown', function(e) {
+                handleAutocompleteKeyboard(e);
+            });
+            
+            // Handle enter key in search
+            destinationInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    getDirections();
+                }
+            });
+
+            // Hide autocomplete when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.search-box')) {
+                    hideAutocomplete();
+                }
+            });
+
+            // Mobile-specific improvements
+            if ('ontouchstart' in window) {
+                // Prevent zoom on double tap
+                let lastTouchEnd = 0;
+                document.addEventListener('touchend', function (event) {
+                    const now = (new Date()).getTime();
+                    if (now - lastTouchEnd <= 300) {
+                        event.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, false);
+
+                // Improve touch targets
+                const touchElements = document.querySelectorAll('button, input, .direction-step');
+                touchElements.forEach(element => {
+                    element.style.minHeight = '44px'; // iOS minimum touch target
+                });
+
+                // Add touch feedback
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.addEventListener('touchstart', function() {
+                        this.style.opacity = '0.7';
+                    });
+                    button.addEventListener('touchend', function() {
+                        this.style.opacity = '1';
+                    });
+                });
+            }
+
+            // Prevent pull-to-refresh on mobile
+            document.body.addEventListener('touchmove', function(e) {
+                if (e.target.closest('#map')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+                    // Handle viewport changes and mobile browser UI
+            window.addEventListener('resize', function() {
+                if (map) {
+                    map.invalidateSize();
+                }
+            });
+
+        // Prevent content shift on mobile browsers
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+
+        window.addEventListener('resize', () => {
+            vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        });
+
+        // Handle iOS Safari viewport issues
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+            // Prevent zoom on input focus
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+            });
+            
+            // Handle orientation changes
+            window.addEventListener('orientationchange', function() {
+                setTimeout(function() {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 100);
+            });
+        }
+
+            // iOS Safari full-screen handling
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                // Request full screen on iOS
+                document.addEventListener('touchstart', function() {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    }
+                }, { once: true });
+
+                // Handle orientation changes
+                window.addEventListener('orientationchange', function() {
+                    setTimeout(function() {
+                        if (map) {
+                            map.invalidateSize();
+                        }
+                        // Force full height after orientation change
+                        document.body.style.height = window.innerHeight + 'px';
+                    }, 100);
+                });
+
+                // Prevent Safari UI from showing
+                document.addEventListener('visibilitychange', function() {
+                    if (!document.hidden) {
+                        // Re-hide Safari UI when app becomes visible
+                        document.body.style.height = window.innerHeight + 'px';
+                    }
+                });
+
+                // Set initial height
+                document.body.style.height = window.innerHeight + 'px';
+            }
+
+            // Prevent context menu on long press
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+
+            // Prevent selection
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+            });
+        });
+    </script>
+</body>
+</html> 

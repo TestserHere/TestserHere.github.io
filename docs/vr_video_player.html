@@ -1,23 +1,115 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>VR Video Player</title>
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    #controls {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 10;
-      width: 320px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Video Player</title>
+    <script src="https://aframe.io/releases/latest/aframe.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        #vr-container {
+            position: absolute;
+            cursor: move;
+            top: 10%;
+            left: 10%;
+            z-index: 10;
+        }
+        #controls {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #progress-bar {
+            width: 200px;
+        }
+        #volume-control {
+            width: 100px;
+        }
+        #upload-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 1rem;
+            padding: 0.5em;
+            z-index: 20;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        #file-upload {
+            display: none;
+        }
+        #play-button {
+            position: fixed;
+            top: calc(50% - 1.25em);
+            left: calc(50% - 1.25em);
+            font-size: 2rem;
+            width: 3em;
+            height: 3em;
+            z-index: 10;
+            color: #fff;
+            background-color: #333;
+            border: none;
+            border-radius: 50%;
+            text-align: center;
+        }
+        #url-input-container {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 21;
+            display: flex;
+            gap: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            border-radius: 5px;
+        }
+        #url-input {
+            width: 300px;
+            height: 2.5rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 0.5em;
+            font-size: 1rem;
+            color: #333;
+        }
+        #load-url-button {
+            height: 2.5rem;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        #load-url-button:hover {
+            background-color: #444;
+        }
+        #error-message {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 22;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body>
   <!-- Controls UI -->
@@ -40,18 +132,14 @@
       <label for="seekSlider" class="form-label">Seek</label>
       <input type="range" class="form-range" id="seekSlider" min="0" max="100" value="0">
     </div>
-  </div>
-
-  <!-- A-Frame Scene -->
-  <a-scene>
-    <a-assets>
-      <video id="video" autoplay loop crossorigin="anonymous" playsinline webkit-playsinline></video>
-    </a-assets>
-
-    <a-videosphere src="#video"></a-videosphere>
-
-    <a-entity camera look-controls position="0 1.6 0"></a-entity>
-  </a-scene>
+    <a-scene id="vr-scene">
+        <a-assets>
+            <video id="vid" src="" crossorigin="anonymous" autoplay="false" loop="true" style="display: none"></video>
+        </a-assets>
+        <a-entity id="vr-video" geometry="primitive: sphere; radius: 5000; segmentsWidth: 64; segmentsHeight: 64;" material="shader: flat; src: #vid;" scale="-1 1 1"></a-entity>
+    </a-scene>
+    <div id="vr-container"></div>
+    <div id="error-message" style="display:none;"></div>
 
   <!-- Script -->
   <script>

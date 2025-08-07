@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💬 Offline Chat Sim</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    .chatbox { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; background: #f9f9f9; }
+    .message { margin: 5px 0; }
+    .user { font-weight: bold; color: #333; }
+    .timestamp { font-size: 0.8em; color: #888; }
+    input, button { padding: 10px; font-size: 1em; margin-top: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>💬 Offline Chat Simulator</h1>
+  <div class="chatbox" id="chatBox"></div>
+  <input type="text" id="nameInput" placeholder="Your name">
+  <input type="text" id="messageInput" placeholder="Your message">
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const nameInput = document.getElementById('nameInput');
+    const messageInput = document.getElementById('messageInput');
+
+    function formatMessage(user, text, time) {
+      return `<div class="message"><span class="user">${user}</span>: ${text} <span class="timestamp">[${time}]</span></div>`;
+    }
+
+    function sendMessage() {
+      const user = nameInput.value.trim() || "Anonymous";
+      const text = messageInput.value.trim();
+      if (!text) return;
+      const time = new Date().toLocaleTimeString();
+      const msgHTML = formatMessage(user, text, time);
+      chatBox.innerHTML += msgHTML;
+      chatBox.scrollTop = chatBox.scrollHeight;
+      messageInput.value = '';
+      saveChat();
+    }
+
+    function saveChat() {
+      localStorage.setItem('offlineChat', chatBox.innerHTML);
+    }
+
+    function loadChat() {
+      const saved = localStorage.getItem('offlineChat');
+      if (saved) chatBox.innerHTML = saved;
+    }
+
+    loadChat();
+  </script>
+</body>
+</html>

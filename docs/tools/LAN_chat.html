@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📶 LAN Messenger (WebRTC)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; text-align: center; }
+    textarea { width: 100%; height: 100px; margin: 10px 0; }
+    input, button { margin: 5px; padding: 8px; width: 100%; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #eee; padding: 10px; }
+    #qrCanvas { margin: 10px auto; }
+  </style>
+</head>
+<body>
+  <h1>📶 LAN Messenger</h1>
+  <p>Send messages between devices on the same network. Share offer/answer below.</p>
+
+  <div id="connectionAlert" class="alert alert-warning" role="alert" style="display: none;">
+    Waiting for connection...
+  </div>
+  <div id="connectedAlert" class="alert alert-success" role="alert" style="display: none;">
+    ✅ Connected successfully!
+  </div>
+
+  <textarea id="localMessage" placeholder="Type a message to send..."></textarea>
+  <button onclick="sendMessage()">Send Message</button>
+
+  <pre id="chatLog"></pre>
+
+  <h3>Connection Setup</h3>
+  <button onclick="createOffer()">Create Offer</button>
+  <textarea id="offer" placeholder="Offer will appear here..."></textarea>
+
+  <button onclick="createAnswer()">Create Answer</button>
+  <textarea id="answer" placeholder="Paste offer above and press 'Create Answer'"></textarea>
+
+  <button onclick="receiveAnswer()">Receive Answer</button>
+
+  <h3>QR Code for Offer</h3>
+  <button onclick="generateQR()">📷 Show QR for Offer</button>
+  <canvas id="qrCanvas"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    const chatLog = document.getElementById("chatLog");
+    const offerTextarea = document.getElementById("offer");
+    const answerTextarea = document.getElementById("answer");
+    const localMessage = document.getElementById("localMessage");
+    const qrCanvas = document.getElementById("qrCanvas");
+    const connectionAlert = document.getElementById("connectionAlert");
+    const connectedAlert = document.getElementById("connectedAlert");
+
+    let pc = new RTCPeerConnection();
+    let channel = pc.createDataChannel("messenger");
+
+    connectionAlert.style.display = "block";
+
+    channel.onopen = () => {
+      connectionAlert.style.display = "none";
+      connectedAlert.style.display = "block";
+    };
+
+    channel.onmessage = (event) => {
+      chatLog.textContent += `\n👤 Peer: ${event.data}`;
+    };
+
+    function sendMessage() {
+      const msg = localMessage.value;
+      if (msg && channel.readyState === "open") {
+        channel.send(msg);
+        chatLog.textContent += `\n🧑 You: ${msg}`;
+        localMessage.value = "";
+      }
+    }
+
+    pc.onicecandidate = (e) => {
+      if (e.candidate === null) {
+        offerTextarea.value = JSON.stringify(pc.localDescription);
+      }
+    };
+
+    async function createOffer() {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+    }
+
+    async function createAnswer() {
+      const remoteOffer = JSON.parse(offerTextarea.value);
+      await pc.setRemoteDescription(new RTCSessionDescription(remoteOffer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      answerTextarea.value = JSON.stringify(pc.localDescription);
+    }
+
+    async function receiveAnswer() {
+      const remoteAnswer = JSON.parse(answerTextarea.value);
+      await pc.setRemoteDescription(new RTCSessionDescription(remoteAnswer));
+    }
+
+    pc.ondatachannel = (event) => {
+      channel = event.channel;
+      connectionAlert.style.display = "block";
+      channel.onopen = () => {
+        connectionAlert.style.display = "none";
+        connectedAlert.style.display = "block";
+      };
+      channel.onmessage = (event) => {
+        chatLog.textContent += `\n👤 Peer: ${event.data}`;
+      };
+    };
+
+    function generateQR() {
+      const data = offerTextarea.value;
+      if (!data) return alert("Create an offer first");
+      QRCode.toCanvas(qrCanvas, data, { width: 250 }, (error) => {
+        if (error) alert("QR generation error");
+      });
+    }
+  </script>
+</body>
+</html>
