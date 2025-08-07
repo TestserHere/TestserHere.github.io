@@ -95,12 +95,21 @@ class P2PVideoCall {
             const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
             console.log('Checking for signaling messages. Total messages:', messages.length);
             console.log('Local peer ID:', this.localPeerId);
-            console.log('Remote peer ID:', this.remotePeerId);
+            console.log('Room ID:', this.roomId);
             
-            const relevantMessages = messages.filter(msg => 
-                (msg.to === this.localPeerId && msg.from === this.remotePeerId) ||
-                (msg.to === this.remotePeerId && msg.from === this.localPeerId)
-            );
+            // Filter messages for this room or direct messages to/from this peer
+            const relevantMessages = messages.filter(msg => {
+                // Check if it's a room message for this room
+                if (msg.roomId === this.roomId) {
+                    return true;
+                }
+                // Check if it's a direct message to/from this peer
+                if ((msg.to === this.localPeerId && msg.from === this.remotePeerId) ||
+                    (msg.to === this.remotePeerId && msg.from === this.localPeerId)) {
+                    return true;
+                }
+                return false;
+            });
             
             console.log('Relevant messages found:', relevantMessages.length);
             
@@ -110,6 +119,12 @@ class P2PVideoCall {
             relevantMessages.forEach(message => {
                 // Check if we've already processed this message
                 if (this.processedMessageIds && this.processedMessageIds.includes(message.id)) {
+                    messagesToRemove.push(message);
+                    return;
+                }
+                
+                // Only process messages from other peers (not our own)
+                if (message.from === this.localPeerId) {
                     messagesToRemove.push(message);
                     return;
                 }
@@ -370,8 +385,13 @@ class P2PVideoCall {
         try {
             console.log('Starting real call process...');
             this.isInitiator = true;
-            // Use the remote IP as the peer ID for now
+            
+            // Create a room ID based on the remote IP
+            this.roomId = 'room_' + remoteIP.replace(/[^a-zA-Z0-9]/g, '_');
             this.remotePeerId = 'peer_' + remoteIP.replace(/[^a-zA-Z0-9]/g, '_');
+            
+            console.log('Room ID:', this.roomId);
+            console.log('Remote Peer ID:', this.remotePeerId);
             
             // Check if permissions are already granted, if not request them
             if (!this.localStream) {
@@ -390,15 +410,16 @@ class P2PVideoCall {
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
             
-            // Send the offer to the remote peer
+            // Send the offer to the room
             this.sendSignalingMessage({
                 type: 'offer',
                 sdp: offer.sdp,
                 from: this.localPeerId,
-                to: this.remotePeerId
+                to: this.roomId,
+                roomId: this.roomId
             });
             
-            console.log('Offer sent, waiting for answer...');
+            console.log('Offer sent to room, waiting for answer...');
             this.updateConnectionStatus('Waiting for answer...', 'connecting');
             
         } catch (error) {
@@ -430,8 +451,13 @@ class P2PVideoCall {
         try {
             console.log('Joining real call...');
             this.isInitiator = false;
-            // Use the remote IP as the peer ID for now
+            
+            // Join the same room based on the remote IP
+            this.roomId = 'room_' + remoteIP.replace(/[^a-zA-Z0-9]/g, '_');
             this.remotePeerId = 'peer_' + remoteIP.replace(/[^a-zA-Z0-9]/g, '_');
+            
+            console.log('Room ID:', this.roomId);
+            console.log('Remote Peer ID:', this.remotePeerId);
             
             // Check if permissions are already granted, if not request them
             if (!this.localStream) {
@@ -446,7 +472,7 @@ class P2PVideoCall {
             this.showVideoPanel();
             this.updateConnectionStatus('Waiting for offer...', 'connecting');
             
-            // Wait for an offer from the remote peer
+            // Wait for an offer from the remote peer in the same room
             // The offer will be handled by the signaling polling system
             
         } catch (error) {
@@ -573,12 +599,13 @@ class P2PVideoCall {
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
                 console.log('New ICE candidate:', event.candidate);
-                // Send the ICE candidate to the remote peer
+                // Send the ICE candidate to the room
                 this.sendSignalingMessage({
                     type: 'ice-candidate',
                     candidate: event.candidate,
                     from: this.localPeerId,
-                    to: this.remotePeerId
+                    to: this.roomId,
+                    roomId: this.roomId
                 });
             }
         };
@@ -636,15 +663,16 @@ class P2PVideoCall {
             const answer = await this.peerConnection.createAnswer();
             await this.peerConnection.setLocalDescription(answer);
             
-            // Send the answer to the remote peer
+            // Send the answer to the room
             this.sendSignalingMessage({
                 type: 'answer',
                 sdp: answer.sdp,
                 from: this.localPeerId,
-                to: this.remotePeerId
+                to: this.roomId,
+                roomId: this.roomId
             });
             
-            console.log('Answer created and sent');
+            console.log('Answer created and sent to room');
             this.updateConnectionStatus('Connected (Real WebRTC)', 'connected');
             
         } catch (error) {
@@ -783,9 +811,11 @@ class P2PVideoCall {
         // Stop signaling polling
         this.stopSignalingPolling();
         
-        // Clear processed message IDs
+        // Clear processed message IDs and room data
         this.processedMessageIds = [];
         this.iceCandidates = [];
+        this.roomId = null;
+        this.remotePeerId = null;
         
         this.localVideo.srcObject = null;
         this.remoteVideo.srcObject = null;
@@ -953,18 +983,29 @@ class P2PVideoCall {
     testSignaling() {
         console.log('=== SIGNALING TEST ===');
         console.log('Local Peer ID:', this.localPeerId);
+        console.log('Room ID:', this.roomId);
         console.log('Remote Peer ID:', this.remotePeerId);
         
         // Clear old messages for testing
         localStorage.removeItem('webrtc_signaling');
         
-        // Send a test message
-        this.sendSignalingMessage({
-            type: 'test',
-            message: 'Hello from ' + this.localPeerId,
-            from: this.localPeerId,
-            to: this.remotePeerId || 'test_peer'
-        });
+        // Send a test message to the room
+        if (this.roomId) {
+            this.sendSignalingMessage({
+                type: 'test',
+                message: 'Hello from ' + this.localPeerId + ' to room ' + this.roomId,
+                from: this.localPeerId,
+                to: this.roomId,
+                roomId: this.roomId
+            });
+        } else {
+            this.sendSignalingMessage({
+                type: 'test',
+                message: 'Hello from ' + this.localPeerId,
+                from: this.localPeerId,
+                to: 'test_room'
+            });
+        }
         
         // Check for messages
         this.checkForSignalingMessages();
