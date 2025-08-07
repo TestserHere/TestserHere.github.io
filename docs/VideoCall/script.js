@@ -48,12 +48,18 @@ class P2PVideoCall {
     checkForSignalingMessages() {
         try {
             const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
+            console.log('Checking for signaling messages. Total messages:', messages.length);
+            console.log('Local peer ID:', this.localPeerId);
+            console.log('Remote peer ID:', this.remotePeerId);
+            
             const relevantMessages = messages.filter(msg => 
                 (msg.to === this.localPeerId && msg.from === this.remotePeerId) ||
                 (msg.to === this.remotePeerId && msg.from === this.localPeerId)
             );
-
+            
+            console.log('Relevant messages found:', relevantMessages.length);
             relevantMessages.forEach(message => {
+                console.log('Processing message:', message);
                 this.handleSignalingMessage(message);
                 // Remove processed message
                 const updatedMessages = messages.filter(m => m !== message);
@@ -67,13 +73,15 @@ class P2PVideoCall {
     sendSignalingMessage(message) {
         try {
             const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
-            messages.push({
+            const messageWithMetadata = {
                 ...message,
                 timestamp: Date.now(),
                 id: Math.random().toString(36).substr(2, 9)
-            });
+            };
+            messages.push(messageWithMetadata);
             localStorage.setItem('webrtc_signaling', JSON.stringify(messages));
-            console.log('Sent signaling message:', message);
+            console.log('Sent signaling message:', messageWithMetadata);
+            console.log('Total messages in storage:', messages.length);
         } catch (error) {
             console.error('Error sending signaling message:', error);
         }
@@ -103,6 +111,7 @@ class P2PVideoCall {
         document.getElementById('toggleAudio').addEventListener('click', () => this.toggleAudio());
         document.getElementById('requestPermissions').addEventListener('click', () => this.requestPermissions());
         document.getElementById('noCamera').addEventListener('click', () => this.enableAudioOnlyMode());
+        document.getElementById('testSignaling').addEventListener('click', () => this.testSignaling());
     }
 
     async getLocalIP() {
@@ -253,7 +262,8 @@ class P2PVideoCall {
         try {
             console.log('Starting real call process...');
             this.isInitiator = true;
-            this.remotePeerId = remoteIP;
+            // Use the remote IP as the peer ID for now
+            this.remotePeerId = 'peer_' + remoteIP.replace(/[^a-zA-Z0-9]/g, '_');
             
             // Check if permissions are already granted, if not request them
             if (!this.localStream) {
@@ -312,7 +322,8 @@ class P2PVideoCall {
         try {
             console.log('Joining real call...');
             this.isInitiator = false;
-            this.remotePeerId = remoteIP;
+            // Use the remote IP as the peer ID for now
+            this.remotePeerId = 'peer_' + remoteIP.replace(/[^a-zA-Z0-9]/g, '_');
             
             // Check if permissions are already granted, if not request them
             if (!this.localStream) {
@@ -782,6 +793,34 @@ class P2PVideoCall {
         } catch (error) {
             console.error('Error enabling audio-only mode:', error);
             alert('Error accessing microphone: ' + error.message);
+        }
+    }
+
+    testSignaling() {
+        console.log('=== SIGNALING TEST ===');
+        console.log('Local Peer ID:', this.localPeerId);
+        console.log('Remote Peer ID:', this.remotePeerId);
+        
+        // Clear old messages for testing
+        localStorage.removeItem('webrtc_signaling');
+        
+        // Send a test message
+        this.sendSignalingMessage({
+            type: 'test',
+            message: 'Hello from ' + this.localPeerId,
+            from: this.localPeerId,
+            to: this.remotePeerId || 'test_peer'
+        });
+        
+        // Check for messages
+        this.checkForSignalingMessages();
+        
+        // Show all messages in storage
+        try {
+            const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
+            console.log('All messages in storage:', messages);
+        } catch (error) {
+            console.error('Error reading messages:', error);
         }
     }
 }
