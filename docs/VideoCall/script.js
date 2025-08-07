@@ -18,14 +18,81 @@ class P2PVideoCall {
         this.remotePeerId = null;
         this.localPeerId = this.generatePeerId();
         this.signalingData = null;
+        this.signalingInterval = null;
+        this.iceCandidates = [];
         
         this.initializeEventListeners();
         this.getLocalIP();
         this.checkDeviceAvailability();
+        this.startSignalingPolling();
     }
 
     generatePeerId() {
         return 'peer_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    startSignalingPolling() {
+        // Poll for signaling messages every 1 second
+        this.signalingInterval = setInterval(() => {
+            this.checkForSignalingMessages();
+        }, 1000);
+    }
+
+    stopSignalingPolling() {
+        if (this.signalingInterval) {
+            clearInterval(this.signalingInterval);
+            this.signalingInterval = null;
+        }
+    }
+
+    checkForSignalingMessages() {
+        try {
+            const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
+            const relevantMessages = messages.filter(msg => 
+                (msg.to === this.localPeerId && msg.from === this.remotePeerId) ||
+                (msg.to === this.remotePeerId && msg.from === this.localPeerId)
+            );
+
+            relevantMessages.forEach(message => {
+                this.handleSignalingMessage(message);
+                // Remove processed message
+                const updatedMessages = messages.filter(m => m !== message);
+                localStorage.setItem('webrtc_signaling', JSON.stringify(updatedMessages));
+            });
+        } catch (error) {
+            console.error('Error checking signaling messages:', error);
+        }
+    }
+
+    sendSignalingMessage(message) {
+        try {
+            const messages = JSON.parse(localStorage.getItem('webrtc_signaling') || '[]');
+            messages.push({
+                ...message,
+                timestamp: Date.now(),
+                id: Math.random().toString(36).substr(2, 9)
+            });
+            localStorage.setItem('webrtc_signaling', JSON.stringify(messages));
+            console.log('Sent signaling message:', message);
+        } catch (error) {
+            console.error('Error sending signaling message:', error);
+        }
+    }
+
+    handleSignalingMessage(message) {
+        console.log('Received signaling message:', message);
+        
+        switch (message.type) {
+            case 'offer':
+                this.handleRemoteOffer(message);
+                break;
+            case 'answer':
+                this.handleRemoteAnswer(message);
+                break;
+            case 'ice-candidate':
+                this.handleRemoteIceCandidate(message);
+                break;
+        }
     }
 
     initializeEventListeners() {
@@ -205,20 +272,16 @@ class P2PVideoCall {
             const offer = await this.peerConnection.createOffer();
             await this.peerConnection.setLocalDescription(offer);
             
-            // Store the offer for signaling
-            this.signalingData = {
+            // Send the offer to the remote peer
+            this.sendSignalingMessage({
                 type: 'offer',
                 sdp: offer.sdp,
                 from: this.localPeerId,
                 to: this.remotePeerId
-            };
+            });
             
-            console.log('Offer created, waiting for answer...');
+            console.log('Offer sent, waiting for answer...');
             this.updateConnectionStatus('Waiting for answer...', 'connecting');
-            
-            // In a real implementation, you would send this offer to the remote peer
-            // For now, we'll simulate the connection but with real WebRTC
-            this.simulateRealConnection();
             
         } catch (error) {
             console.error('Error starting call:', error);
@@ -262,11 +325,10 @@ class P2PVideoCall {
             console.log('Creating peer connection...');
             await this.createPeerConnection();
             this.showVideoPanel();
-            this.updateConnectionStatus('Creating answer...', 'connecting');
+            this.updateConnectionStatus('Waiting for offer...', 'connecting');
             
-            // In a real implementation, you would receive an offer from the remote peer
-            // For now, we'll simulate receiving an offer
-            this.simulateReceivingOffer();
+            // Wait for an offer from the remote peer
+            // The offer will be handled by the signaling polling system
             
         } catch (error) {
             console.error('Error joining call:', error);
@@ -392,8 +454,13 @@ class P2PVideoCall {
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
                 console.log('New ICE candidate:', event.candidate);
-                // In a real implementation, you would send this candidate to the remote peer
-                // For now, we'll just log it
+                // Send the ICE candidate to the remote peer
+                this.sendSignalingMessage({
+                    type: 'ice-candidate',
+                    candidate: event.candidate,
+                    from: this.localPeerId,
+                    to: this.remotePeerId
+                });
             }
         };
 
@@ -404,39 +471,18 @@ class P2PVideoCall {
     }
 
     simulateConnection() {
-        // Simulate connection establishment for demo purposes
-        setTimeout(() => {
-            this.updateConnectionStatus('Connected', 'connected');
-            
-            // Create a mock remote stream for demonstration
-            this.createMockRemoteStream();
-        }, 2000);
+        // This method is no longer needed with real signaling
+        console.log('Simulation method called - should not happen with real signaling');
     }
 
     simulateReceivingOffer() {
-        // Simulate receiving an offer from the remote peer
-        setTimeout(() => {
-            console.log('Simulating receiving offer from remote peer...');
-            
-            // Create a mock offer to respond to
-            const mockOffer = {
-                type: 'offer',
-                sdp: 'v=0\r\no=- 1234567890 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 0.0.0.0\r\na=mid:0\r\na=sendonly\r\na=rtpmap:96 H264/90000\r\n'
-            };
-            
-            this.handleRemoteOffer(mockOffer);
-        }, 2000);
+        // This method is no longer needed with real signaling
+        console.log('Simulation method called - should not happen with real signaling');
     }
 
     simulateRealConnection() {
-        // Simulate real WebRTC connection establishment
-        setTimeout(() => {
-            console.log('Simulating real connection establishment...');
-            this.updateConnectionStatus('Connected (Real WebRTC)', 'connected');
-            
-            // Create a real remote stream simulation
-            this.createRealRemoteStream();
-        }, 3000);
+        // This method is no longer needed with real signaling
+        console.log('Simulation method called - should not happen with real signaling');
     }
 
     async handleRemoteOffer(offer) {
@@ -444,15 +490,31 @@ class P2PVideoCall {
             console.log('Handling remote offer...');
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
             
+            // Process any stored ICE candidates
+            while (this.iceCandidates.length > 0) {
+                const candidate = this.iceCandidates.shift();
+                try {
+                    await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    console.log('Stored ICE candidate added');
+                } catch (error) {
+                    console.error('Error adding stored ICE candidate:', error);
+                }
+            }
+            
             // Create answer
             const answer = await this.peerConnection.createAnswer();
             await this.peerConnection.setLocalDescription(answer);
             
+            // Send the answer to the remote peer
+            this.sendSignalingMessage({
+                type: 'answer',
+                sdp: answer.sdp,
+                from: this.localPeerId,
+                to: this.remotePeerId
+            });
+            
             console.log('Answer created and sent');
             this.updateConnectionStatus('Connected (Real WebRTC)', 'connected');
-            
-            // Create real remote stream
-            this.createRealRemoteStream();
             
         } catch (error) {
             console.error('Error handling remote offer:', error);
@@ -460,82 +522,48 @@ class P2PVideoCall {
         }
     }
 
+    async handleRemoteAnswer(answer) {
+        try {
+            console.log('Handling remote answer...');
+            await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            
+            // Process any stored ICE candidates
+            while (this.iceCandidates.length > 0) {
+                const candidate = this.iceCandidates.shift();
+                try {
+                    await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    console.log('Stored ICE candidate added');
+                } catch (error) {
+                    console.error('Error adding stored ICE candidate:', error);
+                }
+            }
+            
+            console.log('Remote answer processed');
+            this.updateConnectionStatus('Connected (Real WebRTC)', 'connected');
+        } catch (error) {
+            console.error('Error handling remote answer:', error);
+            this.updateConnectionStatus('Connection failed', 'failed');
+        }
+    }
+
+    async handleRemoteIceCandidate(message) {
+        try {
+            console.log('Handling remote ICE candidate...');
+            if (this.peerConnection && this.peerConnection.remoteDescription) {
+                await this.peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+                console.log('Remote ICE candidate added');
+            } else {
+                // Store the candidate for later if remote description isn't set yet
+                this.iceCandidates.push(message.candidate);
+            }
+        } catch (error) {
+            console.error('Error handling remote ICE candidate:', error);
+        }
+    }
+
     createRealRemoteStream() {
-        // Create a more realistic remote stream that simulates actual video
-        const canvas = document.createElement('canvas');
-        canvas.width = 640;
-        canvas.height = 480;
-        const ctx = canvas.getContext('2d');
-        
-        // Create a realistic video simulation
-        let frame = 0;
-        const animate = () => {
-            // Clear canvas
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Create a realistic video background
-            const time = Date.now() * 0.001;
-            
-            // Add some realistic video noise/patterns
-            for (let i = 0; i < 50; i++) {
-                const x = Math.sin(time + i) * canvas.width/2 + canvas.width/2;
-                const y = Math.cos(time * 0.5 + i) * canvas.height/2 + canvas.height/2;
-                const size = Math.sin(time + i) * 3 + 5;
-                
-                ctx.fillStyle = `rgba(100, 150, 255, ${0.1 + Math.sin(time + i) * 0.05})`;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-            
-            // Draw a realistic person
-            ctx.fillStyle = '#4a90e2';
-            
-            // Head with realistic shape
-            ctx.beginPath();
-            ctx.arc(canvas.width/2, canvas.height/2 - 60, 50, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            // Body
-            ctx.fillRect(canvas.width/2 - 40, canvas.height/2 - 10, 80, 120);
-            
-            // Arms with movement
-            const armAngle = Math.sin(time * 2) * 0.1;
-            ctx.save();
-            ctx.translate(canvas.width/2 - 60, canvas.height/2 + 20);
-            ctx.rotate(armAngle);
-            ctx.fillRect(-10, 0, 20, 60);
-            ctx.restore();
-            
-            ctx.save();
-            ctx.translate(canvas.width/2 + 60, canvas.height/2 + 20);
-            ctx.rotate(-armAngle);
-            ctx.fillRect(-10, 0, 20, 60);
-            ctx.restore();
-            
-            // Add realistic video artifacts
-            if (frame % 30 === 0) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-            
-            // Add connection status
-            ctx.fillStyle = '#00ff00';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText('REAL CONNECTION', 20, 30);
-            ctx.fillText(`Frame: ${frame++}`, 20, 50);
-            ctx.fillText('WebRTC Active', 20, 70);
-            
-            requestAnimationFrame(animate);
-        };
-        animate();
-        
-        // Convert to stream with realistic frame rate
-        const stream = canvas.captureStream(25); // 25 FPS for realistic video
-        this.remoteVideo.srcObject = stream;
-        this.remoteVideo.play().catch(e => console.log('Real remote video play failed:', e));
+        // This method is no longer needed since we'll get real video from the remote peer
+        console.log('Real remote stream method called - should not happen with real signaling');
     }
 
     toggleVideo() {
@@ -590,6 +618,9 @@ class P2PVideoCall {
         if (this.peerConnection) {
             this.peerConnection.close();
         }
+        
+        // Stop signaling polling
+        this.stopSignalingPolling();
         
         this.localVideo.srcObject = null;
         this.remoteVideo.srcObject = null;
