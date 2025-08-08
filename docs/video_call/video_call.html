@@ -218,6 +218,70 @@
             font-weight: bold;
         }
 
+        .qr-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .signaling-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+        }
+
+        .manual-signaling {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .manual-signaling h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .signaling-data {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
+
         @media (max-width: 768px) {
             .video-container {
                 grid-template-columns: 1fr;
@@ -265,16 +329,21 @@
                 <h3>How to use:</h3>
                 <ul>
                     <li>Click "Start Call" to begin a new call session</li>
-                    <li>Share the generated room ID with the person you want to call</li>
+                    <li>Share the generated room ID or QR code with the person you want to call</li>
                     <li>They can join by entering the room ID and clicking "Join Call"</li>
                     <li>Allow camera and microphone permissions when prompted</li>
+                    <li>For cross-device calls, you'll need to manually share signaling data</li>
                 </ul>
+            </div>
+
+            <div class="signaling-info">
+                <strong>Note:</strong> This app uses manual signaling for cross-device communication. You'll need to copy and paste the signaling data between devices.
             </div>
 
             <div class="connection-section">
                 <h2>Connection</h2>
                 <div class="input-group">
-                    <input type="text" id="roomId" placeholder="Enter Room ID to join" readonly>
+                    <input type="text" id="roomId" placeholder="Room ID will appear here" readonly>
                     <button class="btn" id="startCall">Start Call</button>
                     <button class="btn secondary" id="joinCall">Join Call</button>
                 </div>
@@ -282,6 +351,23 @@
                     <input type="text" id="joinRoomId" placeholder="Enter Room ID to join">
                     <button class="btn secondary" id="joinExistingCall">Join Existing Call</button>
                 </div>
+            </div>
+
+            <div id="qrSection" class="qr-section" style="display: none;">
+                <h3>Share this QR code or Room ID</h3>
+                <div id="qrCode" class="qr-code"></div>
+                <p>Room ID: <strong id="qrRoomId"></strong></p>
+            </div>
+
+            <div id="manualSignaling" class="manual-signaling" style="display: none;">
+                <h3>Manual Signaling Data</h3>
+                <p>Copy and paste this data to the other device:</p>
+                <div id="signalingData" class="signaling-data"></div>
+                <button class="copy-btn" onclick="copySignalingData()">Copy Data</button>
+                
+                <h4 style="margin-top: 20px;">Paste signaling data from other device:</h4>
+                <textarea id="pasteSignalingData" placeholder="Paste signaling data here..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace;"></textarea>
+                <button class="btn secondary" style="margin-top: 10px;" onclick="processSignalingData()">Process Data</button>
             </div>
 
             <div id="status" class="status" style="display: none;"></div>
@@ -305,6 +391,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script>
         class VideoCallApp {
             constructor() {
@@ -314,6 +401,9 @@
                 this.roomId = null;
                 this.isInitiator = false;
                 this.isConnected = false;
+                this.peerId = this.generatePeerId();
+                this.signalingData = [];
+                this.signalingInterval = null;
 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -331,6 +421,11 @@
                 this.toggleVideoBtn = document.getElementById('toggleVideo');
                 this.toggleAudioBtn = document.getElementById('toggleAudio');
                 this.endCallBtn = document.getElementById('endCall');
+                this.qrSection = document.getElementById('qrSection');
+                this.qrCode = document.getElementById('qrCode');
+                this.qrRoomId = document.getElementById('qrRoomId');
+                this.manualSignaling = document.getElementById('manualSignaling');
+                this.signalingDataDiv = document.getElementById('signalingData');
             }
 
             attachEventListeners() {
@@ -340,6 +435,10 @@
                 this.toggleVideoBtn.addEventListener('click', () => this.toggleVideo());
                 this.toggleAudioBtn.addEventListener('click', () => this.toggleAudio());
                 this.endCallBtn.addEventListener('click', () => this.endCall());
+            }
+
+            generatePeerId() {
+                return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             }
 
             async startCall() {
@@ -352,9 +451,12 @@
                     await this.getUserMedia();
                     await this.createPeerConnection();
                     this.addLocalStreamToPeerConnection();
+                    this.startSignaling();
 
                     this.showStatus(`Call started! Room ID: ${this.roomId}`, 'connected');
                     this.updateButtonStates(true);
+                    this.showQRCode();
+                    this.showManualSignaling();
                 } catch (error) {
                     this.showStatus(`Error starting call: ${error.message}`, 'error');
                 }
@@ -373,9 +475,11 @@
                     await this.getUserMedia();
                     await this.createPeerConnection();
                     this.addLocalStreamToPeerConnection();
+                    this.startSignaling();
 
                     this.showStatus(`Joined room: ${this.roomId}`, 'connected');
                     this.updateButtonStates(true);
+                    this.showManualSignaling();
                 } catch (error) {
                     this.showStatus(`Error joining call: ${error.message}`, 'error');
                 }
@@ -394,9 +498,11 @@
                     await this.getUserMedia();
                     await this.createPeerConnection();
                     this.addLocalStreamToPeerConnection();
+                    this.startSignaling();
 
                     this.showStatus(`Joined room: ${this.roomId}`, 'connected');
                     this.updateButtonStates(true);
+                    this.showManualSignaling();
                 } catch (error) {
                     this.showStatus(`Error joining call: ${error.message}`, 'error');
                 }
@@ -430,13 +536,20 @@
                 this.peerConnection.ontrack = (event) => {
                     this.remoteVideo.srcObject = event.streams[0];
                     this.remoteStream = event.streams[0];
+                    this.showStatus('Remote peer connected!', 'connected');
                 };
 
                 this.peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
-                        // In a real app, you'd send this to the other peer via signaling server
-                        // For this demo, we'll simulate the connection
-                        this.handleIceCandidate(event.candidate);
+                        const message = {
+                            type: 'ice-candidate',
+                            candidate: event.candidate,
+                            from: this.peerId,
+                            roomId: this.roomId,
+                            timestamp: Date.now()
+                        };
+                        this.signalingData.push(message);
+                        this.updateSignalingDisplay();
                     }
                 };
 
@@ -459,16 +572,118 @@
                 }
             }
 
-            async handleIceCandidate(candidate) {
-                // In a real app, you'd send this to the other peer
-                // For this demo, we'll simulate the connection
-                if (this.peerConnection && this.peerConnection.remoteDescription) {
-                    try {
-                        await this.peerConnection.addIceCandidate(candidate);
-                    } catch (error) {
-                        console.error('Error adding ICE candidate:', error);
-                    }
+            startSignaling() {
+                if (this.isInitiator) {
+                    setTimeout(async () => {
+                        try {
+                            const offer = await this.peerConnection.createOffer();
+                            await this.peerConnection.setLocalDescription(offer);
+                            
+                            const message = {
+                                type: 'offer',
+                                offer: offer,
+                                from: this.peerId,
+                                roomId: this.roomId,
+                                timestamp: Date.now()
+                            };
+                            this.signalingData.push(message);
+                            this.updateSignalingDisplay();
+                        } catch (error) {
+                            console.error('Error creating offer:', error);
+                        }
+                    }, 1000);
                 }
+            }
+
+            updateSignalingDisplay() {
+                if (this.signalingData.length > 0) {
+                    const latestData = this.signalingData[this.signalingData.length - 1];
+                    this.signalingDataDiv.textContent = JSON.stringify(latestData, null, 2);
+                }
+            }
+
+            showManualSignaling() {
+                this.manualSignaling.style.display = 'block';
+            }
+
+            async processSignalingData(data) {
+                try {
+                    const message = JSON.parse(data);
+                    if (message.roomId === this.roomId && message.from !== this.peerId) {
+                        await this.handleSignalingMessage(message);
+                    }
+                } catch (error) {
+                    console.error('Error processing signaling data:', error);
+                }
+            }
+
+            async handleSignalingMessage(message) {
+                switch (message.type) {
+                    case 'offer':
+                        await this.handleOffer(message.offer);
+                        break;
+                    case 'answer':
+                        await this.handleAnswer(message.answer);
+                        break;
+                    case 'ice-candidate':
+                        await this.handleIceCandidate(message.candidate);
+                        break;
+                }
+            }
+
+            async handleOffer(offer) {
+                try {
+                    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await this.peerConnection.createAnswer();
+                    await this.peerConnection.setLocalDescription(answer);
+                    
+                    const message = {
+                        type: 'answer',
+                        answer: answer,
+                        from: this.peerId,
+                        roomId: this.roomId,
+                        timestamp: Date.now()
+                    };
+                    this.signalingData.push(message);
+                    this.updateSignalingDisplay();
+                } catch (error) {
+                    console.error('Error handling offer:', error);
+                }
+            }
+
+            async handleAnswer(answer) {
+                try {
+                    await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                } catch (error) {
+                    console.error('Error handling answer:', error);
+                }
+            }
+
+            async handleIceCandidate(candidate) {
+                try {
+                    if (this.peerConnection && this.peerConnection.remoteDescription) {
+                        await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                } catch (error) {
+                    console.error('Error adding ICE candidate:', error);
+                }
+            }
+
+            showQRCode() {
+                const url = `${window.location.origin}${window.location.pathname}?room=${this.roomId}`;
+                this.qrRoomId.textContent = this.roomId;
+                
+                QRCode.toCanvas(this.qrCode, url, {
+                    width: 200,
+                    margin: 2
+                }, (error) => {
+                    if (error) {
+                        console.error('Error generating QR code:', error);
+                        this.qrCode.innerHTML = `<p>Room ID: ${this.roomId}</p>`;
+                    }
+                });
+                
+                this.qrSection.style.display = 'block';
             }
 
             toggleVideo() {
@@ -501,6 +716,9 @@
                 if (this.remoteStream) {
                     this.remoteStream.getTracks().forEach(track => track.stop());
                 }
+                if (this.signalingInterval) {
+                    clearInterval(this.signalingInterval);
+                }
 
                 this.localVideo.srcObject = null;
                 this.remoteVideo.srcObject = null;
@@ -512,6 +730,8 @@
 
                 this.roomIdInput.value = '';
                 this.joinRoomIdInput.value = '';
+                this.qrSection.style.display = 'none';
+                this.manualSignaling.style.display = 'none';
                 this.showStatus('Call ended', 'error');
                 this.updateButtonStates(false);
             }
@@ -536,9 +756,42 @@
             }
         }
 
+        // Global functions for manual signaling
+        function copySignalingData() {
+            const signalingData = document.getElementById('signalingData').textContent;
+            navigator.clipboard.writeText(signalingData).then(() => {
+                alert('Signaling data copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = signalingData;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Signaling data copied to clipboard!');
+            });
+        }
+
+        function processSignalingData() {
+            const data = document.getElementById('pasteSignalingData').value;
+            if (data.trim()) {
+                app.processSignalingData(data);
+                document.getElementById('pasteSignalingData').value = '';
+            }
+        }
+
         // Initialize the app when the page loads
+        let app;
         document.addEventListener('DOMContentLoaded', () => {
-            new VideoCallApp();
+            app = new VideoCallApp();
+            
+            // Check for room parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            if (roomId) {
+                document.getElementById('joinRoomId').value = roomId;
+            }
         });
     </script>
 </body>
