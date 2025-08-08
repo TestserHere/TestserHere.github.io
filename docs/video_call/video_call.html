@@ -472,6 +472,7 @@
                     await this.createPeerConnection();
                     this.addLocalStreamToPeerConnection();
                     this.startSignaling();
+                    this.startConnectionMonitoring();
 
                     this.showStatus(`Call started! Room ID: ${this.roomId}`, 'connected');
                     this.updateButtonStates(true);
@@ -496,6 +497,7 @@
                     await this.createPeerConnection();
                     this.addLocalStreamToPeerConnection();
                     this.startSignaling();
+                    this.startConnectionMonitoring();
 
                     this.showStatus(`Joined room: ${this.roomId}`, 'connected');
                     this.updateButtonStates(true);
@@ -519,6 +521,7 @@
                     await this.createPeerConnection();
                     this.addLocalStreamToPeerConnection();
                     this.startSignaling();
+                    this.startConnectionMonitoring();
 
                     this.showStatus(`Joined room: ${this.roomId}`, 'connected');
                     this.updateButtonStates(true);
@@ -554,8 +557,14 @@
                 this.peerConnection = new RTCPeerConnection(configuration);
 
                 this.peerConnection.ontrack = (event) => {
-                    console.log('Track received:', event);
-                    if (event.streams && event.streams[0]) {
+                    console.log('=== TRACK RECEIVED ===');
+                    console.log('Track event:', event);
+                    console.log('Event streams:', event.streams);
+                    console.log('Event track:', event.track);
+                    console.log('Event track kind:', event.track ? event.track.kind : 'no track');
+                    
+                    if (event.streams && event.streams.length > 0) {
+                        console.log('Using stream from event');
                         this.remoteStream = event.streams[0];
                         this.remoteVideo.srcObject = this.remoteStream;
                         console.log('Remote video stream set:', this.remoteStream);
@@ -564,17 +573,21 @@
                         // Try to play the video
                         this.remoteVideo.play().catch(e => console.log('Auto-play failed:', e));
                     } else if (event.track) {
+                        console.log('Using individual track from event');
                         // Handle individual tracks
                         if (!this.remoteStream) {
                             this.remoteStream = new MediaStream();
+                            console.log('Created new MediaStream for remote tracks');
                         }
                         this.remoteStream.addTrack(event.track);
                         this.remoteVideo.srcObject = this.remoteStream;
-                        console.log('Remote track added:', event.track);
+                        console.log('Remote track added:', event.track.kind, event.track);
                         this.showStatus('Remote peer connected!', 'connected');
                         this.checkRemoteVideoStatus();
                         // Try to play the video
                         this.remoteVideo.play().catch(e => console.log('Auto-play failed:', e));
+                    } else {
+                        console.log('No streams or tracks in event');
                     }
                 };
 
@@ -679,9 +692,14 @@
 
             async handleOffer(offer) {
                 try {
+                    console.log('=== HANDLING OFFER ===');
+                    console.log('Offer:', offer);
                     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                    console.log('Remote description set');
                     const answer = await this.peerConnection.createAnswer();
+                    console.log('Answer created:', answer);
                     await this.peerConnection.setLocalDescription(answer);
+                    console.log('Local description set');
                     
                     const message = {
                         type: 'answer',
@@ -692,6 +710,7 @@
                     };
                     this.signalingData.push(message);
                     this.updateSignalingDisplay();
+                    console.log('Answer message added to signaling data');
                 } catch (error) {
                     console.error('Error handling offer:', error);
                 }
@@ -699,7 +718,10 @@
 
             async handleAnswer(answer) {
                 try {
+                    console.log('=== HANDLING ANSWER ===');
+                    console.log('Answer:', answer);
                     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    console.log('Remote description set from answer');
                 } catch (error) {
                     console.error('Error handling answer:', error);
                 }
@@ -707,8 +729,13 @@
 
             async handleIceCandidate(candidate) {
                 try {
+                    console.log('=== HANDLING ICE CANDIDATE ===');
+                    console.log('Candidate:', candidate);
                     if (this.peerConnection && this.peerConnection.remoteDescription) {
                         await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                        console.log('ICE candidate added successfully');
+                    } else {
+                        console.log('Cannot add ICE candidate - no remote description or peer connection');
                     }
                 } catch (error) {
                     console.error('Error adding ICE candidate:', error);
@@ -760,11 +787,14 @@
             checkRemoteVideoStatus() {
                 setTimeout(() => {
                     if (this.remoteVideo.srcObject) {
+                        console.log('=== REMOTE VIDEO STATUS ===');
                         console.log('Remote video srcObject:', this.remoteVideo.srcObject);
                         console.log('Remote video readyState:', this.remoteVideo.readyState);
                         console.log('Remote video networkState:', this.remoteVideo.networkState);
                         console.log('Remote video paused:', this.remoteVideo.paused);
                         console.log('Remote video ended:', this.remoteVideo.ended);
+                        console.log('Remote video currentTime:', this.remoteVideo.currentTime);
+                        console.log('Remote video duration:', this.remoteVideo.duration);
                         
                         if (this.remoteVideo.readyState >= 2) {
                             console.log('Remote video is ready to play');
@@ -775,6 +805,24 @@
                         console.log('No remote video srcObject set');
                     }
                 }, 1000);
+            }
+
+            // Add a method to check connection status periodically
+            startConnectionMonitoring() {
+                if (this.connectionMonitor) {
+                    clearInterval(this.connectionMonitor);
+                }
+                
+                this.connectionMonitor = setInterval(() => {
+                    if (this.peerConnection) {
+                        console.log('=== CONNECTION STATUS ===');
+                        console.log('Connection state:', this.peerConnection.connectionState);
+                        console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+                        console.log('Signaling state:', this.peerConnection.signalingState);
+                        console.log('Remote description:', this.peerConnection.remoteDescription ? 'Set' : 'Not set');
+                        console.log('Local description:', this.peerConnection.localDescription ? 'Set' : 'Not set');
+                    }
+                }, 3000);
             }
 
             toggleVideo() {
@@ -809,6 +857,9 @@
                 }
                 if (this.signalingInterval) {
                     clearInterval(this.signalingInterval);
+                }
+                if (this.connectionMonitor) {
+                    clearInterval(this.connectionMonitor);
                 }
 
                 this.localVideo.srcObject = null;

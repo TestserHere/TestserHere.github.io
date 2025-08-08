@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Messaging App - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .test-result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .test-result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .test-result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>P2P Messaging App - Test Page</h1>
+        
+        <div class="test-section">
+            <h3>Browser Compatibility Test</h3>
+            <button class="test-button" onclick="testBrowserCompatibility()">Test Browser Support</button>
+            <div id="browserTestResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>WebRTC Support Test</h3>
+            <button class="test-button" onclick="testWebRTCSupport()">Test WebRTC</button>
+            <div id="webrtcTestResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Data Channel Test</h3>
+            <button class="test-button" onclick="testDataChannel()">Test Data Channel</button>
+            <div id="dataChannelTestResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>App Navigation</h3>
+            <button class="test-button" onclick="openMessagingApp()">Open Messaging App</button>
+            <p>Click the button above to open the main messaging application.</p>
+        </div>
+    </div>
+
+    <script>
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-result ${type}">${message}</div>`;
+        }
+
+        function testBrowserCompatibility() {
+            const result = [];
+            
+            // Check for modern browser features
+            if (typeof window !== 'undefined') {
+                result.push('✓ Window object available');
+            } else {
+                result.push('✗ Window object not available');
+            }
+
+            if (typeof navigator !== 'undefined') {
+                result.push('✓ Navigator object available');
+            } else {
+                result.push('✗ Navigator object not available');
+            }
+
+            if (typeof document !== 'undefined') {
+                result.push('✓ Document object available');
+            } else {
+                result.push('✗ Document object not available');
+            }
+
+            // Check for ES6 features
+            if (typeof Promise !== 'undefined') {
+                result.push('✓ Promise support available');
+            } else {
+                result.push('✗ Promise support not available');
+            }
+
+            if (typeof fetch !== 'undefined') {
+                result.push('✓ Fetch API available');
+            } else {
+                result.push('✗ Fetch API not available');
+            }
+
+            const message = result.join('<br>');
+            showResult('browserTestResult', message, 'info');
+        }
+
+        function testWebRTCSupport() {
+            const result = [];
+            
+            // Check for WebRTC support
+            if (typeof RTCPeerConnection !== 'undefined') {
+                result.push('✓ RTCPeerConnection available');
+            } else {
+                result.push('✗ RTCPeerConnection not available');
+            }
+
+            if (typeof RTCSessionDescription !== 'undefined') {
+                result.push('✓ RTCSessionDescription available');
+            } else {
+                result.push('✗ RTCSessionDescription not available');
+            }
+
+            if (typeof RTCIceCandidate !== 'undefined') {
+                result.push('✓ RTCIceCandidate available');
+            } else {
+                result.push('✗ RTCIceCandidate not available');
+            }
+
+            // Test creating a peer connection
+            try {
+                const pc = new RTCPeerConnection();
+                result.push('✓ RTCPeerConnection creation successful');
+                pc.close();
+            } catch (error) {
+                result.push(`✗ RTCPeerConnection creation failed: ${error.message}`);
+            }
+
+            const message = result.join('<br>');
+            const hasErrors = result.some(r => r.startsWith('✗'));
+            showResult('webrtcTestResult', message, hasErrors ? 'error' : 'success');
+        }
+
+        function testDataChannel() {
+            const result = [];
+            
+            try {
+                const pc = new RTCPeerConnection();
+                
+                // Test creating a data channel
+                const dataChannel = pc.createDataChannel('test', { ordered: true });
+                result.push('✓ Data channel creation successful');
+                
+                // Test data channel properties
+                if (dataChannel.readyState !== undefined) {
+                    result.push('✓ Data channel readyState property available');
+                } else {
+                    result.push('✗ Data channel readyState property not available');
+                }
+
+                if (typeof dataChannel.send === 'function') {
+                    result.push('✓ Data channel send method available');
+                } else {
+                    result.push('✗ Data channel send method not available');
+                }
+
+                pc.close();
+            } catch (error) {
+                result.push(`✗ Data channel test failed: ${error.message}`);
+            }
+
+            const message = result.join('<br>');
+            const hasErrors = result.some(r => r.startsWith('✗'));
+            showResult('dataChannelTestResult', message, hasErrors ? 'error' : 'success');
+        }
+
+        function openMessagingApp() {
+            window.open('index.html', '_blank');
+        }
+
+        // Run basic tests on page load
+        window.addEventListener('load', () => {
+            testBrowserCompatibility();
+            testWebRTCSupport();
+        });
+    </script>
+</body>
+</html> 
