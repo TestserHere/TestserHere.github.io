@@ -8,6 +8,7 @@ class P2PMessagingApp {
         this.peerId = this.generatePeerId();
         this.signalingData = [];
         this.messages = [];
+        this.iceCandidateQueue = []; // Queue for ICE candidates that arrive before remote description
 
         this.initializeElements();
         this.attachEventListeners();
@@ -203,6 +204,15 @@ class P2PMessagingApp {
             console.log('Message received:', event.data);
             this.handleReceivedMessage(event.data);
         };
+
+        // Check if data channel is already open
+        if (this.dataChannel.readyState === 'open') {
+            console.log('Data channel already open');
+            this.updateConnectionStatus('Connected');
+            this.showStatus('Peer connected! You can now send messages.', 'connected');
+            this.messageInput.disabled = false;
+            this.sendMessageBtn.disabled = false;
+        }
     }
 
     handleReceivedMessage(data) {
@@ -221,6 +231,12 @@ class P2PMessagingApp {
     sendMessage() {
         const content = this.messageInput.value.trim();
         if (!content) {
+            return;
+        }
+
+        // Check connection status first
+        if (!this.checkConnectionStatus()) {
+            this.showStatus('Not connected to peer. Please wait for connection to be established.', 'error');
             return;
         }
 
@@ -321,6 +337,8 @@ class P2PMessagingApp {
     async processSignalingData(data) {
         try {
             const message = JSON.parse(data);
+            console.log('Processing signaling data:', message.type, 'from:', message.from, 'room:', message.roomId);
+            
             if (message.roomId === this.roomId && message.from !== this.peerId) {
                 this.showStatus('Processing signaling data...', 'connecting');
                 await this.handleSignalingMessage(message);
@@ -336,6 +354,22 @@ class P2PMessagingApp {
             console.error('Error processing signaling data:', error);
             this.showStatus('Invalid signaling data format. Please check the data and try again.', 'error');
         }
+    }
+
+    checkConnectionStatus() {
+        if (this.peerConnection) {
+            console.log('Connection state:', this.peerConnection.connectionState);
+            console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+            console.log('Data channel state:', this.dataChannel ? this.dataChannel.readyState : 'No data channel');
+            
+            if (this.peerConnection.connectionState === 'connected' && this.dataChannel && this.dataChannel.readyState === 'open') {
+                this.updateConnectionStatus('Connected');
+                this.messageInput.disabled = false;
+                this.sendMessageBtn.disabled = false;
+                return true;
+            }
+        }
+        return false;
     }
 
     async handleSignalingMessage(message) {
@@ -355,9 +389,30 @@ class P2PMessagingApp {
                     console.warn('Unknown message type:', message.type);
                     this.showStatus(`Unknown message type: ${message.type}`, 'error');
             }
+            
+            // Check connection status after processing signaling
+            setTimeout(() => {
+                this.checkConnectionStatus();
+            }, 1000);
         } catch (error) {
             console.error('Error handling signaling message:', error);
             this.showStatus('Failed to process signaling data: ' + error.message, 'error');
+        }
+    }
+
+    async processQueuedIceCandidates() {
+        if (this.iceCandidateQueue.length > 0 && this.peerConnection && this.peerConnection.remoteDescription) {
+            console.log(`Processing ${this.iceCandidateQueue.length} queued ICE candidates`);
+            while (this.iceCandidateQueue.length > 0) {
+                const candidate = this.iceCandidateQueue.shift();
+                try {
+                    await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    console.log('Queued ICE candidate added successfully');
+                } catch (error) {
+                    console.error('Error adding queued ICE candidate:', error);
+                }
+            }
+            this.showStatus('Queued ICE candidates processed', 'connected');
         }
     }
 
@@ -367,6 +422,9 @@ class P2PMessagingApp {
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
             const answer = await this.peerConnection.createAnswer();
             await this.peerConnection.setLocalDescription(answer);
+            
+            // Process any queued ICE candidates
+            await this.processQueuedIceCandidates();
             
             const message = {
                 type: 'answer',
@@ -388,6 +446,10 @@ class P2PMessagingApp {
         try {
             console.log('Handling answer:', answer);
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            
+            // Process any queued ICE candidates
+            await this.processQueuedIceCandidates();
+            
             this.showStatus('Connection answer processed successfully', 'connected');
         } catch (error) {
             console.error('Error handling answer:', error);
@@ -401,8 +463,10 @@ class P2PMessagingApp {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
                 console.log('ICE candidate added successfully');
             } else {
-                console.log('Cannot add ICE candidate - no remote description or peer connection');
-                this.showStatus('Waiting for remote description before adding ICE candidate', 'connecting');
+                // Queue the candidate for later when remote description is set
+                console.log('Queueing ICE candidate - no remote description yet');
+                this.iceCandidateQueue.push(candidate);
+                this.showStatus('ICE candidate queued, waiting for remote description', 'connecting');
             }
         } catch (error) {
             console.error('Error adding ICE candidate:', error);
@@ -506,6 +570,11 @@ class P2PMessagingApp {
         this.sendMessageBtn.disabled = !inChat;
     }
 
+    clearIceCandidateQueue() {
+        this.iceCandidateQueue = [];
+        console.log('ICE candidate queue cleared');
+    }
+
     endChat() {
         if (this.dataChannel) {
             this.dataChannel.close();
@@ -518,6 +587,7 @@ class P2PMessagingApp {
         this.peerConnection = null;
         this.isConnected = false;
         this.roomId = null;
+        this.clearIceCandidateQueue();
 
         this.roomIdInput.value = '';
         this.joinRoomIdInput.value = '';
