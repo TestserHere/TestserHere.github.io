@@ -375,11 +375,11 @@
             <div class="video-container">
                 <div class="video-wrapper">
                     <h3>Your Video</h3>
-                    <video id="localVideo" autoplay muted playsinline></video>
+                    <video id="localVideo" autoplay muted playsinline style="background: #1a1a1a;"></video>
                 </div>
                 <div class="video-wrapper">
                     <h3>Remote Video</h3>
-                    <video id="remoteVideo" autoplay playsinline></video>
+                    <video id="remoteVideo" autoplay playsinline style="background: #1a1a1a;"></video>
                 </div>
             </div>
 
@@ -426,6 +426,26 @@
                 this.qrRoomId = document.getElementById('qrRoomId');
                 this.manualSignaling = document.getElementById('manualSignaling');
                 this.signalingDataDiv = document.getElementById('signalingData');
+
+                // Debug video elements
+                console.log('Local video element:', this.localVideo);
+                console.log('Remote video element:', this.remoteVideo);
+
+                // Add event listeners to remote video for debugging
+                if (this.remoteVideo) {
+                    this.remoteVideo.addEventListener('loadedmetadata', () => {
+                        console.log('Remote video loadedmetadata');
+                    });
+                    this.remoteVideo.addEventListener('canplay', () => {
+                        console.log('Remote video canplay');
+                    });
+                    this.remoteVideo.addEventListener('playing', () => {
+                        console.log('Remote video playing');
+                    });
+                    this.remoteVideo.addEventListener('error', (e) => {
+                        console.error('Remote video error:', e);
+                    });
+                }
             }
 
             attachEventListeners() {
@@ -534,9 +554,28 @@
                 this.peerConnection = new RTCPeerConnection(configuration);
 
                 this.peerConnection.ontrack = (event) => {
-                    this.remoteVideo.srcObject = event.streams[0];
-                    this.remoteStream = event.streams[0];
-                    this.showStatus('Remote peer connected!', 'connected');
+                    console.log('Track received:', event);
+                    if (event.streams && event.streams[0]) {
+                        this.remoteStream = event.streams[0];
+                        this.remoteVideo.srcObject = this.remoteStream;
+                        console.log('Remote video stream set:', this.remoteStream);
+                        this.showStatus('Remote peer connected!', 'connected');
+                        this.checkRemoteVideoStatus();
+                        // Try to play the video
+                        this.remoteVideo.play().catch(e => console.log('Auto-play failed:', e));
+                    } else if (event.track) {
+                        // Handle individual tracks
+                        if (!this.remoteStream) {
+                            this.remoteStream = new MediaStream();
+                        }
+                        this.remoteStream.addTrack(event.track);
+                        this.remoteVideo.srcObject = this.remoteStream;
+                        console.log('Remote track added:', event.track);
+                        this.showStatus('Remote peer connected!', 'connected');
+                        this.checkRemoteVideoStatus();
+                        // Try to play the video
+                        this.remoteVideo.play().catch(e => console.log('Auto-play failed:', e));
+                    }
                 };
 
                 this.peerConnection.onicecandidate = (event) => {
@@ -554,6 +593,7 @@
                 };
 
                 this.peerConnection.onconnectionstatechange = () => {
+                    console.log('Connection state changed:', this.peerConnection.connectionState);
                     if (this.peerConnection.connectionState === 'connected') {
                         this.isConnected = true;
                         this.showStatus('Connected!', 'connected');
@@ -562,11 +602,17 @@
                         this.showStatus('Disconnected', 'error');
                     }
                 };
+
+                this.peerConnection.oniceconnectionstatechange = () => {
+                    console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+                };
             }
 
             addLocalStreamToPeerConnection() {
                 if (this.localStream) {
+                    console.log('Adding local stream tracks to peer connection');
                     this.localStream.getTracks().forEach(track => {
+                        console.log('Adding track:', track.kind, track);
                         this.peerConnection.addTrack(track, this.localStream);
                     });
                 }
@@ -709,6 +755,26 @@
                         </div>
                     </div>
                 `;
+            }
+
+            checkRemoteVideoStatus() {
+                setTimeout(() => {
+                    if (this.remoteVideo.srcObject) {
+                        console.log('Remote video srcObject:', this.remoteVideo.srcObject);
+                        console.log('Remote video readyState:', this.remoteVideo.readyState);
+                        console.log('Remote video networkState:', this.remoteVideo.networkState);
+                        console.log('Remote video paused:', this.remoteVideo.paused);
+                        console.log('Remote video ended:', this.remoteVideo.ended);
+                        
+                        if (this.remoteVideo.readyState >= 2) {
+                            console.log('Remote video is ready to play');
+                        } else {
+                            console.log('Remote video not ready yet');
+                        }
+                    } else {
+                        console.log('No remote video srcObject set');
+                    }
+                }, 1000);
             }
 
             toggleVideo() {
