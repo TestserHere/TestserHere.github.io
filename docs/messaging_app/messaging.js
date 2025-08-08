@@ -9,6 +9,7 @@ class P2PMessagingApp {
         this.signalingData = [];
         this.messages = [];
         this.iceCandidateQueue = []; // Queue for ICE candidates that arrive before remote description
+        this.connectionMonitor = null; // For monitoring connection status
 
         this.initializeElements();
         this.attachEventListeners();
@@ -173,6 +174,32 @@ class P2PMessagingApp {
         }
     }
 
+    startConnectionMonitoring() {
+        // Clear any existing monitoring
+        if (this.connectionMonitor) {
+            clearInterval(this.connectionMonitor);
+        }
+        
+        // Start monitoring connection status
+        this.connectionMonitor = setInterval(() => {
+            if (this.checkConnectionStatus()) {
+                // Connection is established, stop monitoring
+                clearInterval(this.connectionMonitor);
+                this.connectionMonitor = null;
+                console.log('Connection monitoring stopped - connection established');
+            }
+        }, 1000);
+        
+        // Stop monitoring after 30 seconds to avoid infinite monitoring
+        setTimeout(() => {
+            if (this.connectionMonitor) {
+                clearInterval(this.connectionMonitor);
+                this.connectionMonitor = null;
+                console.log('Connection monitoring stopped - timeout reached');
+            }
+        }, 30000);
+    }
+
     setupDataChannel() {
         if (!this.dataChannel) return;
 
@@ -183,6 +210,12 @@ class P2PMessagingApp {
             // Enable message input when data channel is open
             this.messageInput.disabled = false;
             this.sendMessageBtn.disabled = false;
+            
+            // Stop connection monitoring if it's running
+            if (this.connectionMonitor) {
+                clearInterval(this.connectionMonitor);
+                this.connectionMonitor = null;
+            }
         };
 
         this.dataChannel.onclose = () => {
@@ -362,11 +395,34 @@ class P2PMessagingApp {
             console.log('ICE connection state:', this.peerConnection.iceConnectionState);
             console.log('Data channel state:', this.dataChannel ? this.dataChannel.readyState : 'No data channel');
             
-            if (this.peerConnection.connectionState === 'connected' && this.dataChannel && this.dataChannel.readyState === 'open') {
+            // Check if we have a data channel and it's open
+            if (this.dataChannel && this.dataChannel.readyState === 'open') {
                 this.updateConnectionStatus('Connected');
                 this.messageInput.disabled = false;
                 this.sendMessageBtn.disabled = false;
+                this.showStatus('Peer connected! You can now send messages.', 'connected');
                 return true;
+            }
+            
+            // Check if peer connection is connected but data channel isn't ready yet
+            if (this.peerConnection.connectionState === 'connected') {
+                this.updateConnectionStatus('Establishing data channel...');
+                this.showStatus('Peer connection established, waiting for data channel...', 'connecting');
+                return false;
+            }
+            
+            // Check if we're in the process of connecting
+            if (this.peerConnection.connectionState === 'connecting' || this.peerConnection.iceConnectionState === 'checking') {
+                this.updateConnectionStatus('Connecting...');
+                this.showStatus('Establishing connection...', 'connecting');
+                return false;
+            }
+            
+            // Check if connection failed
+            if (this.peerConnection.connectionState === 'failed' || this.peerConnection.iceConnectionState === 'failed') {
+                this.updateConnectionStatus('Connection failed');
+                this.showStatus('Connection failed. Please try again.', 'error');
+                return false;
             }
         }
         return false;
@@ -390,10 +446,13 @@ class P2PMessagingApp {
                     this.showStatus(`Unknown message type: ${message.type}`, 'error');
             }
             
-            // Check connection status after processing signaling
+            // Start connection monitoring after processing signaling
+            this.startConnectionMonitoring();
+            
+            // Check connection status after processing signaling with a longer delay
             setTimeout(() => {
                 this.checkConnectionStatus();
-            }, 1000);
+            }, 2000);
         } catch (error) {
             console.error('Error handling signaling message:', error);
             this.showStatus('Failed to process signaling data: ' + error.message, 'error');
@@ -413,6 +472,11 @@ class P2PMessagingApp {
                 }
             }
             this.showStatus('Queued ICE candidates processed', 'connected');
+            
+            // Check connection status again after processing candidates
+            setTimeout(() => {
+                this.checkConnectionStatus();
+            }, 1000);
         }
     }
 
@@ -581,6 +645,12 @@ class P2PMessagingApp {
         }
         if (this.peerConnection) {
             this.peerConnection.close();
+        }
+        
+        // Clear connection monitoring
+        if (this.connectionMonitor) {
+            clearInterval(this.connectionMonitor);
+            this.connectionMonitor = null;
         }
 
         this.dataChannel = null;
