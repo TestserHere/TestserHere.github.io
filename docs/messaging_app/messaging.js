@@ -29,6 +29,8 @@ class P2PMessagingApp {
         this.qrRoomId = document.getElementById('qrRoomId');
         this.manualSignaling = document.getElementById('manualSignaling');
         this.signalingDataDiv = document.getElementById('signalingData');
+        this.connectionIndicator = document.getElementById('connectionIndicator');
+        this.indicatorText = document.getElementById('indicatorText');
     }
 
     attachEventListeners() {
@@ -50,6 +52,7 @@ class P2PMessagingApp {
     async startChat() {
         try {
             this.showStatus('Creating chat session...', 'connecting');
+            this.updateConnectionStatus('Creating session...');
             this.isInitiator = true;
             this.roomId = this.generateRoomId();
             this.roomIdInput.value = this.roomId;
@@ -66,6 +69,7 @@ class P2PMessagingApp {
             this.updateConnectionStatus('Waiting for peer...');
         } catch (error) {
             this.showStatus(`Error creating chat: ${error.message}`, 'error');
+            this.updateConnectionStatus('Error');
             console.error('Error starting chat:', error);
         }
     }
@@ -73,6 +77,7 @@ class P2PMessagingApp {
     async joinChat() {
         try {
             this.showStatus('Joining chat...', 'connecting');
+            this.updateConnectionStatus('Joining...');
             this.isInitiator = false;
             this.roomId = this.joinRoomIdInput.value.trim();
 
@@ -90,6 +95,7 @@ class P2PMessagingApp {
             this.updateConnectionStatus('Connecting...');
         } catch (error) {
             this.showStatus(`Error joining chat: ${error.message}`, 'error');
+            this.updateConnectionStatus('Error');
             console.error('Error joining chat:', error);
         }
     }
@@ -172,18 +178,25 @@ class P2PMessagingApp {
         this.dataChannel.onopen = () => {
             console.log('Data channel opened');
             this.updateConnectionStatus('Connected');
-            this.showStatus('Peer connected!', 'connected');
+            this.showStatus('Peer connected! You can now send messages.', 'connected');
+            // Enable message input when data channel is open
+            this.messageInput.disabled = false;
+            this.sendMessageBtn.disabled = false;
         };
 
         this.dataChannel.onclose = () => {
             console.log('Data channel closed');
             this.updateConnectionStatus('Disconnected');
             this.showStatus('Peer disconnected', 'error');
+            // Disable message input when data channel is closed
+            this.messageInput.disabled = true;
+            this.sendMessageBtn.disabled = true;
         };
 
         this.dataChannel.onerror = (error) => {
             console.error('Data channel error:', error);
-            this.showStatus('Connection error', 'error');
+            this.showStatus('Connection error occurred', 'error');
+            this.updateConnectionStatus('Error');
         };
 
         this.dataChannel.onmessage = (event) => {
@@ -211,8 +224,13 @@ class P2PMessagingApp {
             return;
         }
 
-        if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-            this.showStatus('Not connected to peer', 'error');
+        if (!this.dataChannel) {
+            this.showStatus('No data channel available. Please wait for connection to be established.', 'error');
+            return;
+        }
+
+        if (this.dataChannel.readyState !== 'open') {
+            this.showStatus(`Data channel not ready. Current state: ${this.dataChannel.readyState}`, 'error');
             return;
         }
 
@@ -229,7 +247,7 @@ class P2PMessagingApp {
             this.messageInput.value = '';
         } catch (error) {
             console.error('Error sending message:', error);
-            this.showStatus('Failed to send message', 'error');
+            this.showStatus('Failed to send message: ' + error.message, 'error');
         }
     }
 
@@ -304,18 +322,25 @@ class P2PMessagingApp {
         try {
             const message = JSON.parse(data);
             if (message.roomId === this.roomId && message.from !== this.peerId) {
+                this.showStatus('Processing signaling data...', 'connecting');
                 await this.handleSignalingMessage(message);
+                this.showStatus('Signaling data processed successfully', 'connected');
+                // Only clear the input after successful processing
+                document.getElementById('pasteSignalingData').value = '';
             } else if (message.roomId !== this.roomId) {
-                this.showStatus('Room ID mismatch', 'error');
+                this.showStatus(`Room ID mismatch. Expected: ${this.roomId}, Got: ${message.roomId}`, 'error');
+            } else if (message.from === this.peerId) {
+                this.showStatus('This is your own signaling data', 'error');
             }
         } catch (error) {
             console.error('Error processing signaling data:', error);
-            this.showStatus('Invalid signaling data format', 'error');
+            this.showStatus('Invalid signaling data format. Please check the data and try again.', 'error');
         }
     }
 
     async handleSignalingMessage(message) {
         try {
+            console.log('Processing signaling message:', message.type);
             switch (message.type) {
                 case 'offer':
                     await this.handleOffer(message.offer);
@@ -328,10 +353,11 @@ class P2PMessagingApp {
                     break;
                 default:
                     console.warn('Unknown message type:', message.type);
+                    this.showStatus(`Unknown message type: ${message.type}`, 'error');
             }
         } catch (error) {
             console.error('Error handling signaling message:', error);
-            this.showStatus('Failed to process signaling data', 'error');
+            this.showStatus('Failed to process signaling data: ' + error.message, 'error');
         }
     }
 
@@ -351,9 +377,10 @@ class P2PMessagingApp {
             };
             this.signalingData.push(message);
             this.updateSignalingDisplay();
+            this.showStatus('Connection offer processed. Answer generated.', 'connected');
         } catch (error) {
             console.error('Error handling offer:', error);
-            this.showStatus('Failed to handle connection offer', 'error');
+            this.showStatus('Failed to handle connection offer: ' + error.message, 'error');
         }
     }
 
@@ -361,9 +388,10 @@ class P2PMessagingApp {
         try {
             console.log('Handling answer:', answer);
             await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            this.showStatus('Connection answer processed successfully', 'connected');
         } catch (error) {
             console.error('Error handling answer:', error);
-            this.showStatus('Failed to handle connection answer', 'error');
+            this.showStatus('Failed to handle connection answer: ' + error.message, 'error');
         }
     }
 
@@ -371,11 +399,14 @@ class P2PMessagingApp {
         try {
             if (this.peerConnection && this.peerConnection.remoteDescription) {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                console.log('ICE candidate added successfully');
             } else {
                 console.log('Cannot add ICE candidate - no remote description or peer connection');
+                this.showStatus('Waiting for remote description before adding ICE candidate', 'connecting');
             }
         } catch (error) {
             console.error('Error adding ICE candidate:', error);
+            this.showStatus('Failed to add ICE candidate: ' + error.message, 'error');
         }
     }
 
@@ -426,6 +457,36 @@ class P2PMessagingApp {
 
     updateConnectionStatus(status) {
         this.connectionStatus.textContent = status;
+        this.updateConnectionIndicator(status);
+    }
+
+    updateConnectionIndicator(status) {
+        if (!this.connectionIndicator || !this.indicatorText) return;
+
+        const indicatorDot = this.connectionIndicator.querySelector('.indicator-dot');
+        
+        switch (status.toLowerCase()) {
+            case 'connected':
+                this.connectionIndicator.style.display = 'flex';
+                indicatorDot.className = 'indicator-dot connected';
+                this.indicatorText.textContent = 'Connected';
+                break;
+            case 'connecting':
+            case 'waiting for peer...':
+                this.connectionIndicator.style.display = 'flex';
+                indicatorDot.className = 'indicator-dot';
+                this.indicatorText.textContent = status;
+                break;
+            case 'disconnected':
+            case 'connection failed':
+            case 'error':
+                this.connectionIndicator.style.display = 'flex';
+                indicatorDot.className = 'indicator-dot error';
+                this.indicatorText.textContent = status;
+                break;
+            default:
+                this.connectionIndicator.style.display = 'none';
+        }
     }
 
     generateRoomId() {
@@ -505,8 +566,13 @@ function copySignalingDataFallback(text) {
 function processSignalingData() {
     const data = document.getElementById('pasteSignalingData').value.trim();
     if (data) {
-        app.processSignalingData(data);
-        document.getElementById('pasteSignalingData').value = '';
+        try {
+            // Validate JSON format first
+            JSON.parse(data);
+            app.processSignalingData(data);
+        } catch (error) {
+            alert('Invalid JSON format. Please check the signaling data and try again.');
+        }
     } else {
         alert('Please paste signaling data first.');
     }

@@ -284,6 +284,46 @@
             box-shadow: none;
         }
 
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .indicator-dot.connected {
+            background: #28a745;
+            animation: none;
+        }
+
+        .indicator-dot.error {
+            background: #dc3545;
+            animation: none;
+        }
+
+        .indicator-text {
+            color: #666;
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         .info-box {
             background: #e3f2fd;
             border: 1px solid #bbdefb;
@@ -500,6 +540,10 @@
                 </div>
 
                 <div class="chat-input">
+                    <div class="connection-indicator" id="connectionIndicator" style="display: none;">
+                        <span class="indicator-dot"></span>
+                        <span class="indicator-text" id="indicatorText">Connecting...</span>
+                    </div>
                     <input type="text" id="messageInput" placeholder="Type your message..." disabled>
                     <button id="sendMessage" disabled>Send</button>
                 </div>
