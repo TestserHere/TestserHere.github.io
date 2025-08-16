@@ -38,6 +38,47 @@
             align-items: flex-start;
         }
 
+        .middle-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .map-container {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 80%;
+            max-width: 600px;
+            height: 300px;
+            position: relative;
+        }
+
+        .map-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 15px;
+            background: #2a5298;
+        }
+
+        .map-title {
+            font-size: 1.2rem;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+            -moz-transform: scaleX(-1);
+            -ms-transform: scaleX(-1);
+        }
+
         .speed-display {
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
@@ -255,6 +296,16 @@
             .compass-arrow {
                 height: 40px;
             }
+            
+            .map-container {
+                width: 95%;
+                height: 200px;
+                padding: 15px;
+            }
+            
+            .map-title {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -279,6 +330,13 @@
                     </div>
                     <div class="compass-arrow" id="compassArrow"></div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="middle-section">
+            <div class="map-container">
+                <div class="map-title">Live Location</div>
+                <iframe id="mapFrame" class="map-frame" src="about:blank"></iframe>
             </div>
         </div>
         
@@ -318,6 +376,7 @@
                 this.unitToggle = document.getElementById('unitToggle');
                 this.demoModeBtn = document.getElementById('demoMode');
                 this.resetBtn = document.getElementById('resetBtn');
+                this.mapFrame = document.getElementById('mapFrame');
             }
 
             setupEventListeners() {
@@ -328,6 +387,19 @@
 
             startGPS() {
                 if ('geolocation' in navigator) {
+                    // Get initial position first
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            this.updateMap(position.coords.latitude, position.coords.longitude);
+                        },
+                        (error) => {
+                            console.log('Initial position error:', error);
+                            // Set default map location if GPS fails
+                            this.updateMap(51.5074, -0.1278); // London as default
+                        }
+                    );
+                    
+                    // Then start watching for updates
                     navigator.geolocation.watchPosition(
                         (position) => this.handleGPSUpdate(position),
                         (error) => this.handleGPSError(error),
@@ -340,6 +412,8 @@
                 } else {
                     this.statusElement.textContent = 'GPS Not Available';
                     this.statusElement.style.color = '#ff6b6b';
+                    // Set default map location
+                    this.updateMap(51.5074, -0.1278);
                 }
             }
 
@@ -355,6 +429,7 @@
                 }
 
                 this.updateDisplay();
+                this.updateMap(position.coords.latitude, position.coords.longitude);
                 this.statusElement.textContent = 'GPS Active';
                 this.statusElement.style.color = '#00ff88';
             }
@@ -410,12 +485,25 @@
                 }
             }
 
+            updateMap(latitude, longitude) {
+                if (this.mapFrame) {
+                    // Use OpenStreetMap with your current location
+                    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.01},${latitude-0.01},${longitude+0.01},${latitude+0.01}&layer=mapnik&marker=${latitude},${longitude}`;
+                    this.mapFrame.src = mapUrl;
+                }
+            }
+
             startDemo() {
                 this.demoInterval = setInterval(() => {
                     // Simulate changing speed and direction
                     this.speed = Math.random() * 30; // 0-30 m/s
                     this.direction = (this.direction + Math.random() * 10 - 5) % 360;
                     if (this.direction < 0) this.direction += 360;
+                    
+                    // Simulate movement on map (small random changes)
+                    const latChange = (Math.random() - 0.5) * 0.001;
+                    const lonChange = (Math.random() - 0.5) * 0.001;
+                    this.updateMap(51.5074 + latChange, -0.1278 + lonChange); // London area
                     
                     this.updateDisplay();
                 }, 1000);
@@ -432,6 +520,7 @@
                 this.speed = 0;
                 this.direction = 0;
                 this.updateDisplay();
+                this.mapFrame.src = 'about:blank';
                 this.statusElement.textContent = 'GPS Active';
                 this.statusElement.style.color = '#00ff88';
             }
