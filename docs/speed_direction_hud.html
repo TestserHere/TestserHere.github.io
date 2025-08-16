@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed & Direction HUD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .hud-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .speed-display {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .speed-value {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .speed-unit {
+            font-size: 1.2rem;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .direction-display {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .direction-value {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .direction-text {
+            font-size: 1.2rem;
+            color: #cccccc;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .compass {
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .compass-arrow {
+            width: 4px;
+            height: 60px;
+            background: linear-gradient(to bottom, #ff6b6b, #ff8e8e);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(0deg);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .compass-arrow::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 15px solid #ff6b6b;
+        }
+
+        .compass-circle {
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .compass-markers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .compass-marker {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .north { top: 5px; left: 50%; transform: translateX(-50%); }
+        .east { right: 5px; top: 50%; transform: translateY(-50%); }
+        .south { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .west { left: 5px; top: 50%; transform: translateY(-50%); }
+
+        .bottom-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-indicator {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-text {
+            font-size: 1rem;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .control-btn.active {
+            background: rgba(0, 255, 136, 0.3);
+            border-color: #00ff88;
+        }
+
+        @media (max-width: 768px) {
+            .hud-container {
+                padding: 10px;
+            }
+            
+            .speed-display, .direction-display {
+                padding: 20px;
+                min-width: 150px;
+            }
+            
+            .speed-value, .direction-value {
+                font-size: 2.5rem;
+            }
+            
+            .compass {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .compass-arrow {
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hud-container">
+        <div class="top-section">
+            <div class="speed-display">
+                <div class="speed-value" id="speedValue">0</div>
+                <div class="speed-unit" id="speedUnit">km/h</div>
+            </div>
+            
+            <div class="direction-display">
+                <div class="direction-value" id="directionValue">N</div>
+                <div class="direction-text">Direction</div>
+                <div class="compass">
+                    <div class="compass-circle"></div>
+                    <div class="compass-markers">
+                        <div class="compass-marker north">N</div>
+                        <div class="compass-marker east">E</div>
+                        <div class="compass-marker south">S</div>
+                        <div class="compass-marker west">W</div>
+                    </div>
+                    <div class="compass-arrow" id="compassArrow"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-section">
+            <div class="status-indicator">
+                <div class="status-text" id="statusText">GPS Active</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" id="unitToggle">Toggle Unit</button>
+        <button class="control-btn" id="demoMode">Demo Mode</button>
+        <button class="control-btn" id="resetBtn">Reset</button>
+    </div>
+
+    <script>
+        class SpeedDirectionHUD {
+            constructor() {
+                this.speed = 0;
+                this.direction = 0;
+                this.isMetric = true;
+                this.demoMode = false;
+                this.demoInterval = null;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.startGPS();
+            }
+
+            initializeElements() {
+                this.speedElement = document.getElementById('speedValue');
+                this.speedUnitElement = document.getElementById('speedUnit');
+                this.directionElement = document.getElementById('directionValue');
+                this.compassArrow = document.getElementById('compassArrow');
+                this.statusElement = document.getElementById('statusText');
+                this.unitToggle = document.getElementById('unitToggle');
+                this.demoModeBtn = document.getElementById('demoMode');
+                this.resetBtn = document.getElementById('resetBtn');
+            }
+
+            setupEventListeners() {
+                this.unitToggle.addEventListener('click', () => this.toggleUnit());
+                this.demoModeBtn.addEventListener('click', () => this.toggleDemoMode());
+                this.resetBtn.addEventListener('click', () => this.reset());
+            }
+
+            startGPS() {
+                if ('geolocation' in navigator) {
+                    navigator.geolocation.watchPosition(
+                        (position) => this.handleGPSUpdate(position),
+                        (error) => this.handleGPSError(error),
+                        {
+                            enableHighAccuracy: true,
+                            maximumAge: 1000,
+                            timeout: 5000
+                        }
+                    );
+                } else {
+                    this.statusElement.textContent = 'GPS Not Available';
+                    this.statusElement.style.color = '#ff6b6b';
+                }
+            }
+
+            handleGPSUpdate(position) {
+                if (this.demoMode) return;
+
+                if (position.coords.speed !== null) {
+                    this.speed = position.coords.speed;
+                }
+                
+                if (position.coords.heading !== null) {
+                    this.direction = position.coords.heading;
+                }
+
+                this.updateDisplay();
+                this.statusElement.textContent = 'GPS Active';
+                this.statusElement.style.color = '#00ff88';
+            }
+
+            handleGPSError(error) {
+                console.error('GPS Error:', error);
+                this.statusElement.textContent = 'GPS Error';
+                this.statusElement.style.color = '#ff6b6b';
+            }
+
+            updateDisplay() {
+                // Update speed display
+                const displaySpeed = this.isMetric ? 
+                    (this.speed * 3.6).toFixed(1) : 
+                    (this.speed * 2.237).toFixed(1);
+                
+                this.speedElement.textContent = displaySpeed;
+                this.speedUnitElement.textContent = this.isMetric ? 'km/h' : 'mph';
+
+                // Update direction display
+                const directionText = this.getDirectionText(this.direction);
+                this.directionElement.textContent = directionText;
+                
+                // Update compass arrow
+                this.compassArrow.style.transform = 
+                    `translate(-50%, -100%) rotate(${this.direction}deg)`;
+            }
+
+            getDirectionText(degrees) {
+                const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+                const index = Math.round(degrees / 45) % 8;
+                return directions[index];
+            }
+
+            toggleUnit() {
+                this.isMetric = !this.isMetric;
+                this.updateDisplay();
+                this.unitToggle.classList.toggle('active');
+            }
+
+            toggleDemoMode() {
+                this.demoMode = !this.demoMode;
+                this.demoModeBtn.classList.toggle('active');
+                
+                if (this.demoMode) {
+                    this.startDemo();
+                    this.statusElement.textContent = 'Demo Mode';
+                    this.statusElement.style.color = '#ffaa00';
+                } else {
+                    this.stopDemo();
+                    this.statusElement.textContent = 'GPS Active';
+                    this.statusElement.style.color = '#00ff88';
+                }
+            }
+
+            startDemo() {
+                this.demoInterval = setInterval(() => {
+                    // Simulate changing speed and direction
+                    this.speed = Math.random() * 30; // 0-30 m/s
+                    this.direction = (this.direction + Math.random() * 10 - 5) % 360;
+                    if (this.direction < 0) this.direction += 360;
+                    
+                    this.updateDisplay();
+                }, 1000);
+            }
+
+            stopDemo() {
+                if (this.demoInterval) {
+                    clearInterval(this.demoInterval);
+                    this.demoInterval = null;
+                }
+            }
+
+            reset() {
+                this.speed = 0;
+                this.direction = 0;
+                this.updateDisplay();
+                this.statusElement.textContent = 'GPS Active';
+                this.statusElement.style.color = '#00ff88';
+            }
+        }
+
+        // Initialize the HUD when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SpeedDirectionHUD();
+        });
+    </script>
+</body>
+</html>
