@@ -1,621 +1,758 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed & Direction HUD</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="HUD">
+  <title>HUD — Direction & Speed</title>
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-            overflow: hidden;
-            height: 100vh;
-        }
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-        .hud-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            z-index: 1000;
-        }
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --fg: #e6f0ff;
+      --muted: #7a8aa0;
+      --accent: #5cc8ff;
+      --good: #30d158;
+      --bad: #ff453a;
+    }
 
-        .top-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      letter-spacing: 0.3px;
+      overflow: hidden;
+    }
 
-        .middle-section {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-        }
+    /* Leaflet map full screen behind HUD */
+    #map {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; /* behind HUD */
+    }
 
-        .map-container {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            width: 80%;
-            max-width: 600px;
-            height: 300px;
-            position: relative;
-        }
+    .app {
+      position: relative;
+      z-index: 10; /* on top of map */
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      gap: 14px;
+      padding: clamp(12px, 2.5vh, 24px);
+      box-sizing: border-box;
+    }
 
-        .map-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 15px;
-            background: #2a5298;
-        }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(11, 15, 20, 0.3);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        /* Full-screen map background */
-        .fullscreen-map {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1;
-            border: none;
-        }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
 
-        /* HUD mode overlay */
-        .hud-mode .hud-container {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-        }
+    .btn, .switch {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--fg);
+      backdrop-filter: blur(8px);
+      transition: transform .08s ease, background .2s ease, border-color .2s ease;
+    }
+    .btn:hover, .switch:hover { background: rgba(255,255,255,0.10); }
+    .btn:active, .switch:active { transform: translateY(1px) scale(0.99); }
 
-        .hud-mode .speed-display,
-        .hud-mode .direction-display,
-        .hud-mode .map-container,
-        .hud-mode .status-indicator {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(15px);
-        }
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .switch input { display: none; }
+    .pill {
+      width: 42px; height: 24px; border-radius: 999px;
+      background: rgba(255,255,255,0.2); position: relative;
+      transition: background .2s ease;
+    }
+    .knob {
+      position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--fg);
+      transition: left .2s ease;
+    }
+    input:checked + .pill { background: var(--accent); }
+    input:checked + .pill .knob { left: 20px; }
 
-        /* Normal mode */
-        .normal-mode .hud-container {
-            background: transparent;
-        }
+    .readout-wrap {
+      display: grid; place-items: center; position: relative; overflow: hidden;
+    }
 
-        .normal-mode .speed-display,
-        .normal-mode .direction-display,
-        .normal-mode .map-container,
-        .normal-mode .status-indicator {
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(20px);
-        }
+    .hud {
+      width: 100%; height: 100%;
+      display: grid; place-items: center;
+      transform-origin: center;
+      transition: transform .3s ease;
+    }
 
-        .map-title {
-            font-size: 1.2rem;
-            color: #cccccc;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            -moz-transform: scaleX(-1);
-            -ms-transform: scaleX(-1);
-        }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: clamp(12px, 3vw, 24px);
+      width: min(1100px, 96vw);
+    }
 
-        .speed-display {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            min-width: 200px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
+    .map-widget {
+      background: radial-gradient(1200px 600px at 50% -20%, rgba(92,200,255,0.08), transparent 60%),
+                  linear-gradient(to bottom right, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);
+      backdrop-filter: blur(8px);
+      width: min(1100px, 96vw);
+      height: 200px;
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+      margin-bottom: 10px;
+    }
 
-        .speed-value {
-            font-size: 8rem;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-            margin-bottom: 10px;
-            transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            -moz-transform: scaleX(-1);
-            -ms-transform: scaleX(-1);
-        }
+    .map-widget-title {
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      z-index: 1001;
+      background: rgba(11, 15, 20, 0.7);
+      padding: 5px 10px;
+      border-radius: 8px;
+      backdrop-filter: blur(5px);
+    }
 
-        .speed-unit {
-            font-size: 2rem;
-            color: #cccccc;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            -moz-transform: scaleX(-1);
-            -ms-transform: scaleX(-1);
-        }
+    .map-widget-container {
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+    }
 
-        .direction-display {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            min-width: 200px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
+    .card {
+      background: radial-gradient(1200px 600px at 50% -20%, rgba(92,200,255,0.08), transparent 60%),
+                  linear-gradient(to bottom right, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: clamp(16px, 4vw, 28px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);
+      text-align: center;
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .direction-value {
-            font-size: 8rem;
-            font-weight: bold;
-            color: #ff6b6b;
-            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
-            margin-bottom: 10px;
-            transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            -moz-transform: scaleX scaleX(-1);
-            -ms-transform: scaleX(-1);
-        }
+    .label { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .value {
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .speed { font-size: clamp(56px, 16vw, 160px); font-weight: 800; }
+    .unit { font-size: clamp(16px, 4vw, 24px); color: var(--muted); margin-left: 8px; }
 
-        .direction-text {
-            font-size: 2rem;
-            color: #cccccc;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            -moz-transform: scaleX(-1);
-            -ms-transform: scaleX(-1);
-        }
+    .direction { font-size: clamp(32px, 8vw, 72px); font-weight: 700; }
+    .deg { font-size: clamp(16px, 4vw, 22px); color: var(--muted); margin-left: 10px; }
 
-        .compass {
-            width: 120px;
-            height: 120px;
-            margin: 20px auto;
-            position: relative;
-        }
+    /* Ensure direction card content is properly centered */
+    .card:has(.compass-ring) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .compass-arrow {
-            width: 4px;
-            height: 60px;
-            background: linear-gradient(to bottom, #ff6b6b, #ff8e8e);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-origin: bottom center;
-            transform: translate(-50%, -100%) rotate(0deg);
-            border-radius: 2px;
-            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
-        }
+    .compass-ring {
+      margin-top: 16px;
+      width: min(60vw, 360px); 
+      height: min(60vw, 360px);
+      border-radius: 50%;
+      border: 2px dashed rgba(255,255,255,0.2);
+      display: flex; 
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+      min-width: 200px;
+      min-height: 200px;
+    }
+    .needle {
+      position: absolute; width: 2px; height: 45%; top: 5%; left: 50%; transform-origin: 50% 100%;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(92,200,255,0.7);
+      transition: transform .15s linear;
+    }
+    .north-dot {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      width: 10px; height: 10px; border-radius: 50%; background: var(--good);
+      box-shadow: 0 0 10px rgba(48,209,88,0.6);
+    }
 
-        .compass-arrow::after {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 15px solid #ff6b6b;
-        }
+    .footer {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+      opacity: 0.9;
+      font-size: 13px; color: var(--muted);
+      background: rgba(11, 15, 20, 0.3);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .status { display: inline-flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #999; box-shadow: 0 0 8px rgba(255,255,255,0.25); }
+    .dot.ok { background: var(--good); box-shadow: 0 0 12px rgba(48,209,88,0.6); }
+    .dot.bad { background: var(--bad); box-shadow: 0 0 12px rgba(255,69,58,0.6); }
 
-        .compass-circle {
-            width: 100%;
-            height: 100%;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
+    .reflect-x .hud { transform: scaleX(-1); }
+    .reflect-x .map-widget { transform: scaleX(-1); }
+    .fullscreen { position: fixed; inset: 0; z-index: 50; padding: 8px; }
 
-        .compass-markers {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      .map-widget {
+        height: 150px;
+        padding: 15px;
+      }
+      
+      .map-widget-title {
+        font-size: 12px;
+        top: 10px;
+        left: 15px;
+        padding: 4px 8px;
+      }
+      
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .card {
+        padding: clamp(12px, 3vw, 20px);
+      }
+      
+      .speed {
+        font-size: clamp(40px, 12vw, 120px);
+      }
+      
+      .direction {
+        font-size: clamp(24px, 6vw, 56px);
+      }
+      
+      .compass-ring {
+        width: min(50vw, 280px);
+        height: min(50vw, 280px);
+      }
+    }
 
-        .compass-marker {
-            position: absolute;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 12px;
-            font-weight: bold;
-        }
+    /* Enhanced location marker styles */
+    .custom-location-marker {
+      background: transparent;
+      border: none;
+    }
 
-        .north { top: 5px; left: 50%; transform: translateX(-50%); }
-        .east { right: 5px; top: 50%; transform: translateY(-50%); }
-        .south { bottom: 5px; left: 50%; transform: translateX(-50%); }
-        .west { left: 5px; top: 50%; transform: translateY(-50%); }
+    .location-dot {
+      width: 20px;
+      height: 20px;
+      background: #ff0000;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.7), 0 0 20px rgba(255, 0, 0, 0.4);
+      position: relative;
+      cursor: grab;
+      transition: all 0.3s ease;
+    }
 
-        .bottom-section {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .location-dot:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.9), 0 0 30px rgba(255, 0, 0, 0.6);
+    }
 
-        .status-indicator {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 15px 30px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
+    .location-dot:active {
+      cursor: grabbing;
+      transform: scale(1.1);
+    }
 
-        .status-text {
-            font-size: 1rem;
-            color: #00ff88;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+    .location-dot::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    }
 
-        .controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-        }
+    .location-dot.pulse {
+      animation: pulse 0.5s ease-in-out;
+    }
 
-        .control-btn {
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
 
-        .control-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
+    /* Map interaction improvements */
+    #map {
+      cursor: grab;
+    }
 
-        .control-btn.active {
-            background: rgba(0, 255, 136, 0.3);
-            border-color: #00ff88;
-        }
+    #map:active {
+      cursor: grabbing;
+    }
 
-        #modeToggle {
-            background: rgba(255, 107, 107, 0.3);
-            border-color: #ff6b6b;
-            font-weight: bold;
-        }
-
-        #modeToggle.active {
-            background: rgba(255, 107, 107, 0.6);
-            border-color: #ff6b6b;
-        }
-
-        @media (max-width: 768px) {
-            .hud-container {
-                padding: 10px;
-            }
-            
-            .speed-display, .direction-display {
-                padding: 20px;
-                min-width: 150px;
-            }
-            
-            .speed-value, .direction-value {
-                font-size: 5rem;
-                transform: scaleX(-1);
-                -webkit-transform: scaleX(-1);
-                -moz-transform: scaleX(-1);
-                -ms-transform: scaleX(-1);
-            }
-            
-            .speed-unit, .direction-text {
-                font-size: 1.5rem;
-                transform: scaleX(-1);
-                -webkit-transform: scaleX(-1);
-                -moz-transform: scaleX(-1);
-                -ms-transform: scaleX(-1);
-            }
-            
-            .compass {
-                width: 80px;
-                height: 80px;
-            }
-            
-            .compass-arrow {
-                height: 40px;
-            }
-            
-            .map-container {
-                width: 95%;
-                height: 200px;
-                padding: 15px;
-            }
-            
-            .map-title {
-                font-size: 1rem;
-            }
-            
-            .fullscreen-map {
-                z-index: -2;
-            }
-        }
-    </style>
+    /* HUD overlay improvements for better map visibility */
+    .app {
+      background: linear-gradient(135deg, rgba(11, 15, 20, 0.4), rgba(11, 15, 20, 0.2));
+      backdrop-filter: blur(5px);
+      border-radius: 20px;
+      margin: 10px;
+    }
+  </style>
 </head>
 <body>
-    <!-- Full-screen map background -->
-    <iframe id="fullscreenMap" class="fullscreen-map" src="about:blank"></iframe>
+  <!-- Map container (hidden) -->
+  <div id="map" style="display: none;"></div>
+
+  <div class="app" id="app">
+    <div class="topbar">
+      <div class="controls">
+        <button class="btn" id="startBtn">▶ Start sensors</button>
+        <label class="switch" title="Mirror for windshield reflection">
+          <input type="checkbox" id="reflectToggle">
+          <span class="pill"><span class="knob"></span></span>
+          <span>Reflection mode</span>
+        </label>
+        <label class="switch" title="Toggle units">
+          <input type="checkbox" id="unitToggle">
+          <span class="pill"><span class="knob"></span></span>
+          <span>km/h ↔ mph</span>
+        </label>
+                 <button class="btn" id="fullscreenBtn">⤢ Fullscreen</button>
+         <button class="btn" id="mapDragBtn">🗺️ Map Drag</button>
+         <button class="btn" id="recenterBtn">📍 Re-center</button>
+         <button class="btn" id="compassPerms">🧭 Compass permission</button>
+      </div>
+    </div>
+
+         <div class="readout-wrap" id="readoutWrap">
+       <div class="hud">
+         <div class="cards">
+           <div class="card">
+             <div class="label">Speed</div>
+             <div class="value speed"><span id="speed">0</span><span class="unit" id="unit">km/h</span></div>
+           </div>
+           <div class="card">
+             <div class="label">Direction</div>
+             <div class="value direction"><span id="dir">N</span><span class="deg" id="deg">0°</span></div>
+             <div class="compass-ring">
+               <div class="needle" id="needle"></div>
+               <div class="north-dot"></div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+
+     <div class="map-widget">
+       <div class="map-widget-title">Live Location Map</div>
+       <div class="map-widget-container" id="mapWidget"></div>
+     </div>
+
+     <div class="footer">
+       <div class="status"><span class="dot" id="gpsDot"></span> GPS</div>
+       <div class="status"><span class="dot" id="compassDot"></span> Compass</div>
+       <div class="status">Tip: On mobile, enable location and motion permissions. Desktop fallback: ← → to adjust heading.</div>
+     </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // --- Enhanced Leaflet map setup ---
+    var map = L.map('map', { 
+      zoomControl: false,
+      dragging: true,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true
+    }).setView([0,0], 13);
+
+    // Widget map for the bottom widget
+    var widgetMap = L.map('mapWidget', { 
+      zoomControl: false,
+      dragging: true,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true
+    }).setView([0,0], 13);
+
+    // CartoDB Voyager style tiles for main map
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // CartoDB Voyager style tiles for widget map
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(widgetMap);
+
+    // Enhanced location marker with Google Maps style
+    var locationMarker = L.divIcon({
+      className: 'custom-location-marker',
+      html: '<div class="location-dot"></div>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+
+    var locationDot = L.marker([0,0], {
+      icon: locationMarker,
+      draggable: true,
+      zIndexOffset: 1000
+    }).addTo(map);
+
+    // Widget map location marker
+    var widgetLocationDot = L.marker([0,0], {
+      icon: locationMarker,
+      draggable: false,
+      zIndexOffset: 1000
+    }).addTo(widgetMap);
+
+    // Function to re-center map to current GPS location
+    function reCenterMapToCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          var lat = pos.coords.latitude;
+          var lon = pos.coords.longitude;
+          
+          // Re-center both maps to current location
+          map.panTo([lat, lon], { animate: true, duration: 1 });
+          widgetMap.panTo([lat, lon], { animate: true, duration: 1 });
+          
+          // Reset markers to current location
+          locationDot.setLatLng([lat, lon]);
+          widgetLocationDot.setLatLng([lat, lon]);
+          
+          console.log('Map re-centered to current location:', lat, lon);
+        }, function(err) {
+          console.warn('Error getting current location for re-centering:', err.message);
+        }, { enableHighAccuracy: true, timeout: 10000 });
+      }
+    }
+
+    // Add drag event handlers
+    locationDot.on('dragstart', function() {
+      console.log('Location marker drag started');
+      // Show coordinates info
+      showCoordinates(locationDot.getLatLng());
+    });
+
+    locationDot.on('drag', function(e) {
+      var newPos = e.target.getLatLng();
+      console.log('Dragging to:', newPos.lat, newPos.lng);
+      // Update coordinates display while dragging
+      showCoordinates(newPos);
+    });
+
+    locationDot.on('dragend', function(e) {
+      var newPos = e.target.getLatLng();
+      console.log('Dropped at:', newPos.lat, newPos.lng);
+      // Show final coordinates
+      showCoordinates(newPos, true);
+      
+      // Auto-re-center to current GPS location after 3 seconds
+      setTimeout(() => {
+        reCenterMapToCurrentLocation();
+      }, 3000);
+    });
+
+    // Function to show coordinates information
+    function showCoordinates(pos, isFinal = false) {
+      // Create or update coordinates display
+      let coordDisplay = document.getElementById('coordDisplay');
+      if (!coordDisplay) {
+        coordDisplay = document.createElement('div');
+        coordDisplay.id = 'coordDisplay';
+        coordDisplay.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 15px;
+          border-radius: 10px;
+          font-family: monospace;
+          font-size: 14px;
+          z-index: 2000;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          transition: opacity 0.5s ease;
+          opacity: 1;
+        `;
+        document.body.appendChild(coordDisplay);
+      }
+      
+      const lat = pos.lat.toFixed(6);
+      const lng = pos.lng.toFixed(6);
+      coordDisplay.innerHTML = `
+        <div><strong>Latitude:</strong> ${lat}</div>
+        <div><strong>Longitude:</strong> ${lng}</div>
+        <div><strong>Status:</strong> ${isFinal ? '📍 Dropped' : '🔄 Dragging'}</div>
+      `;
+      
+      // Auto-hide after 3 seconds if it's a final drop
+      if (isFinal) {
+        setTimeout(() => {
+          coordDisplay.style.opacity = '0';
+          setTimeout(() => {
+            if (coordDisplay.parentNode) {
+              coordDisplay.parentNode.removeChild(coordDisplay);
+            }
+          }, 500);
+        }, 3000);
+      }
+    }
+
+    // Enhanced GPS tracking with smooth updates
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(function(pos){
+        var lat = pos.coords.latitude;
+        var lon = pos.coords.longitude;
+        
+        // Update main map (hidden)
+        map.panTo([lat, lon], { animate: true, duration: 1 });
+        locationDot.setLatLng([lat, lon]);
+        
+        // Update widget map
+        widgetMap.panTo([lat, lon], { animate: true, duration: 1 });
+        widgetLocationDot.setLatLng([lat, lon]);
+        
+        // Add a subtle pulse effect to both markers
+        locationDot.getElement()?.classList.add('pulse');
+        widgetLocationDot.getElement()?.classList.add('pulse');
+        setTimeout(() => {
+          locationDot.getElement()?.classList.remove('pulse');
+          widgetLocationDot.getElement()?.classList.remove('pulse');
+        }, 500);
+        
+      }, function(err){
+        console.warn("Geolocation error: " + err.message);
+      }, { 
+        enableHighAccuracy: true, 
+        maximumAge: 1000, 
+        timeout: 20000 
+      });
+    }
+
+    // --- Existing HUD JS below ---
+    const byId = (id) => document.getElementById(id);
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+    function toCardinal(deg) {
+      const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW","N"];
+      return dirs[Math.round((deg % 360) / 22.5)];
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = (x) => x * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R*c;
+    }
+
+    function bearing(lat1, lon1, lat2, lon2) {
+      const toRad = (x)=>x*Math.PI/180;
+      const toDeg = (x)=>x*180/Math.PI;
+      const dLon = toRad(lon2-lon1);
+      lat1 = toRad(lat1); lat2=toRad(lat2);
+      const y=Math.sin(dLon)*Math.cos(lat2);
+      const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+      return (toDeg(Math.atan2(y,x))+360)%360;
+    }
+
+    let useMph=false, headingDeg=0, hasCompass=false, hasGps=false;
+    const speedSamples=[]; const MAX_SAMPLES=5;
+    const speedEl=byId('speed'); const unitEl=byId('unit');
+    const dirEl=byId('dir'); const degEl=byId('deg');
+    const needleEl=byId('needle'); const gpsDot=byId('gpsDot'); const compassDot=byId('compassDot');
+    const reflectToggle=byId('reflectToggle'); const unitToggle=byId('unitToggle');
+         const startBtn=byId('startBtn'); const fullscreenBtn=byId('fullscreenBtn');
+     const compassPermsBtn=byId('compassPerms'); const appEl=byId('app'); const wrapEl=byId('readoutWrap');
+     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn');
+
+         reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked)});
+     unitToggle.addEventListener('change',()=>{useMph=unitToggle.checked; unitEl.textContent=useMph?'mph':'km/h';});
+     
+     // Re-center button functionality
+     recenterBtn.addEventListener('click', () => {
+       reCenterMapToCurrentLocation();
+     });
     
-    <div class="hud-container normal-mode" id="hudContainer">
-        <div class="top-section">
-            <div class="speed-display">
-                <div class="speed-value" id="speedValue">0</div>
-                <div class="speed-unit" id="speedUnit">km/h</div>
-            </div>
-            
-            <div class="direction-display">
-                <div class="direction-value" id="directionValue">N</div>
-                <div class="direction-text">Direction</div>
-                <div class="compass">
-                    <div class="compass-circle"></div>
-                    <div class="compass-markers">
-                        <div class="compass-marker north">N</div>
-                        <div class="compass-marker east">E</div>
-                        <div class="compass-marker south">S</div>
-                        <div class="compass-marker west">W</div>
-                    </div>
-                    <div class="compass-arrow" id="compassArrow"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="middle-section">
-            <div class="map-container">
-                <div class="map-title">Live Location</div>
-                <iframe id="mapFrame" class="map-frame" src="about:blank"></iframe>
-            </div>
-        </div>
-        
-        <div class="bottom-section">
-            <div class="status-indicator">
-                <div class="status-text" id="statusText">GPS Active</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="controls">
-        <button class="control-btn" id="modeToggle">HUD Mode</button>
-        <button class="control-btn" id="unitToggle">Toggle Unit</button>
-        <button class="control-btn" id="demoMode">Demo Mode</button>
-        <button class="control-btn" id="resetBtn">Reset</button>
-    </div>
-
-    <script>
-        class SpeedDirectionHUD {
-            constructor() {
-                this.speed = 0;
-                this.direction = 0;
-                this.isMetric = true;
-                this.demoMode = false;
-                this.demoInterval = null;
-                
-                this.initializeElements();
-                this.setupEventListeners();
-                this.startGPS();
-            }
-
-            initializeElements() {
-                this.speedElement = document.getElementById('speedValue');
-                this.speedUnitElement = document.getElementById('speedUnit');
-                this.directionElement = document.getElementById('directionValue');
-                this.compassArrow = document.getElementById('compassArrow');
-                this.statusElement = document.getElementById('statusText');
-                this.unitToggle = document.getElementById('unitToggle');
-                this.demoModeBtn = document.getElementById('demoMode');
-                this.resetBtn = document.getElementById('resetBtn');
-                this.mapFrame = document.getElementById('mapFrame');
-                this.fullscreenMap = document.getElementById('fullscreenMap');
-                this.hudContainer = document.getElementById('hudContainer');
-                this.modeToggle = document.getElementById('modeToggle');
-            }
-
-            setupEventListeners() {
-                this.modeToggle.addEventListener('click', () => this.toggleMode());
-                this.unitToggle.addEventListener('click', () => this.toggleUnit());
-                this.demoModeBtn.addEventListener('click', () => this.toggleDemoMode());
-                this.resetBtn.addEventListener('click', () => this.reset());
-            }
-
-            startGPS() {
-                if ('geolocation' in navigator) {
-                    // Get initial position first
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            this.updateMap(position.coords.latitude, position.coords.longitude);
-                        },
-                        (error) => {
-                            console.log('Initial position error:', error);
-                            // Set default map location if GPS fails
-                            this.updateMap(51.5074, -0.1278); // London as default
-                        }
-                    );
-                    
-                    // Then start watching for updates
-                    navigator.geolocation.watchPosition(
-                        (position) => this.handleGPSUpdate(position),
-                        (error) => this.handleGPSError(error),
-                        {
-                            enableHighAccuracy: true,
-                            maximumAge: 1000,
-                            timeout: 5000
-                        }
-                    );
-                } else {
-                    this.statusElement.textContent = 'GPS Not Available';
-                    this.statusElement.style.color = '#ff6b6b';
-                    // Set default map location
-                    this.updateMap(51.5074, -0.1278);
-                }
-            }
-
-            handleGPSUpdate(position) {
-                if (this.demoMode) return;
-
-                if (position.coords.speed !== null) {
-                    this.speed = position.coords.speed;
-                }
-                
-                if (position.coords.heading !== null) {
-                    this.direction = position.coords.heading;
-                }
-
-                this.updateDisplay();
-                this.updateMap(position.coords.latitude, position.coords.longitude);
-                this.statusElement.textContent = 'GPS Active';
-                this.statusElement.style.color = '#00ff88';
-            }
-
-            handleGPSError(error) {
-                console.error('GPS Error:', error);
-                this.statusElement.textContent = 'GPS Error';
-                this.statusElement.style.color = '#ff6b6b';
-            }
-
-            updateDisplay() {
-                // Update speed display
-                const displaySpeed = this.isMetric ? 
-                    (this.speed * 3.6).toFixed(1) : 
-                    (this.speed * 2.237).toFixed(1);
-                
-                this.speedElement.textContent = displaySpeed;
-                this.speedUnitElement.textContent = this.isMetric ? 'km/h' : 'mph';
-
-                // Update direction display
-                const directionText = this.getDirectionText(this.direction);
-                this.directionElement.textContent = directionText;
-                
-                // Update compass arrow
-                this.compassArrow.style.transform = 
-                    `translate(-50%, -100%) rotate(${this.direction}deg)`;
-            }
-
-            getDirectionText(degrees) {
-                const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-                const index = Math.round(degrees / 45) % 8;
-                return directions[index];
-            }
-
-            toggleUnit() {
-                this.isMetric = !this.isMetric;
-                this.updateDisplay();
-                this.unitToggle.classList.toggle('active');
-            }
-
-            toggleDemoMode() {
-                this.demoMode = !this.demoMode;
-                this.demoModeBtn.classList.toggle('active');
-                
-                if (this.demoMode) {
-                    this.startDemo();
-                    this.statusElement.textContent = 'Demo Mode';
-                    this.statusElement.style.color = '#ffaa00';
-                } else {
-                    this.stopDemo();
-                    this.statusElement.textContent = 'GPS Active';
-                    this.statusElement.style.color = '#00ff88';
-                }
-            }
-
-            updateMap(latitude, longitude) {
-                if (this.mapFrame) {
-                    // Use OpenStreetMap with your current location
-                    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.01},${latitude-0.01},${longitude+0.01},${latitude+0.01}&layer=mapnik&marker=${latitude},${longitude}`;
-                    this.mapFrame.src = mapUrl;
-                }
-                
-                if (this.fullscreenMap) {
-                    // Use OpenStreetMap with Google Maps-style marker
-                    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.02},${latitude-0.02},${longitude+0.02},${latitude+0.02}&layer=mapnik&marker=${latitude},${longitude}`;
-                    this.fullscreenMap.src = mapUrl;
-                }
-            }
-
-            toggleMode() {
-                const isHUDMode = this.hudContainer.classList.contains('hud-mode');
-                
-                if (isHUDMode) {
-                    // Switch to normal mode
-                    this.hudContainer.classList.remove('hud-mode');
-                    this.hudContainer.classList.add('normal-mode');
-                    this.modeToggle.textContent = 'HUD Mode';
-                    this.modeToggle.classList.remove('active');
-                } else {
-                    // Switch to HUD mode
-                    this.hudContainer.classList.remove('normal-mode');
-                    this.hudContainer.classList.add('hud-mode');
-                    this.modeToggle.textContent = 'Normal Mode';
-                    this.modeToggle.classList.add('active');
-                }
-            }
-
-            startDemo() {
-                this.demoInterval = setInterval(() => {
-                    // Simulate changing speed and direction
-                    this.speed = Math.random() * 30; // 0-30 m/s
-                    this.direction = (this.direction + Math.random() * 10 - 5) % 360;
-                    if (this.direction < 0) this.direction += 360;
-                    
-                    // Simulate movement on map (small random changes)
-                    const latChange = (Math.random() - 0.5) * 0.001;
-                    const lonChange = (Math.random() - 0.5) * 0.001;
-                    this.updateMap(51.5074 + latChange, -0.1278 + lonChange); // London area
-                    
-                    this.updateDisplay();
-                }, 1000);
-            }
-
-            stopDemo() {
-                if (this.demoInterval) {
-                    clearInterval(this.demoInterval);
-                    this.demoInterval = null;
-                }
-            }
-
-            reset() {
-                this.speed = 0;
-                this.direction = 0;
-                this.updateDisplay();
-                this.mapFrame.src = 'about:blank';
-                this.fullscreenMap.src = 'about:blank';
-                this.statusElement.textContent = 'GPS Active';
-                this.statusElement.style.color = '#00ff88';
-            }
+         // Map drag toggle functionality
+     let mapDragEnabled = false;
+     mapDragBtn.addEventListener('click', () => {
+       mapDragEnabled = !mapDragEnabled;
+       
+       // Toggle main map (hidden)
+       map.dragging.disable();
+       map.touchZoom.disable();
+       map.scrollWheelZoom.disable();
+       map.doubleClickZoom.disable();
+       map.boxZoom.disable();
+       map.keyboard.disable();
+       
+       // Toggle widget map
+       widgetMap.dragging.disable();
+       widgetMap.touchZoom.disable();
+       widgetMap.scrollWheelZoom.disable();
+       widgetMap.doubleClickZoom.disable();
+       widgetMap.boxZoom.disable();
+       widgetMap.keyboard.disable();
+       
+       if (mapDragEnabled) {
+         // Enable main map
+         map.dragging.enable();
+         map.touchZoom.enable();
+         map.scrollWheelZoom.enable();
+         map.doubleClickZoom.enable();
+         map.boxZoom.enable();
+         map.keyboard.enable();
+         
+         // Enable widget map
+         widgetMap.dragging.enable();
+         widgetMap.touchZoom.enable();
+         widgetMap.scrollWheelZoom.enable();
+         widgetMap.doubleClickZoom.enable();
+         widgetMap.boxZoom.enable();
+         widgetMap.keyboard.enable();
+         
+         mapDragBtn.textContent = '🗺️ Map Lock';
+         mapDragBtn.style.background = 'rgba(255, 107, 107, 0.3)';
+         mapDragBtn.style.borderColor = '#ff6b6b';
+       } else {
+         mapDragBtn.textContent = '🗺️ Map Drag';
+         mapDragBtn.style.background = 'rgba(255,255,255,0.06)';
+         mapDragBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+       }
+     });
+    fullscreenBtn.addEventListener('click', async()=>{
+      try {
+        if(!document.fullscreenElement){
+          await document.documentElement.requestFullscreen();
+          appEl.classList.add('fullscreen');
+        } else{
+          await document.exitFullscreen();
+          appEl.classList.remove('fullscreen');
         }
+      }catch(e){console.warn('Fullscreen failed:', e);}
+    });
 
-        // Initialize the HUD when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new SpeedDirectionHUD();
-        });
-    </script>
+    compassPermsBtn.addEventListener('click', async()=>{
+      if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){try{await DeviceMotionEvent.requestPermission();}catch{}}
+      if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){try{const p=await DeviceOrientationEvent.requestPermission(); console.log('Orientation permission:', p);}catch{}}
+    });
+
+    function startCompass(){
+      if(!('DeviceOrientationEvent' in window)) return;
+      const handler = (ev)=>{
+        let h = ev.webkitCompassHeading;
+        if(typeof h==='number'){headingDeg=h; hasCompass=true;}
+        else if(typeof ev.alpha==='number'){if(ev.absolute){headingDeg=(360-ev.alpha)%360; hasCompass=true;}}
+        updateDir();
+      };
+      window.addEventListener('deviceorientation',handler,true);
+    }
+
+    let last=null;
+    function startGps(){
+      if(!('geolocation' in navigator)) return;
+      navigator.geolocation.watchPosition((pos)=>{
+        const {latitude:lat,longitude:lon,speed}=pos.coords; const t=pos.timestamp; hasGps=true; gpsDot.classList.add('ok'); gpsDot.classList.remove('bad');
+        let ms=null;
+        if(typeof speed==='number'&&!Number.isNaN(speed)) ms=speed;
+        else if(last){
+          const d=haversine(last.lat,last.lon,lat,lon); const dt=(t-last.t)/1000;
+          if(dt>0) ms=d/dt; if(ms!==null&&ms<0.2) ms=0;
+        }
+        if(ms!==null){
+          speedSamples.push(ms); if(speedSamples.length>MAX_SAMPLES) speedSamples.shift();
+          const avg=speedSamples.reduce((a,b)=>a+b,0)/speedSamples.length;
+          speedEl.textContent=(useMph?avg*2.2369363:avg*3.6).toFixed(0);
+        }
+        if(last){
+          const d=haversine(last.lat,last.lon,lat,lon);
+          if(d>2){const b=bearing(last.lat,last.lon,lat,lon); if(!hasCompass) headingDeg=b;}
+        }
+        last={lat,lon,t};
+        updateDir();
+      },(err)=>{console.warn('GPS error', err); gpsDot.classList.add('bad');},{enableHighAccuracy:true, maximumAge:1000, timeout:20000});
+    }
+
+    function updateDir(){
+      const deg=((headingDeg%360)+360)%360;
+      dirEl.textContent=toCardinal(deg);
+      degEl.textContent=`${deg.toFixed(0)}°`;
+      needleEl.style.transform=`translateX(-50%) rotate(${deg}deg)`;
+      if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
+    }
+
+    window.addEventListener('keydown',(e)=>{if(e.key==='ArrowLeft'){headingDeg=(headingDeg-5+360)%360;updateDir();} if(e.key==='ArrowRight'){headingDeg=(headingDeg+5)%360;updateDir();}});
+
+    startBtn.addEventListener('click',()=>{
+      startCompass();
+      startGps();
+      updateDir();
+    });
+
+    updateDir();
+  </script>
 </body>
 </html>
