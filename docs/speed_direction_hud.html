@@ -941,7 +941,11 @@
 
          function toCardinal(deg) {
        const dirs = ["N","NE","E","SE","S","SW","W","NW"];
-       return dirs[Math.round((deg % 360) / 45)];
+       // Normalize degree to 0-359 range and handle edge cases
+       const normalizedDeg = ((deg % 360) + 360) % 360;
+       // Map 0-22.5 to N, 22.5-67.5 to NE, etc.
+       const index = Math.floor((normalizedDeg + 22.5) / 45) % 8;
+       return dirs[index];
      }
 
     function haversine(lat1, lon1, lat2, lon2) {
@@ -1341,8 +1345,10 @@
 
          function updateDir(){
        const deg=((headingDeg%360)+360)%360;
+       // Ensure degree is in 0-359 range (not 360)
+       const displayDeg = deg === 360 ? 0 : deg;
        dirEl.textContent=toCardinal(deg);
-       degEl.textContent=`${deg.toFixed(0)}°`;
+       degEl.textContent=`${displayDeg.toFixed(0)}°`;
        if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
      }
 
