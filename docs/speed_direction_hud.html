@@ -63,21 +63,60 @@
       box-sizing: border-box;
     }
 
-                   .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        background: rgba(11, 15, 20, 0.3);
-        backdrop-filter: blur(8px);
-        border-radius: 16px;
-        padding: 8px 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        width: 100%;
-        max-width: min(1100px, 96vw);
-        margin: 0 auto;
-        box-sizing: border-box;
-      }
+                        .topbar {
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       gap: 10px;
+       background: rgba(11, 15, 20, 0.3);
+       backdrop-filter: blur(8px);
+       border-radius: 16px;
+       padding: 8px 16px;
+       border: 1px solid rgba(255, 255, 255, 0.1);
+       width: 100%;
+       max-width: min(1100px, 96vw);
+       margin: 0 auto;
+       box-sizing: border-box;
+       transition: all 0.3s ease;
+     }
+     
+     .toggle-controls-btn {
+       background: rgba(92, 200, 255, 0.2);
+       border-color: rgba(92, 200, 255, 0.4);
+       padding: 8px 12px;
+       font-size: 16px;
+       min-width: 40px;
+       height: 40px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+     }
+     
+     .toggle-controls-btn:hover {
+       background: rgba(92, 200, 255, 0.3);
+       border-color: rgba(92, 200, 255, 0.6);
+     }
+     
+     .controls {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 10px;
+       align-items: center;
+       transition: all 0.3s ease;
+       overflow: hidden;
+     }
+     
+     .controls.hidden {
+       max-height: 0;
+       opacity: 0;
+       margin: 0;
+       padding: 0;
+     }
+     
+     .topbar.controls-hidden {
+       padding: 8px 12px;
+       background: rgba(11, 15, 20, 0.2);
+     }
      
      .layout-indicator {
        font-size: 12px;
@@ -460,6 +499,19 @@
          max-height: 320px !important;
        }
        
+       /* iOS controls toggle optimization */
+       .toggle-controls-btn {
+         min-width: 44px;
+         min-height: 44px;
+         font-size: 18px;
+       }
+       
+       /* iOS controls hidden state */
+       .controls.hidden {
+         max-height: 0 !important;
+         opacity: 0 !important;
+       }
+       
        /* iOS mobile layout adjustments */
        .mobile-layout .map-widget {
          height: 280px !important;
@@ -627,27 +679,28 @@
   <div id="map" style="display: none;"></div>
 
   <div class="app" id="app">
-    <div class="topbar">
-      <div class="layout-indicator" id="layoutIndicator">Auto Layout</div>
-      <div class="controls">
-        <button class="btn" id="startBtn">▶ Start sensors</button>
-        <label class="switch" title="Mirror for windshield reflection">
-          <input type="checkbox" id="reflectToggle">
-          <span class="pill"><span class="knob"></span></span>
-          <span>Reflection mode</span>
-        </label>
-        <label class="switch" title="Toggle units">
-          <input type="checkbox" id="unitToggle">
-          <span class="pill"><span class="knob"></span></span>
-          <span>km/h ↔ mph</span>
-        </label>
-                 <button class="btn" id="fullscreenBtn">⤢ Fullscreen</button>
-         <button class="btn" id="mapDragBtn">🗺️ Map Drag</button>
-         <button class="btn" id="recenterBtn">📍 Re-center</button>
-         <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
-         <button class="btn" id="compassPerms">🧭 Compass permission</button>
-      </div>
-    </div>
+         <div class="topbar">
+       <div class="layout-indicator" id="layoutIndicator">Auto Layout</div>
+       <div class="controls" id="controls">
+         <button class="btn" id="startBtn">▶ Start sensors</button>
+         <label class="switch" title="Mirror for windshield reflection">
+           <input type="checkbox" id="reflectToggle">
+           <span class="pill"><span class="knob"></span></span>
+           <span>Reflection mode</span>
+         </label>
+         <label class="switch" title="Toggle units">
+           <input type="checkbox" id="unitToggle">
+           <span class="pill"><span class="knob"></span></span>
+           <span>km/h ↔ mph</span>
+         </label>
+                  <button class="btn" id="fullscreenBtn">⤢ Fullscreen</button>
+          <button class="btn" id="mapDragBtn">🗺️ Map Drag</button>
+          <button class="btn" id="recenterBtn">📍 Re-center</button>
+          <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
+          <button class="btn" id="compassPerms">🧭 Compass permission</button>
+       </div>
+       <button class="btn toggle-controls-btn" id="toggleControlsBtn" title="Toggle controls">⚙️</button>
+     </div>
 
          <div class="readout-wrap" id="readoutWrap">
        <div class="hud">
@@ -919,7 +972,7 @@
     const reflectToggle=byId('reflectToggle'); const unitToggle=byId('unitToggle');
          const startBtn=byId('startBtn'); const fullscreenBtn=byId('fullscreenBtn');
      const compassPermsBtn=byId('compassPerms'); const appEl=byId('app'); const wrapEl=byId('readoutWrap');
-     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator');
+     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator'); const toggleControlsBtn=byId('toggleControlsBtn'); const controlsEl=byId('controls');
 
          reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked)});
      unitToggle.addEventListener('change',()=>{useMph=unitToggle.checked; unitEl.textContent=useMph?'mph':'km/h';});
@@ -927,6 +980,39 @@
      // Re-center button functionality
      recenterBtn.addEventListener('click', () => {
        reCenterMapToCurrentLocation();
+     });
+     
+     // Toggle controls functionality
+     toggleControlsBtn.addEventListener('click', () => {
+       const isHidden = controlsEl.classList.toggle('hidden');
+       const topbar = document.querySelector('.topbar');
+       
+       if (isHidden) {
+         topbar.classList.add('controls-hidden');
+         toggleControlsBtn.textContent = '⚙️';
+         toggleControlsBtn.title = 'Show controls';
+         // Give more space to map widget when controls are hidden
+         const mapWidget = document.querySelector('.map-widget');
+         if (mapWidget) {
+           mapWidget.style.height = 'calc(100vh - 200px)';
+           mapWidget.style.minHeight = '350px';
+         }
+       } else {
+         topbar.classList.remove('controls-hidden');
+         toggleControlsBtn.textContent = '✕';
+         toggleControlsBtn.title = 'Hide controls';
+         // Restore normal map widget height
+         const mapWidget = document.querySelector('.map-widget');
+         if (mapWidget) {
+           mapWidget.style.height = '';
+           mapWidget.style.minHeight = '';
+         }
+       }
+       
+       // Refresh map after layout change
+       if (widgetMap) {
+         setTimeout(() => widgetMap.invalidateSize(), 100);
+       }
      });
      
      // Horizontal mode toggle functionality
