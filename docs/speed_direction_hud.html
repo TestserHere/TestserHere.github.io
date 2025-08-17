@@ -293,8 +293,8 @@
     .dot.ok { background: var(--good); box-shadow: 0 0 12px rgba(48,209,88,0.6); }
     .dot.bad { background: var(--bad); box-shadow: 0 0 12px rgba(255,69,58,0.6); }
 
-           .reflect-x .hud { transform: rotate(180deg); }
-      .reflect-x .map-widget { transform: rotate(180deg); }
+           .reflect-x .hud { transform: rotate(180deg) scaleX(-1); }
+      .reflect-x .map-widget { transform: rotate(180deg) scaleX(-1); }
      .fullscreen { position: fixed; inset: 0; z-index: 50; padding: 8px; }
      
      /* Horizontal mode styles */
@@ -683,10 +683,10 @@
        <div class="layout-indicator" id="layoutIndicator">Auto Layout</div>
        <div class="controls" id="controls">
          <button class="btn" id="startBtn">▶ Start sensors</button>
-         <label class="switch" title="Upside-down for windshield reflection">
+         <label class="switch" title="Mirror image for windshield reflection">
            <input type="checkbox" id="reflectToggle">
            <span class="pill"><span class="knob"></span></span>
-           <span>Upside-down mode</span>
+           <span>Mirror mode</span>
          </label>
          <label class="switch" title="Toggle units">
            <input type="checkbox" id="unitToggle">
