@@ -51,17 +51,28 @@
       box-sizing: border-box;
     }
 
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      background: rgba(11, 15, 20, 0.3);
-      backdrop-filter: blur(8px);
-      border-radius: 16px;
-      padding: 8px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+         .topbar {
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       gap: 10px;
+       background: rgba(11, 15, 20, 0.3);
+       backdrop-filter: blur(8px);
+       border-radius: 16px;
+       padding: 8px 16px;
+       border: 1px solid rgba(255, 255, 255, 0.1);
+     }
+     
+     .layout-indicator {
+       font-size: 12px;
+       color: var(--accent);
+       background: rgba(92, 200, 255, 0.1);
+       padding: 4px 8px;
+       border-radius: 6px;
+       border: 1px solid rgba(92, 200, 255, 0.3);
+       font-weight: 500;
+       letter-spacing: 0.5px;
+     }
 
     .controls {
       display: flex;
@@ -236,7 +247,7 @@
     .dot.ok { background: var(--good); box-shadow: 0 0 12px rgba(48,209,88,0.6); }
     .dot.bad { background: var(--bad); box-shadow: 0 0 12px rgba(255,69,58,0.6); }
 
-         .reflect-x .hud { transform: scaleX(-1); }
+     .reflect-x .hud { transform: scaleX(-1); }
      .reflect-x .map-widget { transform: scaleX(-1); }
      .fullscreen { position: fixed; inset: 0; z-index: 50; padding: 8px; }
      
@@ -290,6 +301,56 @@
        width: min(50vw, 280px);
        height: min(50vw, 280px);
        margin-top: 12px;
+     }
+     
+     /* Mobile layout optimizations */
+     .mobile-layout .app {
+       grid-template-rows: auto auto auto auto;
+       gap: 8px;
+       padding: 8px;
+     }
+     
+     .mobile-layout .topbar {
+       padding: 6px 12px;
+     }
+     
+     .mobile-layout .controls {
+       gap: 6px;
+       flex-wrap: wrap;
+     }
+     
+     .mobile-layout .btn, .mobile-layout .switch {
+       padding: 6px 10px;
+       font-size: 12px;
+       min-height: 32px;
+     }
+     
+     .mobile-layout .map-widget {
+       height: 120px;
+       padding: 12px;
+     }
+     
+     .mobile-layout .cards {
+       grid-template-columns: 1fr;
+       gap: 12px;
+     }
+     
+     .mobile-layout .speed {
+       font-size: clamp(32px, 10vw, 80px);
+     }
+     
+     .mobile-layout .direction {
+       font-size: clamp(20px, 6vw, 48px);
+     }
+     
+     .mobile-layout .compass-ring {
+       width: min(45vw, 200px);
+       height: min(45vw, 200px);
+     }
+     
+     .mobile-layout .footer {
+       padding: 6px 12px;
+       font-size: 11px;
      }
 
          /* Mobile responsive styles */
@@ -528,6 +589,7 @@
 
   <div class="app" id="app">
     <div class="topbar">
+      <div class="layout-indicator" id="layoutIndicator">Auto Layout</div>
       <div class="controls">
         <button class="btn" id="startBtn">▶ Start sensors</button>
         <label class="switch" title="Mirror for windshield reflection">
@@ -803,7 +865,7 @@
     const reflectToggle=byId('reflectToggle'); const unitToggle=byId('unitToggle');
          const startBtn=byId('startBtn'); const fullscreenBtn=byId('fullscreenBtn');
      const compassPermsBtn=byId('compassPerms'); const appEl=byId('app'); const wrapEl=byId('readoutWrap');
-     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn');
+     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator');
 
          reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked)});
      unitToggle.addEventListener('change',()=>{useMph=unitToggle.checked; unitEl.textContent=useMph?'mph':'km/h';});
@@ -827,6 +889,126 @@
          }
        }, 100);
      });
+     
+     // Automatic responsive layout switching
+     function autoSwitchLayout() {
+       const width = window.innerWidth;
+       const height = window.innerHeight;
+       const isLandscape = width > height;
+       const isSmallScreen = width <= 768;
+       
+                 // Auto-switch to horizontal mode on wide screens
+     if (width >= 1200 && height >= 600) {
+       if (!appEl.classList.contains('horizontal-mode')) {
+         appEl.classList.add('horizontal-mode');
+         horizontalBtn.textContent = '🔄 Vertical';
+         showLayoutNotification('Auto-switched to Horizontal Layout', 'info');
+         setTimeout(() => widgetMap.invalidateSize(), 100);
+       }
+     }
+     // Auto-switch to vertical mode on narrow screens
+     else if (width < 1000 || height < 500) {
+       if (appEl.classList.contains('horizontal-mode')) {
+         appEl.classList.remove('horizontal-mode');
+         horizontalBtn.textContent = '🔄 Horizontal';
+         showLayoutNotification('Auto-switched to Vertical Layout', 'info');
+         setTimeout(() => widgetMap.invalidateSize(), 100);
+       }
+     }
+     
+     // Force mobile layout on very small screens
+     if (width <= 480) {
+       appEl.classList.add('mobile-layout');
+     } else {
+       appEl.classList.remove('mobile-layout');
+     }
+     
+     // Update layout indicator
+     updateLayoutIndicator();
+     }
+     
+     // Initial layout check
+     autoSwitchLayout();
+     
+     // Listen for window resize events
+     let resizeTimeout;
+     window.addEventListener('resize', () => {
+       clearTimeout(resizeTimeout);
+       resizeTimeout = setTimeout(autoSwitchLayout, 250); // Debounce resize events
+     });
+     
+     // Listen for orientation changes on mobile
+     window.addEventListener('orientationchange', () => {
+       setTimeout(autoSwitchLayout, 500); // Wait for orientation change to complete
+     });
+     
+     // Function to show layout change notifications
+     function showLayoutNotification(message, type = 'info') {
+       // Remove existing notification
+       const existing = document.getElementById('layoutNotification');
+       if (existing) {
+         existing.remove();
+       }
+       
+       const notification = document.createElement('div');
+       notification.id = 'layoutNotification';
+       notification.style.cssText = `
+         position: fixed;
+         top: 20px;
+         left: 50%;
+         transform: translateX(-50%);
+         background: ${type === 'info' ? 'rgba(92, 200, 255, 0.9)' : 'rgba(255, 107, 107, 0.9)'};
+         color: white;
+         padding: 12px 20px;
+         border-radius: 8px;
+         font-size: 14px;
+         font-weight: 500;
+         z-index: 3000;
+         backdrop-filter: blur(10px);
+         border: 1px solid rgba(255, 255, 255, 0.3);
+         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+         transition: opacity 0.3s ease;
+         opacity: 0;
+       `;
+       notification.textContent = message;
+       
+       document.body.appendChild(notification);
+       
+       // Fade in
+       setTimeout(() => {
+         notification.style.opacity = '1';
+       }, 100);
+       
+       // Auto-hide after 3 seconds
+       setTimeout(() => {
+         notification.style.opacity = '0';
+         setTimeout(() => {
+           if (notification.parentNode) {
+             notification.parentNode.removeChild(notification);
+           }
+         }, 300);
+       }, 3000);
+     }
+     
+     // Function to update layout indicator
+     function updateLayoutIndicator() {
+       const width = window.innerWidth;
+       const height = window.innerHeight;
+       
+       if (appEl.classList.contains('horizontal-mode')) {
+         layoutIndicator.textContent = 'Horizontal Layout';
+         layoutIndicator.style.background = 'rgba(92, 200, 255, 0.2)';
+         layoutIndicator.style.borderColor = 'rgba(92, 200, 255, 0.5)';
+       } else if (appEl.classList.contains('mobile-layout')) {
+         layoutIndicator.textContent = 'Mobile Layout';
+         layoutIndicator.style.background = 'rgba(255, 107, 107, 0.2)';
+         layoutIndicator.style.borderColor = 'rgba(255, 107, 107, 0.5)';
+       } else {
+         layoutIndicator.textContent = 'Vertical Layout';
+         layoutIndicator.style.background = 'rgba(48, 209, 88, 0.2)';
+         layoutIndicator.style.borderColor = 'rgba(48, 209, 88, 0.5)';
+       }
+     }
     
          // Map drag toggle functionality
      let mapDragEnabled = false;
