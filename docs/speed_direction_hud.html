@@ -51,17 +51,21 @@
       box-sizing: border-box;
     }
 
-         .topbar {
-       display: flex;
-       align-items: center;
-       justify-content: space-between;
-       gap: 10px;
-       background: rgba(11, 15, 20, 0.3);
-       backdrop-filter: blur(8px);
-       border-radius: 16px;
-       padding: 8px 16px;
-       border: 1px solid rgba(255, 255, 255, 0.1);
-     }
+                   .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(11, 15, 20, 0.3);
+        backdrop-filter: blur(8px);
+        border-radius: 16px;
+        padding: 8px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        max-width: min(1100px, 96vw);
+        margin: 0 auto;
+        box-sizing: border-box;
+      }
      
      .layout-indicator {
        font-size: 12px;
@@ -114,9 +118,14 @@
     input:checked + .pill { background: var(--accent); }
     input:checked + .pill .knob { left: 20px; }
 
-    .readout-wrap {
-      display: grid; place-items: center; position: relative; overflow: hidden;
-    }
+         .readout-wrap {
+       display: grid; 
+       place-items: center; 
+       position: relative; 
+       overflow: hidden;
+       width: 100%;
+       justify-content: center;
+     }
 
     .hud {
       width: 100%; height: 100%;
@@ -125,28 +134,32 @@
       transition: transform .3s ease;
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(240px, 1fr));
-      gap: clamp(12px, 3vw, 24px);
-      width: min(1100px, 96vw);
-    }
+         .cards {
+       display: grid;
+       grid-template-columns: repeat(2, minmax(240px, 1fr));
+       gap: clamp(12px, 3vw, 24px);
+       width: min(1100px, 96vw);
+       margin: 0 auto;
+       justify-content: center;
+     }
 
-    .map-widget {
-      background: radial-gradient(1200px 600px at 50% -20%, rgba(92,200,255,0.08), transparent 60%),
-                  linear-gradient(to bottom right, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 24px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);
-      backdrop-filter: blur(8px);
-      width: min(1100px, 96vw);
-      height: 200px;
-      position: relative;
-      overflow: hidden;
-      margin: 0 auto;
-      margin-bottom: 10px;
-    }
+         .map-widget {
+       background: radial-gradient(1200px 600px at 50% -20%, rgba(92,200,255,0.08), transparent 60%),
+                   linear-gradient(to bottom right, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+       border: 1px solid rgba(255,255,255,0.15);
+       border-radius: 24px;
+       padding: 20px;
+       box-shadow: 0 10px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);
+       backdrop-filter: blur(8px);
+       width: min(1100px, 96vw);
+       height: 300px;
+       position: relative;
+       overflow: hidden;
+       margin: 0 auto;
+       margin-bottom: 10px;
+       max-width: 100%;
+       box-sizing: border-box;
+     }
 
     .map-widget-title {
       position: absolute;
@@ -197,51 +210,33 @@
     .direction { font-size: clamp(32px, 8vw, 72px); font-weight: 700; }
     .deg { font-size: clamp(16px, 4vw, 22px); color: var(--muted); margin-left: 10px; }
 
-    /* Ensure direction card content is properly centered */
-    .card:has(.compass-ring) {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+         /* Direction card styling */
+     .card:has(.direction) {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       justify-content: center;
+     }
 
-    .compass-ring {
-      margin-top: 16px;
-      width: min(60vw, 360px); 
-      height: min(60vw, 360px);
-      border-radius: 50%;
-      border: 2px dashed rgba(255,255,255,0.2);
-      display: flex; 
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      margin-left: auto;
-      margin-right: auto;
-      min-width: 200px;
-      min-height: 200px;
-    }
-    .needle {
-      position: absolute; width: 2px; height: 45%; top: 5%; left: 50%; transform-origin: 50% 100%;
-      background: var(--accent);
-      box-shadow: 0 0 14px rgba(92,200,255,0.7);
-      transition: transform .15s linear;
-    }
-    .north-dot {
-      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
-      width: 10px; height: 10px; border-radius: 50%; background: var(--good);
-      box-shadow: 0 0 10px rgba(48,209,88,0.6);
-    }
-
-    .footer {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-      opacity: 0.9;
-      font-size: 13px; color: var(--muted);
-      background: rgba(11, 15, 20, 0.3);
-      backdrop-filter: blur(8px);
-      border-radius: 16px;
-      padding: 8px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+         .footer {
+       display: flex; 
+       justify-content: space-between; 
+       align-items: center; 
+       flex-wrap: wrap; 
+       gap: 10px;
+       opacity: 0.9;
+       font-size: 13px; 
+       color: var(--muted);
+       background: rgba(11, 15, 20, 0.3);
+       backdrop-filter: blur(8px);
+       border-radius: 16px;
+       padding: 8px 16px;
+       border: 1px solid rgba(255, 255, 255, 0.1);
+       width: 100%;
+       max-width: min(1100px, 96vw);
+       margin: 0 auto;
+       box-sizing: border-box;
+     }
     .status { display: inline-flex; align-items: center; gap: 8px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; background: #999; box-shadow: 0 0 8px rgba(255,255,255,0.25); }
     .dot.ok { background: var(--good); box-shadow: 0 0 12px rgba(48,209,88,0.6); }
@@ -266,8 +261,8 @@
      .horizontal-mode .map-widget {
        grid-column: 2;
        grid-row: 1;
-       width: 300px;
-       height: 250px;
+       width: 350px;
+       height: 300px;
        margin: 0;
      }
      
@@ -297,16 +292,12 @@
        font-size: clamp(28px, 6vw, 64px);
      }
      
-     .horizontal-mode .compass-ring {
-       width: min(50vw, 280px);
-       height: min(50vw, 280px);
-       margin-top: 12px;
-     }
+
      
      /* Mobile layout optimizations */
      .mobile-layout .app {
        grid-template-rows: auto auto auto auto;
-       gap: 8px;
+       gap: 12px;
        padding: 8px;
      }
      
@@ -325,9 +316,17 @@
        min-height: 32px;
      }
      
+     .mobile-layout .readout-wrap {
+       grid-row: 2;
+       align-self: start;
+     }
+     
      .mobile-layout .map-widget {
-       height: 120px;
+       grid-row: 3;
+       height: 300px;
        padding: 12px;
+       min-height: 250px;
+       max-height: 350px;
      }
      
      .mobile-layout .cards {
@@ -343,21 +342,24 @@
        font-size: clamp(20px, 6vw, 48px);
      }
      
-     .mobile-layout .compass-ring {
-       width: min(45vw, 200px);
-       height: min(45vw, 200px);
-     }
+ 
      
      .mobile-layout .footer {
+       grid-row: 4;
        padding: 6px 12px;
        font-size: 11px;
      }
 
-         /* Mobile responsive styles */
+                   /* Mobile responsive styles */
      @media (max-width: 768px) {
        .map-widget {
-         height: 150px;
+         height: calc(100vh - 400px);
+         min-height: 250px;
+         max-height: 400px;
          padding: 15px;
+         width: min(95vw, 600px) !important;
+         max-width: 95vw !important;
+         margin: 0 auto;
        }
        
        .map-widget-title {
@@ -370,10 +372,15 @@
        .cards {
          grid-template-columns: 1fr;
          gap: 16px;
+         width: min(95vw, 600px) !important;
+         max-width: 95vw !important;
+         margin: 0 auto;
        }
        
        .card {
          padding: clamp(12px, 3vw, 20px);
+         min-width: 0;
+         overflow: hidden;
        }
        
        .speed {
@@ -384,9 +391,11 @@
          font-size: clamp(24px, 6vw, 56px);
        }
        
-       .compass-ring {
-         width: min(50vw, 280px);
-         height: min(50vw, 280px);
+
+       
+       .app {
+         padding: clamp(8px, 2vw, 16px);
+         gap: 12px;
        }
      }
 
@@ -440,10 +449,12 @@
           gap: 10px;
         }
         
-        .map-widget {
-          height: 120px;
-          padding: 12px;
-        }
+                 .map-widget {
+           height: calc(100vh - 300px);
+           min-height: 180px;
+           max-height: 300px;
+           padding: 12px;
+         }
         
         .cards {
           grid-template-columns: repeat(2, 1fr);
@@ -458,11 +469,7 @@
           font-size: clamp(20px, 5vw, 48px);
         }
         
-        .compass-ring {
-          width: min(40vw, 200px);
-          height: min(40vw, 200px);
-          margin-top: 8px;
-        }
+        
         
         .topbar {
           padding: 6px 12px;
@@ -483,11 +490,13 @@
           gap: 12px;
         }
         
-        .horizontal-mode .map-widget {
-          width: 200px;
-          height: 180px;
-          padding: 12px;
-        }
+                                                                                                                                               .horizontal-mode .map-widget {
+             width: 280px;
+             height: 250px;
+             min-height: 200px;
+             max-height: 300px;
+             padding: 12px;
+           }
         
         .horizontal-mode .footer {
           width: 200px;
@@ -508,10 +517,7 @@
           font-size: clamp(20px, 5vw, 48px);
         }
         
-        .horizontal-mode .compass-ring {
-          width: min(45vw, 220px);
-          height: min(45vw, 220px);
-        }
+                 
       }
 
     /* Enhanced location marker styles */
@@ -617,14 +623,10 @@
              <div class="label">Speed</div>
              <div class="value speed"><span id="speed">0</span><span class="unit" id="unit">km/h</span></div>
            </div>
-           <div class="card">
-             <div class="label">Direction</div>
-             <div class="value direction"><span id="dir">N</span><span class="deg" id="deg">0°</span></div>
-             <div class="compass-ring">
-               <div class="needle" id="needle"></div>
-               <div class="north-dot"></div>
-             </div>
-           </div>
+                       <div class="card">
+              <div class="label">Direction</div>
+              <div class="value direction"><span id="dir">N</span><span class="deg" id="deg">0°</span></div>
+            </div>
          </div>
        </div>
      </div>
@@ -656,16 +658,16 @@
       keyboard: true
     }).setView([0,0], 13);
 
-    // Widget map for the bottom widget
-    var widgetMap = L.map('mapWidget', { 
-      zoomControl: false,
-      dragging: true,
-      touchZoom: true,
-      scrollWheelZoom: true,
-      doubleClickZoom: true,
-      boxZoom: true,
-      keyboard: true
-    }).setView([0,0], 13);
+         // Widget map for the bottom widget
+     var widgetMap = L.map('mapWidget', { 
+       zoomControl: false,
+       dragging: true,
+       touchZoom: true,
+       scrollWheelZoom: true,
+       doubleClickZoom: true,
+       boxZoom: true,
+       keyboard: true
+     }).setView([0,0], 18);
 
     // CartoDB Voyager style tiles for main map
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -797,7 +799,7 @@
       }
     }
 
-    // Enhanced GPS tracking with smooth updates
+    // Enhanced GPS tracking with smooth updates and automatic zoom adjustment
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(function(pos){
         var lat = pos.coords.latitude;
@@ -810,6 +812,25 @@
         // Update widget map
         widgetMap.panTo([lat, lon], { animate: true, duration: 1 });
         widgetLocationDot.setLatLng([lat, lon]);
+        
+        // Automatically adjust zoom based on speed for better road visibility
+        let speed = pos.coords.speed || 0;
+        let zoomLevel = 18; // Default zoom for walking/slow speeds (higher base zoom)
+        
+        if (speed > 10) { // Above 36 km/h (10 m/s) - highway speeds
+          zoomLevel = 17; // Zoom out slightly for highway speeds
+        } else if (speed > 5) { // Above 18 km/h (5 m/s) - city driving
+          zoomLevel = 18; // High zoom for city driving
+        } else if (speed > 2) { // Above 7.2 km/h (2 m/s) - slow driving/walking
+          zoomLevel = 19; // Very high zoom for slow speeds
+        } else {
+          zoomLevel = 19; // Maximum zoom for stationary/walking
+        }
+        
+        // Smoothly adjust zoom if it's significantly different
+        if (Math.abs(widgetMap.getZoom() - zoomLevel) > 0.5) {
+          widgetMap.setZoom(zoomLevel, { animate: true, duration: 1 });
+        }
         
         // Add a subtle pulse effect to both markers
         locationDot.getElement()?.classList.add('pulse');
@@ -861,7 +882,7 @@
     const speedSamples=[]; const MAX_SAMPLES=5;
     const speedEl=byId('speed'); const unitEl=byId('unit');
     const dirEl=byId('dir'); const degEl=byId('deg');
-    const needleEl=byId('needle'); const gpsDot=byId('gpsDot'); const compassDot=byId('compassDot');
+         const gpsDot=byId('gpsDot'); const compassDot=byId('compassDot');
     const reflectToggle=byId('reflectToggle'); const unitToggle=byId('unitToggle');
          const startBtn=byId('startBtn'); const fullscreenBtn=byId('fullscreenBtn');
      const compassPermsBtn=byId('compassPerms'); const appEl=byId('app'); const wrapEl=byId('readoutWrap');
@@ -890,45 +911,55 @@
        }, 100);
      });
      
-     // Automatic responsive layout switching
+          // Automatic responsive layout switching
      function autoSwitchLayout() {
        const width = window.innerWidth;
        const height = window.innerHeight;
        const isLandscape = width > height;
        const isSmallScreen = width <= 768;
        
-                 // Auto-switch to horizontal mode on wide screens
-     if (width >= 1200 && height >= 600) {
-       if (!appEl.classList.contains('horizontal-mode')) {
-         appEl.classList.add('horizontal-mode');
-         horizontalBtn.textContent = '🔄 Vertical';
-         showLayoutNotification('Auto-switched to Horizontal Layout', 'info');
-         setTimeout(() => widgetMap.invalidateSize(), 100);
+       // Auto-switch to horizontal mode on wide screens
+       if (width >= 1200 && height >= 600) {
+         if (!appEl.classList.contains('horizontal-mode')) {
+           appEl.classList.add('horizontal-mode');
+           horizontalBtn.textContent = '🔄 Vertical';
+           showLayoutNotification('Auto-switched to Horizontal Layout', 'info');
+           setTimeout(() => {
+             widgetMap.invalidateSize();
+             centerWidgets();
+           }, 100);
+         }
        }
-     }
-     // Auto-switch to vertical mode on narrow screens
-     else if (width < 1000 || height < 500) {
-       if (appEl.classList.contains('horizontal-mode')) {
-         appEl.classList.remove('horizontal-mode');
-         horizontalBtn.textContent = '🔄 Horizontal';
-         showLayoutNotification('Auto-switched to Vertical Layout', 'info');
-         setTimeout(() => widgetMap.invalidateSize(), 100);
+       // Auto-switch to vertical mode on narrow screens
+       else if (width < 1000 || height < 500) {
+         if (appEl.classList.contains('horizontal-mode')) {
+           appEl.classList.remove('horizontal-mode');
+           horizontalBtn.textContent = '🔄 Horizontal';
+           showLayoutNotification('Auto-switched to Vertical Layout', 'info');
+           setTimeout(() => {
+             widgetMap.invalidateSize();
+             centerWidgets();
+           }, 100);
+         }
        }
-     }
-     
-     // Force mobile layout on very small screens
-     if (width <= 480) {
-       appEl.classList.add('mobile-layout');
-     } else {
-       appEl.classList.remove('mobile-layout');
-     }
-     
-     // Update layout indicator
-     updateLayoutIndicator();
+       
+       // Force mobile layout on very small screens
+       if (width <= 480) {
+         appEl.classList.add('mobile-layout');
+       } else {
+         appEl.classList.remove('mobile-layout');
+       }
+       
+       // Update layout indicator and center widgets
+       updateLayoutIndicator();
+       centerWidgets();
      }
      
      // Initial layout check
      autoSwitchLayout();
+     
+     // Initial widget centering
+     centerWidgets();
      
      // Listen for window resize events
      let resizeTimeout;
@@ -1007,6 +1038,53 @@
          layoutIndicator.textContent = 'Vertical Layout';
          layoutIndicator.style.background = 'rgba(48, 209, 88, 0.2)';
          layoutIndicator.style.borderColor = 'rgba(48, 209, 88, 0.5)';
+       }
+     }
+     
+     // Function to center widgets and ensure they're fully visible
+     function centerWidgets() {
+       const width = window.innerWidth;
+       const height = window.innerHeight;
+       
+       // Adjust card widths for better centering on small screens
+       const cards = document.querySelector('.cards');
+       const mapWidget = document.querySelector('.map-widget');
+       
+       if (width <= 768) {
+         // Mobile: ensure cards fit within screen width
+         if (cards) {
+           cards.style.width = 'min(95vw, 600px)';
+           cards.style.maxWidth = '95vw';
+         }
+         if (mapWidget) {
+           mapWidget.style.width = 'min(95vw, 600px)';
+           mapWidget.style.maxWidth = '95vw';
+         }
+       } else if (width <= 1200) {
+         // Tablet: moderate sizing
+         if (cards) {
+           cards.style.width = 'min(90vw, 800px)';
+           cards.style.maxWidth = '90vw';
+         }
+         if (mapWidget) {
+           mapWidget.style.width = 'min(90vw, 800px)';
+           mapWidget.style.maxWidth = '90vw';
+         }
+       } else {
+         // Desktop: full sizing
+         if (cards) {
+           cards.style.width = 'min(1100px, 96vw)';
+           cards.style.maxWidth = '96vw';
+         }
+         if (mapWidget) {
+           mapWidget.style.width = 'min(1100px, 96vw)';
+           mapWidget.style.maxWidth = '96vw';
+         }
+       }
+       
+       // Force map refresh after size changes
+       if (widgetMap) {
+         setTimeout(() => widgetMap.invalidateSize(), 50);
        }
      }
     
@@ -1110,13 +1188,12 @@
       },(err)=>{console.warn('GPS error', err); gpsDot.classList.add('bad');},{enableHighAccuracy:true, maximumAge:1000, timeout:20000});
     }
 
-    function updateDir(){
-      const deg=((headingDeg%360)+360)%360;
-      dirEl.textContent=toCardinal(deg);
-      degEl.textContent=`${deg.toFixed(0)}°`;
-      needleEl.style.transform=`translateX(-50%) rotate(${deg}deg)`;
-      if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
-    }
+         function updateDir(){
+       const deg=((headingDeg%360)+360)%360;
+       dirEl.textContent=toCardinal(deg);
+       degEl.textContent=`${deg.toFixed(0)}°`;
+       if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
+     }
 
     window.addEventListener('keydown',(e)=>{if(e.key==='ArrowLeft'){headingDeg=(headingDeg-5+360)%360;updateDir();} if(e.key==='ArrowRight'){headingDeg=(headingDeg+5)%360;updateDir();}});
 
