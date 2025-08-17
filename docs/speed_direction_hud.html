@@ -22,15 +22,27 @@
       --bad: #ff453a;
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      letter-spacing: 0.3px;
-      overflow: hidden;
-    }
+         html, body {
+       height: 100%;
+       margin: 0;
+       background: var(--bg);
+       color: var(--fg);
+       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+       letter-spacing: 0.3px;
+       overflow: hidden;
+     }
+     
+     /* iOS Safari 100vh fix */
+     @supports (-webkit-touch-callout: none) {
+       html, body {
+         height: -webkit-fill-available;
+       }
+       
+       .app {
+         height: -webkit-fill-available;
+         min-height: -webkit-fill-available;
+       }
+     }
 
     /* Leaflet map full screen behind HUD */
     #map {
@@ -439,6 +451,27 @@
        .knob {
          min-width: 24px;
          min-height: 24px;
+       }
+       
+       /* iOS-specific map widget sizing */
+       .map-widget {
+         height: 280px !important;
+         min-height: 250px !important;
+         max-height: 320px !important;
+       }
+       
+       /* iOS mobile layout adjustments */
+       .mobile-layout .map-widget {
+         height: 280px !important;
+         min-height: 250px !important;
+         max-height: 320px !important;
+       }
+       
+       /* iOS horizontal mode adjustments */
+       .horizontal-mode .map-widget {
+         height: 250px !important;
+         min-height: 200px !important;
+         max-height: 300px !important;
        }
      }
 
@@ -960,6 +993,38 @@
      
      // Initial widget centering
      centerWidgets();
+     
+     // iOS-specific viewport handling
+     function handleIOSViewport() {
+       if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+         // Force viewport recalculation on iOS
+         const viewport = document.querySelector('meta[name="viewport"]');
+         if (viewport) {
+           viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+         }
+         
+         // Force map widget sizing on iOS
+         const mapWidget = document.querySelector('.map-widget');
+         if (mapWidget) {
+           mapWidget.style.height = '280px';
+           mapWidget.style.minHeight = '250px';
+           mapWidget.style.maxHeight = '320px';
+         }
+         
+         // Force map refresh
+         if (widgetMap) {
+           setTimeout(() => {
+             widgetMap.invalidateSize();
+           }, 100);
+         }
+       }
+     }
+     
+     // Call iOS handling on load and orientation change
+     handleIOSViewport();
+     window.addEventListener('orientationchange', () => {
+       setTimeout(handleIOSViewport, 500);
+     });
      
      // Listen for window resize events
      let resizeTimeout;
