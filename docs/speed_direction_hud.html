@@ -67,6 +67,44 @@
             background: #2a5298;
         }
 
+        /* Full-screen map background */
+        .fullscreen-map {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            border: none;
+        }
+
+        /* HUD mode overlay */
+        .hud-mode .hud-container {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .hud-mode .speed-display,
+        .hud-mode .direction-display,
+        .hud-mode .map-container,
+        .hud-mode .status-indicator {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+        }
+
+        /* Normal mode */
+        .normal-mode .hud-container {
+            background: transparent;
+        }
+
+        .normal-mode .speed-display,
+        .normal-mode .direction-display,
+        .normal-mode .map-container,
+        .normal-mode .status-indicator {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+        }
+
         .map-title {
             font-size: 1.2rem;
             color: #cccccc;
@@ -262,6 +300,17 @@
             border-color: #00ff88;
         }
 
+        #modeToggle {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        #modeToggle.active {
+            background: rgba(255, 107, 107, 0.6);
+            border-color: #ff6b6b;
+        }
+
         @media (max-width: 768px) {
             .hud-container {
                 padding: 10px;
@@ -306,11 +355,18 @@
             .map-title {
                 font-size: 1rem;
             }
+            
+            .fullscreen-map {
+                z-index: -2;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="hud-container">
+    <!-- Full-screen map background -->
+    <iframe id="fullscreenMap" class="fullscreen-map" src="about:blank"></iframe>
+    
+    <div class="hud-container normal-mode" id="hudContainer">
         <div class="top-section">
             <div class="speed-display">
                 <div class="speed-value" id="speedValue">0</div>
@@ -348,6 +404,7 @@
     </div>
 
     <div class="controls">
+        <button class="control-btn" id="modeToggle">HUD Mode</button>
         <button class="control-btn" id="unitToggle">Toggle Unit</button>
         <button class="control-btn" id="demoMode">Demo Mode</button>
         <button class="control-btn" id="resetBtn">Reset</button>
@@ -377,9 +434,13 @@
                 this.demoModeBtn = document.getElementById('demoMode');
                 this.resetBtn = document.getElementById('resetBtn');
                 this.mapFrame = document.getElementById('mapFrame');
+                this.fullscreenMap = document.getElementById('fullscreenMap');
+                this.hudContainer = document.getElementById('hudContainer');
+                this.modeToggle = document.getElementById('modeToggle');
             }
 
             setupEventListeners() {
+                this.modeToggle.addEventListener('click', () => this.toggleMode());
                 this.unitToggle.addEventListener('click', () => this.toggleUnit());
                 this.demoModeBtn.addEventListener('click', () => this.toggleDemoMode());
                 this.resetBtn.addEventListener('click', () => this.reset());
@@ -491,6 +552,30 @@
                     const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.01},${latitude-0.01},${longitude+0.01},${latitude+0.01}&layer=mapnik&marker=${latitude},${longitude}`;
                     this.mapFrame.src = mapUrl;
                 }
+                
+                if (this.fullscreenMap) {
+                    // Use OpenStreetMap with Google Maps-style marker
+                    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude-0.02},${latitude-0.02},${longitude+0.02},${latitude+0.02}&layer=mapnik&marker=${latitude},${longitude}`;
+                    this.fullscreenMap.src = mapUrl;
+                }
+            }
+
+            toggleMode() {
+                const isHUDMode = this.hudContainer.classList.contains('hud-mode');
+                
+                if (isHUDMode) {
+                    // Switch to normal mode
+                    this.hudContainer.classList.remove('hud-mode');
+                    this.hudContainer.classList.add('normal-mode');
+                    this.modeToggle.textContent = 'HUD Mode';
+                    this.modeToggle.classList.remove('active');
+                } else {
+                    // Switch to HUD mode
+                    this.hudContainer.classList.remove('normal-mode');
+                    this.hudContainer.classList.add('hud-mode');
+                    this.modeToggle.textContent = 'Normal Mode';
+                    this.modeToggle.classList.add('active');
+                }
             }
 
             startDemo() {
@@ -521,6 +606,7 @@
                 this.direction = 0;
                 this.updateDisplay();
                 this.mapFrame.src = 'about:blank';
+                this.fullscreenMap.src = 'about:blank';
                 this.statusElement.textContent = 'GPS Active';
                 this.statusElement.style.color = '#00ff88';
             }
