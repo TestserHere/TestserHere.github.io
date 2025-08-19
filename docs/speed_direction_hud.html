@@ -169,53 +169,7 @@
     input:checked + .pill { background: var(--accent); }
     input:checked + .pill .knob { left: 20px; }
     
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin: 12px 0;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
     
-    .control-label {
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    
-    .control-slider {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    
-    .control-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-    }
-    
-    .control-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-    }
 
          .readout-wrap {
        display: grid; 
@@ -747,10 +701,7 @@
           <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
           <button class="btn" id="compassPerms">🧭 Compass permission</button>
          </div>
-         <div class="control-group">
-           <label for="speedUpdateSlider" class="control-label">Speed Update Delay: <span id="speedUpdateValue">1s</span></label>
-           <input type="range" id="speedUpdateSlider" min="500" max="3000" step="100" value="1000" class="control-slider">
-         </div>
+         
        </div>
        <button class="btn toggle-controls-btn" id="toggleControlsBtn" title="Toggle controls">⚙️</button>
      </div>
@@ -1022,8 +973,8 @@
     }
 
     let useMph=false, headingDeg=0, hasCompass=false, hasGps=false;
-    let lastSpeedUpdate = 0;
-    let speedUpdateDelay = 1000; // 1 second delay between speed updates
+         let lastSpeedUpdate = 0;
+     let speedUpdateDelay = 200; // 200ms delay between speed updates (minimal)
     const speedSamples=[]; const MAX_SAMPLES=5;
     const speedEl=byId('speed'); const unitEl=byId('unit');
     const dirEl=byId('dir'); const degEl=byId('deg');
@@ -1031,16 +982,12 @@
     const reflectToggle=byId('reflectToggle'); const unitToggle=byId('unitToggle');
          const startBtn=byId('startBtn'); const fullscreenBtn=byId('fullscreenBtn');
      const compassPermsBtn=byId('compassPerms'); const appEl=byId('app'); const wrapEl=byId('readoutWrap');
-     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator'); const toggleControlsBtn=byId('toggleControlsBtn'); const controlsEl=byId('controls'); const speedUpdateSlider=byId('speedUpdateSlider'); const speedUpdateValue=byId('speedUpdateValue');
+     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator'); const toggleControlsBtn=byId('toggleControlsBtn'); const controlsEl=byId('controls');
 
          reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked)});
      unitToggle.addEventListener('change',()=>{useMph=unitToggle.checked; unitEl.textContent=useMph?'mph':'km/h';});
      
-     // Speed update delay slider functionality
-     speedUpdateSlider.addEventListener('input', () => {
-       speedUpdateDelay = parseInt(speedUpdateSlider.value);
-       speedUpdateValue.textContent = (speedUpdateDelay / 1000) + 's';
-     });
+
      
      // Re-center button functionality
      recenterBtn.addEventListener('click', () => {
