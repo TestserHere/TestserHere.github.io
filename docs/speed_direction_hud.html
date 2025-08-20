@@ -168,8 +168,6 @@
     }
     input:checked + .pill { background: var(--accent); }
     input:checked + .pill .knob { left: 20px; }
-    
-    
 
          .readout-wrap {
        display: grid; 
@@ -700,8 +698,6 @@
           <button class="btn" id="recenterBtn">📍 Re-center</button>
           <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
           <button class="btn" id="compassPerms">🧭 Compass permission</button>
-         </div>
-         
        </div>
        <button class="btn toggle-controls-btn" id="toggleControlsBtn" title="Toggle controls">⚙️</button>
      </div>
@@ -973,8 +969,6 @@
     }
 
     let useMph=false, headingDeg=0, hasCompass=false, hasGps=false;
-         let lastSpeedUpdate = 0;
-     let speedUpdateDelay = 200; // 200ms delay between speed updates (minimal)
     const speedSamples=[]; const MAX_SAMPLES=5;
     const speedEl=byId('speed'); const unitEl=byId('unit');
     const dirEl=byId('dir'); const degEl=byId('deg');
@@ -986,8 +980,6 @@
 
          reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked)});
      unitToggle.addEventListener('change',()=>{useMph=unitToggle.checked; unitEl.textContent=useMph?'mph':'km/h';});
-     
-
      
      // Re-center button functionality
      recenterBtn.addEventListener('click', () => {
@@ -1340,13 +1332,7 @@
         if(ms!==null){
           speedSamples.push(ms); if(speedSamples.length>MAX_SAMPLES) speedSamples.shift();
           const avg=speedSamples.reduce((a,b)=>a+b,0)/speedSamples.length;
-          
-          // Throttle speed updates to reduce flickering
-          const now = Date.now();
-          if (now - lastSpeedUpdate >= speedUpdateDelay) {
-            speedEl.textContent=(useMph?avg*2.2369363:avg*3.6).toFixed(0);
-            lastSpeedUpdate = now;
-          }
+          speedEl.textContent=(useMph?avg*2.2369363:avg*3.6).toFixed(0);
         }
         if(last){
           const d=haversine(last.lat,last.lon,lat,lon);
