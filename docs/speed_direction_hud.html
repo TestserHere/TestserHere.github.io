@@ -649,6 +649,32 @@
     .location-dot.pulse {
       animation: pulse 0.5s ease-in-out;
     }
+    
+    .location-arrow {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 16px solid #ff0000;
+      filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+      animation: pulse 2s infinite;
+      cursor: grab;
+      transform-origin: center bottom;
+      position: relative;
+    }
+    
+    .location-arrow::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      background: #ffffff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
+    }
 
     @keyframes pulse {
       0% { transform: scale(1); }
@@ -776,6 +802,14 @@
       iconSize: [20, 20],
       iconAnchor: [10, 10]
     });
+    
+    // Arrow icon for high-accuracy GPS devices
+    var arrowIcon = L.divIcon({
+      className: 'custom-location-marker',
+      html: '<div class="location-arrow"></div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
 
     var locationDot = L.marker([0,0], {
       icon: locationMarker,
@@ -885,11 +919,33 @@
       }
     }
 
+    // Function to update marker icon based on GPS accuracy
+    function updateMarkerIcon(accuracy) {
+      const isHighAccuracy = accuracy && accuracy <= 10; // 10 meters or better
+      const newIcon = isHighAccuracy ? arrowIcon : locationMarker;
+      
+      // Update both markers
+      locationDot.setIcon(newIcon);
+      widgetLocationDot.setIcon(newIcon);
+      
+      // If using arrow, rotate it based on heading
+      if (isHighAccuracy && headingDeg !== undefined) {
+        const arrowElements = document.querySelectorAll('.location-arrow');
+        arrowElements.forEach(arrow => {
+          arrow.style.transform = `rotate(${headingDeg}deg)`;
+        });
+      }
+    }
+
     // Enhanced GPS tracking with smooth updates and automatic zoom adjustment
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(function(pos){
         var lat = pos.coords.latitude;
         var lon = pos.coords.longitude;
+        var accuracy = pos.coords.accuracy;
+        
+        // Update marker icon based on GPS accuracy
+        updateMarkerIcon(accuracy);
         
         // Update main map (hidden)
         map.panTo([lat, lon], { animate: true, duration: 1 });
@@ -1350,6 +1406,12 @@
        dirEl.textContent=toCardinal(deg);
        degEl.textContent=`${displayDeg.toFixed(0)}°`;
        if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
+       
+       // Update arrow rotation if using arrow icon
+       const arrowElements = document.querySelectorAll('.location-arrow');
+       arrowElements.forEach(arrow => {
+         arrow.style.transform = `rotate(${deg}deg)`;
+       });
      }
 
     window.addEventListener('keydown',(e)=>{if(e.key==='ArrowLeft'){headingDeg=(headingDeg-5+360)%360;updateDir();} if(e.key==='ArrowRight'){headingDeg=(headingDeg+5)%360;updateDir();}});
