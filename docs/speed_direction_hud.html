@@ -260,8 +260,6 @@
 
     .direction { font-size: clamp(32px, 8vw, 72px); font-weight: 700; }
     .deg { font-size: clamp(16px, 4vw, 22px); color: var(--muted); margin-left: 10px; }
-    
-
 
          /* Direction card styling */
      .card:has(.direction) {
@@ -297,6 +295,7 @@
 
            .reflect-x .hud { transform: rotate(180deg) scaleX(-1); }
       .reflect-x .map-widget { transform: rotate(180deg) scaleX(-1); }
+      .reflect-x .location-arrow .arrow-shape { transform: scaleX(-1); }
      .fullscreen { position: fixed; inset: 0; z-index: 50; padding: 8px; }
      
      /* Horizontal mode styles */
@@ -443,8 +442,6 @@
        .direction {
          font-size: clamp(24px, 6vw, 56px);
        }
-       
-
        
 
        
@@ -615,45 +612,51 @@
       border: none;
     }
 
-    .location-arrow-marker {
+    .location-arrow {
       width: 24px;
       height: 24px;
-      background: #ff0000;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      box-shadow: 0 0 10px rgba(255, 0, 0, 0.7), 0 0 20px rgba(255, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
       cursor: grab;
       transition: all 0.3s ease;
-      transform-origin: center;
     }
 
-    .location-arrow-marker::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-bottom: 12px solid #ffffff;
-      transform: translate(-50%, -50%);
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
-    }
-
-    .location-arrow-marker:hover {
+    .location-arrow:hover {
       transform: scale(1.2);
-      box-shadow: 0 0 15px rgba(255, 0, 0, 0.9), 0 0 30px rgba(255, 0, 0, 0.6);
+      box-shadow: 0 0 15px rgba(0, 102, 255, 0.9), 0 0 30px rgba(0, 102, 255, 0.6);
     }
 
-    .location-arrow-marker:active {
+    .location-arrow:active {
       cursor: grabbing;
       transform: scale(1.1);
     }
 
-    .location-arrow-marker.pulse {
+    .location-arrow svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .location-arrow .arrow-shape {
+      fill: #4285f4;
+      stroke: #ffffff;
+      stroke-width: 1.5;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+    }
+
+    .location-arrow.pulse {
       animation: pulse 0.5s ease-in-out;
+    }
+
+    /* Map rotation styles */
+    .map-rotating .map-widget-container {
+      transition: transform 0.3s ease;
+    }
+
+    .map-rotating .widget-car-icon {
+      transition: transform 0.3s ease;
     }
 
     @keyframes pulse {
@@ -702,10 +705,10 @@
                   <button class="btn" id="fullscreenBtn">⤢ Fullscreen</button>
           <button class="btn" id="mapDragBtn">🗺️ Map Drag</button>
           <button class="btn" id="recenterBtn">📍 Re-center</button>
-                      <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
-            <button class="btn" id="compassPerms">🧭 Compass permission</button>
-            <button class="btn" id="arrowLockBtn">⬆️ Arrow Lock</button>
-        </div>
+          <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
+          <button class="btn" id="compassPerms">🧭 Compass permission</button>
+          <button class="btn" id="lockArrowBtn">🔒 Lock Arrow Up</button>
+       </div>
        <button class="btn toggle-controls-btn" id="toggleControlsBtn" title="Toggle controls">⚙️</button>
      </div>
 
@@ -726,7 +729,9 @@
 
      <div class="map-widget">
        <div class="map-widget-title">Live Location Map</div>
-       <div class="map-widget-container" id="mapWidget"></div>
+       <div class="map-widget-container" id="mapWidget">
+         <!-- Location marker arrow will show here automatically -->
+       </div>
      </div>
 
      <div class="footer">
@@ -776,12 +781,12 @@
       maxZoom: 19
     }).addTo(widgetMap);
 
-    // Enhanced location marker with directional arrow
+    // Enhanced location marker with Google Maps style
     var locationMarker = L.divIcon({
       className: 'custom-location-marker',
-      html: '<div class="location-arrow-marker"></div>',
+      html: '<div class="location-arrow"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path class="arrow-shape" d="M12 2 L6 18 L18 18 Z" fill="#4285f4" stroke="#ffffff" stroke-width="1.5"/></svg></div>',
       iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      iconAnchor: [12, 18]
     });
 
     var locationDot = L.marker([0,0], {
@@ -819,10 +824,31 @@
       }
     }
 
+    // Function to rotate location markers to show direction
+    function rotateLocationMarkers(heading) {
+      // Rotate main map location marker
+      const mainMarker = locationDot.getElement();
+      if (mainMarker) {
+        const arrow = mainMarker.querySelector('svg');
+        if (arrow) {
+          arrow.style.transform = `rotate(${heading}deg)`;
+        }
+      }
+      
+      // Rotate widget map location marker
+      const widgetMarker = widgetLocationDot.getElement();
+      if (widgetMarker) {
+        const arrow = widgetMarker.querySelector('svg');
+        if (arrow) {
+          arrow.style.transform = `rotate(${heading}deg)`;
+        }
+      }
+    }
+
     // Add drag event handlers
     locationDot.on('dragstart', function() {
       console.log('Location marker drag started');
-      // Show coordinates info
+      // Show coordinates info                       
       showCoordinates(locationDot.getLatLng());
     });
 
@@ -892,35 +918,6 @@
       }
     }
 
-    // Arrow lock functionality
-    let arrowLocked = false;
-    
-    arrowLockBtn.addEventListener('click', () => {
-      arrowLocked = !arrowLocked;
-      
-      if (arrowLocked) {
-        arrowLockBtn.textContent = '⬆️ Arrow Free';
-        arrowLockBtn.style.background = 'rgba(48, 209, 88, 0.3)';
-        arrowLockBtn.style.borderColor = '#30d158';
-        // Lock map marker to point north
-        const markerElement = locationDot.getElement();
-        const widgetMarkerElement = widgetLocationDot.getElement();
-        if (markerElement) markerElement.style.transform = 'rotate(0deg)';
-        if (widgetMarkerElement) widgetMarkerElement.style.transform = 'rotate(0deg)';
-      } else {
-        arrowLockBtn.textContent = '⬆️ Arrow Lock';
-        arrowLockBtn.style.background = 'rgba(255,255,255,0.06)';
-        arrowLockBtn.style.borderColor = 'rgba(255,255,255,0.12)';
-        // Restore normal marker rotation
-        if (hasCompass && headingDeg !== undefined) {
-          const markerElement = locationDot.getElement();
-          const widgetMarkerElement = widgetLocationDot.getElement();
-          if (markerElement) markerElement.style.transform = `rotate(${headingDeg}deg)`;
-          if (widgetMarkerElement) widgetMarkerElement.style.transform = `rotate(${headingDeg}deg)`;
-        }
-      }
-    });
-
     // Enhanced GPS tracking with smooth updates and automatic zoom adjustment
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(function(pos){
@@ -934,6 +931,9 @@
         // Update widget map
         widgetMap.panTo([lat, lon], { animate: true, duration: 1 });
         widgetLocationDot.setLatLng([lat, lon]);
+        
+        // Rotate location arrows to show direction
+        rotateLocationMarkers(headingDeg);
         
         // Automatically adjust zoom based on speed for better road visibility
         let speed = pos.coords.speed || 0;
@@ -961,19 +961,6 @@
           locationDot.getElement()?.classList.remove('pulse');
           widgetLocationDot.getElement()?.classList.remove('pulse');
         }, 500);
-        
-        // Update marker rotation based on heading (if we have compass data)
-        if (hasCompass && headingDeg !== undefined) {
-          const markerElement = locationDot.getElement();
-          const widgetMarkerElement = widgetLocationDot.getElement();
-          
-          if (markerElement) {
-            markerElement.style.transform = `rotate(${headingDeg}deg)`;
-          }
-          if (widgetMarkerElement) {
-            widgetMarkerElement.style.transform = `rotate(${headingDeg}deg)`;
-          }
-        }
         
       }, function(err){
         console.warn("Geolocation error: " + err.message);
@@ -1025,10 +1012,33 @@
     const reflectToggle=byId('reflectToggle'); const unitToggle=byId('unitToggle');
          const startBtn=byId('startBtn'); const fullscreenBtn=byId('fullscreenBtn');
      const compassPermsBtn=byId('compassPerms'); const appEl=byId('app'); const wrapEl=byId('readoutWrap');
-     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator'); const toggleControlsBtn=byId('toggleControlsBtn'); const controlsEl=byId('controls'); const arrowLockBtn=byId('arrowLockBtn');
+     const mapDragBtn=byId('mapDragBtn'); const recenterBtn=byId('recenterBtn'); const horizontalBtn=byId('horizontalBtn'); const layoutIndicator=byId('layoutIndicator'); const toggleControlsBtn=byId('toggleControlsBtn'); const controlsEl=byId('controls'); const lockArrowBtn=byId('lockArrowBtn');
 
-         reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked)});
+         reflectToggle.addEventListener('change',()=>{document.body.classList.toggle('reflect-x',reflectToggle.checked); rotateLocationMarkers(headingDeg);});
      unitToggle.addEventListener('change',()=>{useMph=unitToggle.checked; unitEl.textContent=useMph?'mph':'km/h';});
+     
+     // Lock arrow button functionality
+     let arrowLocked = false;
+     lockArrowBtn.addEventListener('click', () => {
+       arrowLocked = !arrowLocked;
+       if (arrowLocked) {
+         lockArrowBtn.textContent = '🔓 Unlock Arrow';
+         lockArrowBtn.style.background = 'rgba(255, 107, 107, 0.3)';
+         lockArrowBtn.style.borderColor = '#ff6b6b';
+         appEl.classList.add('map-rotating');
+         
+         // Lock arrows pointing up
+         rotateLocationMarkers(0);
+       } else {
+         lockArrowBtn.textContent = '🔒 Lock Arrow Up';
+         lockArrowBtn.style.background = 'rgba(255,255,255,0.06)';
+         lockArrowBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+         appEl.classList.remove('map-rotating');
+         
+         // Unlock arrows to show current direction
+         rotateLocationMarkers(headingDeg);
+       }
+     });
      
      // Re-center button functionality
      recenterBtn.addEventListener('click', () => {
@@ -1363,6 +1373,9 @@
         if(typeof h==='number'){headingDeg=h; hasCompass=true;}
         else if(typeof ev.alpha==='number'){if(ev.absolute){headingDeg=(360-ev.alpha)%360; hasCompass=true;}}
         updateDir();
+        
+        // Also rotate location markers when compass updates
+        rotateLocationMarkers(headingDeg);
       };
       window.addEventListener('deviceorientation',handler,true);
     }
@@ -1398,24 +1411,18 @@
        const displayDeg = deg === 360 ? 0 : deg;
        dirEl.textContent=toCardinal(deg);
        degEl.textContent=`${displayDeg.toFixed(0)}°`;
+       if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
        
-                // Update map marker rotation based on heading (unless locked)
-         if (hasCompass && hasGps && !arrowLocked) {
-           const markerElement = locationDot.getElement();
-           const widgetMarkerElement = widgetLocationDot.getElement();
-           
-           if (markerElement) {
-             markerElement.style.transform = `rotate(${deg}deg)`;
-           }
-           if (widgetMarkerElement) {
-             widgetMarkerElement.style.transform = `rotate(${deg}deg)`;
-           }
-         }
-         
-         if(hasCompass){compassDot.classList.add('ok'); compassDot.classList.remove('bad');}
+       // Update car icon rotation
+       // updateCarIconRotation(); // This function is no longer needed
      }
 
-    window.addEventListener('keydown',(e)=>{if(e.key==='ArrowLeft'){headingDeg=(headingDeg-5+360)%360;updateDir();} if(e.key==='ArrowRight'){headingDeg=(headingDeg+5)%360;updateDir();}});
+     // Function to update car icon rotation based on heading and lock state
+     function updateCarIconRotation() {
+       // This function is no longer needed as we are using location markers
+     }
+
+    window.addEventListener('keydown',(e)=>{if(e.key==='ArrowLeft'){headingDeg=(headingDeg-5+360)%360;updateDir(); rotateLocationMarkers(headingDeg);} if(e.key==='ArrowRight'){headingDeg=(headingDeg+5)%360;updateDir(); rotateLocationMarkers(headingDeg);}});
 
     startBtn.addEventListener('click',()=>{
       startCompass();
@@ -1424,6 +1431,12 @@
     });
 
     updateDir();
+    
+    // Initialize car icon rotation on page load
+    // updateCarIconRotation(); // This function is no longer needed
+    
+    // Initialize location marker rotation on page load
+    rotateLocationMarkers(headingDeg);
   </script>
 </body>
 </html>
