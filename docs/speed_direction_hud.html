@@ -681,6 +681,55 @@
       border-radius: 20px;
       margin: 10px;
     }
+
+    /* Mobile layout with reflection mode fixes */
+    .mobile-layout.reflect-x .location-arrow {
+      z-index: 1000;
+      position: relative;
+    }
+
+    .mobile-layout.reflect-x .custom-location-marker {
+      z-index: 1000;
+    }
+
+    .mobile-layout.reflect-x .map-widget-container {
+      overflow: visible;
+    }
+
+    /* Ensure location markers are visible in mobile reflection mode */
+    .mobile-layout.reflect-x .leaflet-marker-icon {
+      z-index: 1000 !important;
+      position: relative;
+    }
+
+    .mobile-layout.reflect-x .leaflet-marker-pane {
+      z-index: 1000 !important;
+    }
+
+    .map-widget.fullscreen-map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      background: var(--bg);
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .map-widget.fullscreen-map .map-widget-container {
+      width: 100%;
+      height: calc(100vh - 80px);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .map-widget.fullscreen-map .map-widget-title {
+      font-size: 24px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -826,12 +875,15 @@
 
     // Function to rotate location markers to show direction
     function rotateLocationMarkers(heading) {
+      // Use locked heading (0 degrees) if arrow is locked, otherwise use actual heading
+      const rotationAngle = arrowLocked ? 0 : heading;
+      
       // Rotate main map location marker
       const mainMarker = locationDot.getElement();
       if (mainMarker) {
         const arrow = mainMarker.querySelector('svg');
         if (arrow) {
-          arrow.style.transform = `rotate(${heading}deg)`;
+          arrow.style.transform = `rotate(${rotationAngle}deg)`;
         }
       }
       
@@ -840,7 +892,7 @@
       if (widgetMarker) {
         const arrow = widgetMarker.querySelector('svg');
         if (arrow) {
-          arrow.style.transform = `rotate(${heading}deg)`;
+          arrow.style.transform = `rotate(${rotationAngle}deg)`;
         }
       }
     }
@@ -1056,7 +1108,7 @@
          toggleControlsBtn.title = 'Show controls';
          // Give more space to map widget when controls are hidden
          const mapWidget = document.querySelector('.map-widget');
-         if (mapWidget) {
+         if (mapWidget) { 
            mapWidget.style.height = 'calc(100vh - 200px)';
            mapWidget.style.minHeight = '350px';
          }
@@ -1351,13 +1403,31 @@
      });
     fullscreenBtn.addEventListener('click', async()=>{
       try {
+        const mapWidget = document.querySelector('.map-widget');
+        const mapWidgetContainer = document.querySelector('.map-widget-container');
+        
         if(!document.fullscreenElement){
-          await document.documentElement.requestFullscreen();
-          appEl.classList.add('fullscreen');
+          // Make map widget fullscreen
+          await mapWidgetContainer.requestFullscreen();
+          mapWidget.classList.add('fullscreen-map');
+          fullscreenBtn.textContent = '⤢ Exit Fullscreen';
+          fullscreenBtn.style.background = 'rgba(255, 107, 107, 0.3)';
+          fullscreenBtn.style.borderColor = '#ff6b6b';
         } else{
+          // Exit fullscreen
           await document.exitFullscreen();
-          appEl.classList.remove('fullscreen');
+          mapWidget.classList.remove('fullscreen-map');
+          fullscreenBtn.textContent = '⤢ Fullscreen';
+          fullscreenBtn.style.background = 'rgba(255,255,255,0.06)';
+          fullscreenBtn.style.borderColor = 'rgba(255,255,255,0.12)';
         }
+        
+        // Refresh map after fullscreen change
+        setTimeout(() => {
+          if (widgetMap) {
+            widgetMap.invalidateSize();
+          }
+        }, 100);
       }catch(e){console.warn('Fullscreen failed:', e);}
     });
 
@@ -1368,10 +1438,51 @@
 
     function startCompass(){
       if(!('DeviceOrientationEvent' in window)) return;
+      
+      let screenOrientation = 0;
+      
+      // Handle screen orientation changes
+      const handleOrientationChange = () => {
+        if (screen.orientation) {
+          switch(screen.orientation.type) {
+            case 'landscape-primary':
+              screenOrientation = 90;
+              break;
+            case 'landscape-secondary':
+              screenOrientation = -90;
+              break;
+            case 'portrait-secondary':
+              screenOrientation = 180;
+              break;
+            default:
+              screenOrientation = 0;
+          }
+        }
+      };
+      
+      // Listen for orientation changes
+      if (screen.orientation) {
+        screen.orientation.addEventListener('change', handleOrientationChange);
+      }
+      handleOrientationChange(); // Get initial orientation
+      
       const handler = (ev)=>{
         let h = ev.webkitCompassHeading;
-        if(typeof h==='number'){headingDeg=h; hasCompass=true;}
-        else if(typeof ev.alpha==='number'){if(ev.absolute){headingDeg=(360-ev.alpha)%360; hasCompass=true;}}
+        if(typeof h==='number'){
+          // Compensate for screen orientation
+          headingDeg = (h + screenOrientation) % 360;
+          if(headingDeg < 0) headingDeg += 360;
+          hasCompass=true;
+        }
+        else if(typeof ev.alpha==='number'){
+          if(ev.absolute){
+            // For devices without webkitCompassHeading, use alpha with orientation compensation
+            headingDeg = (360 - ev.alpha + screenOrientation) % 360;
+            if(headingDeg < 0) headingDeg += 360;
+            hasCompass=true;
+          }
+        }
+        
         updateDir();
         
         // Also rotate location markers when compass updates

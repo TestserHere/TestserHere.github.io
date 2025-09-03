@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GPS HUD">
+  <title>GPS HUD — Direction & Speed</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --fg: #e6f0ff;
+      --muted: #7a8aa0;
+      --accent: #5cc8ff;
+      --good: #30d158;
+      --bad: #ff453a;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      letter-spacing: 0.3px;
+      overflow: hidden;
+    }
+    
+    /* iOS Safari 100vh fix */
+    @supports (-webkit-touch-callout: none) {
+      html, body {
+        height: -webkit-fill-available;
+      }
+      
+      .app {
+        height: -webkit-fill-available;
+        min-height: -webkit-fill-available;
+      }
+    }
+
+    /* Leaflet map full screen behind HUD */
+    #map {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; /* behind HUD */
+    }
+
+    .app {
+      position: relative;
+      z-index: 10; /* on top of map */
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      gap: 14px;
+      padding: clamp(12px, 2.5vh, 24px);
+      box-sizing: border-box;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(11, 15, 20, 0.3);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+      max-width: min(1100px, 96vw);
+      margin: 0 auto;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+    
+    .toggle-controls-btn {
+      background: rgba(92, 200, 255, 0.2);
+      border-color: rgba(92, 200, 255, 0.4);
+      padding: 8px 12px;
+      font-size: 16px;
+      min-width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .toggle-controls-btn:hover {
+      background: rgba(92, 200, 255, 0.3);
+      border-color: rgba(92, 200, 255, 0.6);
+    }
+    
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+    
+    .controls.hidden {
+      display: none;
+    }
+    
+    .topbar.controls-hidden {
+      justify-content: flex-end;
+    }
+    
+    .btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--fg);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
+    
+    .switch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .switch input {
+      display: none;
+    }
+    
+    .pill {
+      width: 44px;
+      height: 24px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    
+    .switch input:checked + .pill {
+      background: var(--accent);
+    }
+    
+    .knob {
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: all 0.2s ease;
+    }
+    
+    .switch input:checked + .pill .knob {
+      transform: translateX(20px);
+    }
+
+    .readout-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: min(1100px, 96vw);
+      margin: 0 auto;
+    }
+
+    .hud {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .card {
+      background: rgba(11, 15, 20, 0.4);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .label {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .value {
+      font-size: clamp(32px, 8vw, 64px);
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .unit {
+      font-size: clamp(16px, 4vw, 24px);
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .deg {
+      font-size: clamp(16px, 4vw, 24px);
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .map-widget {
+      width: 100%;
+      max-width: min(1100px, 96vw);
+      margin: 0 auto;
+      margin-bottom: 10px;
+    }
+
+    .map-widget-title {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .map-widget-container {
+      height: 300px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(11, 15, 20, 0.4);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: rgba(11, 15, 20, 0.3);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 100%;
+      max-width: min(1100px, 96vw);
+      margin: 0 auto;
+      box-sizing: border-box;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--bad);
+      transition: all 0.3s ease;
+    }
+
+    .dot.ok {
+      background: var(--good);
+    }
+
+    /* Reflection mode styles */
+    .reflect-x .hud { transform: rotate(180deg) scaleX(-1); }
+    .reflect-x .map-widget { transform: rotate(180deg) scaleX(-1); }
+    .reflect-x .location-arrow .arrow-shape { transform: scaleX(-1); }
+
+    /* Location marker styles */
+    .custom-location-marker {
+      background: none;
+      border: none;
+    }
+
+    .location-arrow {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .location-arrow svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .location-arrow .arrow-shape {
+      fill: #4285f4;
+      stroke: #ffffff;
+      stroke-width: 1.5;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+    }
+
+    .location-arrow.pulse {
+      animation: pulse 0.5s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* Mobile layout with reflection mode fixes */
+    .mobile-layout.reflect-x .location-arrow {
+      z-index: 1000;
+      position: relative;
+    }
+
+    .mobile-layout.reflect-x .custom-location-marker {
+      z-index: 1000;
+    }
+
+    .mobile-layout.reflect-x .map-widget-container {
+      overflow: visible;
+    }
+
+    /* Ensure location markers are visible in mobile reflection mode */
+    .mobile-layout.reflect-x .leaflet-marker-icon {
+      z-index: 1000 !important;
+      position: relative;
+    }
+
+    .mobile-layout.reflect-x .leaflet-marker-pane {
+      z-index: 1000 !important;
+    }
+
+    .map-widget.fullscreen-map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      background: var(--bg);
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .map-widget.fullscreen-map .map-widget-container {
+      width: 100%;
+      height: calc(100vh - 80px);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .map-widget.fullscreen-map .map-widget-title {
+      font-size: 24px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .app {
+        grid-template-rows: auto 1fr auto auto;
+        gap: 12px;
+        padding: 12px;
+      }
+      
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .map-widget-container {
+        height: 250px;
+      }
+      
+      .footer {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
+    }
+
+    /* Horizontal mode for wide screens */
+    .horizontal-mode {
+      grid-template-rows: auto auto 1fr auto !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .horizontal-mode .topbar {
+      grid-column: 1 / -1;
+    }
+
+    .horizontal-mode .readout-wrap {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .horizontal-mode .map-widget {
+      grid-column: 2;
+      grid-row: 2 / 4;
+      margin: 0;
+    }
+
+    .horizontal-mode .footer {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
+    .horizontal-mode .map-widget-container {
+      height: 100%;
+      min-height: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="topbar">
+      <div class="controls" id="controls">
+        <button class="btn" id="startBtn">🚀 Start GPS</button>
+        <label class="switch" title="Mirror image for windshield reflection">
+          <input type="checkbox" id="reflectToggle">
+          <span class="pill"><span class="knob"></span></span>
+          <span>Mirror mode</span>
+        </label>
+        <label class="switch" title="Toggle units">
+          <input type="checkbox" id="unitToggle">
+          <span class="pill"><span class="knob"></span></span>
+          <span>km/h ↔ mph</span>
+        </label>
+        <button class="btn" id="fullscreenBtn">⤢ Fullscreen</button>
+        <button class="btn" id="mapDragBtn">🗺️ Map Drag</button>
+        <button class="btn" id="recenterBtn">📍 Re-center</button>
+        <button class="btn" id="horizontalBtn">🔄 Horizontal</button>
+        <button class="btn" id="lockArrowBtn">🔒 Lock Arrow Up</button>
+      </div>
+      <button class="btn toggle-controls-btn" id="toggleControlsBtn" title="Toggle controls">⚙️</button>
+    </div>
+
+    <div class="readout-wrap" id="readoutWrap">
+      <div class="hud">
+        <div class="cards">
+          <div class="card">
+            <div class="label">Speed</div>
+            <div class="value speed"><span id="speed">0</span><span class="unit" id="unit">km/h</span></div>
+          </div>
+          <div class="card">
+            <div class="label">Direction</div>
+            <div class="value direction"><span id="dir">N</span><span class="deg" id="deg">0°</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-widget">
+      <div class="map-widget-title">Live Location Map (GPS Direction)</div>
+      <div class="map-widget-container" id="mapWidget">
+        <!-- Location marker arrow will show here automatically -->
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="status"><span class="dot" id="gpsDot"></span> GPS</div>
+      <div class="status"><span class="dot" id="directionDot"></span> Direction</div>
+      <div class="status">Tip: Movement-based direction. Start moving to see direction changes.</div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // --- Enhanced Leaflet map setup ---
+    var map = L.map('map', { 
+      zoomControl: false,
+      dragging: true,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true
+    }).setView([0,0], 13);
+
+    // Widget map for the bottom widget
+    var widgetMap = L.map('mapWidget', { 
+      zoomControl: false,
+      dragging: true,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true
+    }).setView([0,0], 18);
+
+    // CartoDB Voyager style tiles for main map
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // CartoDB Voyager style tiles for widget map
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(widgetMap);
+
+    // Enhanced location marker with Google Maps style
+    var locationMarker = L.divIcon({
+      className: 'custom-location-marker',
+      html: '<div class="location-arrow"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path class="arrow-shape" d="M12 2 L6 18 L18 18 Z" fill="#4285f4" stroke="#ffffff" stroke-width="1.5"/></svg></div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 18]
+    });
+
+    var locationDot = L.marker([0,0], {
+      icon: locationMarker,
+      draggable: true,
+      zIndexOffset: 1000
+    }).addTo(map);
+
+    // Widget map location marker
+    var widgetLocationDot = L.marker([0,0], {
+      icon: locationMarker,
+      draggable: true,
+      zIndexOffset: 1000
+    }).addTo(widgetMap);
+
+    // GPS-based direction calculation
+    let useMph = false, headingDeg = 0, hasGps = false, hasDirection = false;
+    const speedSamples = []; 
+    const MAX_SAMPLES = 5;
+    let lastPosition = null;
+    let directionHistory = [];
+    const MIN_MOVEMENT_DISTANCE = 5; // meters
+    const DIRECTION_SMOOTHING = 3; // number of samples to average
+
+    // Utility functions
+    function byId(id) { return document.getElementById(id); }
+    const speedEl = byId('speed'); 
+    const unitEl = byId('unit');
+    const dirEl = byId('dir'); 
+    const degEl = byId('deg');
+    const gpsDot = byId('gpsDot'); 
+    const directionDot = byId('directionDot');
+    const reflectToggle = byId('reflectToggle'); 
+    const unitToggle = byId('unitToggle');
+    const startBtn = byId('startBtn'); 
+    const fullscreenBtn = byId('fullscreenBtn');
+    const mapDragBtn = byId('mapDragBtn'); 
+    const recenterBtn = byId('recenterBtn'); 
+    const horizontalBtn = byId('horizontalBtn'); 
+    const lockArrowBtn = byId('lockArrowBtn');
+    const toggleControlsBtn = byId('toggleControlsBtn'); 
+    const controlsEl = byId('controls');
+    const appEl = byId('app');
+
+    // Haversine formula for distance calculation
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // Earth's radius in meters
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // Bearing calculation for direction
+    function bearing(lat1, lon1, lat2, lon2) {
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δλ = (lon2 - lon1) * Math.PI / 180;
+      const y = Math.sin(Δλ) * Math.cos(φ2);
+      const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+      const θ = Math.atan2(y, x);
+      return (θ * 180 / Math.PI + 360) % 360;
+    }
+
+    // Convert degrees to cardinal directions (8-point)
+    function toCardinal(deg) {
+      const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+      const normalizedDeg = ((deg % 360) + 360) % 360;
+      const index = Math.floor((normalizedDeg + 22.5) / 45) % 8;
+      return dirs[index];
+    }
+
+    // Function to rotate location markers to show direction
+    function rotateLocationMarkers(heading) {
+      // Use locked heading (0 degrees) if arrow is locked, otherwise use actual heading
+      const rotationAngle = arrowLocked ? 0 : heading;
+      
+      // Rotate main map location marker
+      const mainMarker = locationDot.getElement();
+      if (mainMarker) {
+        const arrow = mainMarker.querySelector('svg');
+        if (arrow) {
+          arrow.style.transform = `rotate(${rotationAngle}deg)`;
+        }
+      }
+      
+      // Rotate widget map location marker
+      const widgetMarker = widgetLocationDot.getElement();
+      if (widgetMarker) {
+        const arrow = widgetMarker.querySelector('svg');
+        if (arrow) {
+          arrow.style.transform = `rotate(${rotationAngle}deg)`;
+        }
+      }
+    }
+
+    // Function to update direction based on GPS movement
+    function updateDirectionFromGPS(currentLat, currentLon, currentTime) {
+      if (!lastPosition) {
+        lastPosition = { lat: currentLat, lon: currentLon, time: currentTime };
+        return;
+      }
+
+      const distance = haversine(lastPosition.lat, lastPosition.lon, currentLat, currentLon);
+      const timeDiff = (currentTime - lastPosition.time) / 1000; // seconds
+
+      // Only update direction if we've moved enough distance
+      if (distance > MIN_MOVEMENT_DISTANCE && timeDiff > 0) {
+        const newBearing = bearing(lastPosition.lat, lastPosition.lon, currentLat, currentLon);
+        
+        // Add to direction history for smoothing
+        directionHistory.push(newBearing);
+        if (directionHistory.length > DIRECTION_SMOOTHING) {
+          directionHistory.shift();
+        }
+        
+        // Calculate average direction
+        const avgDirection = directionHistory.reduce((sum, dir) => sum + dir, 0) / directionHistory.length;
+        headingDeg = avgDirection;
+        hasDirection = true;
+        directionDot.classList.add('ok');
+        directionDot.classList.remove('bad');
+        
+        updateDir();
+        rotateLocationMarkers(headingDeg);
+      }
+
+      lastPosition = { lat: currentLat, lon: currentLon, time: currentTime };
+    }
+
+    // Function to update direction display
+    function updateDir() {
+      const deg = ((headingDeg % 360) + 360) % 360;
+      // Ensure degree is in 0-359 range (not 360)
+      const displayDeg = deg === 360 ? 0 : deg;
+      dirEl.textContent = toCardinal(deg);
+      degEl.textContent = `${displayDeg.toFixed(0)}°`;
+      
+      if (hasDirection) {
+        directionDot.classList.add('ok');
+        directionDot.classList.remove('bad');
+      }
+    }
+
+    // GPS tracking function
+    function startGps() {
+      if (!('geolocation' in navigator)) return;
+      
+      navigator.geolocation.watchPosition((pos) => {
+        const { latitude: lat, longitude: lon, speed } = pos.coords;
+        const t = pos.timestamp;
+        hasGps = true;
+        gpsDot.classList.add('ok');
+        gpsDot.classList.remove('bad');
+
+        // Update map markers
+        locationDot.setLatLng([lat, lon]);
+        widgetLocationDot.setLatLng([lat, lon]);
+        
+        // Update maps if they're not being dragged
+        if (!map.dragging.enabled()) {
+          map.panTo([lat, lon]);
+        }
+        if (!widgetMap.dragging.enabled()) {
+          widgetMap.panTo([lat, lon]);
+        }
+
+        // Calculate speed
+        let ms = null;
+        if (typeof speed === 'number' && !Number.isNaN(speed)) {
+          ms = speed;
+        } else if (lastPosition) {
+          const d = haversine(lastPosition.lat, lastPosition.lon, lat, lon);
+          const dt = (t - lastPosition.time) / 1000;
+          if (dt > 0) ms = d / dt;
+          if (ms !== null && ms < 0.2) ms = 0;
+        }
+        
+        if (ms !== null) {
+          speedSamples.push(ms);
+          if (speedSamples.length > MAX_SAMPLES) speedSamples.shift();
+          const avg = speedSamples.reduce((a, b) => a + b, 0) / speedSamples.length;
+          speedEl.textContent = (useMph ? avg * 2.2369363 : avg * 3.6).toFixed(0);
+        }
+
+        // Update direction from GPS movement
+        updateDirectionFromGPS(lat, lon, t);
+        
+      }, (err) => {
+        console.warn('GPS error', err);
+        gpsDot.classList.add('bad');
+        gpsDot.classList.remove('ok');
+      }, {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 20000
+      });
+    }
+
+    // Function to re-center map to current location
+    function reCenterMapToCurrentLocation() {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        
+        map.panTo([lat, lon]);
+        widgetMap.panTo([lat, lon]);
+        locationDot.setLatLng([lat, lon]);
+        widgetLocationDot.setLatLng([lat, lon]);
+        
+        console.log('Map re-centered to current location:', lat, lon);
+      }, function(err) {
+        console.warn('Error getting current location for re-centering:', err.message);
+      }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+
+    // Event listeners
+    reflectToggle.addEventListener('change', () => {
+      document.body.classList.toggle('reflect-x', reflectToggle.checked);
+      rotateLocationMarkers(headingDeg);
+    });
+
+    unitToggle.addEventListener('change', () => {
+      useMph = unitToggle.checked;
+      unitEl.textContent = useMph ? 'mph' : 'km/h';
+    });
+
+    // Lock arrow button functionality
+    let arrowLocked = false;
+    lockArrowBtn.addEventListener('click', () => {
+      arrowLocked = !arrowLocked;
+      if (arrowLocked) {
+        lockArrowBtn.textContent = '🔓 Unlock Arrow';
+        lockArrowBtn.style.background = 'rgba(255, 107, 107, 0.3)';
+        lockArrowBtn.style.borderColor = '#ff6b6b';
+        appEl.classList.add('map-rotating');
+        
+        // Lock arrows pointing up
+        rotateLocationMarkers(0);
+      } else {
+        lockArrowBtn.textContent = '🔒 Lock Arrow Up';
+        lockArrowBtn.style.background = 'rgba(255,255,255,0.06)';
+        lockArrowBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+        appEl.classList.remove('map-rotating');
+        
+        // Unlock arrows to show current direction
+        rotateLocationMarkers(headingDeg);
+      }
+    });
+
+    // Re-center button functionality
+    recenterBtn.addEventListener('click', () => {
+      reCenterMapToCurrentLocation();
+    });
+
+    // Toggle controls functionality
+    toggleControlsBtn.addEventListener('click', () => {
+      const isHidden = controlsEl.classList.toggle('hidden');
+      const topbar = document.querySelector('.topbar');
+      
+      if (isHidden) {
+        topbar.classList.add('controls-hidden');
+        toggleControlsBtn.textContent = '⚙️';
+        toggleControlsBtn.title = 'Show controls';
+        // Give more space to map widget when controls are hidden
+        const mapWidget = document.querySelector('.map-widget');
+        if (mapWidget) {
+          mapWidget.style.height = 'calc(100vh - 200px)';
+          mapWidget.style.minHeight = '350px';
+        }
+      } else {
+        topbar.classList.remove('controls-hidden');
+        toggleControlsBtn.textContent = '✕';
+        toggleControlsBtn.title = 'Hide controls';
+        // Restore normal map widget height
+        const mapWidget = document.querySelector('.map-widget');
+        if (mapWidget) {
+          mapWidget.style.height = '';
+          mapWidget.style.minHeight = '';
+        }
+      }
+      
+      // Refresh map after layout change
+      if (widgetMap) {
+        setTimeout(() => widgetMap.invalidateSize(), 100);
+      }
+    });
+
+    // Horizontal mode toggle functionality
+    horizontalBtn.addEventListener('click', () => {
+      const isHorizontal = appEl.classList.toggle('horizontal-mode');
+      horizontalBtn.textContent = isHorizontal ? '🔄 Vertical' : '🔄 Horizontal';
+      
+      // Adjust map size and refresh after layout change
+      setTimeout(() => {
+        if (isHorizontal) {
+          widgetMap.invalidateSize();
+        } else {
+          widgetMap.invalidateSize();
+        }
+      }, 100);
+    });
+
+    // Map drag toggle functionality
+    mapDragBtn.addEventListener('click', () => {
+      const isDragging = map.dragging.enabled();
+      
+      if (isDragging) {
+        map.dragging.disable();
+        widgetMap.dragging.disable();
+        map.touchZoom.disable();
+        widgetMap.touchZoom.disable();
+        map.scrollWheelZoom.disable();
+        widgetMap.scrollWheelZoom.disable();
+        map.doubleClickZoom.disable();
+        widgetMap.doubleClickZoom.disable();
+        map.boxZoom.disable();
+        widgetMap.boxZoom.disable();
+        map.keyboard.disable();
+        widgetMap.keyboard.disable();
+        
+        mapDragBtn.textContent = '🗺️ Map Drag';
+        mapDragBtn.style.background = 'rgba(255,255,255,0.06)';
+        mapDragBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+      } else {
+        map.dragging.enable();
+        widgetMap.dragging.enable();
+        map.touchZoom.enable();
+        widgetMap.touchZoom.enable();
+        map.scrollWheelZoom.enable();
+        widgetMap.scrollWheelZoom.enable();
+        map.doubleClickZoom.enable();
+        widgetMap.doubleClickZoom.enable();
+        map.boxZoom.enable();
+        widgetMap.boxZoom.enable();
+        map.keyboard.enable();
+        widgetMap.keyboard.enable();
+        
+        mapDragBtn.textContent = '🗺️ Map Lock';
+        mapDragBtn.style.background = 'rgba(255, 107, 107, 0.3)';
+        mapDragBtn.style.borderColor = '#ff6b6b';
+      }
+    });
+
+    // Fullscreen button functionality
+    fullscreenBtn.addEventListener('click', async() => {
+      try {
+        const mapWidget = document.querySelector('.map-widget');
+        const mapWidgetContainer = document.querySelector('.map-widget-container');
+        
+        if (!document.fullscreenElement) {
+          // Make map widget fullscreen
+          await mapWidgetContainer.requestFullscreen();
+          mapWidget.classList.add('fullscreen-map');
+          fullscreenBtn.textContent = '⤢ Exit Fullscreen';
+          fullscreenBtn.style.background = 'rgba(255, 107, 107, 0.3)';
+          fullscreenBtn.style.borderColor = '#ff6b6b';
+        } else {
+          // Exit fullscreen
+          await document.exitFullscreen();
+          mapWidget.classList.remove('fullscreen-map');
+          fullscreenBtn.textContent = '⤢ Fullscreen';
+          fullscreenBtn.style.background = 'rgba(255,255,255,0.06)';
+          fullscreenBtn.style.borderColor = 'rgba(255,255,255,0.12)';
+        }
+        
+        // Refresh map after fullscreen change
+        setTimeout(() => {
+          if (widgetMap) {
+            widgetMap.invalidateSize();
+          }
+        }, 100);
+      } catch(e) {
+        console.warn('Fullscreen failed:', e);
+      }
+    });
+
+    // Start button functionality
+    startBtn.addEventListener('click', () => {
+      startGps();
+      updateDir();
+      startBtn.textContent = '🔄 GPS Active';
+      startBtn.style.background = 'rgba(48, 209, 88, 0.3)';
+      startBtn.style.borderColor = '#30d158';
+    });
+
+    // Manual direction controls (for testing)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') {
+        headingDeg = (headingDeg - 5 + 360) % 360;
+        updateDir();
+        rotateLocationMarkers(headingDeg);
+      }
+      if (e.key === 'ArrowRight') {
+        headingDeg = (headingDeg + 5) % 360;
+        updateDir();
+        rotateLocationMarkers(headingDeg);
+      }
+    });
+
+    // Initialize on page load
+    updateDir();
+    rotateLocationMarkers(headingDeg);
+  </script>
+</body>
+</html>
