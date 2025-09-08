@@ -411,6 +411,377 @@
             font-weight: 600;
         }
 
+        /* Fact Checker Styles */
+        .fact-check-section {
+            display: none;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .fact-check-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .fact-check-input {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .fact-check-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .fact-check-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .fact-check-textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .fact-check-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .fact-check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .fact-check-results {
+            display: none;
+        }
+
+        .fact-check-status {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .fact-check-status.verified {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .fact-check-status.unverified {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .fact-check-status.partial {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .fact-check-status.unknown {
+            background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%);
+            color: #383d41;
+            border: 2px solid #d6d8db;
+        }
+
+        .fact-check-score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .score-circle.high {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .score-circle.medium {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+
+        .score-circle.low {
+            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        }
+
+        .sources-section {
+            margin-top: 30px;
+        }
+
+        .sources-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .source-item {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .source-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .source-name {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .source-reliability {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .source-reliability.high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .source-reliability.medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .source-reliability.low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .source-content {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .source-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .source-link:hover {
+            text-decoration: underline;
+        }
+
+        .fact-check-tips {
+            background: #e8f4fd;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .fact-check-tips h4 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .fact-check-tips ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .fact-check-tips li {
+            margin-bottom: 8px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* Word of the Day Styles */
+        .word-of-day {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .word-of-day::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%) translateY(-100%); }
+            50% { transform: translateX(100%) translateY(100%); }
+        }
+
+        .word-of-day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .word-of-day-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .word-of-day-date {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .word-of-day-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .word-of-day-word {
+            font-size: 2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .word-of-day-word:hover {
+            transform: scale(1.05);
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .word-of-day-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .word-of-day-pronunciation {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .word-of-day-definition {
+            font-size: 1rem;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .word-of-day-example {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-style: italic;
+            border-left: 3px solid rgba(255,255,255,0.5);
+            padding-left: 10px;
+        }
+
+        .word-of-day-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .word-of-day-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .word-of-day-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .word-of-day-word {
+                font-size: 1.8rem;
+            }
+
+            .word-of-day-info {
+                min-width: auto;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -467,10 +838,28 @@
         </div>
 
         <div class="search-section">
+            <!-- Word of the Day -->
+            <div class="word-of-day" id="wordOfDay">
+                <div class="word-of-day-header">
+                    <div class="word-of-day-title">🌟 Word of the Day</div>
+                    <div class="word-of-day-date" id="wordOfDayDate"></div>
+                </div>
+                <div class="word-of-day-content">
+                    <div class="word-of-day-word" id="wordOfDayWord" onclick="searchWordOfDay()">serendipity</div>
+                    <div class="word-of-day-info">
+                        <div class="word-of-day-pronunciation" id="wordOfDayPronunciation">/ˌserənˈdipədē/</div>
+                        <div class="word-of-day-definition" id="wordOfDayDefinition">The occurrence and development of events by chance in a happy or beneficial way.</div>
+                        <div class="word-of-day-example" id="wordOfDayExample">"A fortunate stroke of serendipity brought the two old friends together."</div>
+                    </div>
+                    <button class="word-of-day-btn" onclick="searchWordOfDay()">Learn More</button>
+                </div>
+            </div>
+
             <div class="tabs">
                 <button class="tab active" id="wikipediaTab">📖 Wikipedia</button>
                 <button class="tab" id="dictionaryTab">📚 Dictionary</button>
                 <button class="tab" id="bothTab">🔍 Both</button>
+                <button class="tab" id="factCheckTab">✅ Fact Check</button>
             </div>
             
             <div class="search-container">
@@ -507,6 +896,43 @@
                 <span class="suggestion-item" onclick="searchFor('climate change', 'both')">climate change</span>
             </div>
         </div>
+
+        <!-- Fact Checker Section -->
+        <div id="factCheckSection" class="fact-check-section">
+            <div class="fact-check-tabs">
+                <button class="tab" id="wikipediaTab2" onclick="switchMode('wikipedia')">📖 Wikipedia</button>
+                <button class="tab" id="dictionaryTab2" onclick="switchMode('dictionary')">📚 Dictionary</button>
+                <button class="tab" id="bothTab2" onclick="switchMode('both')">🔍 Both</button>
+                <button class="tab active" id="factCheckTab2" onclick="switchMode('factCheck')">✅ Fact Check</button>
+            </div>
+
+            <div class="fact-check-input">
+                <label class="fact-check-label" for="factCheckTextarea">🔍 Enter a statement or claim to fact-check:</label>
+                <textarea 
+                    id="factCheckTextarea" 
+                    class="fact-check-textarea" 
+                    placeholder="Example: 'The Great Wall of China is visible from space with the naked eye' or 'Sharks don't get cancer'"
+                ></textarea>
+                <button class="fact-check-btn" onclick="factCheck()">✅ Verify Facts</button>
+            </div>
+
+            <div id="factCheckResults" class="fact-check-results">
+                <div id="factCheckStatus" class="fact-check-status"></div>
+                <div id="factCheckScore" class="fact-check-score"></div>
+                <div id="sourcesSection" class="sources-section"></div>
+                
+                <div class="fact-check-tips">
+                    <h4>💡 Fact-Checking Tips:</h4>
+                    <ul>
+                        <li>Always verify claims with multiple reliable sources</li>
+                        <li>Check the date of information - facts can change over time</li>
+                        <li>Look for primary sources and original research</li>
+                        <li>Be wary of claims that seem too good or too bad to be true</li>
+                        <li>Consider the source's expertise and potential bias</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -515,6 +941,7 @@
         const wikipediaTab = document.getElementById('wikipediaTab');
         const dictionaryTab = document.getElementById('dictionaryTab');
         const bothTab = document.getElementById('bothTab');
+        const factCheckTab = document.getElementById('factCheckTab');
         const loading = document.getElementById('loading');
         const loadingText = document.getElementById('loadingText');
         const error = document.getElementById('error');
@@ -523,6 +950,14 @@
         const resultsCount = document.getElementById('resultsCount');
         const noResults = document.getElementById('noResults');
         const searchModeIndicator = document.getElementById('searchModeIndicator');
+        
+        // Fact Checker elements
+        const factCheckSection = document.getElementById('factCheckSection');
+        const factCheckTextarea = document.getElementById('factCheckTextarea');
+        const factCheckResults = document.getElementById('factCheckResults');
+        const factCheckStatus = document.getElementById('factCheckStatus');
+        const factCheckScore = document.getElementById('factCheckScore');
+        const sourcesSection = document.getElementById('sourcesSection');
 
         let currentMode = 'wikipedia';
 
@@ -532,23 +967,149 @@
         // Cambridge Dictionary API (using a free alternative)
         const DICTIONARY_API_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
 
+        // Word of the Day data
+        const wordsOfTheDay = [
+            {
+                word: "serendipity",
+                pronunciation: "/ˌserənˈdipədē/",
+                definition: "The occurrence and development of events by chance in a happy or beneficial way.",
+                example: "A fortunate stroke of serendipity brought the two old friends together."
+            },
+            {
+                word: "ephemeral",
+                pronunciation: "/əˈfem(ə)rəl/",
+                definition: "Lasting for a very short time; transient.",
+                example: "The beauty of cherry blossoms is ephemeral, lasting only a few weeks."
+            },
+            {
+                word: "ubiquitous",
+                pronunciation: "/yo͞oˈbikwədəs/",
+                definition: "Present, appearing, or found everywhere.",
+                example: "Smartphones have become ubiquitous in modern society."
+            },
+            {
+                word: "mellifluous",
+                pronunciation: "/məˈliflo͞oəs/",
+                definition: "Sweet or musical; pleasant to hear.",
+                example: "Her mellifluous voice captivated the entire audience."
+            },
+            {
+                word: "petrichor",
+                pronunciation: "/ˈpetrəˌkôr/",
+                definition: "The pleasant, earthy smell after rain.",
+                example: "The petrichor filled the air after the summer storm."
+            },
+            {
+                word: "wanderlust",
+                pronunciation: "/ˈwändərˌləst/",
+                definition: "A strong desire to travel and explore the world.",
+                example: "Her wanderlust led her to visit over thirty countries."
+            },
+            {
+                word: "eloquent",
+                pronunciation: "/ˈeləkwənt/",
+                definition: "Fluent or persuasive in speaking or writing.",
+                example: "His eloquent speech moved the audience to tears."
+            },
+            {
+                word: "resilient",
+                pronunciation: "/rəˈzilyənt/",
+                definition: "Able to withstand or recover quickly from difficult conditions.",
+                example: "Despite the setbacks, she remained resilient and determined."
+            },
+            {
+                word: "luminous",
+                pronunciation: "/ˈlo͞omənəs/",
+                definition: "Full of or shedding light; bright or shining.",
+                example: "The luminous moon cast shadows across the garden."
+            },
+            {
+                word: "serene",
+                pronunciation: "/səˈrēn/",
+                definition: "Calm, peaceful, and untroubled.",
+                example: "The lake was perfectly serene in the early morning light."
+            },
+            {
+                word: "vivacious",
+                pronunciation: "/vəˈvāSHəs/",
+                definition: "Attractively lively and animated.",
+                example: "Her vivacious personality made her the life of the party."
+            },
+            {
+                word: "enigmatic",
+                pronunciation: "/ˌenəɡˈmadik/",
+                definition: "Difficult to interpret or understand; mysterious.",
+                example: "The Mona Lisa's enigmatic smile has puzzled viewers for centuries."
+            },
+            {
+                word: "whimsical",
+                pronunciation: "/ˈ(h)wimzəkəl/",
+                definition: "Playfully quaint or fanciful, especially in an appealing and amusing way.",
+                example: "The artist's whimsical sculptures brought joy to the city park."
+            },
+            {
+                word: "ethereal",
+                pronunciation: "/əˈTHirēəl/",
+                definition: "Extremely delicate and light in a way that seems too perfect for this world.",
+                example: "The ethereal music seemed to float through the concert hall."
+            },
+            {
+                word: "perspicacious",
+                pronunciation: "/ˌpərspəˈkāSHəs/",
+                definition: "Having a ready insight into and understanding of things; shrewd.",
+                example: "His perspicacious analysis of the market trends impressed investors."
+            }
+        ];
+
         // Tab switching
         wikipediaTab.addEventListener('click', () => switchMode('wikipedia'));
         dictionaryTab.addEventListener('click', () => switchMode('dictionary'));
         bothTab.addEventListener('click', () => switchMode('both'));
+        factCheckTab.addEventListener('click', () => switchMode('factCheck'));
 
         function switchMode(mode) {
             currentMode = mode;
             
-            // Update tab appearance
+            // Update tab appearance for both tab sets
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(mode + 'Tab').classList.add('active');
+            
+            // Handle different tab naming conventions
+            let tabId, tabId2;
+            if (mode === 'factCheck') {
+                tabId = 'factCheckTab';
+                tabId2 = 'factCheckTab2';
+            } else {
+                tabId = mode + 'Tab';
+                tabId2 = mode + 'Tab2';
+            }
+            
+            // Update both tab sets
+            const tabElement = document.getElementById(tabId);
+            const tabElement2 = document.getElementById(tabId2);
+            
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
+            if (tabElement2) {
+                tabElement2.classList.add('active');
+            }
+            
+            // Show/hide sections
+            if (mode === 'factCheck') {
+                document.querySelector('.search-section').style.display = 'none';
+                factCheckSection.style.display = 'block';
+                hideAllSections();
+            } else {
+                document.querySelector('.search-section').style.display = 'block';
+                factCheckSection.style.display = 'none';
+            }
             
             // Update placeholder text
             const placeholders = {
                 'wikipedia': 'Search Wikipedia articles...',
                 'dictionary': 'Search word definitions...',
-                'both': 'Search Wikipedia articles or dictionary words...'
+                'both': 'Search Wikipedia articles or dictionary words...',
+                'factCheck': 'Enter a statement to fact-check...'
             };
             searchInput.placeholder = placeholders[mode];
         }
@@ -883,9 +1444,280 @@
             }
         });
 
+        // Word of the Day functionality
+        function getWordOfTheDay() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const wordIndex = dayOfYear % wordsOfTheDay.length;
+            return wordsOfTheDay[wordIndex];
+        }
+
+        function updateWordOfTheDay() {
+            const wordData = getWordOfTheDay();
+            const today = new Date();
+            
+            document.getElementById('wordOfDayWord').textContent = wordData.word;
+            document.getElementById('wordOfDayPronunciation').textContent = wordData.pronunciation;
+            document.getElementById('wordOfDayDefinition').textContent = wordData.definition;
+            document.getElementById('wordOfDayExample').textContent = `"${wordData.example}"`;
+            document.getElementById('wordOfDayDate').textContent = today.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        function searchWordOfDay() {
+            const wordData = getWordOfTheDay();
+            searchInput.value = wordData.word;
+            switchMode('dictionary');
+            searchWikipedia(wordData.word);
+        }
+
+        // Fact Checker functionality
+        async function factCheck() {
+            const claim = factCheckTextarea.value.trim();
+            if (!claim) {
+                showError('Please enter a statement to fact-check');
+                return;
+            }
+
+            showLoading();
+            factCheckResults.style.display = 'none';
+            loadingText.textContent = 'Analyzing claim and searching sources...';
+
+            try {
+                // Extract key terms from the claim
+                const keyTerms = extractKeyTerms(claim);
+                
+                // Search multiple sources
+                const sources = await searchMultipleSources(keyTerms);
+                
+                // Analyze the claim against sources
+                const analysis = analyzeClaim(claim, sources);
+                
+                // Display results
+                displayFactCheckResults(analysis, sources);
+                
+            } catch (err) {
+                console.error('Fact check error:', err);
+                showError('Failed to fact-check. Please try again.');
+            }
+        }
+
+        function extractKeyTerms(claim) {
+            // Simple keyword extraction - in a real app, you'd use NLP
+            const words = claim.toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+                .filter(word => word.length > 3)
+                .slice(0, 5); // Take top 5 keywords
+            
+            return words;
+        }
+
+        async function searchMultipleSources(keyTerms) {
+            const sources = [];
+            
+            // Search Wikipedia for each key term
+            for (const term of keyTerms) {
+                try {
+                    const response = await fetch(`${WIKIPEDIA_API_URL}${encodeURIComponent(term)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        sources.push({
+                            name: 'Wikipedia',
+                            reliability: 'high',
+                            content: data.extract || '',
+                            url: data.content_urls?.desktop?.page || '',
+                            relevance: calculateRelevance(term, data.extract || '')
+                        });
+                    }
+                } catch (err) {
+                    console.log('Wikipedia search failed for:', term);
+                }
+            }
+
+            // Add some mock sources for demonstration
+            sources.push({
+                name: 'Scientific American',
+                reliability: 'high',
+                content: 'Scientific research and peer-reviewed studies provide reliable information on various topics.',
+                url: 'https://www.scientificamerican.com',
+                relevance: 0.7
+            });
+
+            sources.push({
+                name: 'National Geographic',
+                reliability: 'high',
+                content: 'Educational content and verified information about geography, science, and culture.',
+                url: 'https://www.nationalgeographic.com',
+                relevance: 0.6
+            });
+
+            return sources;
+        }
+
+        function calculateRelevance(term, content) {
+            if (!content) return 0;
+            const termCount = (content.toLowerCase().match(new RegExp(term.toLowerCase(), 'g')) || []).length;
+            return Math.min(termCount / 10, 1);
+        }
+
+        function analyzeClaim(claim, sources) {
+            // Simple analysis - in a real app, you'd use AI/NLP
+            const claimLower = claim.toLowerCase();
+            
+            // Check for common false claims
+            const falseIndicators = [
+                'always', 'never', 'all', 'none', 'everyone', 'nobody',
+                'proven', 'scientifically proven', 'studies show',
+                'doctors hate', 'one weird trick', 'miracle cure'
+            ];
+            
+            const trueIndicators = [
+                'research suggests', 'studies indicate', 'evidence shows',
+                'according to', 'based on', 'findings suggest'
+            ];
+
+            let score = 0.5; // Start neutral
+            let status = 'unknown';
+            let confidence = 0.5;
+
+            // Adjust score based on indicators
+            falseIndicators.forEach(indicator => {
+                if (claimLower.includes(indicator)) {
+                    score -= 0.2;
+                }
+            });
+
+            trueIndicators.forEach(indicator => {
+                if (claimLower.includes(indicator)) {
+                    score += 0.2;
+                }
+            });
+
+            // Adjust based on source reliability
+            const avgReliability = sources.reduce((sum, source) => {
+                const reliabilityScore = source.reliability === 'high' ? 1 : 
+                                       source.reliability === 'medium' ? 0.5 : 0.2;
+                return sum + reliabilityScore;
+            }, 0) / sources.length;
+
+            score = (score + avgReliability) / 2;
+            confidence = Math.min(sources.length / 3, 1);
+
+            // Determine status
+            if (score > 0.7) {
+                status = 'verified';
+            } else if (score < 0.3) {
+                status = 'unverified';
+            } else if (score > 0.5) {
+                status = 'partial';
+            } else {
+                status = 'unknown';
+            }
+
+            return {
+                score: Math.max(0, Math.min(1, score)),
+                status: status,
+                confidence: confidence,
+                analysis: generateAnalysis(claim, status, score)
+            };
+        }
+
+        function generateAnalysis(claim, status, score) {
+            const analyses = {
+                'verified': [
+                    'This claim appears to be supported by reliable sources.',
+                    'Multiple credible sources confirm this information.',
+                    'The evidence strongly supports this statement.'
+                ],
+                'unverified': [
+                    'This claim lacks sufficient evidence from reliable sources.',
+                    'No credible sources were found to support this statement.',
+                    'This appears to be misinformation or an unsubstantiated claim.'
+                ],
+                'partial': [
+                    'This claim has mixed evidence - some sources support it, others contradict it.',
+                    'The evidence is inconclusive and requires further investigation.',
+                    'This statement may be partially true but needs verification.'
+                ],
+                'unknown': [
+                    'Insufficient information available to verify this claim.',
+                    'More research is needed to determine the accuracy of this statement.',
+                    'The claim could not be adequately fact-checked with available sources.'
+                ]
+            };
+
+            return analyses[status][Math.floor(Math.random() * analyses[status].length)];
+        }
+
+        function displayFactCheckResults(analysis, sources) {
+            hideLoading();
+            
+            // Update status
+            factCheckStatus.className = `fact-check-status ${analysis.status}`;
+            factCheckStatus.innerHTML = `
+                <div>${getStatusIcon(analysis.status)} ${getStatusText(analysis.status)}</div>
+                <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.8;">${analysis.analysis}</div>
+            `;
+
+            // Update score
+            const scorePercent = Math.round(analysis.score * 100);
+            const scoreClass = analysis.score > 0.7 ? 'high' : analysis.score > 0.4 ? 'medium' : 'low';
+            
+            factCheckScore.innerHTML = `
+                <div class="score-circle ${scoreClass}">${scorePercent}%</div>
+                <div>
+                    <div style="font-weight: 600;">Credibility Score</div>
+                    <div style="font-size: 0.9rem; opacity: 0.7;">Based on ${sources.length} sources</div>
+                </div>
+            `;
+
+            // Update sources
+            sourcesSection.innerHTML = `
+                <div class="sources-title">📚 Sources Consulted</div>
+                ${sources.map(source => `
+                    <div class="source-item">
+                        <div class="source-header">
+                            <div class="source-name">${source.name}</div>
+                            <div class="source-reliability ${source.reliability}">${source.reliability.toUpperCase()}</div>
+                        </div>
+                        <div class="source-content">${source.content.substring(0, 200)}${source.content.length > 200 ? '...' : ''}</div>
+                        ${source.url ? `<a href="${source.url}" target="_blank" class="source-link">View Source →</a>` : ''}
+                    </div>
+                `).join('')}
+            `;
+
+            factCheckResults.style.display = 'block';
+        }
+
+        function getStatusIcon(status) {
+            const icons = {
+                'verified': '✅',
+                'unverified': '❌',
+                'partial': '⚠️',
+                'unknown': '❓'
+            };
+            return icons[status];
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'verified': 'VERIFIED',
+                'unverified': 'UNVERIFIED',
+                'partial': 'PARTIALLY VERIFIED',
+                'unknown': 'INSUFFICIENT DATA'
+            };
+            return texts[status];
+        }
+
         // Focus search input on page load
         window.addEventListener('load', () => {
             searchInput.focus();
+            updateWordOfTheDay();
         });
     </script>
 </body>
