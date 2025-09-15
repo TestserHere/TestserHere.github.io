@@ -537,14 +537,42 @@
 
         <!-- Cookie Consent JavaScript -->
         <script>
+            // Initialize analytics with consent (auto-accept by default)
+            function initializeAnalytics() {
+                // Enable analytics by default
+                if (typeof gtag !== 'undefined') {
+                    gtag('consent', 'update', {
+                        'analytics_storage': 'granted'
+                    });
+                }
+            }
+
             // Check if user has already made a choice
             function checkCookieConsent() {
                 const consent = localStorage.getItem('cookieConsent');
                 if (!consent) {
-                    // Show banner after a short delay
+                    // Auto-accept cookies by default
+                    localStorage.setItem('cookieConsent', 'accepted');
+                    initializeAnalytics();
+                    
+                    // Show banner briefly to inform user, then auto-hide
                     setTimeout(() => {
                         document.getElementById('cookieBanner').classList.add('show');
+                        // Auto-hide after 3 seconds
+                        setTimeout(() => {
+                            hideCookieBanner();
+                        }, 3000);
                     }, 1000);
+                } else if (consent === 'declined') {
+                    // User previously declined, respect their choice
+                    if (typeof gtag !== 'undefined') {
+                        gtag('consent', 'update', {
+                            'analytics_storage': 'denied'
+                        });
+                    }
+                } else {
+                    // User previously accepted, enable analytics
+                    initializeAnalytics();
                 }
             }
 
