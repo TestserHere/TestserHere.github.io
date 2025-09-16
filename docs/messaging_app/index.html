@@ -621,22 +621,12 @@
                  }
              }
 
-             async resolveNicknameConflict(nickname, roomId) {
-                 let finalNickname = nickname;
-                 let counter = 1;
-                 
-                 while (!(await this.checkNicknameAvailability(finalNickname, roomId))) {
-                     finalNickname = `${nickname}${counter}`;
-                     counter++;
-                     
-                     // Prevent infinite loop
-                     if (counter > 100) {
-                         finalNickname = `${nickname}_${this.generateUserId().substring(5, 10)}`;
-                         break;
-                     }
+             async validateUniqueNickname(nickname, roomId) {
+                 const isAvailable = await this.checkNicknameAvailability(nickname, roomId);
+                 if (!isAvailable) {
+                     throw new Error(`Nickname "${nickname}" is already taken. Please choose a different nickname.`);
                  }
-                 
-                 return finalNickname;
+                 return nickname;
              }
 
             async createPrivateRoom() {
@@ -659,12 +649,8 @@
                 this.roomId = this.generateRoomId();
                 this.userId = this.generateUserId();
                 
-                // Resolve nickname conflicts
-                this.nickname = await this.resolveNicknameConflict(nickname, this.roomId);
-                
-                if (this.nickname !== nickname) {
-                    this.showStatus(`Nickname "${nickname}" was taken. Using "${this.nickname}" instead.`, 'connecting');
-                }
+                // Validate nickname is unique
+                this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                 
                 this.isConnected = true;
 
@@ -703,12 +689,8 @@
                 this.roomId = 'public-room';
                 this.userId = this.generateUserId();
                 
-                // Resolve nickname conflicts
-                this.nickname = await this.resolveNicknameConflict(nickname, this.roomId);
-                
-                if (this.nickname !== nickname) {
-                    this.showStatus(`Nickname "${nickname}" was taken. Using "${this.nickname}" instead.`, 'connecting');
-                }
+                // Validate nickname is unique
+                this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                 
                 this.isConnected = true;
 
@@ -759,12 +741,8 @@
                 this.roomId = roomId;
                 this.userId = this.generateUserId();
                 
-                // Resolve nickname conflicts
-                this.nickname = await this.resolveNicknameConflict(nickname, this.roomId);
-                
-                if (this.nickname !== nickname) {
-                    this.showStatus(`Nickname "${nickname}" was taken. Using "${this.nickname}" instead.`, 'connecting');
-                }
+                // Validate nickname is unique
+                this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                 
                 this.isConnected = true;
 
