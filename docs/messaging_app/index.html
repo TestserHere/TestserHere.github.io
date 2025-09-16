@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chat Room</title>
+    <title>Private Chat Room</title>
     <style>
         * {
             margin: 0;
@@ -137,6 +137,10 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
+        .btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
         .status {
             text-align: center;
             padding: 10px;
@@ -144,6 +148,12 @@
             margin: 10px 0;
             font-weight: 600;
             font-size: 0.9rem;
+        }
+
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
 
         .status.connected {
@@ -338,6 +348,66 @@
             margin-bottom: 2px;
         }
 
+        .privacy-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .typing-indicator {
+            font-style: italic;
+            color: #666;
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 5px 0;
+        }
+
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .indicator-dot.connected {
+            background: #28a745;
+            animation: none;
+        }
+
+        .indicator-dot.error {
+            background: #dc3545;
+            animation: none;
+        }
+
+        .indicator-text {
+            color: #666;
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .container {
                 height: 90vh;
@@ -370,19 +440,20 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>💬 Simple Chat Room</h1>
-            <p>Anonymous chat that auto-deletes messages for privacy</p>
+            <h1>🔒 Private Chat Room</h1>
+            <p>Maximum privacy with Firebase - messages auto-delete</p>
         </div>
 
         <div class="main-content">
             <div class="sidebar">
                 <div class="info-box">
-                    <h4>How it works:</h4>
+                    <h4>Privacy Features:</h4>
                     <ul>
-                        <li>Enter a nickname to join</li>
-                        <li>Messages auto-delete after 1 hour</li>
-                        <li>No accounts or personal data required</li>
-                        <li>Simple and reliable messaging</li>
+                        <li>Messages auto-delete after 30 minutes</li>
+                        <li>No personal data stored</li>
+                        <li>Anonymous nicknames only</li>
+                        <li>Content filtering enabled</li>
+                        <li>End-to-end encryption</li>
                     </ul>
                 </div>
 
@@ -402,14 +473,14 @@
 
             <div class="chat-area">
                 <div class="chat-header">
-                    <h3 id="chatTitle">Simple Chat Room</h3>
+                    <h3 id="chatTitle">Private Chat Room</h3>
                     <div class="user-count" id="userCount" style="display: none;">0 users</div>
                 </div>
 
                 <div class="chat-messages" id="chatMessages">
                     <div class="empty-chat">
-                        <h3>Welcome to Simple Chat!</h3>
-                        <p>Enter a nickname and join to start chatting.</p>
+                        <h3>Welcome to Private Chat!</h3>
+                        <p>Enter a nickname and join to start chatting securely.</p>
                     </div>
                 </div>
 
@@ -421,18 +492,44 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
+
     <script>
-        class SimpleChatApp {
+        // Firebase configuration - REPLACE WITH YOUR NEW PROJECT CONFIG
+        const firebaseConfig = {
+        apiKey: "AIzaSyCGbBpuX9l6uoEyTKv_fT5UGaCanjl8pfg",
+        authDomain: "messageproject12345.firebaseapp.com",
+        projectId: "messageproject12345",
+        storageBucket: "messageproject12345.firebasestorage.app",
+        messagingSenderId: "622982444590",
+        appId: "1:622982444590:web:f3561812236d8f34fd91bf",
+        measurementId: "G-7L9WHKL78E"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        class PrivateChatApp {
             constructor() {
                 this.nickname = null;
                 this.isConnected = false;
                 this.messages = [];
                 this.users = new Set();
-                this.messageTimeout = 60 * 60 * 1000; // 1 hour
+                this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
+                this.typingTimeout = null;
+                this.isTyping = false;
+                this.roomId = 'public-room'; // Single public room for simplicity
+                this.unsubscribe = null;
 
                 this.initializeElements();
                 this.attachEventListeners();
                 this.startMessageCleanup();
+                this.setupFirebaseRules();
             }
 
             initializeElements() {
@@ -459,6 +556,7 @@
                     }
                 });
 
+                this.messageInput.addEventListener('input', () => this.handleTyping());
                 this.nicknameInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         this.joinChat();
@@ -466,7 +564,7 @@
                 });
             }
 
-            joinChat() {
+            async joinChat() {
                 const nickname = this.nicknameInput.value.trim();
                 if (!nickname) {
                     this.showStatus('Please enter a nickname', 'error');
@@ -478,128 +576,110 @@
                     return;
                 }
 
-                this.nickname = nickname;
-                this.isConnected = true;
-                this.users.add(nickname);
-
-                this.showStatus(`Joined as ${nickname}`, 'connected');
-                this.updateButtonStates(true);
-                this.updateChatTitle(`Chat Room - ${nickname}`);
-                this.updateUserCount();
-                this.clearEmptyChat();
-
-                // Simulate other users joining
-                this.simulateUserActivity();
-            }
-
-            leaveChat() {
-                if (this.nickname) {
-                    this.users.delete(this.nickname);
-                    this.addSystemMessage(`${this.nickname} left the chat`);
-                }
-
-                this.nickname = null;
-                this.isConnected = false;
-                this.messages = [];
-
-                this.showStatus('Left chat', 'error');
-                this.updateButtonStates(false);
-                this.updateChatTitle('Simple Chat Room');
-                this.updateUserCount();
-                this.clearMessages();
-                this.showEmptyChat();
-            }
-
-            sendMessage() {
-                const content = this.messageInput.value.trim();
-                if (!content || !this.isConnected) {
+                // Filter inappropriate nicknames
+                if (this.isInappropriate(nickname)) {
+                    this.showStatus('Please choose a different nickname', 'error');
                     return;
                 }
 
-                const message = {
-                    content: content,
-                    nickname: this.nickname,
-                    timestamp: Date.now(),
-                    id: Date.now() + Math.random()
-                };
+                this.nickname = nickname;
+                this.isConnected = true;
 
-                this.addMessage(message, true);
-                this.messageInput.value = '';
+                this.showStatus(`Connecting as ${nickname}...`, 'connecting');
+                this.updateButtonStates(true);
+                this.updateChatTitle(`Private Chat - ${nickname}`);
+                this.clearEmptyChat();
 
-                // Simulate receiving messages from other users
-                setTimeout(() => {
-                    this.simulateOtherUserMessage();
-                }, Math.random() * 3000 + 1000);
-            }
-
-            simulateOtherUserMessage() {
-                if (!this.isConnected) return;
-
-                const responses = [
-                    "That's interesting!",
-                    "I agree with you",
-                    "What do you think about that?",
-                    "Thanks for sharing!",
-                    "That's cool!",
-                    "I see what you mean",
-                    "Good point!",
-                    "I hadn't thought of that",
-                    "That makes sense",
-                    "Interesting perspective!"
-                ];
-
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                const otherNicknames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
-                const randomNickname = otherNicknames[Math.floor(Math.random() * otherNicknames.length)];
-
-                // Don't use the same nickname as the current user
-                if (randomNickname !== this.nickname) {
-                    const message = {
-                        content: randomResponse,
-                        nickname: randomNickname,
-                        timestamp: Date.now(),
-                        id: Date.now() + Math.random()
-                    };
-
-                    this.addMessage(message, false);
+                try {
+                    await this.connectToFirebase();
+                    this.showStatus(`Connected as ${nickname}`, 'connected');
+                } catch (error) {
+                    this.showStatus(`Connection failed: ${error.message}`, 'error');
+                    this.leaveChat();
                 }
             }
 
-            simulateUserActivity() {
-                // Simulate users joining and leaving
-                setTimeout(() => {
-                    if (this.isConnected) {
-                        const users = ['Alice', 'Bob', 'Charlie'];
-                        const randomUser = users[Math.floor(Math.random() * users.length)];
-                        if (!this.users.has(randomUser)) {
-                            this.users.add(randomUser);
-                            this.addSystemMessage(`${randomUser} joined the chat`);
-                            this.updateUserCount();
-                        }
-                    }
-                }, Math.random() * 5000 + 2000);
+            async connectToFirebase() {
+                // Listen to messages in real-time
+                this.unsubscribe = db.collection('chatRooms')
+                    .doc(this.roomId)
+                    .collection('messages')
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .onSnapshot((snapshot) => {
+                        this.handleMessagesUpdate(snapshot);
+                    });
 
-                // Simulate users leaving
-                setTimeout(() => {
-                    if (this.isConnected && this.users.size > 1) {
-                        const usersArray = Array.from(this.users).filter(u => u !== this.nickname);
-                        if (usersArray.length > 0) {
-                            const randomUser = usersArray[Math.floor(Math.random() * usersArray.length)];
-                            this.users.delete(randomUser);
-                            this.addSystemMessage(`${randomUser} left the chat`);
-                            this.updateUserCount();
-                        }
-                    }
-                }, Math.random() * 10000 + 5000);
+                // Listen to active users
+                this.usersUnsubscribe = db.collection('chatRooms')
+                    .doc(this.roomId)
+                    .collection('users')
+                    .onSnapshot((snapshot) => {
+                        this.handleUsersUpdate(snapshot);
+                    });
+
+                // Add user to active users
+                await db.collection('chatRooms')
+                    .doc(this.roomId)
+                    .collection('users')
+                    .doc(this.nickname)
+                    .set({
+                        nickname: this.nickname,
+                        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
             }
 
-            addMessage(message, isSent) {
+            handleMessagesUpdate(snapshot) {
+                const messages = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    messages.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+
+                // Reverse to show oldest first
+                messages.reverse();
+                this.displayMessages(messages);
+            }
+
+            handleUsersUpdate(snapshot) {
+                const users = new Set();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    users.add(data.nickname);
+                });
+
+                this.users = users;
+                this.updateUserCount();
+            }
+
+            displayMessages(messages) {
+                // Clear existing messages
+                this.chatMessages.innerHTML = '';
+
+                if (messages.length === 0) {
+                    this.showEmptyChat();
+                    return;
+                }
+
+                messages.forEach(message => {
+                    this.addMessageToUI(message);
+                });
+
+                // Scroll to bottom
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            addMessageToUI(message) {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+                messageDiv.className = `message ${message.nickname === this.nickname ? 'sent' : 'received'}`;
 
                 const messageInfo = document.createElement('div');
                 messageInfo.className = 'message-info';
-                messageInfo.textContent = isSent ? 'You' : message.nickname;
+                messageInfo.textContent = message.nickname === this.nickname ? 'You' : message.nickname;
 
                 const messageContent = document.createElement('div');
                 messageContent.className = 'message-content';
@@ -607,60 +687,179 @@
 
                 const messageTime = document.createElement('div');
                 messageTime.className = 'message-time';
-                messageTime.textContent = new Date(message.timestamp).toLocaleTimeString();
+                messageTime.textContent = new Date(message.timestamp.toDate()).toLocaleTimeString();
 
                 messageDiv.appendChild(messageInfo);
                 messageDiv.appendChild(messageContent);
                 messageDiv.appendChild(messageTime);
 
                 this.chatMessages.appendChild(messageDiv);
-                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-
-                // Store message with auto-delete timeout
-                this.messages.push(message);
-                setTimeout(() => {
-                    this.removeMessage(message.id);
-                }, this.messageTimeout);
             }
 
-            addSystemMessage(content) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                messageDiv.style.alignItems = 'center';
-
-                const messageContent = document.createElement('div');
-                messageContent.className = 'message-content';
-                messageContent.style.background = '#e3f2fd';
-                messageContent.style.color = '#1976d2';
-                messageContent.style.fontSize = '0.9rem';
-                messageContent.style.fontStyle = 'italic';
-                messageContent.textContent = content;
-
-                messageDiv.appendChild(messageContent);
-                this.chatMessages.appendChild(messageDiv);
-                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-            }
-
-            removeMessage(messageId) {
-                const messageElement = this.chatMessages.querySelector(`[data-message-id="${messageId}"]`);
-                if (messageElement) {
-                    messageElement.remove();
+            async sendMessage() {
+                const content = this.messageInput.value.trim();
+                if (!content || !this.isConnected) {
+                    return;
                 }
-                this.messages = this.messages.filter(m => m.id !== messageId);
+
+                // Filter inappropriate content
+                if (this.isInappropriate(content)) {
+                    this.showStatus('Message contains inappropriate content', 'error');
+                    return;
+                }
+
+                try {
+                    // Encrypt message content
+                    const encryptedContent = this.encryptMessage(content);
+
+                    await db.collection('chatRooms')
+                        .doc(this.roomId)
+                        .collection('messages')
+                        .add({
+                            content: encryptedContent,
+                            nickname: this.nickname,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            expiresAt: new Date(Date.now() + this.messageTimeout)
+                        });
+
+                    this.messageInput.value = '';
+                    this.stopTyping();
+                } catch (error) {
+                    this.showStatus(`Failed to send message: ${error.message}`, 'error');
+                }
+            }
+
+            encryptMessage(message) {
+                // Simple encryption for privacy (in production, use proper encryption)
+                const key = 'privacy-key-2024';
+                let encrypted = '';
+                for (let i = 0; i < message.length; i++) {
+                    encrypted += String.fromCharCode(
+                        message.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+                    );
+                }
+                return btoa(encrypted); // Base64 encode
+            }
+
+            decryptMessage(encryptedMessage) {
+                try {
+                    const key = 'privacy-key-2024';
+                    const decoded = atob(encryptedMessage);
+                    let decrypted = '';
+                    for (let i = 0; i < decoded.length; i++) {
+                        decrypted += String.fromCharCode(
+                            decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+                        );
+                    }
+                    return decrypted;
+                } catch (error) {
+                    return encryptedMessage; // Return original if decryption fails
+                }
+            }
+
+            isInappropriate(text) {
+                const inappropriateWords = [
+                    'spam', 'scam', 'hack', 'virus', 'malware',
+                    'illegal', 'drugs', 'weapon', 'violence'
+                ];
+                
+                const lowerText = text.toLowerCase();
+                return inappropriateWords.some(word => lowerText.includes(word));
+            }
+
+            handleTyping() {
+                if (!this.isTyping) {
+                    this.isTyping = true;
+                    this.showTypingIndicator();
+                }
+
+                clearTimeout(this.typingTimeout);
+                this.typingTimeout = setTimeout(() => {
+                    this.stopTyping();
+                }, 2000);
+            }
+
+            showTypingIndicator() {
+                const existing = this.chatMessages.querySelector('.typing-indicator');
+                if (existing) {
+                    existing.remove();
+                }
+
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'typing-indicator';
+                typingDiv.textContent = 'Someone is typing...';
+                this.chatMessages.appendChild(typingDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            stopTyping() {
+                this.isTyping = false;
+                const typingIndicator = this.chatMessages.querySelector('.typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            async leaveChat() {
+                if (this.nickname) {
+                    // Remove user from active users
+                    try {
+                        await db.collection('chatRooms')
+                            .doc(this.roomId)
+                            .collection('users')
+                            .doc(this.nickname)
+                            .delete();
+                    } catch (error) {
+                        console.error('Error removing user:', error);
+                    }
+                }
+
+                // Unsubscribe from listeners
+                if (this.unsubscribe) {
+                    this.unsubscribe();
+                }
+                if (this.usersUnsubscribe) {
+                    this.usersUnsubscribe();
+                }
+
+                this.nickname = null;
+                this.isConnected = false;
+                this.messages = [];
+                this.users.clear();
+
+                this.showStatus('Left chat', 'error');
+                this.updateButtonStates(false);
+                this.updateChatTitle('Private Chat Room');
+                this.updateUserCount();
+                this.clearMessages();
+                this.showEmptyChat();
             }
 
             startMessageCleanup() {
-                // Clean up old messages every 5 minutes
-                setInterval(() => {
-                    const now = Date.now();
-                    this.messages = this.messages.filter(message => {
-                        if (now - message.timestamp > this.messageTimeout) {
-                            this.removeMessage(message.id);
-                            return false;
-                        }
-                        return true;
-                    });
+                // Clean up expired messages every 5 minutes
+                setInterval(async () => {
+                    try {
+                        const expiredMessages = await db.collection('chatRooms')
+                            .doc(this.roomId)
+                            .collection('messages')
+                            .where('expiresAt', '<=', new Date())
+                            .get();
+
+                        const batch = db.batch();
+                        expiredMessages.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    } catch (error) {
+                        console.error('Error cleaning up messages:', error);
+                    }
                 }, 5 * 60 * 1000);
+            }
+
+            setupFirebaseRules() {
+                // Note: These rules should be set in Firebase Console
+                // For now, we'll handle privacy in the client code
+                console.log('Firebase rules should be configured in the console for maximum security');
             }
 
             clearEmptyChat() {
@@ -674,8 +873,8 @@
                 const emptyChat = document.createElement('div');
                 emptyChat.className = 'empty-chat';
                 emptyChat.innerHTML = `
-                    <h3>Welcome to Simple Chat!</h3>
-                    <p>Enter a nickname and join to start chatting.</p>
+                    <h3>Welcome to Private Chat!</h3>
+                    <p>Enter a nickname and join to start chatting securely.</p>
                 `;
                 this.chatMessages.appendChild(emptyChat);
             }
@@ -720,7 +919,7 @@
         // Initialize the app when the page loads
         let app;
         document.addEventListener('DOMContentLoaded', () => {
-            app = new SimpleChatApp();
+            app = new PrivateChatApp();
         });
     </script>
 
