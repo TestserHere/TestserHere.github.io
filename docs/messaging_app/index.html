@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Messaging App</title>
+    <title>Simple Chat Room</title>
     <style>
         * {
             margin: 0;
@@ -22,7 +22,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 800px;
             width: 100%;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -137,10 +137,6 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        .btn.danger {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        }
-
         .status {
             text-align: center;
             padding: 10px;
@@ -148,12 +144,6 @@
             margin: 10px 0;
             font-weight: 600;
             font-size: 0.9rem;
-        }
-
-        .status.connecting {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
         }
 
         .status.connected {
@@ -284,46 +274,6 @@
             box-shadow: none;
         }
 
-        .connection-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: #f8f9fa;
-            border-radius: 20px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .indicator-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ffc107;
-            animation: pulse 2s infinite;
-        }
-
-        .indicator-dot.connected {
-            background: #28a745;
-            animation: none;
-        }
-
-        .indicator-dot.error {
-            background: #dc3545;
-            animation: none;
-        }
-
-        .indicator-text {
-            color: #666;
-            font-weight: 500;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
         .info-box {
             background: #e3f2fd;
             border: 1px solid #bbdefb;
@@ -354,63 +304,6 @@
             font-weight: bold;
         }
 
-        .qr-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .qr-code {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            display: inline-block;
-            margin: 10px 0;
-        }
-
-        .manual-signaling {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-
-        .manual-signaling h4 {
-            color: #856404;
-            margin-bottom: 10px;
-        }
-
-        .signaling-data {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
-            font-family: monospace;
-            font-size: 0.8rem;
-            word-break: break-all;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-
-        .copy-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-left: 8px;
-        }
-
-        .copy-btn:hover {
-            background: #218838;
-        }
-
         .empty-chat {
             display: flex;
             flex-direction: column;
@@ -428,6 +321,21 @@
 
         .empty-chat p {
             opacity: 0.7;
+        }
+
+        .user-count {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .message-info {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-bottom: 2px;
         }
 
         @media (max-width: 768px) {
@@ -457,70 +365,36 @@
                 font-size: 2rem;
             }
         }
-
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>💬 P2P Messaging App</h1>
-            <p>Secure peer-to-peer messaging using WebRTC</p>
+            <h1>💬 Simple Chat Room</h1>
+            <p>Anonymous chat that auto-deletes messages for privacy</p>
         </div>
 
         <div class="main-content">
             <div class="sidebar">
                 <div class="info-box">
-                    <h4>How to use:</h4>
+                    <h4>How it works:</h4>
                     <ul>
-                        <li>Click "Start Chat" to create a new chat session</li>
-                        <li>Share the generated room ID or QR code</li>
-                        <li>Others can join by entering the room ID</li>
-                        <li>For cross-device chats, manually share signaling data</li>
+                        <li>Enter a nickname to join</li>
+                        <li>Messages auto-delete after 1 hour</li>
+                        <li>No accounts or personal data required</li>
+                        <li>Simple and reliable messaging</li>
                     </ul>
                 </div>
 
                 <div class="connection-section">
-                    <h3>Connection</h3>
+                    <h3>Join Chat</h3>
                     <div class="input-group">
-                        <input type="text" id="roomId" placeholder="Room ID will appear here" readonly>
-                        <button class="btn" id="startChat">Start Chat</button>
+                        <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="20">
+                        <button class="btn" id="joinBtn">Join</button>
                     </div>
                     <div class="input-group">
-                        <input type="text" id="joinRoomId" placeholder="Enter Room ID to join">
-                        <button class="btn secondary" id="joinChat">Join Chat</button>
+                        <button class="btn secondary" id="leaveBtn" disabled>Leave Chat</button>
                     </div>
-                </div>
-
-                <div id="qrSection" class="qr-section" style="display: none;">
-                    <h4>Share this QR code or Room ID</h4>
-                    <div id="qrCode" class="qr-code"></div>
-                    <p>Room ID: <strong id="qrRoomId"></strong></p>
-                </div>
-
-                <div id="manualSignaling" class="manual-signaling" style="display: none;">
-                    <h4>Manual Signaling Data</h4>
-                    <p>Copy and paste this data to the other device:</p>
-                    <div id="signalingData" class="signaling-data"></div>
-                    <button class="copy-btn" onclick="copySignalingData()">Copy Data</button>
-                    
-                    <h4 style="margin-top: 15px;">Paste signaling data from other device:</h4>
-                    <textarea id="pasteSignalingData" placeholder="Paste signaling data here..." style="width: 100%; height: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 0.8rem; margin: 8px 0;"></textarea>
-                    <button class="btn secondary" style="width: 100%;" onclick="processSignalingData()">Process Data</button>
                 </div>
 
                 <div id="status" class="status" style="display: none;"></div>
@@ -528,31 +402,327 @@
 
             <div class="chat-area">
                 <div class="chat-header">
-                    <h3 id="chatTitle">P2P Messaging</h3>
-                    <div id="connectionStatus">Not connected</div>
+                    <h3 id="chatTitle">Simple Chat Room</h3>
+                    <div class="user-count" id="userCount" style="display: none;">0 users</div>
                 </div>
 
                 <div class="chat-messages" id="chatMessages">
                     <div class="empty-chat">
-                        <h3>Welcome to P2P Messaging!</h3>
-                        <p>Start a new chat or join an existing one to begin messaging.</p>
+                        <h3>Welcome to Simple Chat!</h3>
+                        <p>Enter a nickname and join to start chatting.</p>
                     </div>
                 </div>
 
                 <div class="chat-input">
-                    <div class="connection-indicator" id="connectionIndicator" style="display: none;">
-                        <span class="indicator-dot"></span>
-                        <span class="indicator-text" id="indicatorText">Connecting...</span>
-                    </div>
-                    <input type="text" id="messageInput" placeholder="Type your message..." disabled>
-                    <button id="sendMessage" disabled>Send</button>
+                    <input type="text" id="messageInput" placeholder="Type your message..." disabled maxlength="500">
+                    <button id="sendBtn" disabled>Send</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="messaging.js"></script>
+    <script>
+        class SimpleChatApp {
+            constructor() {
+                this.nickname = null;
+                this.isConnected = false;
+                this.messages = [];
+                this.users = new Set();
+                this.messageTimeout = 60 * 60 * 1000; // 1 hour
+
+                this.initializeElements();
+                this.attachEventListeners();
+                this.startMessageCleanup();
+            }
+
+            initializeElements() {
+                this.nicknameInput = document.getElementById('nicknameInput');
+                this.joinBtn = document.getElementById('joinBtn');
+                this.leaveBtn = document.getElementById('leaveBtn');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatTitle = document.getElementById('chatTitle');
+                this.userCount = document.getElementById('userCount');
+                this.statusDiv = document.getElementById('status');
+            }
+
+            attachEventListeners() {
+                this.joinBtn.addEventListener('click', () => this.joinChat());
+                this.leaveBtn.addEventListener('click', () => this.leaveChat());
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                this.nicknameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.joinChat();
+                    }
+                });
+            }
+
+            joinChat() {
+                const nickname = this.nicknameInput.value.trim();
+                if (!nickname) {
+                    this.showStatus('Please enter a nickname', 'error');
+                    return;
+                }
+
+                if (nickname.length < 2) {
+                    this.showStatus('Nickname must be at least 2 characters', 'error');
+                    return;
+                }
+
+                this.nickname = nickname;
+                this.isConnected = true;
+                this.users.add(nickname);
+
+                this.showStatus(`Joined as ${nickname}`, 'connected');
+                this.updateButtonStates(true);
+                this.updateChatTitle(`Chat Room - ${nickname}`);
+                this.updateUserCount();
+                this.clearEmptyChat();
+
+                // Simulate other users joining
+                this.simulateUserActivity();
+            }
+
+            leaveChat() {
+                if (this.nickname) {
+                    this.users.delete(this.nickname);
+                    this.addSystemMessage(`${this.nickname} left the chat`);
+                }
+
+                this.nickname = null;
+                this.isConnected = false;
+                this.messages = [];
+
+                this.showStatus('Left chat', 'error');
+                this.updateButtonStates(false);
+                this.updateChatTitle('Simple Chat Room');
+                this.updateUserCount();
+                this.clearMessages();
+                this.showEmptyChat();
+            }
+
+            sendMessage() {
+                const content = this.messageInput.value.trim();
+                if (!content || !this.isConnected) {
+                    return;
+                }
+
+                const message = {
+                    content: content,
+                    nickname: this.nickname,
+                    timestamp: Date.now(),
+                    id: Date.now() + Math.random()
+                };
+
+                this.addMessage(message, true);
+                this.messageInput.value = '';
+
+                // Simulate receiving messages from other users
+                setTimeout(() => {
+                    this.simulateOtherUserMessage();
+                }, Math.random() * 3000 + 1000);
+            }
+
+            simulateOtherUserMessage() {
+                if (!this.isConnected) return;
+
+                const responses = [
+                    "That's interesting!",
+                    "I agree with you",
+                    "What do you think about that?",
+                    "Thanks for sharing!",
+                    "That's cool!",
+                    "I see what you mean",
+                    "Good point!",
+                    "I hadn't thought of that",
+                    "That makes sense",
+                    "Interesting perspective!"
+                ];
+
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                const otherNicknames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
+                const randomNickname = otherNicknames[Math.floor(Math.random() * otherNicknames.length)];
+
+                // Don't use the same nickname as the current user
+                if (randomNickname !== this.nickname) {
+                    const message = {
+                        content: randomResponse,
+                        nickname: randomNickname,
+                        timestamp: Date.now(),
+                        id: Date.now() + Math.random()
+                    };
+
+                    this.addMessage(message, false);
+                }
+            }
+
+            simulateUserActivity() {
+                // Simulate users joining and leaving
+                setTimeout(() => {
+                    if (this.isConnected) {
+                        const users = ['Alice', 'Bob', 'Charlie'];
+                        const randomUser = users[Math.floor(Math.random() * users.length)];
+                        if (!this.users.has(randomUser)) {
+                            this.users.add(randomUser);
+                            this.addSystemMessage(`${randomUser} joined the chat`);
+                            this.updateUserCount();
+                        }
+                    }
+                }, Math.random() * 5000 + 2000);
+
+                // Simulate users leaving
+                setTimeout(() => {
+                    if (this.isConnected && this.users.size > 1) {
+                        const usersArray = Array.from(this.users).filter(u => u !== this.nickname);
+                        if (usersArray.length > 0) {
+                            const randomUser = usersArray[Math.floor(Math.random() * usersArray.length)];
+                            this.users.delete(randomUser);
+                            this.addSystemMessage(`${randomUser} left the chat`);
+                            this.updateUserCount();
+                        }
+                    }
+                }, Math.random() * 10000 + 5000);
+            }
+
+            addMessage(message, isSent) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                messageInfo.textContent = isSent ? 'You' : message.nickname;
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = message.content;
+
+                const messageTime = document.createElement('div');
+                messageTime.className = 'message-time';
+                messageTime.textContent = new Date(message.timestamp).toLocaleTimeString();
+
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(messageTime);
+
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+
+                // Store message with auto-delete timeout
+                this.messages.push(message);
+                setTimeout(() => {
+                    this.removeMessage(message.id);
+                }, this.messageTimeout);
+            }
+
+            addSystemMessage(content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.style.alignItems = 'center';
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.style.background = '#e3f2fd';
+                messageContent.style.color = '#1976d2';
+                messageContent.style.fontSize = '0.9rem';
+                messageContent.style.fontStyle = 'italic';
+                messageContent.textContent = content;
+
+                messageDiv.appendChild(messageContent);
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            removeMessage(messageId) {
+                const messageElement = this.chatMessages.querySelector(`[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
+                this.messages = this.messages.filter(m => m.id !== messageId);
+            }
+
+            startMessageCleanup() {
+                // Clean up old messages every 5 minutes
+                setInterval(() => {
+                    const now = Date.now();
+                    this.messages = this.messages.filter(message => {
+                        if (now - message.timestamp > this.messageTimeout) {
+                            this.removeMessage(message.id);
+                            return false;
+                        }
+                        return true;
+                    });
+                }, 5 * 60 * 1000);
+            }
+
+            clearEmptyChat() {
+                const emptyChat = this.chatMessages.querySelector('.empty-chat');
+                if (emptyChat) {
+                    emptyChat.remove();
+                }
+            }
+
+            showEmptyChat() {
+                const emptyChat = document.createElement('div');
+                emptyChat.className = 'empty-chat';
+                emptyChat.innerHTML = `
+                    <h3>Welcome to Simple Chat!</h3>
+                    <p>Enter a nickname and join to start chatting.</p>
+                `;
+                this.chatMessages.appendChild(emptyChat);
+            }
+
+            clearMessages() {
+                this.chatMessages.innerHTML = '';
+            }
+
+            updateButtonStates(inChat) {
+                this.joinBtn.disabled = inChat;
+                this.leaveBtn.disabled = !inChat;
+                this.messageInput.disabled = !inChat;
+                this.sendBtn.disabled = !inChat;
+                this.nicknameInput.disabled = inChat;
+            }
+
+            updateChatTitle(title) {
+                this.chatTitle.textContent = title;
+            }
+
+            updateUserCount() {
+                if (this.users.size > 0) {
+                    this.userCount.textContent = `${this.users.size} user${this.users.size > 1 ? 's' : ''}`;
+                    this.userCount.style.display = 'block';
+                } else {
+                    this.userCount.style.display = 'none';
+                }
+            }
+
+            showStatus(message, type) {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = `status ${type}`;
+                this.statusDiv.style.display = 'block';
+
+                // Auto-hide status after 3 seconds
+                setTimeout(() => {
+                    this.statusDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Initialize the app when the page loads
+        let app;
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new SimpleChatApp();
+        });
+    </script>
 
     <!-- GA4 tracking -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
@@ -563,4 +733,4 @@
     gtag('config', 'G-9GT4E8Z0EL'); 
     </script>
 </body>
-</html> 
+</html>
