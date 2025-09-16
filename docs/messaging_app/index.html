@@ -543,6 +543,7 @@
                 this.attachEventListeners();
                 this.startMessageCleanup();
                 this.setupFirebaseRules();
+                this.setupTabCloseCleanup();
             }
 
             initializeElements() {
@@ -606,6 +607,14 @@
                  return `user_${timestamp}_${random}`;
              }
 
+             resetConnectionState() {
+                 this.nickname = null;
+                 this.userId = null;
+                 this.roomId = 'public-room';
+                 this.isConnected = false;
+                 this.updateButtonStates(false);
+             }
+
              async checkNicknameAvailability(nickname, roomId) {
                  try {
                      const usersSnapshot = await db.collection('chatRooms')
@@ -649,23 +658,22 @@
                 this.roomId = this.generateRoomId();
                 this.userId = this.generateUserId();
                 
-                // Validate nickname is unique
-                this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
-                
-                this.isConnected = true;
-
-                this.showStatus(`Creating room ${this.roomId}...`, 'connecting');
-                this.updateButtonStates(true);
-                this.updateChatTitle(`Private Room: ${this.roomId}`);
-                this.showRoomInfo();
-                this.clearEmptyChat();
-
                 try {
+                    // Validate nickname is unique
+                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
+                    this.isConnected = true;
+
+                    this.showStatus(`Creating room ${this.roomId}...`, 'connecting');
+                    this.updateButtonStates(true);
+                    this.updateChatTitle(`Private Room: ${this.roomId}`);
+                    this.showRoomInfo();
+                    this.clearEmptyChat();
+
                     await this.connectToFirebase();
                     this.showStatus(`Room ${this.roomId} created! Share the ID with others.`, 'connected');
                 } catch (error) {
-                    this.showStatus(`Failed to create room: ${error.message}`, 'error');
-                    this.leaveChat();
+                    this.showStatus(error.message, 'error');
+                    this.resetConnectionState();
                 }
             }
 
@@ -689,23 +697,22 @@
                 this.roomId = 'public-room';
                 this.userId = this.generateUserId();
                 
-                // Validate nickname is unique
-                this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
-                
-                this.isConnected = true;
-
-                this.showStatus(`Joining public chat as ${this.nickname}...`, 'connecting');
-                this.updateButtonStates(true);
-                this.updateChatTitle(`Public Chat - ${this.nickname}`);
-                this.hideRoomInfo();
-                this.clearEmptyChat();
-
                 try {
+                    // Validate nickname is unique
+                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
+                    this.isConnected = true;
+
+                    this.showStatus(`Joining public chat as ${this.nickname}...`, 'connecting');
+                    this.updateButtonStates(true);
+                    this.updateChatTitle(`Public Chat - ${this.nickname}`);
+                    this.hideRoomInfo();
+                    this.clearEmptyChat();
+
                     await this.connectToFirebase();
                     this.showStatus(`Joined public chat as ${this.nickname}`, 'connected');
                 } catch (error) {
-                    this.showStatus(`Failed to join public chat: ${error.message}`, 'error');
-                    this.leaveChat();
+                    this.showStatus(error.message, 'error');
+                    this.resetConnectionState();
                 }
             }
 
@@ -741,23 +748,22 @@
                 this.roomId = roomId;
                 this.userId = this.generateUserId();
                 
-                // Validate nickname is unique
-                this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
-                
-                this.isConnected = true;
-
-                this.showStatus(`Joining room ${roomId} as ${this.nickname}...`, 'connecting');
-                this.updateButtonStates(true);
-                this.updateChatTitle(`Room: ${roomId} - ${this.nickname}`);
-                this.showRoomInfo();
-                this.clearEmptyChat();
-
                 try {
+                    // Validate nickname is unique
+                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
+                    this.isConnected = true;
+
+                    this.showStatus(`Joining room ${roomId} as ${this.nickname}...`, 'connecting');
+                    this.updateButtonStates(true);
+                    this.updateChatTitle(`Room: ${roomId} - ${this.nickname}`);
+                    this.showRoomInfo();
+                    this.clearEmptyChat();
+
                     await this.connectToFirebase();
                     this.showStatus(`Joined room ${roomId} as ${this.nickname}`, 'connected');
                 } catch (error) {
-                    this.showStatus(`Failed to join room: ${error.message}`, 'error');
-                    this.leaveChat();
+                    this.showStatus(error.message, 'error');
+                    this.resetConnectionState();
                 }
             }
 
@@ -1129,6 +1135,36 @@
                 setTimeout(() => {
                     this.statusDiv.style.display = 'none';
                 }, 3000);
+            }
+
+            setupTabCloseCleanup() {
+                // Clean up user data when tab is closed or refreshed
+                window.addEventListener('beforeunload', () => {
+                    if (this.userId && this.roomId) {
+                        this.cleanupUserData();
+                    }
+                });
+
+                // Also clean up when page becomes hidden (mobile)
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.userId && this.roomId) {
+                        this.cleanupUserData();
+                    }
+                });
+            }
+
+            async cleanupUserData() {
+                if (this.userId && this.roomId) {
+                    try {
+                        await db.collection('chatRooms')
+                            .doc(this.roomId)
+                            .collection('users')
+                            .doc(this.userId)
+                            .delete();
+                    } catch (error) {
+                        console.error('Error cleaning up user data:', error);
+                    }
+                }
             }
         }
 
