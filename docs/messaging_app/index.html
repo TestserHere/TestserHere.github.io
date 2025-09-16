@@ -522,7 +522,7 @@
                 <div class="chat-messages" id="chatMessages">
                     <div class="empty-chat">
                         <h3>Welcome to Private Chat!</h3>
-                        <p>Enter a nickname and join to start chatting securely.</p>
+                        <p>Please login to start chatting securely.</p>
                     </div>
                 </div>
 
@@ -537,7 +537,6 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
 
     <script>
         // Firebase configuration - REPLACE WITH YOUR NEW PROJECT CONFIG
@@ -554,27 +553,36 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const auth = firebase.auth();
 
-         class PrivateChatApp {
-             constructor() {
-                 this.nickname = null;
-                 this.userId = null; // Unique user ID to prevent impersonation
-                 this.isConnected = false;
-                 this.messages = [];
-                 this.users = new Map(); // Changed to Map to store user data
-                 this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
-                 this.roomId = 'public-room'; // Single public room for simplicity
-                 this.unsubscribe = null;
+        class PrivateChatApp {
+            constructor() {
+                this.nickname = null;
+                this.userId = null;
+                this.isConnected = false;
+                this.messages = [];
+                this.users = new Map();
+                this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
+                this.roomId = 'public-room';
+                this.unsubscribe = null;
+                
+                // Authentication properties
+                this.isAuthenticated = false;
+                this.username = null;
+                this.sessionToken = null;
+                this.passwordSalt = 'secure-salt-2024';
 
                 this.initializeElements();
                 this.attachEventListeners();
                 this.startMessageCleanup();
-                this.setupFirebaseRules();
                 this.setupTabCloseCleanup();
             }
 
             initializeElements() {
+                this.usernameInput = document.getElementById('usernameInput');
+                this.passwordInput = document.getElementById('passwordInput');
+                this.loginBtn = document.getElementById('loginBtn');
+                this.registerBtn = document.getElementById('registerBtn');
+                this.logoutBtn = document.getElementById('logoutBtn');
                 this.nicknameInput = document.getElementById('nicknameInput');
                 this.createRoomBtn = document.getElementById('createRoomBtn');
                 this.joinPublicBtn = document.getElementById('joinPublicBtn');
@@ -593,6 +601,13 @@
             }
 
             attachEventListeners() {
+                // Authentication event listeners
+                this.loginBtn.addEventListener('click', () => this.handleLogin());
+                this.registerBtn.addEventListener('click', () => this.handleRegister());
+                this.logoutBtn.addEventListener('click', () => this.logout());
+                this.passwordInput.addEventListener('input', () => this.updatePasswordStrength());
+
+                // Room event listeners
                 this.createRoomBtn.addEventListener('click', () => this.createPrivateRoom());
                 this.joinPublicBtn.addEventListener('click', () => this.joinPublicChat());
                 this.joinRoomBtn.addEventListener('click', () => this.joinRoomById());
@@ -619,52 +634,197 @@
                 });
             }
 
-             generateRoomId() {
-                 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                 let result = '';
-                 for (let i = 0; i < 6; i++) {
-                     result += chars.charAt(Math.floor(Math.random() * chars.length));
-                 }
-                 return result;
-             }
+            // Authentication Methods
+            async hashPassword(password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password + this.passwordSalt);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
 
-             generateUserId() {
-                 // Generate a unique user ID with timestamp and random string
-                 const timestamp = Date.now().toString(36);
-                 const random = Math.random().toString(36).substring(2, 8);
-                 return `user_${timestamp}_${random}`;
-             }
+            validatePassword(password) {
+                return {
+                    length: password.length >= 8,
+                    upper: /[A-Z]/.test(password),
+                    lower: /[a-z]/.test(password),
+                    number: /\d/.test(password),
+                    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                };
+            }
 
-             resetConnectionState() {
-                 this.nickname = null;
-                 this.userId = null;
-                 this.roomId = 'public-room';
-                 this.isConnected = false;
-                 this.updateButtonStates(false);
-             }
+            updatePasswordStrength() {
+                const password = this.passwordInput.value;
+                if (password.length === 0) {
+                    document.getElementById('passwordStrength').style.display = 'none';
+                    return;
+                }
 
-             async checkNicknameAvailability(nickname, roomId) {
-                 try {
-                     const usersSnapshot = await db.collection('chatRooms')
-                         .doc(roomId)
-                         .collection('users')
-                         .where('nickname', '==', nickname)
-                         .get();
-                     
-                     return usersSnapshot.empty; // true if nickname is available
-                 } catch (error) {
-                     console.error('Error checking nickname:', error);
-                     return false; // Assume taken if error
-                 }
-             }
+                document.getElementById('passwordStrength').style.display = 'block';
+                const requirements = this.validatePassword(password);
+                const elements = {
+                    length: document.getElementById('lengthReq'),
+                    upper: document.getElementById('upperReq'),
+                    lower: document.getElementById('lowerReq'),
+                    number: document.getElementById('numberReq'),
+                    special: document.getElementById('specialReq')
+                };
 
-             async validateUniqueNickname(nickname, roomId) {
-                 const isAvailable = await this.checkNicknameAvailability(nickname, roomId);
-                 if (!isAvailable) {
-                     throw new Error(`Nickname "${nickname}" is already taken. Please choose a different nickname.`);
-                 }
-                 return nickname;
-             }
+                Object.keys(requirements).forEach(key => {
+                    if (elements[key]) {
+                        elements[key].style.color = requirements[key] ? '#28a745' : '#dc3545';
+                        elements[key].style.fontWeight = requirements[key] ? 'bold' : 'normal';
+                    }
+                });
+
+                return Object.values(requirements).every(req => req);
+            }
+
+            async handleRegister() {
+                const username = this.usernameInput.value.trim();
+                const password = this.passwordInput.value;
+
+                if (!username || !password) {
+                    this.showStatus('Please enter both username and password', 'error');
+                    return;
+                }
+
+                if (username.length < 3) {
+                    this.showStatus('Username must be at least 3 characters', 'error');
+                    return;
+                }
+
+                if (!this.updatePasswordStrength()) {
+                    this.showStatus('Password does not meet requirements', 'error');
+                    return;
+                }
+
+                try {
+                    await this.register(username, password);
+                    this.showStatus('Registration successful! Please login.', 'connected');
+                    this.passwordInput.value = '';
+                } catch (error) {
+                    this.showStatus(error.message, 'error');
+                }
+            }
+
+            async handleLogin() {
+                const username = this.usernameInput.value.trim();
+                const password = this.passwordInput.value;
+
+                if (!username || !password) {
+                    this.showStatus('Please enter both username and password', 'error');
+                    return;
+                }
+
+                try {
+                    await this.login(username, password);
+                    this.showStatus(`Welcome back, ${username}!`, 'connected');
+                    this.passwordInput.value = '';
+                } catch (error) {
+                    this.showStatus(error.message, 'error');
+                }
+            }
+
+            async register(username, password) {
+                const userDoc = await db.collection('users').doc(username).get();
+                if (userDoc.exists) {
+                    throw new Error('Username already exists');
+                }
+
+                const hashedPassword = await this.hashPassword(password);
+                await db.collection('users').doc(username).set({
+                    username: username,
+                    passwordHash: hashedPassword,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: null
+                });
+                return true;
+            }
+
+            async login(username, password) {
+                const userDoc = await db.collection('users').doc(username).get();
+                if (!userDoc.exists) {
+                    throw new Error('Invalid username or password');
+                }
+
+                const userData = userDoc.data();
+                const hashedPassword = await this.hashPassword(password);
+                
+                if (hashedPassword !== userData.passwordHash) {
+                    throw new Error('Invalid username or password');
+                }
+
+                this.username = username;
+                this.isAuthenticated = true;
+                this.showRoomSection();
+                return true;
+            }
+
+            logout() {
+                this.isAuthenticated = false;
+                this.username = null;
+                this.leaveChat();
+                this.showAuthSection();
+                this.showStatus('Logged out successfully', 'error');
+            }
+
+            showAuthSection() {
+                document.getElementById('authSection').style.display = 'block';
+                document.getElementById('roomSection').style.display = 'none';
+                document.getElementById('passwordStrength').style.display = 'none';
+            }
+
+            showRoomSection() {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('roomSection').style.display = 'block';
+            }
+
+            generateRoomId() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let result = '';
+                for (let i = 0; i < 6; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+
+            generateUserId() {
+                const timestamp = Date.now().toString(36);
+                const random = Math.random().toString(36).substring(2, 8);
+                return `user_${timestamp}_${random}`;
+            }
+
+            resetConnectionState() {
+                this.nickname = null;
+                this.userId = null;
+                this.roomId = 'public-room';
+                this.isConnected = false;
+                this.updateButtonStates(false);
+            }
+
+            async checkNicknameAvailability(nickname, roomId) {
+                try {
+                    const usersSnapshot = await db.collection('chatRooms')
+                        .doc(roomId)
+                        .collection('users')
+                        .where('nickname', '==', nickname)
+                        .get();
+                    
+                    return usersSnapshot.empty;
+                } catch (error) {
+                    console.error('Error checking nickname:', error);
+                    return false;
+                }
+            }
+
+            async validateUniqueNickname(nickname, roomId) {
+                const isAvailable = await this.checkNicknameAvailability(nickname, roomId);
+                if (!isAvailable) {
+                    throw new Error(`Nickname "${nickname}" is already taken. Please choose a different nickname.`);
+                }
+                return nickname;
+            }
 
             async createPrivateRoom() {
                 const nickname = this.nicknameInput.value.trim();
@@ -687,7 +847,6 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    // Validate nickname is unique
                     this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
@@ -726,7 +885,6 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    // Validate nickname is unique
                     this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
@@ -777,7 +935,6 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    // Validate nickname is unique
                     this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
@@ -834,43 +991,7 @@
                 document.body.removeChild(textArea);
             }
 
-            async joinChat() {
-                const nickname = this.nicknameInput.value.trim();
-                if (!nickname) {
-                    this.showStatus('Please enter a nickname', 'error');
-                    return;
-                }
-
-                if (nickname.length < 2) {
-                    this.showStatus('Nickname must be at least 2 characters', 'error');
-                    return;
-                }
-
-                // Filter inappropriate nicknames
-                if (this.isInappropriate(nickname)) {
-                    this.showStatus('Please choose a different nickname', 'error');
-                    return;
-                }
-
-                this.nickname = nickname;
-                this.isConnected = true;
-
-                this.showStatus(`Connecting as ${nickname}...`, 'connecting');
-                this.updateButtonStates(true);
-                this.updateChatTitle(`Private Chat - ${nickname}`);
-                this.clearEmptyChat();
-
-                try {
-                    await this.connectToFirebase();
-                    this.showStatus(`Connected as ${nickname}`, 'connected');
-                } catch (error) {
-                    this.showStatus(`Connection failed: ${error.message}`, 'error');
-                    this.leaveChat();
-                }
-            }
-
             async connectToFirebase() {
-                // Listen to messages in real-time
                 this.unsubscribe = db.collection('chatRooms')
                     .doc(this.roomId)
                     .collection('messages')
@@ -880,7 +1001,6 @@
                         this.handleMessagesUpdate(snapshot);
                     });
 
-                // Listen to active users
                 this.usersUnsubscribe = db.collection('chatRooms')
                     .doc(this.roomId)
                     .collection('users')
@@ -888,17 +1008,16 @@
                         this.handleUsersUpdate(snapshot);
                     });
 
-                 // Add user to active users with unique ID
-                 await db.collection('chatRooms')
-                     .doc(this.roomId)
-                     .collection('users')
-                     .doc(this.userId)
-                     .set({
-                         userId: this.userId,
-                         nickname: this.nickname,
-                         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                         joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                     });
+                await db.collection('chatRooms')
+                    .doc(this.roomId)
+                    .collection('users')
+                    .doc(this.userId)
+                    .set({
+                        userId: this.userId,
+                        nickname: this.nickname,
+                        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
             }
 
             handleMessagesUpdate(snapshot) {
@@ -911,29 +1030,27 @@
                     });
                 });
 
-                // Reverse to show oldest first
                 messages.reverse();
                 this.displayMessages(messages);
             }
 
-             handleUsersUpdate(snapshot) {
-                 const users = new Map();
-                 snapshot.forEach(doc => {
-                     const data = doc.data();
-                     users.set(data.userId, {
-                         userId: data.userId,
-                         nickname: data.nickname,
-                         lastSeen: data.lastSeen,
-                         joinedAt: data.joinedAt
-                     });
-                 });
+            handleUsersUpdate(snapshot) {
+                const users = new Map();
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    users.set(data.userId, {
+                        userId: data.userId,
+                        nickname: data.nickname,
+                        lastSeen: data.lastSeen,
+                        joinedAt: data.joinedAt
+                    });
+                });
 
-                 this.users = users;
-                 this.updateUserCount();
-             }
+                this.users = users;
+                this.updateUserCount();
+            }
 
             displayMessages(messages) {
-                // Clear existing messages
                 this.chatMessages.innerHTML = '';
 
                 if (messages.length === 0) {
@@ -945,33 +1062,32 @@
                     this.addMessageToUI(message);
                 });
 
-                // Scroll to bottom
                 this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
             }
 
-             addMessageToUI(message) {
-                 const messageDiv = document.createElement('div');
-                 const isOwnMessage = message.userId === this.userId;
-                 messageDiv.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
+            addMessageToUI(message) {
+                const messageDiv = document.createElement('div');
+                const isOwnMessage = message.userId === this.userId;
+                messageDiv.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
 
-                 const messageInfo = document.createElement('div');
-                 messageInfo.className = 'message-info';
-                 messageInfo.textContent = isOwnMessage ? 'You' : message.nickname;
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                messageInfo.textContent = isOwnMessage ? 'You' : message.nickname;
 
-                 const messageContent = document.createElement('div');
-                 messageContent.className = 'message-content';
-                 messageContent.textContent = this.decryptMessage(message.content);
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = this.decryptMessage(message.content);
 
-                 const messageTime = document.createElement('div');
-                 messageTime.className = 'message-time';
-                 messageTime.textContent = new Date(message.timestamp.toDate()).toLocaleTimeString();
+                const messageTime = document.createElement('div');
+                messageTime.className = 'message-time';
+                messageTime.textContent = new Date(message.timestamp.toDate()).toLocaleTimeString();
 
-                 messageDiv.appendChild(messageInfo);
-                 messageDiv.appendChild(messageContent);
-                 messageDiv.appendChild(messageTime);
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(messageTime);
 
-                 this.chatMessages.appendChild(messageDiv);
-             }
+                this.chatMessages.appendChild(messageDiv);
+            }
 
             async sendMessage() {
                 const content = this.messageInput.value.trim();
@@ -979,35 +1095,32 @@
                     return;
                 }
 
-                // Filter inappropriate content
                 if (this.isInappropriate(content)) {
                     this.showStatus('Message contains inappropriate content', 'error');
                     return;
                 }
 
                 try {
-                    // Encrypt message content
                     const encryptedContent = this.encryptMessage(content);
 
-                     await db.collection('chatRooms')
-                         .doc(this.roomId)
-                         .collection('messages')
-                         .add({
-                             content: encryptedContent,
-                             userId: this.userId,
-                             nickname: this.nickname,
-                             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                             expiresAt: new Date(Date.now() + this.messageTimeout)
-                         });
+                    await db.collection('chatRooms')
+                        .doc(this.roomId)
+                        .collection('messages')
+                        .add({
+                            content: encryptedContent,
+                            userId: this.userId,
+                            nickname: this.nickname,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            expiresAt: new Date(Date.now() + this.messageTimeout)
+                        });
 
-                     this.messageInput.value = '';
+                    this.messageInput.value = '';
                 } catch (error) {
                     this.showStatus(`Failed to send message: ${error.message}`, 'error');
                 }
             }
 
             encryptMessage(message) {
-                // Simple encryption for privacy (in production, use proper encryption)
                 const key = 'privacy-key-2024';
                 let encrypted = '';
                 for (let i = 0; i < message.length; i++) {
@@ -1015,7 +1128,7 @@
                         message.charCodeAt(i) ^ key.charCodeAt(i % key.length)
                     );
                 }
-                return btoa(encrypted); // Base64 encode
+                return btoa(encrypted);
             }
 
             decryptMessage(encryptedMessage) {
@@ -1030,7 +1143,7 @@
                     }
                     return decrypted;
                 } catch (error) {
-                    return encryptedMessage; // Return original if decryption fails
+                    return encryptedMessage;
                 }
             }
 
@@ -1044,10 +1157,8 @@
                 return inappropriateWords.some(word => lowerText.includes(word));
             }
 
-
             async leaveChat() {
                 if (this.userId) {
-                    // Remove user from active users
                     try {
                         await db.collection('chatRooms')
                             .doc(this.roomId)
@@ -1059,7 +1170,6 @@
                     }
                 }
 
-                // Unsubscribe from listeners
                 if (this.unsubscribe) {
                     this.unsubscribe();
                 }
@@ -1083,7 +1193,6 @@
             }
 
             startMessageCleanup() {
-                // Clean up expired messages every 5 minutes
                 setInterval(async () => {
                     try {
                         const expiredMessages = await db.collection('chatRooms')
@@ -1103,10 +1212,32 @@
                 }, 5 * 60 * 1000);
             }
 
-            setupFirebaseRules() {
-                // Note: These rules should be set in Firebase Console
-                // For now, we'll handle privacy in the client code
-                console.log('Firebase rules should be configured in the console for maximum security');
+            setupTabCloseCleanup() {
+                window.addEventListener('beforeunload', () => {
+                    if (this.userId && this.roomId) {
+                        this.cleanupUserData();
+                    }
+                });
+
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden && this.userId && this.roomId) {
+                        this.cleanupUserData();
+                    }
+                });
+            }
+
+            async cleanupUserData() {
+                if (this.userId && this.roomId) {
+                    try {
+                        await db.collection('chatRooms')
+                            .doc(this.roomId)
+                            .collection('users')
+                            .doc(this.userId)
+                            .delete();
+                    } catch (error) {
+                        console.error('Error cleaning up user data:', error);
+                    }
+                }
             }
 
             clearEmptyChat() {
@@ -1121,7 +1252,7 @@
                 emptyChat.className = 'empty-chat';
                 emptyChat.innerHTML = `
                     <h3>Welcome to Private Chat!</h3>
-                    <p>Enter a nickname and join to start chatting securely.</p>
+                    <p>Please login to start chatting securely.</p>
                 `;
                 this.chatMessages.appendChild(emptyChat);
             }
@@ -1159,40 +1290,9 @@
                 this.statusDiv.className = `status ${type}`;
                 this.statusDiv.style.display = 'block';
 
-                // Auto-hide status after 3 seconds
                 setTimeout(() => {
                     this.statusDiv.style.display = 'none';
                 }, 3000);
-            }
-
-            setupTabCloseCleanup() {
-                // Clean up user data when tab is closed or refreshed
-                window.addEventListener('beforeunload', () => {
-                    if (this.userId && this.roomId) {
-                        this.cleanupUserData();
-                    }
-                });
-
-                // Also clean up when page becomes hidden (mobile)
-                document.addEventListener('visibilitychange', () => {
-                    if (document.hidden && this.userId && this.roomId) {
-                        this.cleanupUserData();
-                    }
-                });
-            }
-
-            async cleanupUserData() {
-                if (this.userId && this.roomId) {
-                    try {
-                        await db.collection('chatRooms')
-                            .doc(this.roomId)
-                            .collection('users')
-                            .doc(this.userId)
-                            .delete();
-                    } catch (error) {
-                        console.error('Error cleaning up user data:', error);
-                    }
-                }
             }
         }
 
@@ -1212,4 +1312,4 @@
     gtag('config', 'G-9GT4E8Z0EL'); 
     </script>
 </body>
-</html> 
+</html>
