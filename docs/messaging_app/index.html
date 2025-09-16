@@ -457,13 +457,38 @@
                     </ul>
                 </div>
 
-                <div class="connection-section">
+                <div id="passwordStrength" class="info-box" style="display: none;">
+                    <h4>Password Requirements:</h4>
+                    <ul>
+                        <li id="lengthReq">At least 8 characters</li>
+                        <li id="upperReq">One uppercase letter</li>
+                        <li id="lowerReq">One lowercase letter</li>
+                        <li id="numberReq">One number</li>
+                        <li id="specialReq">One special character</li>
+                    </ul>
+                </div>
+
+                <div class="connection-section" id="authSection">
+                    <h3>Authentication</h3>
+                    <div class="input-group">
+                        <input type="text" id="usernameInput" placeholder="Enter username" maxlength="20">
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="passwordInput" placeholder="Enter password" maxlength="50">
+                    </div>
+                    <div class="input-group">
+                        <button class="btn" id="loginBtn">Login</button>
+                        <button class="btn secondary" id="registerBtn">Register</button>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn danger" id="logoutBtn" disabled>Logout</button>
+                    </div>
+                </div>
+
+                <div class="connection-section" id="roomSection" style="display: none;">
                     <h3>Room Options</h3>
                     <div class="input-group">
                         <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="20">
-                    </div>
-                    <div class="input-group">
-                        <input type="password" id="passwordInput" placeholder="Enter password (optional)" maxlength="50">
                     </div>
                     <div class="input-group">
                         <button class="btn" id="createRoomBtn">Create Private Room</button>
@@ -551,7 +576,6 @@
 
             initializeElements() {
                 this.nicknameInput = document.getElementById('nicknameInput');
-                this.passwordInput = document.getElementById('passwordInput');
                 this.createRoomBtn = document.getElementById('createRoomBtn');
                 this.joinPublicBtn = document.getElementById('joinPublicBtn');
                 this.joinRoomBtn = document.getElementById('joinRoomBtn');
@@ -611,45 +635,12 @@
                  return `user_${timestamp}_${random}`;
              }
 
-             async hashPassword(password) {
-                 // Use Web Crypto API for secure password hashing
-                 const encoder = new TextEncoder();
-                 const data = encoder.encode(password);
-                 const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-                 const hashArray = Array.from(new Uint8Array(hashBuffer));
-                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-             }
-
-             async authenticateUser(nickname, password, roomId) {
-                 if (!password) {
-                     // No password provided, check if nickname is available
-                     return await this.checkNicknameAvailability(nickname, roomId);
-                 }
-                 
-                 // Hash the provided password
-                 const hashedPassword = await this.hashPassword(password);
-                 
-                 try {
-                     // Check if user exists with this nickname and password
-                     const userSnapshot = await db.collection('chatRooms')
-                         .doc(roomId)
-                         .collection('users')
-                         .where('nickname', '==', nickname)
-                         .where('passwordHash', '==', hashedPassword)
-                         .get();
-                     
-                     return !userSnapshot.empty; // true if user exists with correct password
-                 } catch (error) {
-                     console.error('Error authenticating user:', error);
-                     return false;
-                 }
-             }
-
-             async logout() {
-                 if (this.isConnected) {
-                     await this.leaveChat();
-                     this.showStatus('Logged out successfully', 'connected');
-                 }
+             resetConnectionState() {
+                 this.nickname = null;
+                 this.userId = null;
+                 this.roomId = 'public-room';
+                 this.isConnected = false;
+                 this.updateButtonStates(false);
              }
 
              async checkNicknameAvailability(nickname, roomId) {
@@ -677,8 +668,6 @@
 
             async createPrivateRoom() {
                 const nickname = this.nicknameInput.value.trim();
-                const password = this.passwordInput.value.trim();
-                
                 if (!nickname) {
                     this.showStatus('Please enter a nickname', 'error');
                     return;
@@ -708,7 +697,7 @@
                     this.showRoomInfo();
                     this.clearEmptyChat();
 
-                    await this.connectToFirebase(password);
+                    await this.connectToFirebase();
                     this.showStatus(`Room ${this.roomId} created! Share the ID with others.`, 'connected');
                 } catch (error) {
                     this.showStatus(error.message, 'error');
@@ -718,8 +707,6 @@
 
             async joinPublicChat() {
                 const nickname = this.nicknameInput.value.trim();
-                const password = this.passwordInput.value.trim();
-                
                 if (!nickname) {
                     this.showStatus('Please enter a nickname', 'error');
                     return;
@@ -749,7 +736,7 @@
                     this.hideRoomInfo();
                     this.clearEmptyChat();
 
-                    await this.connectToFirebase(password);
+                    await this.connectToFirebase();
                     this.showStatus(`Joined public chat as ${this.nickname}`, 'connected');
                 } catch (error) {
                     this.showStatus(error.message, 'error');
@@ -759,7 +746,6 @@
 
             async joinRoomById() {
                 const nickname = this.nicknameInput.value.trim();
-                const password = this.passwordInput.value.trim();
                 const roomId = this.roomIdInput.value.trim().toUpperCase();
 
                 if (!nickname) {
@@ -791,17 +777,8 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    // Check if user exists with password, or validate unique nickname
-                    if (password) {
-                        const isAuthenticated = await this.authenticateUser(nickname, password, this.roomId);
-                        if (!isAuthenticated) {
-                            throw new Error('Invalid nickname or password');
-                        }
-                        this.nickname = nickname;
-                    } else {
-                        this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
-                    }
-                    
+                    // Validate nickname is unique
+                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
                     this.showStatus(`Joining room ${roomId} as ${this.nickname}...`, 'connecting');
@@ -810,7 +787,7 @@
                     this.showRoomInfo();
                     this.clearEmptyChat();
 
-                    await this.connectToFirebase(password);
+                    await this.connectToFirebase();
                     this.showStatus(`Joined room ${roomId} as ${this.nickname}`, 'connected');
                 } catch (error) {
                     this.showStatus(error.message, 'error');
@@ -892,7 +869,7 @@
                 }
             }
 
-            async connectToFirebase(password = '') {
+            async connectToFirebase() {
                 // Listen to messages in real-time
                 this.unsubscribe = db.collection('chatRooms')
                     .doc(this.roomId)
@@ -911,23 +888,17 @@
                         this.handleUsersUpdate(snapshot);
                     });
 
-                // Add user to active users with password hash
-                const userData = {
-                    userId: this.userId,
-                    nickname: this.nickname,
-                    lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                if (password) {
-                    userData.passwordHash = await this.hashPassword(password);
-                }
-                
-                await db.collection('chatRooms')
-                    .doc(this.roomId)
-                    .collection('users')
-                    .doc(this.userId)
-                    .set(userData);
+                 // Add user to active users with unique ID
+                 await db.collection('chatRooms')
+                     .doc(this.roomId)
+                     .collection('users')
+                     .doc(this.userId)
+                     .set({
+                         userId: this.userId,
+                         nickname: this.nickname,
+                         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                         joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                     });
             }
 
             handleMessagesUpdate(snapshot) {
@@ -1167,7 +1138,6 @@
                 this.messageInput.disabled = !inChat;
                 this.sendBtn.disabled = !inChat;
                 this.nicknameInput.disabled = inChat;
-                this.passwordInput.disabled = inChat;
                 this.roomIdInput.disabled = inChat;
             }
 
@@ -1242,4 +1212,4 @@
     gtag('config', 'G-9GT4E8Z0EL'); 
     </script>
 </body>
-</html>
+</html> 
