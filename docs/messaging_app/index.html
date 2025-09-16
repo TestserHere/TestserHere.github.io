@@ -458,14 +458,28 @@
                 </div>
 
                 <div class="connection-section">
-                    <h3>Join Chat</h3>
+                    <h3>Room Options</h3>
                     <div class="input-group">
                         <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="20">
-                        <button class="btn" id="joinBtn">Join</button>
                     </div>
                     <div class="input-group">
-                        <button class="btn secondary" id="leaveBtn" disabled>Leave Chat</button>
+                        <button class="btn" id="createRoomBtn">Create Private Room</button>
+                        <button class="btn secondary" id="joinPublicBtn">Join Public Chat</button>
                     </div>
+                    <div class="input-group">
+                        <input type="text" id="roomIdInput" placeholder="Enter Room ID to join" maxlength="10">
+                        <button class="btn" id="joinRoomBtn">Join Room</button>
+                    </div>
+                    <div class="input-group">
+                        <button class="btn danger" id="leaveBtn" disabled>Leave Chat</button>
+                    </div>
+                </div>
+
+                <div id="roomInfo" class="info-box" style="display: none;">
+                    <h4>Room Information</h4>
+                    <p><strong>Room ID:</strong> <span id="currentRoomId"></span></p>
+                    <p><strong>Share this ID</strong> with others to let them join your room!</p>
+                    <button class="btn" id="copyRoomIdBtn" style="width: 100%; margin-top: 10px;">Copy Room ID</button>
                 </div>
 
                 <div id="status" class="status" style="display: none;"></div>
@@ -534,7 +548,10 @@
 
             initializeElements() {
                 this.nicknameInput = document.getElementById('nicknameInput');
-                this.joinBtn = document.getElementById('joinBtn');
+                this.createRoomBtn = document.getElementById('createRoomBtn');
+                this.joinPublicBtn = document.getElementById('joinPublicBtn');
+                this.joinRoomBtn = document.getElementById('joinRoomBtn');
+                this.roomIdInput = document.getElementById('roomIdInput');
                 this.leaveBtn = document.getElementById('leaveBtn');
                 this.messageInput = document.getElementById('messageInput');
                 this.sendBtn = document.getElementById('sendBtn');
@@ -542,12 +559,18 @@
                 this.chatTitle = document.getElementById('chatTitle');
                 this.userCount = document.getElementById('userCount');
                 this.statusDiv = document.getElementById('status');
+                this.roomInfo = document.getElementById('roomInfo');
+                this.currentRoomId = document.getElementById('currentRoomId');
+                this.copyRoomIdBtn = document.getElementById('copyRoomIdBtn');
             }
 
             attachEventListeners() {
-                this.joinBtn.addEventListener('click', () => this.joinChat());
+                this.createRoomBtn.addEventListener('click', () => this.createPrivateRoom());
+                this.joinPublicBtn.addEventListener('click', () => this.joinPublicChat());
+                this.joinRoomBtn.addEventListener('click', () => this.joinRoomById());
                 this.leaveBtn.addEventListener('click', () => this.leaveChat());
                 this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.copyRoomIdBtn.addEventListener('click', () => this.copyRoomId());
                 
                 this.messageInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -559,9 +582,182 @@
                 this.messageInput.addEventListener('input', () => this.handleTyping());
                 this.nicknameInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
-                        this.joinChat();
+                        this.createPrivateRoom();
                     }
                 });
+                this.roomIdInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.joinRoomById();
+                    }
+                });
+            }
+
+            generateRoomId() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let result = '';
+                for (let i = 0; i < 6; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+
+            async createPrivateRoom() {
+                const nickname = this.nicknameInput.value.trim();
+                if (!nickname) {
+                    this.showStatus('Please enter a nickname', 'error');
+                    return;
+                }
+
+                if (nickname.length < 2) {
+                    this.showStatus('Nickname must be at least 2 characters', 'error');
+                    return;
+                }
+
+                if (this.isInappropriate(nickname)) {
+                    this.showStatus('Please choose a different nickname', 'error');
+                    return;
+                }
+
+                this.nickname = nickname;
+                this.roomId = this.generateRoomId();
+                this.isConnected = true;
+
+                this.showStatus(`Creating room ${this.roomId}...`, 'connecting');
+                this.updateButtonStates(true);
+                this.updateChatTitle(`Private Room: ${this.roomId}`);
+                this.showRoomInfo();
+                this.clearEmptyChat();
+
+                try {
+                    await this.connectToFirebase();
+                    this.showStatus(`Room ${this.roomId} created! Share the ID with others.`, 'connected');
+                } catch (error) {
+                    this.showStatus(`Failed to create room: ${error.message}`, 'error');
+                    this.leaveChat();
+                }
+            }
+
+            async joinPublicChat() {
+                const nickname = this.nicknameInput.value.trim();
+                if (!nickname) {
+                    this.showStatus('Please enter a nickname', 'error');
+                    return;
+                }
+
+                if (nickname.length < 2) {
+                    this.showStatus('Nickname must be at least 2 characters', 'error');
+                    return;
+                }
+
+                if (this.isInappropriate(nickname)) {
+                    this.showStatus('Please choose a different nickname', 'error');
+                    return;
+                }
+
+                this.nickname = nickname;
+                this.roomId = 'public-room';
+                this.isConnected = true;
+
+                this.showStatus(`Joining public chat as ${nickname}...`, 'connecting');
+                this.updateButtonStates(true);
+                this.updateChatTitle(`Public Chat - ${nickname}`);
+                this.hideRoomInfo();
+                this.clearEmptyChat();
+
+                try {
+                    await this.connectToFirebase();
+                    this.showStatus(`Joined public chat as ${nickname}`, 'connected');
+                } catch (error) {
+                    this.showStatus(`Failed to join public chat: ${error.message}`, 'error');
+                    this.leaveChat();
+                }
+            }
+
+            async joinRoomById() {
+                const nickname = this.nicknameInput.value.trim();
+                const roomId = this.roomIdInput.value.trim().toUpperCase();
+
+                if (!nickname) {
+                    this.showStatus('Please enter a nickname', 'error');
+                    return;
+                }
+
+                if (!roomId) {
+                    this.showStatus('Please enter a room ID', 'error');
+                    return;
+                }
+
+                if (nickname.length < 2) {
+                    this.showStatus('Nickname must be at least 2 characters', 'error');
+                    return;
+                }
+
+                if (roomId.length !== 6) {
+                    this.showStatus('Room ID must be 6 characters', 'error');
+                    return;
+                }
+
+                if (this.isInappropriate(nickname)) {
+                    this.showStatus('Please choose a different nickname', 'error');
+                    return;
+                }
+
+                this.nickname = nickname;
+                this.roomId = roomId;
+                this.isConnected = true;
+
+                this.showStatus(`Joining room ${roomId} as ${nickname}...`, 'connecting');
+                this.updateButtonStates(true);
+                this.updateChatTitle(`Room: ${roomId} - ${nickname}`);
+                this.showRoomInfo();
+                this.clearEmptyChat();
+
+                try {
+                    await this.connectToFirebase();
+                    this.showStatus(`Joined room ${roomId} as ${nickname}`, 'connected');
+                } catch (error) {
+                    this.showStatus(`Failed to join room: ${error.message}`, 'error');
+                    this.leaveChat();
+                }
+            }
+
+            showRoomInfo() {
+                this.roomInfo.style.display = 'block';
+                this.currentRoomId.textContent = this.roomId;
+            }
+
+            hideRoomInfo() {
+                this.roomInfo.style.display = 'none';
+            }
+
+            copyRoomId() {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(this.roomId).then(() => {
+                        this.showStatus('Room ID copied to clipboard!', 'connected');
+                    }).catch(() => {
+                        this.copyRoomIdFallback();
+                    });
+                } else {
+                    this.copyRoomIdFallback();
+                }
+            }
+
+            copyRoomIdFallback() {
+                const textArea = document.createElement('textarea');
+                textArea.value = this.roomId;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showStatus('Room ID copied to clipboard!', 'connected');
+                } catch (err) {
+                    this.showStatus('Failed to copy Room ID', 'error');
+                }
+                document.body.removeChild(textArea);
             }
 
             async joinChat() {
@@ -683,7 +879,7 @@
 
                 const messageContent = document.createElement('div');
                 messageContent.className = 'message-content';
-                messageContent.textContent = message.content;
+                messageContent.textContent = this.decryptMessage(message.content);
 
                 const messageTime = document.createElement('div');
                 messageTime.className = 'message-time';
@@ -832,6 +1028,7 @@
                 this.updateChatTitle('Private Chat Room');
                 this.updateUserCount();
                 this.clearMessages();
+                this.hideRoomInfo();
                 this.showEmptyChat();
             }
 
@@ -884,11 +1081,14 @@
             }
 
             updateButtonStates(inChat) {
-                this.joinBtn.disabled = inChat;
+                this.createRoomBtn.disabled = inChat;
+                this.joinPublicBtn.disabled = inChat;
+                this.joinRoomBtn.disabled = inChat;
                 this.leaveBtn.disabled = !inChat;
                 this.messageInput.disabled = !inChat;
                 this.sendBtn.disabled = !inChat;
                 this.nicknameInput.disabled = inChat;
+                this.roomIdInput.disabled = inChat;
             }
 
             updateChatTitle(title) {
