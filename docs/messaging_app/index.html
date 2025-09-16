@@ -534,9 +534,7 @@
                 this.isConnected = false;
                 this.messages = [];
                 this.users = new Set();
-                this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
-                this.typingTimeout = null;
-                this.isTyping = false;
+                 this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
                 this.roomId = 'public-room'; // Single public room for simplicity
                 this.unsubscribe = null;
 
@@ -579,7 +577,6 @@
                     }
                 });
 
-                this.messageInput.addEventListener('input', () => this.handleTyping());
                 this.nicknameInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         this.createPrivateRoom();
@@ -918,8 +915,7 @@
                             expiresAt: new Date(Date.now() + this.messageTimeout)
                         });
 
-                    this.messageInput.value = '';
-                    this.stopTyping();
+                     this.messageInput.value = '';
                 } catch (error) {
                     this.showStatus(`Failed to send message: ${error.message}`, 'error');
                 }
@@ -963,38 +959,6 @@
                 return inappropriateWords.some(word => lowerText.includes(word));
             }
 
-            handleTyping() {
-                if (!this.isTyping) {
-                    this.isTyping = true;
-                    this.showTypingIndicator();
-                }
-
-                clearTimeout(this.typingTimeout);
-                this.typingTimeout = setTimeout(() => {
-                    this.stopTyping();
-                }, 2000);
-            }
-
-            showTypingIndicator() {
-                const existing = this.chatMessages.querySelector('.typing-indicator');
-                if (existing) {
-                    existing.remove();
-                }
-
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'typing-indicator';
-                typingDiv.textContent = 'Someone is typing...';
-                this.chatMessages.appendChild(typingDiv);
-                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-            }
-
-            stopTyping() {
-                this.isTyping = false;
-                const typingIndicator = this.chatMessages.querySelector('.typing-indicator');
-                if (typingIndicator) {
-                    typingIndicator.remove();
-                }
-            }
 
             async leaveChat() {
                 if (this.nickname) {
