@@ -528,15 +528,16 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        class PrivateChatApp {
-            constructor() {
-                this.nickname = null;
-                this.isConnected = false;
-                this.messages = [];
-                this.users = new Set();
+         class PrivateChatApp {
+             constructor() {
+                 this.nickname = null;
+                 this.userId = null; // Unique user ID to prevent impersonation
+                 this.isConnected = false;
+                 this.messages = [];
+                 this.users = new Map(); // Changed to Map to store user data
                  this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
-                this.roomId = 'public-room'; // Single public room for simplicity
-                this.unsubscribe = null;
+                 this.roomId = 'public-room'; // Single public room for simplicity
+                 this.unsubscribe = null;
 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -589,14 +590,54 @@
                 });
             }
 
-            generateRoomId() {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let result = '';
-                for (let i = 0; i < 6; i++) {
-                    result += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                return result;
-            }
+             generateRoomId() {
+                 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                 let result = '';
+                 for (let i = 0; i < 6; i++) {
+                     result += chars.charAt(Math.floor(Math.random() * chars.length));
+                 }
+                 return result;
+             }
+
+             generateUserId() {
+                 // Generate a unique user ID with timestamp and random string
+                 const timestamp = Date.now().toString(36);
+                 const random = Math.random().toString(36).substring(2, 8);
+                 return `user_${timestamp}_${random}`;
+             }
+
+             async checkNicknameAvailability(nickname, roomId) {
+                 try {
+                     const usersSnapshot = await db.collection('chatRooms')
+                         .doc(roomId)
+                         .collection('users')
+                         .where('nickname', '==', nickname)
+                         .get();
+                     
+                     return usersSnapshot.empty; // true if nickname is available
+                 } catch (error) {
+                     console.error('Error checking nickname:', error);
+                     return false; // Assume taken if error
+                 }
+             }
+
+             async resolveNicknameConflict(nickname, roomId) {
+                 let finalNickname = nickname;
+                 let counter = 1;
+                 
+                 while (!(await this.checkNicknameAvailability(finalNickname, roomId))) {
+                     finalNickname = `${nickname}${counter}`;
+                     counter++;
+                     
+                     // Prevent infinite loop
+                     if (counter > 100) {
+                         finalNickname = `${nickname}_${this.generateUserId().substring(5, 10)}`;
+                         break;
+                     }
+                 }
+                 
+                 return finalNickname;
+             }
 
             async createPrivateRoom() {
                 const nickname = this.nicknameInput.value.trim();
@@ -615,8 +656,16 @@
                     return;
                 }
 
-                this.nickname = nickname;
                 this.roomId = this.generateRoomId();
+                this.userId = this.generateUserId();
+                
+                // Resolve nickname conflicts
+                this.nickname = await this.resolveNicknameConflict(nickname, this.roomId);
+                
+                if (this.nickname !== nickname) {
+                    this.showStatus(`Nickname "${nickname}" was taken. Using "${this.nickname}" instead.`, 'connecting');
+                }
+                
                 this.isConnected = true;
 
                 this.showStatus(`Creating room ${this.roomId}...`, 'connecting');
@@ -651,19 +700,27 @@
                     return;
                 }
 
-                this.nickname = nickname;
                 this.roomId = 'public-room';
+                this.userId = this.generateUserId();
+                
+                // Resolve nickname conflicts
+                this.nickname = await this.resolveNicknameConflict(nickname, this.roomId);
+                
+                if (this.nickname !== nickname) {
+                    this.showStatus(`Nickname "${nickname}" was taken. Using "${this.nickname}" instead.`, 'connecting');
+                }
+                
                 this.isConnected = true;
 
-                this.showStatus(`Joining public chat as ${nickname}...`, 'connecting');
+                this.showStatus(`Joining public chat as ${this.nickname}...`, 'connecting');
                 this.updateButtonStates(true);
-                this.updateChatTitle(`Public Chat - ${nickname}`);
+                this.updateChatTitle(`Public Chat - ${this.nickname}`);
                 this.hideRoomInfo();
                 this.clearEmptyChat();
 
                 try {
                     await this.connectToFirebase();
-                    this.showStatus(`Joined public chat as ${nickname}`, 'connected');
+                    this.showStatus(`Joined public chat as ${this.nickname}`, 'connected');
                 } catch (error) {
                     this.showStatus(`Failed to join public chat: ${error.message}`, 'error');
                     this.leaveChat();
@@ -699,19 +756,27 @@
                     return;
                 }
 
-                this.nickname = nickname;
                 this.roomId = roomId;
+                this.userId = this.generateUserId();
+                
+                // Resolve nickname conflicts
+                this.nickname = await this.resolveNicknameConflict(nickname, this.roomId);
+                
+                if (this.nickname !== nickname) {
+                    this.showStatus(`Nickname "${nickname}" was taken. Using "${this.nickname}" instead.`, 'connecting');
+                }
+                
                 this.isConnected = true;
 
-                this.showStatus(`Joining room ${roomId} as ${nickname}...`, 'connecting');
+                this.showStatus(`Joining room ${roomId} as ${this.nickname}...`, 'connecting');
                 this.updateButtonStates(true);
-                this.updateChatTitle(`Room: ${roomId} - ${nickname}`);
+                this.updateChatTitle(`Room: ${roomId} - ${this.nickname}`);
                 this.showRoomInfo();
                 this.clearEmptyChat();
 
                 try {
                     await this.connectToFirebase();
-                    this.showStatus(`Joined room ${roomId} as ${nickname}`, 'connected');
+                    this.showStatus(`Joined room ${roomId} as ${this.nickname}`, 'connected');
                 } catch (error) {
                     this.showStatus(`Failed to join room: ${error.message}`, 'error');
                     this.leaveChat();
@@ -811,16 +876,17 @@
                         this.handleUsersUpdate(snapshot);
                     });
 
-                // Add user to active users
-                await db.collection('chatRooms')
-                    .doc(this.roomId)
-                    .collection('users')
-                    .doc(this.nickname)
-                    .set({
-                        nickname: this.nickname,
-                        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                 // Add user to active users with unique ID
+                 await db.collection('chatRooms')
+                     .doc(this.roomId)
+                     .collection('users')
+                     .doc(this.userId)
+                     .set({
+                         userId: this.userId,
+                         nickname: this.nickname,
+                         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                         joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                     });
             }
 
             handleMessagesUpdate(snapshot) {
@@ -838,16 +904,21 @@
                 this.displayMessages(messages);
             }
 
-            handleUsersUpdate(snapshot) {
-                const users = new Set();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    users.add(data.nickname);
-                });
+             handleUsersUpdate(snapshot) {
+                 const users = new Map();
+                 snapshot.forEach(doc => {
+                     const data = doc.data();
+                     users.set(data.userId, {
+                         userId: data.userId,
+                         nickname: data.nickname,
+                         lastSeen: data.lastSeen,
+                         joinedAt: data.joinedAt
+                     });
+                 });
 
-                this.users = users;
-                this.updateUserCount();
-            }
+                 this.users = users;
+                 this.updateUserCount();
+             }
 
             displayMessages(messages) {
                 // Clear existing messages
@@ -866,28 +937,29 @@
                 this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
             }
 
-            addMessageToUI(message) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${message.nickname === this.nickname ? 'sent' : 'received'}`;
+             addMessageToUI(message) {
+                 const messageDiv = document.createElement('div');
+                 const isOwnMessage = message.userId === this.userId;
+                 messageDiv.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
 
-                const messageInfo = document.createElement('div');
-                messageInfo.className = 'message-info';
-                messageInfo.textContent = message.nickname === this.nickname ? 'You' : message.nickname;
+                 const messageInfo = document.createElement('div');
+                 messageInfo.className = 'message-info';
+                 messageInfo.textContent = isOwnMessage ? 'You' : message.nickname;
 
-                const messageContent = document.createElement('div');
-                messageContent.className = 'message-content';
-                messageContent.textContent = this.decryptMessage(message.content);
+                 const messageContent = document.createElement('div');
+                 messageContent.className = 'message-content';
+                 messageContent.textContent = this.decryptMessage(message.content);
 
-                const messageTime = document.createElement('div');
-                messageTime.className = 'message-time';
-                messageTime.textContent = new Date(message.timestamp.toDate()).toLocaleTimeString();
+                 const messageTime = document.createElement('div');
+                 messageTime.className = 'message-time';
+                 messageTime.textContent = new Date(message.timestamp.toDate()).toLocaleTimeString();
 
-                messageDiv.appendChild(messageInfo);
-                messageDiv.appendChild(messageContent);
-                messageDiv.appendChild(messageTime);
+                 messageDiv.appendChild(messageInfo);
+                 messageDiv.appendChild(messageContent);
+                 messageDiv.appendChild(messageTime);
 
-                this.chatMessages.appendChild(messageDiv);
-            }
+                 this.chatMessages.appendChild(messageDiv);
+             }
 
             async sendMessage() {
                 const content = this.messageInput.value.trim();
@@ -905,15 +977,16 @@
                     // Encrypt message content
                     const encryptedContent = this.encryptMessage(content);
 
-                    await db.collection('chatRooms')
-                        .doc(this.roomId)
-                        .collection('messages')
-                        .add({
-                            content: encryptedContent,
-                            nickname: this.nickname,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                            expiresAt: new Date(Date.now() + this.messageTimeout)
-                        });
+                     await db.collection('chatRooms')
+                         .doc(this.roomId)
+                         .collection('messages')
+                         .add({
+                             content: encryptedContent,
+                             userId: this.userId,
+                             nickname: this.nickname,
+                             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                             expiresAt: new Date(Date.now() + this.messageTimeout)
+                         });
 
                      this.messageInput.value = '';
                 } catch (error) {
@@ -961,13 +1034,13 @@
 
 
             async leaveChat() {
-                if (this.nickname) {
+                if (this.userId) {
                     // Remove user from active users
                     try {
                         await db.collection('chatRooms')
                             .doc(this.roomId)
                             .collection('users')
-                            .doc(this.nickname)
+                            .doc(this.userId)
                             .delete();
                     } catch (error) {
                         console.error('Error removing user:', error);
@@ -983,6 +1056,7 @@
                 }
 
                 this.nickname = null;
+                this.userId = null;
                 this.isConnected = false;
                 this.messages = [];
                 this.users.clear();
