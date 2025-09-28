@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immersive 3D PDF Reader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            overflow: hidden;
+            color: white;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas {
+            display: block;
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .ui-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            pointer-events: all;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .top-panel {
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .bottom-panel {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .left-panel {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .right-panel {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .btn.small {
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .info-display {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .slider-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 200;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .page-indicator {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 500px;
+        }
+
+        .instructions h2 {
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .instructions p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .instructions .highlight {
+            color: #f093fb;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .ui-panel {
+                padding: 15px;
+            }
+            
+            .top-panel, .bottom-panel {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .left-panel, .right-panel {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                margin: 10px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        
+        <div class="ui-overlay">
+            <!-- Top Panel -->
+            <div class="ui-panel top-panel">
+                <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                <label for="fileInput" class="file-label">📁 Load PDF</label>
+                <button class="btn" id="resetViewBtn">🎯 Reset View</button>
+                <button class="btn secondary" id="toggleLightingBtn">💡 Lighting</button>
+                <button class="btn" id="fullscreenBtn">⛶ Fullscreen</button>
+            </div>
+
+            <!-- Bottom Panel -->
+            <div class="ui-panel bottom-panel">
+                <button class="btn" id="prevPageBtn" disabled>⬅️ Previous</button>
+                <div class="info-display" id="pageInfo">Page 0 / 0</div>
+                <button class="btn" id="nextPageBtn" disabled>Next ➡️</button>
+                <button class="btn secondary" id="flipPageBtn" disabled>📖 Flip Page</button>
+            </div>
+
+            <!-- Left Panel -->
+            <div class="ui-panel left-panel">
+                <div class="slider-container">
+                    <div class="slider-label">Zoom</div>
+                    <input type="range" class="slider" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">Page Thickness</div>
+                    <input type="range" class="slider" id="thicknessSlider" min="0.01" max="0.1" step="0.01" value="0.02">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-label">Animation Speed</div>
+                    <input type="range" class="slider" id="speedSlider" min="0.5" max="3" step="0.1" value="1">
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="ui-panel right-panel">
+                <button class="btn small" id="rotateLeftBtn">↺ Rotate</button>
+                <button class="btn small" id="rotateRightBtn">↻ Rotate</button>
+                <button class="btn small" id="toggleShadowsBtn">🌑 Shadows</button>
+                <button class="btn small" id="toggleWireframeBtn">🔲 Wireframe</button>
+            </div>
+
+            <!-- Page Indicator -->
+            <div class="page-indicator" id="pageIndicator" style="display: none;">
+                <span id="currentPage">1</span> / <span id="totalPages">1</span>
+            </div>
+        </div>
+
+        <!-- Loading Screen -->
+        <div class="loading hidden" id="loadingScreen">
+            <div class="spinner"></div>
+            <div>Loading PDF...</div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions" id="instructions">
+            <h2>📚 Immersive 3D PDF Reader</h2>
+            <p>Welcome to the most immersive PDF reading experience!</p>
+            <p><span class="highlight">Click "Load PDF"</span> to start reading your document in 3D.</p>
+            <p><span class="highlight">Mouse controls:</span> Drag to rotate, scroll to zoom, click pages to flip</p>
+            <p><span class="highlight">Features:</span> Realistic page flipping, 3D lighting, shadows, and more!</p>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Set PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        class ImmersivePDFReader {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
+                this.pdfDoc = null;
+                this.currentPage = 1;
+                this.totalPages = 0;
+                this.pages = [];
+                this.isFlipping = false;
+                this.flipAnimation = null;
+                this.settings = {
+                    zoom: 1,
+                    thickness: 0.02,
+                    speed: 1,
+                    shadows: true,
+                    wireframe: false,
+                    lighting: true
+                };
+                
+                this.initializeThreeJS();
+                this.setupEventListeners();
+                this.createEnvironment();
+                this.animate();
+            }
+
+            initializeThreeJS() {
+                const canvas = document.getElementById('canvas');
+                const container = document.getElementById('container');
+                
+                // Scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x1a1a1a);
+                
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(
+                    75, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    1000
+                );
+                this.camera.position.set(0, 0, 5);
+                
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas, 
+                    antialias: true,
+                    alpha: true
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+                
+                // Controls
+                this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.enableZoom = true;
+                this.controls.enablePan = true;
+                this.controls.maxDistance = 20;
+                this.controls.minDistance = 1;
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            createEnvironment() {
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 5, 5);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                directionalLight.shadow.camera.near = 0.5;
+                directionalLight.shadow.camera.far = 50;
+                directionalLight.shadow.camera.left = -10;
+                directionalLight.shadow.camera.right = 10;
+                directionalLight.shadow.camera.top = 10;
+                directionalLight.shadow.camera.bottom = -10;
+                this.scene.add(directionalLight);
+                
+                // Point light for dramatic effect
+                const pointLight = new THREE.PointLight(0x667eea, 0.5, 100);
+                pointLight.position.set(-5, 5, 5);
+                this.scene.add(pointLight);
+                
+                // Floor
+                const floorGeometry = new THREE.PlaneGeometry(20, 20);
+                const floorMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x2a2a2a,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -2;
+                floor.receiveShadow = true;
+                this.scene.add(floor);
+                
+                // Background elements
+                this.createBackgroundElements();
+            }
+
+            createBackgroundElements() {
+                // Floating particles
+                const particleGeometry = new THREE.BufferGeometry();
+                const particleCount = 100;
+                const positions = new Float32Array(particleCount * 3);
+                
+                for (let i = 0; i < particleCount * 3; i++) {
+                    positions[i] = (Math.random() - 0.5) * 50;
+                }
+                
+                particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const particleMaterial = new THREE.PointsMaterial({
+                    color: 0x667eea,
+                    size: 0.1,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                
+                const particles = new THREE.Points(particleGeometry, particleMaterial);
+                this.scene.add(particles);
+                
+                // Animate particles
+                this.animateParticles = () => {
+                    const positions = particles.geometry.attributes.position.array;
+                    for (let i = 1; i < positions.length; i += 3) {
+                        positions[i] += 0.01;
+                        if (positions[i] > 25) positions[i] = -25;
+                    }
+                    particles.geometry.attributes.position.needsUpdate = true;
+                };
+            }
+
+            setupEventListeners() {
+                // File input
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    this.loadPDF(e.target.files[0]);
+                });
+                
+                // Navigation buttons
+                document.getElementById('prevPageBtn').addEventListener('click', () => {
+                    this.goToPreviousPage();
+                });
+                
+                document.getElementById('nextPageBtn').addEventListener('click', () => {
+                    this.goToNextPage();
+                });
+                
+                document.getElementById('flipPageBtn').addEventListener('click', () => {
+                    this.flipPage();
+                });
+                
+                // Control buttons
+                document.getElementById('resetViewBtn').addEventListener('click', () => {
+                    this.resetView();
+                });
+                
+                document.getElementById('toggleLightingBtn').addEventListener('click', () => {
+                    this.toggleLighting();
+                });
+                
+                document.getElementById('fullscreenBtn').addEventListener('click', () => {
+                    this.toggleFullscreen();
+                });
+                
+                document.getElementById('rotateLeftBtn').addEventListener('click', () => {
+                    this.rotatePages(-Math.PI / 2);
+                });
+                
+                document.getElementById('rotateRightBtn').addEventListener('click', () => {
+                    this.rotatePages(Math.PI / 2);
+                });
+                
+                document.getElementById('toggleShadowsBtn').addEventListener('click', () => {
+                    this.toggleShadows();
+                });
+                
+                document.getElementById('toggleWireframeBtn').addEventListener('click', () => {
+                    this.toggleWireframe();
+                });
+                
+                // Sliders
+                document.getElementById('zoomSlider').addEventListener('input', (e) => {
+                    this.settings.zoom = parseFloat(e.target.value);
+                    this.updateZoom();
+                });
+                
+                document.getElementById('thicknessSlider').addEventListener('input', (e) => {
+                    this.settings.thickness = parseFloat(e.target.value);
+                    this.updatePageThickness();
+                });
+                
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.settings.speed = parseFloat(e.target.value);
+                });
+                
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                            this.goToPreviousPage();
+                            break;
+                        case 'ArrowRight':
+                            this.goToNextPage();
+                            break;
+                        case ' ':
+                            e.preventDefault();
+                            this.flipPage();
+                            break;
+                        case 'r':
+                            this.resetView();
+                            break;
+                        case 'f':
+                            this.toggleFullscreen();
+                            break;
+                    }
+                });
+            }
+
+            async loadPDF(file) {
+                if (!file) return;
+                
+                this.showLoading(true);
+                this.hideInstructions();
+                
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    this.pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    this.totalPages = this.pdfDoc.numPages;
+                    this.currentPage = 1;
+                    
+                    await this.createPages();
+                    this.updateUI();
+                    this.showPageIndicator();
+                    
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    alert('Error loading PDF file. Please try a different file.');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async createPages() {
+                // Clear existing pages
+                this.pages.forEach(page => {
+                    this.scene.remove(page.mesh);
+                });
+                this.pages = [];
+                
+                // Create pages
+                for (let i = 1; i <= this.totalPages; i++) {
+                    const page = await this.createPage(i);
+                    this.pages.push(page);
+                    this.scene.add(page.mesh);
+                }
+                
+                // Position pages
+                this.positionPages();
+            }
+
+            async createPage(pageNum) {
+                const page = await this.pdfDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 2 });
+                
+                // Create canvas for PDF rendering
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                // Render PDF page to canvas
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+                
+                // Create texture from canvas
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.needsUpdate = true;
+                
+                // Create page geometry
+                const pageWidth = 2;
+                const pageHeight = 2.8;
+                const pageGeometry = new THREE.BoxGeometry(
+                    pageWidth, 
+                    pageHeight, 
+                    this.settings.thickness
+                );
+                
+                // Create materials
+                const frontMaterial = new THREE.MeshLambertMaterial({ 
+                    map: texture,
+                    side: THREE.FrontSide
+                });
+                
+                const backMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0xf0f0f0,
+                    side: THREE.BackSide
+                });
+                
+                // Create mesh
+                const mesh = new THREE.Mesh(pageGeometry, [backMaterial, backMaterial, backMaterial, backMaterial, frontMaterial, backMaterial]);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.userData = { pageNum, isFlipping: false };
+                
+                return {
+                    mesh,
+                    pageNum,
+                    texture,
+                    frontMaterial,
+                    backMaterial,
+                    originalPosition: new THREE.Vector3(),
+                    originalRotation: new THREE.Euler()
+                };
+            }
+
+            positionPages() {
+                const pageSpacing = 0.01;
+                const startX = -(this.totalPages - 1) * pageSpacing / 2;
+                
+                this.pages.forEach((page, index) => {
+                    const x = startX + index * pageSpacing;
+                    page.mesh.position.set(x, 0, 0);
+                    page.originalPosition.copy(page.mesh.position);
+                    page.originalRotation.copy(page.mesh.rotation);
+                });
+            }
+
+            flipPage() {
+                if (this.isFlipping || this.currentPage >= this.totalPages) return;
+                
+                this.isFlipping = true;
+                const currentPageMesh = this.pages[this.currentPage - 1].mesh;
+                const nextPageMesh = this.pages[this.currentPage].mesh;
+                
+                // Start flip animation
+                this.startFlipAnimation(currentPageMesh, nextPageMesh);
+            }
+
+            startFlipAnimation(currentPage, nextPage) {
+                const startTime = Date.now();
+                const duration = 1000 / this.settings.speed;
+                
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing function for smooth animation
+                    const easeProgress = this.easeInOutCubic(progress);
+                    
+                    // Rotate current page
+                    const rotationY = easeProgress * Math.PI;
+                    currentPage.rotation.y = rotationY;
+                    
+                    // Move current page slightly forward
+                    currentPage.position.z = Math.sin(rotationY) * 0.1;
+                    
+                    // Show next page when current page is halfway flipped
+                    if (progress > 0.5) {
+                        nextPage.visible = true;
+                        nextPage.position.z = Math.sin((progress - 0.5) * 2 * Math.PI) * 0.05;
+                    }
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // Animation complete
+                        currentPage.visible = false;
+                        nextPage.position.z = 0;
+                        this.currentPage++;
+                        this.isFlipping = false;
+                        this.updateUI();
+                    }
+                };
+                
+                animate();
+            }
+
+            easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            goToPreviousPage() {
+                if (this.currentPage <= 1) return;
+                
+                this.currentPage--;
+                this.showPage(this.currentPage);
+                this.updateUI();
+            }
+
+            goToNextPage() {
+                if (this.currentPage >= this.totalPages) return;
+                
+                this.currentPage++;
+                this.showPage(this.currentPage);
+                this.updateUI();
+            }
+
+            showPage(pageNum) {
+                this.pages.forEach((page, index) => {
+                    page.mesh.visible = index < pageNum;
+                });
+            }
+
+            updateUI() {
+                // Update page info
+                document.getElementById('pageInfo').textContent = `Page ${this.currentPage} / ${this.totalPages}`;
+                document.getElementById('currentPage').textContent = this.currentPage;
+                document.getElementById('totalPages').textContent = this.totalPages;
+                
+                // Update button states
+                document.getElementById('prevPageBtn').disabled = this.currentPage <= 1;
+                document.getElementById('nextPageBtn').disabled = this.currentPage >= this.totalPages;
+                document.getElementById('flipPageBtn').disabled = this.currentPage >= this.totalPages || this.isFlipping;
+            }
+
+            updateZoom() {
+                this.camera.position.z = 5 / this.settings.zoom;
+                this.controls.update();
+            }
+
+            updatePageThickness() {
+                this.pages.forEach(page => {
+                    const geometry = page.mesh.geometry;
+                    geometry.parameters.depth = this.settings.thickness;
+                    geometry.needsUpdate = true;
+                });
+            }
+
+            resetView() {
+                this.camera.position.set(0, 0, 5);
+                this.controls.reset();
+                this.settings.zoom = 1;
+                document.getElementById('zoomSlider').value = 1;
+            }
+
+            toggleLighting() {
+                this.settings.lighting = !this.settings.lighting;
+                this.scene.traverse((child) => {
+                    if (child.isLight) {
+                        child.visible = this.settings.lighting;
+                    }
+                });
+            }
+
+            toggleShadows() {
+                this.settings.shadows = !this.settings.shadows;
+                this.renderer.shadowMap.enabled = this.settings.shadows;
+                this.scene.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = this.settings.shadows;
+                        child.receiveShadow = this.settings.shadows;
+                    }
+                });
+            }
+
+            toggleWireframe() {
+                this.settings.wireframe = !this.settings.wireframe;
+                this.pages.forEach(page => {
+                    page.frontMaterial.wireframe = this.settings.wireframe;
+                    page.backMaterial.wireframe = this.settings.wireframe;
+                });
+            }
+
+            rotatePages(angle) {
+                this.pages.forEach(page => {
+                    page.mesh.rotation.y += angle;
+                });
+            }
+
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+
+            showLoading(show) {
+                document.getElementById('loadingScreen').classList.toggle('hidden', !show);
+            }
+
+            hideInstructions() {
+                document.getElementById('instructions').classList.add('hidden');
+            }
+
+            showPageIndicator() {
+                document.getElementById('pageIndicator').style.display = 'block';
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                this.controls.update();
+                
+                if (this.animateParticles) {
+                    this.animateParticles();
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // Initialize the PDF reader when the page loads
+        let pdfReader;
+        document.addEventListener('DOMContentLoaded', () => {
+            pdfReader = new ImmersivePDFReader();
+        });
+    </script>
+</body>
+</html>
