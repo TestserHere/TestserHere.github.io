@@ -124,6 +124,7 @@
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             backface-visibility: hidden;
             border-radius: 5px;
+            opacity: 1;
         }
 
         .page.left {
@@ -144,10 +145,12 @@
 
         .page.flipping.left {
             transform: rotateY(-180deg);
+            z-index: 10;
         }
 
         .page.flipping.right {
             transform: rotateY(180deg);
+            z-index: 10;
         }
 
         .page-content {
@@ -585,6 +588,9 @@
                 const leftPageNum = this.currentPage;
                 const rightPageNum = this.currentPage + 1;
 
+                // Clear all pages first
+                this.clearAllPages();
+
                 // Render left page
                 if (leftPageNum <= this.totalPages) {
                     await this.renderPage(leftPageNum, 'left');
@@ -598,6 +604,17 @@
                 this.updatePagePositions();
             }
 
+            clearAllPages() {
+                const pages = this.book.querySelectorAll('.page');
+                pages.forEach(page => {
+                    const canvas = page.querySelector('canvas');
+                    if (canvas) {
+                        const context = canvas.getContext('2d');
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                });
+            }
+
             async renderPage(pageNum, position) {
                 const page = this.book.querySelector(`[data-page-number="${pageNum}"]`);
                 if (!page) return;
@@ -606,7 +623,7 @@
                 const context = canvas.getContext('2d');
 
                 const pdfPage = await this.pdfDoc.getPage(pageNum);
-                const viewport = pdfPage.getViewport({ scale: this.zoom });
+                const viewport = pdfPage.getViewport({ scale: 1.0 });
 
                 // Set canvas size to match the page dimensions
                 const pageContent = page.querySelector('.page-content');
@@ -620,17 +637,26 @@
                 
                 const scaledViewport = pdfPage.getViewport({ scale: scale });
                 
+                // Set canvas dimensions
                 canvas.width = scaledViewport.width;
                 canvas.height = scaledViewport.height;
                 canvas.style.width = containerWidth + 'px';
                 canvas.style.height = containerHeight + 'px';
+
+                // Clear canvas before rendering
+                context.clearRect(0, 0, canvas.width, canvas.height);
 
                 const renderContext = {
                     canvasContext: context,
                     viewport: scaledViewport
                 };
 
-                await pdfPage.render(renderContext).promise;
+                try {
+                    await pdfPage.render(renderContext).promise;
+                    console.log(`Rendered page ${pageNum} for position ${position}`);
+                } catch (error) {
+                    console.error(`Error rendering page ${pageNum}:`, error);
+                }
             }
 
             updatePagePositions() {
@@ -640,13 +666,18 @@
                     page.classList.remove('left', 'right', 'flipping');
                     page.style.transform = '';
                     page.style.display = 'block';
+                    page.style.opacity = '1';
                     
                     if (pageNum === this.currentPage) {
                         page.classList.add('left');
                         page.style.zIndex = '2';
+                        page.style.left = '2.5%';
+                        page.style.right = 'auto';
                     } else if (pageNum === this.currentPage + 1) {
                         page.classList.add('right');
                         page.style.zIndex = '1';
+                        page.style.right = '2.5%';
+                        page.style.left = 'auto';
                     } else {
                         page.style.display = 'none';
                         page.style.zIndex = '0';
@@ -660,16 +691,16 @@
                 this.isFlipping = true;
                 this.updateControls();
 
-                // Animate page flip
-                const currentPage = this.book.querySelector(`[data-page-number="${this.currentPage}"]`);
-                if (currentPage) {
-                    currentPage.classList.add('flipping');
+                // Animate page flip - flip the right page to reveal next pages
+                const rightPage = this.book.querySelector(`[data-page-number="${this.currentPage + 1}"]`);
+                if (rightPage) {
+                    rightPage.classList.add('flipping');
                 }
 
                 // Wait for animation
                 await new Promise(resolve => setTimeout(resolve, 800));
 
-                this.currentPage++;
+                this.currentPage += 2; // Move to next spread (2 pages at a time)
                 await this.renderCurrentPages();
                 this.updatePageInfo();
                 this.isFlipping = false;
@@ -682,13 +713,15 @@
                 this.isFlipping = true;
                 this.updateControls();
 
-                this.currentPage--;
+                this.currentPage -= 2; // Move to previous spread (2 pages at a time)
+                if (this.currentPage < 1) this.currentPage = 1;
+                
                 await this.renderCurrentPages();
 
-                // Animate page reveal
-                const currentPage = this.book.querySelector(`[data-page-number="${this.currentPage}"]`);
-                if (currentPage) {
-                    currentPage.classList.add('flipping');
+                // Animate page reveal - flip the left page to reveal previous pages
+                const leftPage = this.book.querySelector(`[data-page-number="${this.currentPage}"]`);
+                if (leftPage) {
+                    leftPage.classList.add('flipping');
                 }
 
                 // Wait for animation
@@ -739,15 +772,20 @@
 
             updateControls() {
                 this.prevBtn.disabled = this.currentPage <= 1 || this.isFlipping;
-                this.nextBtn.disabled = this.currentPage >= this.totalPages || this.isFlipping;
+                this.nextBtn.disabled = this.currentPage + 1 >= this.totalPages || this.isFlipping;
                 this.firstBtn.disabled = this.currentPage === 1 || this.isFlipping;
-                this.lastBtn.disabled = this.currentPage === this.totalPages || this.isFlipping;
+                this.lastBtn.disabled = this.currentPage + 1 >= this.totalPages || this.isFlipping;
                 this.zoomIn.disabled = this.zoom >= 3.0;
                 this.zoomOut.disabled = this.zoom <= 0.5;
             }
 
             updatePageInfo() {
-                this.pageInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+                const rightPage = this.currentPage + 1;
+                if (rightPage <= this.totalPages) {
+                    this.pageInfo.textContent = `Pages ${this.currentPage}-${rightPage} of ${this.totalPages}`;
+                } else {
+                    this.pageInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+                }
             }
         }
 
