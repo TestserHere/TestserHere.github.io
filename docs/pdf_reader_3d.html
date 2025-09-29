@@ -91,13 +91,16 @@
         }
 
         .book-container {
-            perspective: 2000px;
+            perspective: 1500px;
             perspective-origin: center center;
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
             height: 600px;
             position: relative;
             margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .book {
@@ -105,34 +108,46 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.6s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .page {
             position: absolute;
-            width: 50%;
-            height: 100%;
+            width: 45%;
+            height: 90%;
             background: white;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            transform-origin: left center;
+            border: 2px solid #ddd;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.4);
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             backface-visibility: hidden;
+            border-radius: 5px;
         }
 
         .page.left {
-            left: 0;
+            left: 2.5%;
             z-index: 2;
+            transform-origin: right center;
         }
 
         .page.right {
-            right: 0;
+            right: 2.5%;
             z-index: 1;
+            transform-origin: left center;
         }
 
         .page.flipping {
             z-index: 10;
+        }
+
+        .page.flipping.left {
+            transform: rotateY(-180deg);
+        }
+
+        .page.flipping.right {
+            transform: rotateY(180deg);
         }
 
         .page-content {
@@ -146,6 +161,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            display: block;
         }
 
         .page-shadow {
@@ -275,13 +291,14 @@
         .book-spine {
             position: absolute;
             left: 50%;
-            top: 0;
-            width: 4px;
-            height: 100%;
+            top: 5%;
+            width: 6px;
+            height: 90%;
             background: linear-gradient(to bottom, #8b4513 0%, #654321 50%, #8b4513 100%);
             transform: translateX(-50%);
             z-index: 5;
             box-shadow: inset -2px 0 5px rgba(0,0,0,0.3);
+            border-radius: 3px;
         }
 
         .book-cover {
@@ -356,6 +373,32 @@
             }
             100% {
                 transform: rotateY(0deg);
+            }
+        }
+
+        .page.flipping.left {
+            animation: flipLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .page.flipping.right {
+            animation: flipRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes flipLeft {
+            0% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(-180deg);
+            }
+        }
+
+        @keyframes flipRight {
+            0% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(180deg);
             }
         }
     </style>
@@ -565,12 +608,26 @@
                 const pdfPage = await this.pdfDoc.getPage(pageNum);
                 const viewport = pdfPage.getViewport({ scale: this.zoom });
 
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                // Set canvas size to match the page dimensions
+                const pageContent = page.querySelector('.page-content');
+                const containerWidth = pageContent.offsetWidth;
+                const containerHeight = pageContent.offsetHeight;
+                
+                // Calculate scale to fit the page in the container
+                const scaleX = containerWidth / viewport.width;
+                const scaleY = containerHeight / viewport.height;
+                const scale = Math.min(scaleX, scaleY) * this.zoom;
+                
+                const scaledViewport = pdfPage.getViewport({ scale: scale });
+                
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = containerHeight + 'px';
 
                 const renderContext = {
                     canvasContext: context,
-                    viewport: viewport
+                    viewport: scaledViewport
                 };
 
                 await pdfPage.render(renderContext).promise;
@@ -581,6 +638,8 @@
                 pages.forEach((page, index) => {
                     const pageNum = parseInt(page.dataset.pageNumber);
                     page.classList.remove('left', 'right', 'flipping');
+                    page.style.transform = '';
+                    page.style.display = 'block';
                     
                     if (pageNum === this.currentPage) {
                         page.classList.add('left');
@@ -605,7 +664,6 @@
                 const currentPage = this.book.querySelector(`[data-page-number="${this.currentPage}"]`);
                 if (currentPage) {
                     currentPage.classList.add('flipping');
-                    currentPage.style.transform = 'rotateY(-180deg)';
                 }
 
                 // Wait for animation
@@ -630,7 +688,7 @@
                 // Animate page reveal
                 const currentPage = this.book.querySelector(`[data-page-number="${this.currentPage}"]`);
                 if (currentPage) {
-                    currentPage.classList.add('page-reveal-animation');
+                    currentPage.classList.add('flipping');
                 }
 
                 // Wait for animation
