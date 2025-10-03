@@ -470,7 +470,6 @@
             <div class="control-buttons">
                 <button class="btn" id="nextBtn" disabled>Next Problem</button>
                 <button class="btn secondary" id="skipBtn" disabled>Skip</button>
-                <button class="btn secondary" id="timerToggleBtn">🕐 Hide Timer</button>
                 <button class="btn danger" id="endPracticeBtn">End Practice</button>
             </div>
 
@@ -522,7 +521,6 @@
                 this.skipBtn = document.getElementById('skipBtn');
                 this.endPracticeBtn = document.getElementById('endPracticeBtn');
                 this.practiceComplete = document.getElementById('practiceComplete');
-                this.timerToggleBtn = document.getElementById('timerToggleBtn');
                 this.showTimerCheckbox = document.getElementById('showTimerCheckbox');
             }
 
@@ -539,9 +537,6 @@
                 this.nextBtn.addEventListener('click', () => this.nextProblem());
                 this.skipBtn.addEventListener('click', () => this.skipProblem());
                 this.endPracticeBtn.addEventListener('click', () => this.endPractice());
-                if (this.timerToggleBtn) {
-                    this.timerToggleBtn.addEventListener('click', () => this.toggleTimer());
-                }
                 // newPracticeBtn will be attached dynamically when results are shown
 
                 // Answer input listeners
@@ -560,7 +555,8 @@
             updateCurrentSelection() {
                 this.selectedTables = [];
                 this.checkboxes.forEach(checkbox => {
-                    if (checkbox.checked) {
+                    // Only process multiplication table checkboxes, not timer settings
+                    if (checkbox.checked && checkbox.id.startsWith('table')) {
                         this.selectedTables.push(parseInt(checkbox.value));
                     }
                 });
@@ -577,14 +573,20 @@
 
             selectAll() {
                 this.checkboxes.forEach(checkbox => {
-                    checkbox.checked = true;
+                    // Only affect multiplication table checkboxes
+                    if (checkbox.id.startsWith('table')) {
+                        checkbox.checked = true;
+                    }
                 });
                 this.updateCurrentSelection();
             }
 
             clearAll() {
                 this.checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
+                    // Only affect multiplication table checkboxes
+                    if (checkbox.id.startsWith('table')) {
+                        checkbox.checked = false;
+                    }
                 });
                 this.updateCurrentSelection();
             }
@@ -824,8 +826,11 @@
                 this.practicePanel.style.display = 'none';
                 this.practiceComplete.style.display = 'none';
                 this.selectedTablesDisplay.textContent = 'None selected';
+                // Only clear multiplication table checkboxes, preserve timer setting
                 this.checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
+                    if (checkbox.id.startsWith('table')) {
+                        checkbox.checked = false;
+                    }
                 });
                 this.updateCurrentSelection();
             }
@@ -858,15 +863,6 @@
             }
 
             initializeTimerDisplay() {
-                if (this.timerToggleBtn) {
-                    this.timerToggleBtn.textContent = this.showTimer ? '🕐 Hide Timer' : '🕐 Show Timer';
-                    // Hide timer toggle button if timer is disabled from settings
-                    if (this.showTimerCheckbox && !this.showTimerCheckbox.checked) {
-                        this.timerToggleBtn.style.display = 'none';
-                    } else {
-                        this.timerToggleBtn.style.display = 'inline-block';
-                    }
-                }
                 if (this.timerElement) {
                     this.timerElement.style.display = this.showTimer ? 'block' : 'none';
                 }
@@ -878,19 +874,6 @@
                 }
                 if (this.endPracticeBtn) {
                     this.endPracticeBtn.disabled = false;
-                }
-                if (this.timerToggleBtn) {
-                    this.timerToggleBtn.disabled = false;
-                }
-            }
-
-            toggleTimer() {
-                this.showTimer = !this.showTimer;
-                if (this.timerElement) {
-                    this.timerElement.style.display = this.showTimer ? 'block' : 'none';
-                }
-                if (this.timerToggleBtn) {
-                    this.timerToggleBtn.textContent = this.showTimer ? '🕐 Hide Timer' : '🕐 Show Timer';
                 }
             }
         }
