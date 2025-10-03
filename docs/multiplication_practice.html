@@ -750,7 +750,7 @@
                     <div class="final-score">
                         Final Score: <span id="finalScore">${this.score}</span>/<span id="finalTotal">${this.results.length}</span>
                     </div>
-                    <div>Accuracy: <span id="finalAccuracy">${this.totalProblems > 0 ? Math.round((this.correctAnswers / this.results.length) * 100) : 0}%</span></div>
+                    <div>Accuracy: <span id="finalAccuracy">${this.results.length > 0 ? Math.round((this.correctAnswers / this.results.length) * 100) : 0}%</span></div>
                     <div>Time: <span id="finalTime">${Math.round((Date.now() - this.startTime) / 1000)}s</span></div>
                     <br>
                     ${resultsHTML}
@@ -791,9 +791,9 @@
 
             updateStats() {
                 this.scoreElement.textContent = this.score;
-                this.totalProblemsElement.textContent = this.currentProblemIndex + 1;
-                const accuracy = this.currentProblemIndex > 0 ? 
-                    Math.round((this.correctAnswers / this.currentProblemIndex) * 100) : 0;
+                this.totalProblemsElement.textContent = this.results.length;
+                const accuracy = this.results.length > 0 ? 
+                    Math.round((this.correctAnswers / this.results.length) * 100) : 0;
                 this.accuracyElement.textContent = accuracy + '%';
             }
         }
