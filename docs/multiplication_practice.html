@@ -513,7 +513,7 @@
                 this.nextBtn.addEventListener('click', () => this.nextProblem());
                 this.skipBtn.addEventListener('click', () => this.skipProblem());
                 this.endPracticeBtn.addEventListener('click', () => this.endPractice());
-                this.newPracticeBtn.addEventListener('click', () => this.startNewPractice());
+                // newPracticeBtn will be attached dynamically when results are shown
 
                 // Answer input listeners
                 this.answerInput.addEventListener('keypress', (e) => {
@@ -619,6 +619,7 @@
                 this.answerInput.focus();
                 this.feedback.style.display = 'none';
                 this.nextBtn.disabled = true;
+                this.updateStats();
             }
 
             checkAnswer() {
@@ -657,6 +658,8 @@
             }
 
             enableNextButton() {
+                if (this.practiceCompleted || !this.nextBtn) return;
+                
                 if (this.answerInput.value.trim() !== '') {
                     this.nextBtn.disabled = false;
                 } else {
@@ -790,11 +793,11 @@
             }
 
             updateStats() {
-                this.scoreElement.textContent = this.score;
-                this.totalProblemsElement.textContent = this.results.length;
+                if (this.scoreElement) this.scoreElement.textContent = this.score;
+                if (this.totalProblemsElement) this.totalProblemsElement.textContent = this.results.length;
                 const accuracy = this.results.length > 0 ? 
                     Math.round((this.correctAnswers / this.results.length) * 100) : 0;
-                this.accuracyElement.textContent = accuracy + '%';
+                if (this.accuracyElement) this.accuracyElement.textContent = accuracy + '%';
             }
         }
 
