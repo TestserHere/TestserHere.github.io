@@ -273,6 +273,71 @@
             color: white;
         }
 
+        .results-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .results-section h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #429e9d;
+        }
+
+        .results-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            gap: 10px;
+        }
+
+        .result-item.correct {
+            background: rgba(46, 204, 113, 0.2);
+            border-left: 4px solid #2ecc71;
+        }
+
+        .result-item.incorrect {
+            background: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .problem-number {
+            font-weight: bold;
+            min-width: 30px;
+        }
+
+        .problem-question {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .status {
+            font-size: 1.2rem;
+        }
+
+        .user-answer {
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+        }
+
+        .correct-answer {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
@@ -388,14 +453,7 @@
             </div>
 
             <div class="practice-complete" id="practiceComplete">
-                <h3>🎉 Practice Complete!</h3>
-                <div class="final-score">
-                    Final Score: <span id="finalScore">0</span>/<span id="finalTotal">0</span>
-                </div>
-                <div>Accuracy: <span id="finalAccuracy">0%</span></div>
-                <div>Time: <span id="finalTime">0s</span></div>
-                <br>
-                <button class="btn" id="newPracticeBtn">Start New Practice</button>
+                <!-- Results will be dynamically generated here -->
             </div>
         </div>
     </div>
@@ -411,6 +469,8 @@
                 this.startTime = null;
                 this.correctAnswers = 0;
                 this.timerInterval = null;
+                this.results = []; // Store detailed results for each problem
+                this.practiceCompleted = false;
                 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -438,11 +498,6 @@
                 this.skipBtn = document.getElementById('skipBtn');
                 this.endPracticeBtn = document.getElementById('endPracticeBtn');
                 this.practiceComplete = document.getElementById('practiceComplete');
-                this.finalScoreElement = document.getElementById('finalScore');
-                this.finalTotalElement = document.getElementById('finalTotal');
-                this.finalAccuracyElement = document.getElementById('finalAccuracy');
-                this.finalTimeElement = document.getElementById('finalTime');
-                this.newPracticeBtn = document.getElementById('newPracticeBtn');
             }
 
             attachEventListeners() {
@@ -466,7 +521,11 @@
                         this.checkAnswer();
                     }
                 });
-                this.answerInput.addEventListener('input', () => this.enableNextButton());
+                this.answerInput.addEventListener('input', () => {
+                    if (!this.practiceCompleted) {
+                        this.enableNextButton();
+                    }
+                });
             }
 
             updateCurrentSelection() {
@@ -536,6 +595,8 @@
                 this.correctAnswers = 0;
                 this.currentProblemIndex = 0;
                 this.startTime = Date.now();
+                this.results = [];
+                this.practiceCompleted = false;
                 
                 this.practicePanel.style.display = 'block';
                 this.practiceComplete.style.display = 'none';
@@ -561,12 +622,22 @@
             }
 
             checkAnswer() {
-                if (this.currentProblemIndex >= this.currentProblems.length) return;
+                if (this.currentProblemIndex >= this.currentProblems.length || this.practiceCompleted) return;
 
                 const problem = this.currentProblems[this.currentProblemIndex];
                 const userAnswer = parseInt(this.answerInput.value);
+                const isCorrect = userAnswer === problem.answer;
 
-                if (userAnswer === problem.answer) {
+                // Store the result
+                this.results.push({
+                    multiplicand: problem.multiplicand,
+                    multiplier: problem.multiplier,
+                    correctAnswer: problem.answer,
+                    userAnswer: userAnswer,
+                    isCorrect: isCorrect
+                });
+
+                if (isCorrect) {
                     this.score++;
                     this.correctAnswers++;
                     this.showFeedback('correct', `Correct! ${problem.multiplicand} × ${problem.multiplier} = ${problem.answer}`);
@@ -594,37 +665,102 @@
             }
 
             nextProblem() {
+                if (this.practiceCompleted) return;
+                
                 this.currentProblemIndex++;
-                this.showCurrentProblem();
+                
+                if (this.currentProblemIndex >= this.currentProblems.length) {
+                    this.endPractice();
+                } else {
+                    this.showCurrentProblem();
+                }
             }
 
             skipProblem() {
+                if (this.practiceCompleted) return;
+                
                 const problem = this.currentProblems[this.currentProblemIndex];
+                
+                // Store the skipped result
+                this.results.push({
+                    multiplicand: problem.multiplicand,
+                    multiplier: problem.multiplier,
+                    correctAnswer: problem.answer,
+                    userAnswer: null,
+                    isCorrect: false,
+                    skipped: true
+                });
+                
                 this.showFeedback('incorrect', `Skipped. The answer was ${problem.answer}`);
                 this.answerInput.disabled = true;
                 this.nextBtn.disabled = false;
                 
                 setTimeout(() => {
                     this.currentProblemIndex++;
-                    this.showCurrentProblem();
+                    if (this.currentProblemIndex >= this.currentProblems.length) {
+                        this.endPractice();
+                    } else {
+                        this.showCurrentProblem();
+                    }
                 }, 2000);
             }
 
             endPractice() {
+                this.practiceCompleted = true;
                 this.stopTimer();
+                
+                // Disable practice buttons
+                this.nextBtn.disabled = true;
+                this.skipBtn.disabled = true;
+                this.answerInput.disabled = true;
+                
                 this.showFinalResults();
             }
 
             showFinalResults() {
-                const accuracy = this.totalProblems > 0 ? Math.round((this.correctAnswers / this.totalProblems) * 100) : 0;
-                const timeSpent = Math.round((Date.now() - this.startTime) / 1000);
-
-                this.finalScoreElement.textContent = this.score;
-                this.finalTotalElement.textContent = this.totalProblems;
-                this.finalAccuracyElement.textContent = accuracy + '%';
-                this.finalTimeElement.textContent = timeSpent + 's';
-
+                // Build the detailed results list
+                this.buildResultsList();
                 this.practiceComplete.style.display = 'block';
+            }
+
+            buildResultsList() {
+                let resultsHTML = '<div class="results-section"><h3>📋 Detailed Results</h3><div class="results-list">';
+                
+                this.results.forEach((result, index) => {
+                    const statusClass = result.isCorrect ? 'correct' : 'incorrect';
+                    const statusIcon = result.isCorrect ? '✅' : '❌';
+                    const userAnswerText = result.skipped ? 'Skipped' : result.userAnswer;
+                    
+                    resultsHTML += `
+                        <div class="result-item ${statusClass}">
+                            <span class="problem-number">${index + 1}.</span>
+                            <span class="problem-question">${result.multiplicand} × ${result.multiplier} = ?</span>
+                            <span class="status">${statusIcon}</span>
+                            <span class="user-answer">Your answer: ${userAnswerText}</span>
+                            <span class="correct-answer">Correct: ${result.correctAnswer}</span>
+                        </div>
+                    `;
+                });
+                
+                resultsHTML += '</div></div>';
+                resultsHTML += '<button class="btn" id="newPracticeBtn">Start New Practice</button>';
+                
+                this.practiceComplete.innerHTML = `
+                    <h3>🎉 Practice Complete!</h3>
+                    <div class="final-score">
+                        Final Score: <span id="finalScore">${this.score}</span>/<span id="finalTotal">${this.results.length}</span>
+                    </div>
+                    <div>Accuracy: <span id="finalAccuracy">${this.totalProblems > 0 ? Math.round((this.correctAnswers / this.results.length) * 100) : 0}%</span></div>
+                    <div>Time: <span id="finalTime">${Math.round((Date.now() - this.startTime) / 1000)}s</span></div>
+                    <br>
+                    ${resultsHTML}
+                `;
+                
+                // Reattach event listener for the new practice button
+                const newPracticeBtn = document.getElementById('newPracticeBtn');
+                if (newPracticeBtn) {
+                    newPracticeBtn.addEventListener('click', () => this.startNewPractice());
+                }
             }
 
             startNewPractice() {
