@@ -449,6 +449,7 @@
             <div class="control-buttons">
                 <button class="btn" id="nextBtn" disabled>Next Problem</button>
                 <button class="btn secondary" id="skipBtn" disabled>Skip</button>
+                <button class="btn secondary" id="timerToggleBtn">🕐 Hide Timer</button>
                 <button class="btn danger" id="endPracticeBtn">End Practice</button>
             </div>
 
@@ -472,6 +473,7 @@
                 this.results = []; // Store detailed results for each problem
                 this.practiceCompleted = false;
                 this.totalQuestionsAnswered = 0;
+                this.showTimer = true; // Control timer visibility
                 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -499,6 +501,7 @@
                 this.skipBtn = document.getElementById('skipBtn');
                 this.endPracticeBtn = document.getElementById('endPracticeBtn');
                 this.practiceComplete = document.getElementById('practiceComplete');
+                this.timerToggleBtn = document.getElementById('timerToggleBtn');
             }
 
             attachEventListeners() {
@@ -514,6 +517,9 @@
                 this.nextBtn.addEventListener('click', () => this.nextProblem());
                 this.skipBtn.addEventListener('click', () => this.skipProblem());
                 this.endPracticeBtn.addEventListener('click', () => this.endPractice());
+                if (this.timerToggleBtn) {
+                    this.timerToggleBtn.addEventListener('click', () => this.toggleTimer());
+                }
                 // newPracticeBtn will be attached dynamically when results are shown
 
                 // Answer input listeners
@@ -599,6 +605,7 @@
                 this.results = [];
                 this.practiceCompleted = false;
                 this.totalQuestionsAnswered = 0;
+                this.showTimer = true;
                 
                 this.practicePanel.style.display = 'block';
                 this.practiceComplete.style.display = 'none';
@@ -606,6 +613,7 @@
                 this.showCurrentProblem();
                 this.startTimer();
                 this.updateStats();
+                this.initializeTimerDisplay();
             }
 
             showCurrentProblem() {
@@ -800,7 +808,10 @@
                 this.timerInterval = setInterval(() => {
                     if (this.startTime) {
                         const timeSpent = Math.round((Date.now() - this.startTime) / 1000);
-                        this.timerElement.textContent = timeSpent + 's';
+                        // Always update the element if it exists, regardless of visibility
+                        if (this.timerElement) {
+                            this.timerElement.textContent = timeSpent + 's';
+                        }
                     }
                 }, 1000);
             }
@@ -818,6 +829,25 @@
                 const accuracy = this.totalQuestionsAnswered > 0 ? 
                     Math.round((this.score / this.totalQuestionsAnswered) * 100) : 0;
                 if (this.accuracyElement) this.accuracyElement.textContent = accuracy + '%';
+            }
+
+            initializeTimerDisplay() {
+                if (this.timerToggleBtn) {
+                    this.timerToggleBtn.textContent = this.showTimer ? '🕐 Hide Timer' : '🕐 Show Timer';
+                }
+                if (this.timerElement) {
+                    this.timerElement.style.display = this.showTimer ? 'block' : 'none';
+                }
+            }
+
+            toggleTimer() {
+                this.showTimer = !this.showTimer;
+                if (this.timerElement) {
+                    this.timerElement.style.display = this.showTimer ? 'block' : 'none';
+                }
+                if (this.timerToggleBtn) {
+                    this.timerToggleBtn.textContent = this.showTimer ? '🕐 Hide Timer' : '🕐 Show Timer';
+                }
             }
         }
 
