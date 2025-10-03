@@ -273,6 +273,19 @@
             color: white;
         }
 
+        .timer-settings {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .timer-settings h3 {
+            margin-bottom: 10px;
+            color: #429e9d;
+        }
+
         .results-section {
             margin: 30px 0;
             text-align: center;
@@ -423,6 +436,14 @@
                 <div class="current-selection" id="selectedTables">None selected</div>
             </div>
 
+            <div class="timer-settings">
+                <h3>⏱️ Timer Settings</h3>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="showTimerCheckbox" checked>
+                    <label for="showTimerCheckbox">Show timer during practice</label>
+                </div>
+            </div>
+
             <div class="control-buttons">
                 <button class="btn" id="selectAllBtn">Select All</button>
                 <button class="btn secondary" id="clearAllBtn">Clear All</button>
@@ -502,6 +523,7 @@
                 this.endPracticeBtn = document.getElementById('endPracticeBtn');
                 this.practiceComplete = document.getElementById('practiceComplete');
                 this.timerToggleBtn = document.getElementById('timerToggleBtn');
+                this.showTimerCheckbox = document.getElementById('showTimerCheckbox');
             }
 
             attachEventListeners() {
@@ -605,7 +627,7 @@
                 this.results = [];
                 this.practiceCompleted = false;
                 this.totalQuestionsAnswered = 0;
-                this.showTimer = true;
+                this.showTimer = this.showTimerCheckbox ? this.showTimerCheckbox.checked : true;
                 
                 this.practicePanel.style.display = 'block';
                 this.practiceComplete.style.display = 'none';
@@ -838,6 +860,12 @@
             initializeTimerDisplay() {
                 if (this.timerToggleBtn) {
                     this.timerToggleBtn.textContent = this.showTimer ? '🕐 Hide Timer' : '🕐 Show Timer';
+                    // Hide timer toggle button if timer is disabled from settings
+                    if (this.showTimerCheckbox && !this.showTimerCheckbox.checked) {
+                        this.timerToggleBtn.style.display = 'none';
+                    } else {
+                        this.timerToggleBtn.style.display = 'inline-block';
+                    }
                 }
                 if (this.timerElement) {
                     this.timerElement.style.display = this.showTimer ? 'block' : 'none';
