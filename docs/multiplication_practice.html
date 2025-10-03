@@ -471,6 +471,7 @@
                 this.timerInterval = null;
                 this.results = []; // Store detailed results for each problem
                 this.practiceCompleted = false;
+                this.totalQuestionsAnswered = 0;
                 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -597,6 +598,7 @@
                 this.startTime = Date.now();
                 this.results = [];
                 this.practiceCompleted = false;
+                this.totalQuestionsAnswered = 0;
                 
                 this.practicePanel.style.display = 'block';
                 this.practiceComplete.style.display = 'none';
@@ -629,6 +631,9 @@
                 const userAnswer = parseInt(this.answerInput.value);
                 const isCorrect = userAnswer === problem.answer;
 
+                // Increment total questions answered
+                this.totalQuestionsAnswered++;
+
                 // Store the result
                 this.results.push({
                     multiplicand: problem.multiplicand,
@@ -638,12 +643,13 @@
                     isCorrect: isCorrect
                 });
 
+                // Show immediate feedback with colored boxes
                 if (isCorrect) {
                     this.score++;
                     this.correctAnswers++;
-                    this.showFeedback('correct', `Correct! ${problem.multiplicand} × ${problem.multiplier} = ${problem.answer}`);
+                    this.showFeedback('correct', `✅ Correct! ${problem.multiplicand} × ${problem.multiplier} = ${problem.answer}`);
                 } else {
-                    this.showFeedback('incorrect', `Incorrect. The answer is ${problem.answer}`);
+                    this.showFeedback('incorrect', `❌ Incorrect. ${problem.multiplicand} × ${problem.multiplier} = ${problem.answer} (You said: ${userAnswer})`);
                 }
 
                 this.answerInput.disabled = true;
@@ -684,6 +690,9 @@
                 
                 const problem = this.currentProblems[this.currentProblemIndex];
                 
+                // Increment total questions answered
+                this.totalQuestionsAnswered++;
+                
                 // Store the skipped result
                 this.results.push({
                     multiplicand: problem.multiplicand,
@@ -694,7 +703,7 @@
                     skipped: true
                 });
                 
-                this.showFeedback('incorrect', `Skipped. The answer was ${problem.answer}`);
+                this.showFeedback('incorrect', `⏭️ Skipped. The answer was ${problem.answer}`);
                 this.answerInput.disabled = true;
                 this.nextBtn.disabled = false;
                 
@@ -731,14 +740,25 @@
                 
                 this.results.forEach((result, index) => {
                     const statusClass = result.isCorrect ? 'correct' : 'incorrect';
-                    const statusIcon = result.isCorrect ? '✅' : '❌';
-                    const userAnswerText = result.skipped ? 'Skipped' : result.userAnswer;
+                    let icon = '';
+                    let userAnswerText = '';
+                    
+                    if (result.skipped) {
+                        icon = '⏭️';
+                        userAnswerText = 'Skipped';
+                    } else if (result.isCorrect) {
+                        icon = '✅';
+                        userAnswerText = result.userAnswer;
+                    } else {
+                        icon = '❌';
+                        userAnswerText = result.userAnswer;
+                    }
                     
                     resultsHTML += `
                         <div class="result-item ${statusClass}">
                             <span class="problem-number">${index + 1}.</span>
                             <span class="problem-question">${result.multiplicand} × ${result.multiplier} = ?</span>
-                            <span class="status">${statusIcon}</span>
+                            <span class="status">${icon}</span>
                             <span class="user-answer">Your answer: ${userAnswerText}</span>
                             <span class="correct-answer">Correct: ${result.correctAnswer}</span>
                         </div>
@@ -751,9 +771,9 @@
                 this.practiceComplete.innerHTML = `
                     <h3>🎉 Practice Complete!</h3>
                     <div class="final-score">
-                        Final Score: <span id="finalScore">${this.score}</span>/<span id="finalTotal">${this.results.length}</span>
+                        Final Score: <span id="finalScore">${this.score}</span>/<span id="finalTotal">${this.totalQuestionsAnswered}</span>
                     </div>
-                    <div>Accuracy: <span id="finalAccuracy">${this.results.length > 0 ? Math.round((this.correctAnswers / this.results.length) * 100) : 0}%</span></div>
+                    <div>Accuracy: <span id="finalAccuracy">${this.totalQuestionsAnswered > 0 ? Math.round((this.score / this.totalQuestionsAnswered) * 100) : 0}%</span></div>
                     <div>Time: <span id="finalTime">${Math.round((Date.now() - this.startTime) / 1000)}s</span></div>
                     <br>
                     ${resultsHTML}
@@ -794,9 +814,9 @@
 
             updateStats() {
                 if (this.scoreElement) this.scoreElement.textContent = this.score;
-                if (this.totalProblemsElement) this.totalProblemsElement.textContent = this.results.length;
-                const accuracy = this.results.length > 0 ? 
-                    Math.round((this.correctAnswers / this.results.length) * 100) : 0;
+                if (this.totalProblemsElement) this.totalProblemsElement.textContent = this.totalQuestionsAnswered;
+                const accuracy = this.totalQuestionsAnswered > 0 ? 
+                    Math.round((this.score / this.totalQuestionsAnswered) * 100) : 0;
                 if (this.accuracyElement) this.accuracyElement.textContent = accuracy + '%';
             }
         }
