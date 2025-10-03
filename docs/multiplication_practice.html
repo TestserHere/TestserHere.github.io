@@ -614,6 +614,7 @@
                 this.startTimer();
                 this.updateStats();
                 this.initializeTimerDisplay();
+                this.enablePracticeButtons();
             }
 
             showCurrentProblem() {
@@ -629,6 +630,9 @@
                 this.answerInput.focus();
                 this.feedback.style.display = 'none';
                 this.nextBtn.disabled = true;
+                if (this.skipBtn && !this.practiceCompleted) {
+                    this.skipBtn.disabled = false;
+                }
                 this.updateStats();
             }
 
@@ -837,6 +841,18 @@
                 }
                 if (this.timerElement) {
                     this.timerElement.style.display = this.showTimer ? 'block' : 'none';
+                }
+            }
+
+            enablePracticeButtons() {
+                if (this.skipBtn && !this.practiceCompleted) {
+                    this.skipBtn.disabled = false;
+                }
+                if (this.endPracticeBtn) {
+                    this.endPracticeBtn.disabled = false;
+                }
+                if (this.timerToggleBtn) {
+                    this.timerToggleBtn.disabled = false;
                 }
             }
 
