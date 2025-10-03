@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplication Practice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .selection-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .practice-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            min-width: 500px;
+            max-width: 600px;
+            display: none;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .selection-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #429e9d 0%, #38b2a3 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(66, 158, 157, 0.3);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 158, 157, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn.secondary:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn.danger:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .practice-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .current-problem {
+            text-align: center;
+            margin: 30px 0;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .problem-text {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .answer-input {
+            font-size: 2rem;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 15px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+            width: 150px;
+            margin: 20px auto;
+            display: block;
+            outline: none;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .answer-input:focus {
+            border-color: #429e9d;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .answer-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .feedback {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+            border: 2px solid rgba(46, 204, 113, 0.5);
+        }
+
+        .feedback.incorrect {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            border: 2px solid rgba(231, 76, 60, 0.5);
+        }
+
+        .practice-complete {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .final-score {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .selected-tables {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .selected-tables h3 {
+            margin-bottom: 10px;
+            color: #429e9d;
+        }
+
+        .current-selection {
+            font-weight: 600;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .practice-panel,
+            .selection-panel {
+                min-width: 100%;
+                max-width: 100%;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .problem-text {
+                font-size: 2.5rem;
+            }
+
+            .answer-input {
+                font-size: 1.5rem;
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔢 Multiplication Practice</h1>
+        <p>Select which multiplication tables you want to practice</p>
+    </div>
+
+    <div class="main-container">
+        <!-- Selection Panel -->
+        <div class="selection-panel">
+            <h2 class="panel-title">📚 Select Tables</h2>
+            
+            <div class="selection-section">
+                <h3 class="section-title">Choose Multiplication Tables</h3>
+                <div class="checkbox-grid">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table1" value="1">
+                        <label for="table1">1×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table2" value="2">
+                        <label for="table2">2×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table3" value="3">
+                        <label for="table3">3×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table4" value="4">
+                        <label for="table4">4×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table5" value="5">
+                        <label for="table5">5×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table6" value="6">
+                        <label for="table6">6×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table7" value="7">
+                        <label for="table7">7×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table8" value="8">
+                        <label for="table8">8×</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="table9" value="9">
+                        <label for="table9">9×</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="selected-tables">
+                <h3>Selected Tables</h3>
+                <div class="current-selection" id="selectedTables">None selected</div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn" id="selectAllBtn">Select All</button>
+                <button class="btn secondary" id="clearAllBtn">Clear All</button>
+                <button class="btn" id="startPracticeBtn" disabled>Start Practice</button>
+            </div>
+        </div>
+
+        <!-- Practice Panel -->
+        <div class="practice-panel" id="practicePanel">
+            <h2 class="panel-title">🎯 Practice Session</h2>
+
+            <div class="practice-stats">
+                <div>Score: <span id="score">0</span>/<span id="totalProblems">0</span></div>
+                <div>Accuracy: <span id="accuracy">0%</span></div>
+                <div>Time: <span id="timer">0s</span></div>
+            </div>
+
+            <div class="current-problem" id="currentProblem">
+                <div class="problem-text" id="problemText">Ready to start!</div>
+                <input type="number" class="answer-input" id="answerInput" placeholder="?" disabled>
+                <div class="feedback" id="feedback"></div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn" id="nextBtn" disabled>Next Problem</button>
+                <button class="btn secondary" id="skipBtn" disabled>Skip</button>
+                <button class="btn danger" id="endPracticeBtn">End Practice</button>
+            </div>
+
+            <div class="practice-complete" id="practiceComplete">
+                <h3>🎉 Practice Complete!</h3>
+                <div class="final-score">
+                    Final Score: <span id="finalScore">0</span>/<span id="finalTotal">0</span>
+                </div>
+                <div>Accuracy: <span id="finalAccuracy">0%</span></div>
+                <div>Time: <span id="finalTime">0s</span></div>
+                <br>
+                <button class="btn" id="newPracticeBtn">Start New Practice</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MultiplicationPractice {
+            constructor() {
+                this.selectedTables = [];
+                this.currentProblems = [];
+                this.currentProblemIndex = 0;
+                this.score = 0;
+                this.totalProblems = 0;
+                this.startTime = null;
+                this.correctAnswers = 0;
+                this.timerInterval = null;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+                this.updateCurrentSelection();
+            }
+
+            initializeElements() {
+                // Selection panel elements
+                this.checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                this.selectedTablesDisplay = document.getElementById('selectedTables');
+                this.selectAllBtn = document.getElementById('selectAllBtn');
+                this.clearAllBtn = document.getElementById('clearAllBtn');
+                this.startPracticeBtn = document.getElementById('startPracticeBtn');
+
+                // Practice panel elements
+                this.practicePanel = document.getElementById('practicePanel');
+                this.problemText = document.getElementById('problemText');
+                this.answerInput = document.getElementById('answerInput');
+                this.feedback = document.getElementById('feedback');
+                this.scoreElement = document.getElementById('score');
+                this.totalProblemsElement = document.getElementById('totalProblems');
+                this.accuracyElement = document.getElementById('accuracy');
+                this.timerElement = document.getElementById('timer');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.skipBtn = document.getElementById('skipBtn');
+                this.endPracticeBtn = document.getElementById('endPracticeBtn');
+                this.practiceComplete = document.getElementById('practiceComplete');
+                this.finalScoreElement = document.getElementById('finalScore');
+                this.finalTotalElement = document.getElementById('finalTotal');
+                this.finalAccuracyElement = document.getElementById('finalAccuracy');
+                this.finalTimeElement = document.getElementById('finalTime');
+                this.newPracticeBtn = document.getElementById('newPracticeBtn');
+            }
+
+            attachEventListeners() {
+                // Checkbox change listeners
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', () => this.updateCurrentSelection());
+                });
+
+                // Button event listeners
+                this.selectAllBtn.addEventListener('click', () => this.selectAll());
+                this.clearAllBtn.addEventListener('click', () => this.clearAll());
+                this.startPracticeBtn.addEventListener('click', () => this.startPractice());
+                this.nextBtn.addEventListener('click', () => this.nextProblem());
+                this.skipBtn.addEventListener('click', () => this.skipProblem());
+                this.endPracticeBtn.addEventListener('click', () => this.endPractice());
+                this.newPracticeBtn.addEventListener('click', () => this.startNewPractice());
+
+                // Answer input listeners
+                this.answerInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.checkAnswer();
+                    }
+                });
+                this.answerInput.addEventListener('input', () => this.enableNextButton());
+            }
+
+            updateCurrentSelection() {
+                this.selectedTables = [];
+                this.checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        this.selectedTables.push(parseInt(checkbox.value));
+                    }
+                });
+
+                // Update display
+                if (this.selectedTables.length === 0) {
+                    this.selectedTablesDisplay.textContent = 'None selected';
+                    this.startPracticeBtn.disabled = true;
+                } else {
+                    this.selectedTablesDisplay.textContent = this.selectedTables.join(', ');
+                    this.startPracticeBtn.disabled = false;
+                }
+            }
+
+            selectAll() {
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                this.updateCurrentSelection();
+            }
+
+            clearAll() {
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                this.updateCurrentSelection();
+            }
+
+            generateProblems() {
+                this.currentProblems = [];
+                this.selectedTables.forEach(table => {
+                    for (let multiplier = 1; multiplier <= 9; multiplier++) {
+                        this.currentProblems.push({
+                            multiplicand: table,
+                            multiplier: multiplier,
+                            answer: table * multiplier
+                        });
+                    }
+                });
+
+                // Shuffle the problems array
+                this.currentProblems = this.shuffleArray(this.currentProblems);
+                this.totalProblems = this.currentProblems.length;
+                this.currentProblemIndex = 0;
+            }
+
+            shuffleArray(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+
+            startPractice() {
+                if (this.selectedTables.length === 0) return;
+
+                this.generateProblems();
+                this.score = 0;
+                this.correctAnswers = 0;
+                this.currentProblemIndex = 0;
+                this.startTime = Date.now();
+                
+                this.practicePanel.style.display = 'block';
+                this.practiceComplete.style.display = 'none';
+                
+                this.showCurrentProblem();
+                this.startTimer();
+                this.updateStats();
+            }
+
+            showCurrentProblem() {
+                if (this.currentProblemIndex >= this.currentProblems.length) {
+                    this.endPractice();
+                    return;
+                }
+
+                const problem = this.currentProblems[this.currentProblemIndex];
+                this.problemText.textContent = `${problem.multiplicand} × ${problem.multiplier} = ?`;
+                this.answerInput.value = '';
+                this.answerInput.disabled = false;
+                this.answerInput.focus();
+                this.feedback.style.display = 'none';
+                this.nextBtn.disabled = true;
+            }
+
+            checkAnswer() {
+                if (this.currentProblemIndex >= this.currentProblems.length) return;
+
+                const problem = this.currentProblems[this.currentProblemIndex];
+                const userAnswer = parseInt(this.answerInput.value);
+
+                if (userAnswer === problem.answer) {
+                    this.score++;
+                    this.correctAnswers++;
+                    this.showFeedback('correct', `Correct! ${problem.multiplicand} × ${problem.multiplier} = ${problem.answer}`);
+                } else {
+                    this.showFeedback('incorrect', `Incorrect. The answer is ${problem.answer}`);
+                }
+
+                this.answerInput.disabled = true;
+                this.nextBtn.disabled = false;
+                this.updateStats();
+            }
+
+            showFeedback(type, message) {
+                this.feedback.textContent = message;
+                this.feedback.className = `feedback ${type}`;
+                this.feedback.style.display = 'block';
+            }
+
+            enableNextButton() {
+                if (this.answerInput.value.trim() !== '') {
+                    this.nextBtn.disabled = false;
+                } else {
+                    this.nextBtn.disabled = true;
+                }
+            }
+
+            nextProblem() {
+                this.currentProblemIndex++;
+                this.showCurrentProblem();
+            }
+
+            skipProblem() {
+                const problem = this.currentProblems[this.currentProblemIndex];
+                this.showFeedback('incorrect', `Skipped. The answer was ${problem.answer}`);
+                this.answerInput.disabled = true;
+                this.nextBtn.disabled = false;
+                
+                setTimeout(() => {
+                    this.currentProblemIndex++;
+                    this.showCurrentProblem();
+                }, 2000);
+            }
+
+            endPractice() {
+                this.stopTimer();
+                this.showFinalResults();
+            }
+
+            showFinalResults() {
+                const accuracy = this.totalProblems > 0 ? Math.round((this.correctAnswers / this.totalProblems) * 100) : 0;
+                const timeSpent = Math.round((Date.now() - this.startTime) / 1000);
+
+                this.finalScoreElement.textContent = this.score;
+                this.finalTotalElement.textContent = this.totalProblems;
+                this.finalAccuracyElement.textContent = accuracy + '%';
+                this.finalTimeElement.textContent = timeSpent + 's';
+
+                this.practiceComplete.style.display = 'block';
+            }
+
+            startNewPractice() {
+                this.practicePanel.style.display = 'none';
+                this.practiceComplete.style.display = 'none';
+                this.selectedTablesDisplay.textContent = 'None selected';
+                this.checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                this.updateCurrentSelection();
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    if (this.startTime) {
+                        const timeSpent = Math.round((Date.now() - this.startTime) / 1000);
+                        this.timerElement.textContent = timeSpent + 's';
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            updateStats() {
+                this.scoreElement.textContent = this.score;
+                this.totalProblemsElement.textContent = this.currentProblemIndex + 1;
+                const accuracy = this.currentProblemIndex > 0 ? 
+                    Math.round((this.correctAnswers / this.currentProblemIndex) * 100) : 0;
+                this.accuracyElement.textContent = accuracy + '%';
+            }
+        }
+
+        // Initialize the multiplication practice when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MultiplicationPractice();
+        });
+    </script>
+</body>
+</html>

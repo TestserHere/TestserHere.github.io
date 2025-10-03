@@ -91,7 +91,7 @@
         }
 
         .book-container {
-            perspective: 1500px;
+            perspective: 1200px;
             perspective-origin: center center;
             width: 100%;
             max-width: 900px;
@@ -121,7 +121,7 @@
             border: 2px solid #ddd;
             box-shadow: 0 5px 25px rgba(0,0,0,0.4);
             transform-style: preserve-3d;
-            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.6s ease-in-out;
             backface-visibility: hidden;
             border-radius: 5px;
             opacity: 1;
@@ -144,13 +144,47 @@
         }
 
         .page.flipping.left {
-            transform: rotateY(-180deg);
-            z-index: 10;
+            animation: flipLeft 0.6s ease-in-out forwards;
         }
 
         .page.flipping.right {
-            transform: rotateY(180deg);
-            z-index: 10;
+            animation: flipRight 0.6s ease-in-out forwards;
+        }
+
+        @keyframes flipLeft {
+            0% {
+                transform: rotateY(0deg);
+            }
+            25% {
+                transform: rotateY(45deg);
+            }
+            50% {
+                transform: rotateY(90deg);
+            }
+            75% {
+                transform: rotateY(135deg);
+            }
+            100% {
+                transform: rotateY(180deg);
+            }
+        }
+
+        @keyframes flipRight {
+            0% {
+                transform: rotateY(0deg);
+            }
+            25% {
+                transform: rotateY(-45deg);
+            }
+            50% {
+                transform: rotateY(-90deg);
+            }
+            75% {
+                transform: rotateY(-135deg);
+            }
+            100% {
+                transform: rotateY(-180deg);
+            }
         }
 
         .page-content {
@@ -167,6 +201,27 @@
             display: block;
         }
 
+        .page-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            z-index: 5;
+        }
+
+        .page-loading .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
         .page-shadow {
             position: absolute;
             top: 0;
@@ -177,10 +232,19 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            border-radius: 5px;
         }
 
         .page.flipping .page-shadow {
             opacity: 1;
+        }
+
+        .page.flipping.left .page-shadow {
+            background: linear-gradient(to left, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%);
+        }
+
+        .page.flipping.right .page-shadow {
+            background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%);
         }
 
         .controls {
@@ -229,34 +293,6 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .zoom-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .zoom-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .zoom-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .zoom-level {
-            color: white;
-            font-weight: 600;
-            min-width: 60px;
-            text-align: center;
-        }
 
         .loading {
             display: none;
@@ -380,29 +416,11 @@
         }
 
         .page.flipping.left {
-            animation: flipLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform: rotateY(180deg);
         }
 
         .page.flipping.right {
-            animation: flipRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        @keyframes flipLeft {
-            0% {
-                transform: rotateY(0deg);
-            }
-            100% {
-                transform: rotateY(-180deg);
-            }
-        }
-
-        @keyframes flipRight {
-            0% {
-                transform: rotateY(0deg);
-            }
-            100% {
-                transform: rotateY(180deg);
-            }
+            transform: rotateY(-180deg);
         }
     </style>
 </head>
@@ -433,11 +451,6 @@
             <button class="control-btn" id="lastBtn">Last Page</button>
         </div>
 
-        <div class="zoom-controls">
-            <button class="zoom-btn" id="zoomOut">-</button>
-            <span class="zoom-level" id="zoomLevel">100%</span>
-            <button class="zoom-btn" id="zoomIn">+</button>
-        </div>
 
         <div class="book-container">
             <div class="book" id="book">
@@ -454,6 +467,15 @@
         <div class="page-info" id="pageInfo">
             Page 1 of 1
         </div>
+
+        <div class="keyboard-help" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; margin: 20px 0; text-align: center; color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
+            <h4 style="margin-bottom: 10px;">⌨️ Keyboard Controls</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.9rem;">
+                <div><strong>← →</strong> or <strong>↑ ↓</strong> Navigate pages</div>
+                <div><strong>Home</strong> First page</div>
+                <div><strong>End</strong> Last page</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -462,9 +484,10 @@
                 this.pdfDoc = null;
                 this.currentPage = 1;
                 this.totalPages = 0;
-                this.zoom = 1.0;
                 this.isFlipping = false;
                 this.pages = [];
+                this.renderedPages = new Set();
+                this.preloadQueue = [];
                 
                 this.initializeElements();
                 this.attachEventListeners();
@@ -484,9 +507,6 @@
                 this.nextBtn = document.getElementById('nextBtn');
                 this.firstBtn = document.getElementById('firstBtn');
                 this.lastBtn = document.getElementById('lastBtn');
-                this.zoomIn = document.getElementById('zoomIn');
-                this.zoomOut = document.getElementById('zoomOut');
-                this.zoomLevel = document.getElementById('zoomLevel');
             }
 
             attachEventListeners() {
@@ -495,8 +515,9 @@
                 this.nextBtn.addEventListener('click', () => this.nextPage());
                 this.firstBtn.addEventListener('click', () => this.goToFirstPage());
                 this.lastBtn.addEventListener('click', () => this.goToLastPage());
-                this.zoomIn.addEventListener('click', () => this.zoomIn());
-                this.zoomOut.addEventListener('click', () => this.zoomOut());
+                
+                // Add keyboard event listeners
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
             }
 
             async loadPDF(file) {
@@ -506,20 +527,28 @@
                 this.hideError();
 
                 try {
+                    console.log('Loading PDF file:', file.name);
                     const arrayBuffer = await file.arrayBuffer();
                     this.pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
                     this.totalPages = this.pdfDoc.numPages;
                     this.currentPage = 1;
                     this.pages = [];
 
+                    console.log(`PDF loaded successfully. Total pages: ${this.totalPages}`);
+
                     this.hideLoading();
                     this.showPDFContainer();
                     this.hideBookCover();
                     this.createBookPages();
+                    
+                    // Wait a bit for DOM to settle
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
                     await this.renderCurrentPages();
                     this.updateControls();
                     this.updatePageInfo();
                 } catch (error) {
+                    console.error('Error loading PDF:', error);
                     this.hideLoading();
                     this.showError('Failed to load PDF: ' + error.message);
                 }
@@ -561,6 +590,8 @@
                 const existingPages = this.book.querySelectorAll('.page');
                 existingPages.forEach(page => page.remove());
 
+                console.log(`Creating ${this.totalPages} page elements`);
+
                 // Create page elements
                 for (let i = 0; i < this.totalPages; i++) {
                     const page = document.createElement('div');
@@ -571,7 +602,18 @@
                     pageContent.className = 'page-content';
                     
                     const canvas = document.createElement('canvas');
+                    canvas.style.width = '100%';
+                    canvas.style.height = '100%';
                     pageContent.appendChild(canvas);
+                    
+                    // Add loading indicator
+                    const loadingDiv = document.createElement('div');
+                    loadingDiv.className = 'page-loading';
+                    loadingDiv.innerHTML = `
+                        <div class="spinner"></div>
+                        <div>Loading page ${i + 1}...</div>
+                    `;
+                    pageContent.appendChild(loadingDiv);
                     
                     const pageShadow = document.createElement('div');
                     pageShadow.className = 'page-shadow';
@@ -580,6 +622,8 @@
                     page.appendChild(pageShadow);
                     this.book.appendChild(page);
                 }
+
+                console.log(`Created ${this.book.querySelectorAll('.page').length} page elements`);
             }
 
             async renderCurrentPages() {
@@ -588,20 +632,27 @@
                 const leftPageNum = this.currentPage;
                 const rightPageNum = this.currentPage + 1;
 
+                console.log(`Rendering pages: left=${leftPageNum}, right=${rightPageNum}, total=${this.totalPages}`);
+
                 // Clear all pages first
                 this.clearAllPages();
 
                 // Render left page
                 if (leftPageNum <= this.totalPages) {
+                    console.log(`Rendering left page ${leftPageNum}`);
                     await this.renderPage(leftPageNum, 'left');
                 }
 
                 // Render right page
                 if (rightPageNum <= this.totalPages) {
+                    console.log(`Rendering right page ${rightPageNum}`);
                     await this.renderPage(rightPageNum, 'right');
                 }
 
                 this.updatePagePositions();
+                
+                // Start preloading nearby pages
+                this.startPreloading();
             }
 
             clearAllPages() {
@@ -617,23 +668,35 @@
 
             async renderPage(pageNum, position) {
                 const page = this.book.querySelector(`[data-page-number="${pageNum}"]`);
-                if (!page) return;
+                if (!page) {
+                    console.error(`Page element not found for page ${pageNum}`);
+                    return;
+                }
 
                 const canvas = page.querySelector('canvas');
-                const context = canvas.getContext('2d');
+                if (!canvas) {
+                    console.error(`Canvas not found for page ${pageNum}`);
+                    return;
+                }
 
+                const loadingDiv = page.querySelector('.page-loading');
+                if (loadingDiv) {
+                    loadingDiv.style.display = 'block';
+                }
+
+                const context = canvas.getContext('2d');
                 const pdfPage = await this.pdfDoc.getPage(pageNum);
                 const viewport = pdfPage.getViewport({ scale: 1.0 });
 
                 // Set canvas size to match the page dimensions
                 const pageContent = page.querySelector('.page-content');
-                const containerWidth = pageContent.offsetWidth;
-                const containerHeight = pageContent.offsetHeight;
+                const containerWidth = pageContent.offsetWidth || 400;
+                const containerHeight = pageContent.offsetHeight || 600;
                 
                 // Calculate scale to fit the page in the container
                 const scaleX = containerWidth / viewport.width;
                 const scaleY = containerHeight / viewport.height;
-                const scale = Math.min(scaleX, scaleY) * this.zoom;
+                const scale = Math.min(scaleX, scaleY);
                 
                 const scaledViewport = pdfPage.getViewport({ scale: scale });
                 
@@ -653,9 +716,20 @@
 
                 try {
                     await pdfPage.render(renderContext).promise;
-                    console.log(`Rendered page ${pageNum} for position ${position}`);
+                    console.log(`Successfully rendered page ${pageNum} for position ${position}`);
+                    
+                    // Hide loading indicator
+                    if (loadingDiv) {
+                        loadingDiv.style.display = 'none';
+                    }
+                    
+                    // Mark page as rendered
+                    this.renderedPages.add(pageNum);
                 } catch (error) {
                     console.error(`Error rendering page ${pageNum}:`, error);
+                    if (loadingDiv) {
+                        loadingDiv.innerHTML = '<div>Error loading page</div>';
+                    }
                 }
             }
 
@@ -667,6 +741,7 @@
                     page.style.transform = '';
                     page.style.display = 'block';
                     page.style.opacity = '1';
+                    page.style.animation = '';
                     
                     if (pageNum === this.currentPage) {
                         page.classList.add('left');
@@ -698,7 +773,7 @@
                 }
 
                 // Wait for animation
-                await new Promise(resolve => setTimeout(resolve, 800));
+                await new Promise(resolve => setTimeout(resolve, 600));
 
                 this.currentPage += 2; // Move to next spread (2 pages at a time)
                 await this.renderCurrentPages();
@@ -725,7 +800,7 @@
                 }
 
                 // Wait for animation
-                await new Promise(resolve => setTimeout(resolve, 800));
+                await new Promise(resolve => setTimeout(resolve, 600));
 
                 this.updatePageInfo();
                 this.isFlipping = false;
@@ -750,33 +825,12 @@
                 this.updateControls();
             }
 
-            async zoomIn() {
-                if (this.zoom >= 3.0) return;
-                
-                this.zoom += 0.25;
-                this.updateZoomLevel();
-                await this.renderCurrentPages();
-            }
-
-            async zoomOut() {
-                if (this.zoom <= 0.5) return;
-                
-                this.zoom -= 0.25;
-                this.updateZoomLevel();
-                await this.renderCurrentPages();
-            }
-
-            updateZoomLevel() {
-                this.zoomLevel.textContent = Math.round(this.zoom * 100) + '%';
-            }
 
             updateControls() {
                 this.prevBtn.disabled = this.currentPage <= 1 || this.isFlipping;
                 this.nextBtn.disabled = this.currentPage + 1 >= this.totalPages || this.isFlipping;
                 this.firstBtn.disabled = this.currentPage === 1 || this.isFlipping;
                 this.lastBtn.disabled = this.currentPage + 1 >= this.totalPages || this.isFlipping;
-                this.zoomIn.disabled = this.zoom >= 3.0;
-                this.zoomOut.disabled = this.zoom <= 0.5;
             }
 
             updatePageInfo() {
@@ -785,6 +839,101 @@
                     this.pageInfo.textContent = `Pages ${this.currentPage}-${rightPage} of ${this.totalPages}`;
                 } else {
                     this.pageInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+                }
+            }
+
+            startPreloading() {
+                // Preload next 2 pages and previous 2 pages
+                const pagesToPreload = [];
+                
+                // Next pages
+                for (let i = 1; i <= 2; i++) {
+                    const nextPage = this.currentPage + 2 + i;
+                    if (nextPage <= this.totalPages && !this.renderedPages.has(nextPage)) {
+                        pagesToPreload.push(nextPage);
+                    }
+                }
+                
+                // Previous pages
+                for (let i = 1; i <= 2; i++) {
+                    const prevPage = this.currentPage - 2 - i;
+                    if (prevPage >= 1 && !this.renderedPages.has(prevPage)) {
+                        pagesToPreload.push(prevPage);
+                    }
+                }
+                
+                // Preload pages in background
+                pagesToPreload.forEach(pageNum => {
+                    this.preloadPage(pageNum);
+                });
+            }
+
+            async preloadPage(pageNum) {
+                if (this.renderedPages.has(pageNum)) return;
+                
+                try {
+                    const page = this.book.querySelector(`[data-page-number="${pageNum}"]`);
+                    if (!page) return;
+                    
+                    const canvas = page.querySelector('canvas');
+                    if (!canvas) return;
+                    
+                    const context = canvas.getContext('2d');
+                    const pdfPage = await this.pdfDoc.getPage(pageNum);
+                    const viewport = pdfPage.getViewport({ scale: 1.0 });
+                    
+                    const pageContent = page.querySelector('.page-content');
+                    const containerWidth = pageContent.offsetWidth || 400;
+                    const containerHeight = pageContent.offsetHeight || 600;
+                    
+                    const scaleX = containerWidth / viewport.width;
+                    const scaleY = containerHeight / viewport.height;
+                    const scale = Math.min(scaleX, scaleY);
+                    
+                    const scaledViewport = pdfPage.getViewport({ scale: scale });
+                    
+                    canvas.width = scaledViewport.width;
+                    canvas.height = scaledViewport.height;
+                    canvas.style.width = containerWidth + 'px';
+                    canvas.style.height = containerHeight + 'px';
+                    
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: scaledViewport
+                    };
+                    
+                    await pdfPage.render(renderContext).promise;
+                    this.renderedPages.add(pageNum);
+                    console.log(`Preloaded page ${pageNum}`);
+                } catch (error) {
+                    console.error(`Error preloading page ${pageNum}:`, error);
+                }
+            }
+
+            handleKeyPress(e) {
+                // Only handle keyboard events when PDF is loaded and not flipping
+                if (!this.pdfDoc || this.isFlipping) return;
+                
+                // Prevent default behavior for navigation keys
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+                    e.preventDefault();
+                }
+                
+                switch (e.key) {
+                    case 'ArrowLeft':
+                    case 'ArrowUp':
+                        this.previousPage();
+                        break;
+                    case 'ArrowRight':
+                    case 'ArrowDown':
+                        this.nextPage();
+                        break;
+                    case 'Home':
+                        this.goToFirstPage();
+                        break;
+                    case 'End':
+                        this.goToLastPage();
+                        break;
                 }
             }
         }
