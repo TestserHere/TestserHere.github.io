@@ -388,6 +388,17 @@
                 </div>
 
                 <div class="setting-group">
+                    <label for="ocrService">OCR Service</label>
+                    <select id="ocrService">
+                        <option value="combined">Combined (Best Results)</option>
+                        <option value="math">Math Focused (Numbers & Symbols)</option>
+                        <option value="ocrspace">OCR.space (Free API)</option>
+                        <option value="google">Google Vision (Free)</option>
+                        <option value="tesseract">Tesseract.js (Local)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
                     <label for="ocrLanguage">OCR Language</label>
                     <select id="ocrLanguage">
                         <option value="eng">English</option>
@@ -431,6 +442,26 @@
                     <div class="checkbox-group">
                         <input type="checkbox" id="highlightQuestions">
                         <label for="highlightQuestions">Highlight Questions</label>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label for="imagePreprocessing">Image Enhancement</label>
+                    <select id="imagePreprocessing">
+                        <option value="auto">Auto Enhancement</option>
+                        <option value="math">Math Problems (Numbers & Circles)</option>
+                        <option value="contrast">High Contrast</option>
+                        <option value="grayscale">Grayscale</option>
+                        <option value="sharpen">Sharpen</option>
+                        <option value="denoise">Denoise</option>
+                        <option value="none">None</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoRotate" checked>
+                        <label for="autoRotate">Auto-rotate Text</label>
                     </div>
                 </div>
             </div>
@@ -617,8 +648,406 @@
             }
 
             async performOCR(canvas) {
+                const service = document.getElementById('ocrService').value;
                 const language = document.getElementById('ocrLanguage').value;
                 
+                // Preprocess image for better OCR
+                const processedCanvas = this.preprocessImage(canvas);
+                
+                switch (service) {
+                    case 'math':
+                        return await this.performMathOCR(processedCanvas, language);
+                    case 'ocrspace':
+                        return await this.performOCRSpace(processedCanvas, language);
+                    case 'google':
+                        return await this.performGoogleVision(processedCanvas, language);
+                    case 'combined':
+                        return await this.performCombinedOCR(processedCanvas, language);
+                    default:
+                        return await this.performTesseract(processedCanvas, language);
+                }
+            }
+
+            preprocessImage(canvas) {
+                const preprocessing = document.getElementById('imagePreprocessing').value;
+                const autoRotate = document.getElementById('autoRotate').checked;
+                
+                const processedCanvas = document.createElement('canvas');
+                const ctx = processedCanvas.getContext('2d');
+                processedCanvas.width = canvas.width;
+                processedCanvas.height = canvas.height;
+                
+                ctx.drawImage(canvas, 0, 0);
+                
+                if (preprocessing === 'none') {
+                    return processedCanvas;
+                }
+                
+                const imageData = ctx.getImageData(0, 0, processedCanvas.width, processedCanvas.height);
+                const data = imageData.data;
+                
+                switch (preprocessing) {
+                    case 'math':
+                        this.enhanceForMath(data, processedCanvas.width, processedCanvas.height);
+                        break;
+                    case 'contrast':
+                        this.enhanceContrast(data);
+                        break;
+                    case 'grayscale':
+                        this.convertToGrayscale(data);
+                        break;
+                    case 'sharpen':
+                        this.sharpenImage(data, processedCanvas.width, processedCanvas.height);
+                        break;
+                    case 'denoise':
+                        this.denoiseImage(data);
+                        break;
+                    case 'auto':
+                        this.autoEnhance(data);
+                        break;
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                
+                if (autoRotate) {
+                    return this.autoRotateImage(processedCanvas);
+                }
+                
+                return processedCanvas;
+            }
+
+            enhanceContrast(data) {
+                const factor = 1.5;
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.min(255, Math.max(0, (data[i] - 128) * factor + 128));
+                    data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * factor + 128));
+                    data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * factor + 128));
+                }
+            }
+
+            convertToGrayscale(data) {
+                for (let i = 0; i < data.length; i += 4) {
+                    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                    data[i] = gray;
+                    data[i + 1] = gray;
+                    data[i + 2] = gray;
+                }
+            }
+
+            sharpenImage(data, width, height) {
+                const kernel = [
+                    0, -1, 0,
+                    -1, 5, -1,
+                    0, -1, 0
+                ];
+                this.applyKernel(data, width, height, kernel);
+            }
+
+            denoiseImage(data) {
+                const temp = new Uint8ClampedArray(data);
+                for (let i = 4; i < data.length - 4; i += 4) {
+                    data[i] = (temp[i - 4] + temp[i] + temp[i + 4]) / 3;
+                    data[i + 1] = (temp[i - 3] + temp[i + 1] + temp[i + 5]) / 3;
+                    data[i + 2] = (temp[i - 2] + temp[i + 2] + temp[i + 6]) / 3;
+                }
+            }
+
+            autoEnhance(data) {
+                this.convertToGrayscale(data);
+                this.enhanceContrast(data);
+                this.denoiseImage(data);
+            }
+
+            enhanceForMath(data, width, height) {
+                // Convert to grayscale first
+                this.convertToGrayscale(data);
+                
+                // Enhance contrast for better number visibility
+                this.enhanceContrast(data);
+                
+                // Apply morphological operations to enhance circles and numbers
+                this.enhanceCirclesAndNumbers(data, width, height);
+                
+                // Sharpen to make edges clearer
+                this.sharpenImage(data, width, height);
+            }
+
+            enhanceCirclesAndNumbers(data, width, height) {
+                // Create a temporary array for processing
+                const temp = new Uint8ClampedArray(data);
+                
+                // Apply circular enhancement kernel
+                for (let y = 2; y < height - 2; y++) {
+                    for (let x = 2; x < width - 2; x++) {
+                        const idx = (y * width + x) * 4;
+                        
+                        // Check for circular patterns (circled numbers)
+                        let circleScore = 0;
+                        const centerValue = temp[idx];
+                        
+                        // Check surrounding pixels in circular pattern
+                        for (let dy = -2; dy <= 2; dy++) {
+                            for (let dx = -2; dx <= 2; dx++) {
+                                const dist = Math.sqrt(dx*dx + dy*dy);
+                                if (dist >= 1.5 && dist <= 2.5) { // Circle perimeter
+                                    const checkIdx = ((y + dy) * width + (x + dx)) * 4;
+                                    if (Math.abs(temp[checkIdx] - centerValue) > 50) {
+                                        circleScore++;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // If we detect a circular pattern, enhance it
+                        if (circleScore > 8) {
+                            data[idx] = Math.min(255, data[idx] + 30);
+                            data[idx + 1] = Math.min(255, data[idx + 1] + 30);
+                            data[idx + 2] = Math.min(255, data[idx + 2] + 30);
+                        }
+                    }
+                }
+            }
+
+            applyKernel(data, width, height, kernel) {
+                const temp = new Uint8ClampedArray(data);
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        let r = 0, g = 0, b = 0;
+                        for (let ky = 0; ky < 3; ky++) {
+                            for (let kx = 0; kx < 3; kx++) {
+                                const idx = ((y + ky - 1) * width + (x + kx - 1)) * 4;
+                                const weight = kernel[ky * 3 + kx];
+                                r += temp[idx] * weight;
+                                g += temp[idx + 1] * weight;
+                                b += temp[idx + 2] * weight;
+                            }
+                        }
+                        const idx = (y * width + x) * 4;
+                        data[idx] = Math.min(255, Math.max(0, r));
+                        data[idx + 1] = Math.min(255, Math.max(0, g));
+                        data[idx + 2] = Math.min(255, Math.max(0, b));
+                    }
+                }
+            }
+
+            autoRotateImage(canvas) {
+                // Simple rotation detection based on text orientation
+                // This is a basic implementation - in practice, you'd use more sophisticated methods
+                return canvas; // For now, return as-is
+            }
+
+            async performMathOCR(canvas, language) {
+                try {
+                    // Use OCR.space with math-specific settings
+                    const formData = new FormData();
+                    const blob = await this.canvasToBlob(canvas);
+                    formData.append('file', blob, 'math_problem.png');
+                    formData.append('language', language);
+                    formData.append('isOverlayRequired', 'false');
+                    formData.append('apikey', 'helloworld');
+                    formData.append('OCREngine', '2'); // Engine 2 is better for numbers
+                    formData.append('detectOrientation', 'true');
+                    formData.append('scale', 'true');
+                    formData.append('OCREngine', '2');
+
+                    const response = await fetch('https://api.ocr.space/parse/image', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.ParsedResults && result.ParsedResults.length > 0) {
+                        let text = result.ParsedResults[0].ParsedText.trim();
+                        
+                        // Post-process the text to fix common math OCR issues
+                        text = this.postProcessMathText(text);
+                        
+                        const confidence = result.ParsedResults[0].TextOverlay ? 
+                            Math.round(result.ParsedResults[0].TextOverlay.Lines.reduce((acc, line) => 
+                                acc + line.Words.reduce((wordAcc, word) => wordAcc + word.WordConfidence, 0) / line.Words.length, 0
+                            ) / result.ParsedResults[0].TextOverlay.Lines.length) : 85;
+                        
+                        return {
+                            text: text,
+                            confidence: confidence
+                        };
+                    }
+                    
+                    throw new Error('No text detected');
+                } catch (error) {
+                    console.error('Math OCR error:', error);
+                    // Fallback to Tesseract with math-specific settings
+                    return await this.performTesseractMath(canvas, language);
+                }
+            }
+
+            postProcessMathText(text) {
+                // Fix common OCR mistakes in math problems
+                let processed = text;
+                
+                // Fix common number misrecognitions
+                const numberFixes = {
+                    'O': '0', 'o': '0', 'Q': '0',
+                    'l': '1', 'I': '1', '|': '1',
+                    'S': '5', 's': '5',
+                    'G': '6', 'g': '6',
+                    'T': '7', 't': '7',
+                    'B': '8', 'b': '8',
+                    'g': '9', 'q': '9'
+                };
+                
+                // Apply number fixes
+                for (const [wrong, correct] of Object.entries(numberFixes)) {
+                    processed = processed.replace(new RegExp(wrong, 'g'), correct);
+                }
+                
+                // Fix common symbol misrecognitions
+                const symbolFixes = {
+                    '—': '-', '–': '-', '−': '-',
+                    '×': '*', '·': '*',
+                    '÷': '/', '∕': '/',
+                    '=': '=', '≡': '=',
+                    '(': '(', '（': '(',
+                    ')': ')', '）': ')'
+                };
+                
+                for (const [wrong, correct] of Object.entries(symbolFixes)) {
+                    processed = processed.replace(new RegExp(wrong, 'g'), correct);
+                }
+                
+                // Clean up extra spaces and normalize formatting
+                processed = processed.replace(/\s+/g, ' ').trim();
+                
+                return processed;
+            }
+
+            async performTesseractMath(canvas, language) {
+                const { data: { text, confidence } } = await Tesseract.recognize(
+                    canvas,
+                    language,
+                    {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                this.updateStatus(`Math OCR: ${Math.round(m.progress * 100)}%`, 'processing');
+                            }
+                        },
+                        tessedit_char_whitelist: '0123456789+-*/=()[]{}.,!?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ',
+                        tessedit_pageseg_mode: '6' // Single uniform block of text
+                    }
+                );
+
+                const processedText = this.postProcessMathText(text.trim());
+                
+                return {
+                    text: processedText,
+                    confidence: confidence
+                };
+            }
+
+            async performOCRSpace(canvas, language) {
+                try {
+                    const formData = new FormData();
+                    const blob = await this.canvasToBlob(canvas);
+                    formData.append('file', blob, 'image.png');
+                    formData.append('language', language);
+                    formData.append('isOverlayRequired', 'false');
+                    formData.append('apikey', 'helloworld'); // Free API key
+                    formData.append('OCREngine', '2'); // Engine 2 is more accurate
+
+                    const response = await fetch('https://api.ocr.space/parse/image', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.ParsedResults && result.ParsedResults.length > 0) {
+                        return {
+                            text: result.ParsedResults[0].ParsedText.trim(),
+                            confidence: result.ParsedResults[0].TextOverlay ? 
+                                Math.round(result.ParsedResults[0].TextOverlay.Lines.reduce((acc, line) => 
+                                    acc + line.Words.reduce((wordAcc, word) => wordAcc + word.WordConfidence, 0) / line.Words.length, 0
+                                ) / result.ParsedResults[0].TextOverlay.Lines.length) : 85
+                        };
+                    }
+                    
+                    throw new Error('No text detected');
+                } catch (error) {
+                    console.error('OCR.space error:', error);
+                    return await this.performTesseract(canvas, language);
+                }
+            }
+
+            async performGoogleVision(canvas, language) {
+                try {
+                    const base64 = canvas.toDataURL('image/png').split(',')[1];
+                    
+                    // Using Google Vision API through a CORS proxy (free tier)
+                    const response = await fetch('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyBJf97-B28IflQfLB3Z3GP09NwFhq00vZI', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            requests: [{
+                                image: {
+                                    content: base64
+                                },
+                                features: [{
+                                    type: 'TEXT_DETECTION',
+                                    maxResults: 1
+                                }]
+                            }]
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.responses && result.responses[0] && result.responses[0].textAnnotations) {
+                        const text = result.responses[0].textAnnotations[0].text || '';
+                        const confidence = result.responses[0].textAnnotations[0].score || 85;
+                        
+                        return {
+                            text: text.trim(),
+                            confidence: Math.round(confidence * 100)
+                        };
+                    }
+                    
+                    throw new Error('No text detected');
+                } catch (error) {
+                    console.error('Google Vision error:', error);
+                    return await this.performTesseract(canvas, language);
+                }
+            }
+
+            async performCombinedOCR(canvas, language) {
+                try {
+                    // Try Google Vision first (most accurate)
+                    const googleResult = await this.performGoogleVision(canvas, language);
+                    
+                    // If confidence is low, try OCR.space as backup
+                    if (googleResult.confidence < 75) {
+                        const ocrSpaceResult = await this.performOCRSpace(canvas, language);
+                        
+                        // Return the result with higher confidence
+                        return googleResult.confidence > ocrSpaceResult.confidence ? 
+                            googleResult : ocrSpaceResult;
+                    }
+                    
+                    return googleResult;
+                } catch (error) {
+                    console.error('Combined OCR error:', error);
+                    // Fallback to OCR.space, then Tesseract
+                    try {
+                        return await this.performOCRSpace(canvas, language);
+                    } catch (ocrSpaceError) {
+                        return await this.performTesseract(canvas, language);
+                    }
+                }
+            }
+
+            async performTesseract(canvas, language) {
                 const { data: { text, confidence } } = await Tesseract.recognize(
                     canvas,
                     language,
@@ -635,6 +1064,12 @@
                     text: text.trim(),
                     confidence: confidence
                 };
+            }
+
+            async canvasToBlob(canvas) {
+                return new Promise(resolve => {
+                    canvas.toBlob(resolve, 'image/png');
+                });
             }
 
             analyzeQuestions(text) {
