@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Question Checker - Test Page</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-section h2 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+
+        .sample-text {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .sample-text.question {
+            border-left-color: #ff9800;
+        }
+
+        .sample-text.no-question {
+            border-left-color: #f44336;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📷 Webcam Question Checker</h1>
+            <p>Test Page & Sample Questions</p>
+        </div>
+
+        <div class="instructions">
+            <h2>📋 How to Use</h2>
+            <ol>
+                <li><strong>Start Camera:</strong> Click the "Start Camera" button to access your webcam</li>
+                <li><strong>Position Text:</strong> Hold printed text or handwritten questions in front of the camera</li>
+                <li><strong>Capture & Analyze:</strong> Click "Capture & Analyze" to detect and analyze questions</li>
+                <li><strong>View Results:</strong> See detected text and question analysis in the results panel</li>
+                <li><strong>Adjust Settings:</strong> Modify OCR language, confidence threshold, and detection mode</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Sample Questions to Test</h2>
+            <p>Try holding these sample questions in front of your webcam:</p>
+            
+            <div class="sample-text question">
+                <strong>What is the capital of France?</strong><br>
+                <em>Type: What Question</em>
+            </div>
+
+            <div class="sample-text question">
+                <strong>How do you calculate the area of a circle?</strong><br>
+                <em>Type: How Question</em>
+            </div>
+
+            <div class="sample-text question">
+                <strong>Can you explain photosynthesis?</strong><br>
+                <em>Type: Request Question</em>
+            </div>
+
+            <div class="sample-text question">
+                <strong>Is water a compound or element?</strong><br>
+                <em>Type: Yes/No Question</em>
+            </div>
+
+            <div class="sample-text question">
+                <strong>Why does the sky appear blue?</strong><br>
+                <em>Type: Why Question</em>
+            </div>
+
+            <div class="sample-text no-question">
+                <strong>The sun rises in the east.</strong><br>
+                <em>Type: Statement (Not a Question)</em>
+            </div>
+
+            <div class="sample-text no-question">
+                <strong>Mathematics is an important subject.</strong><br>
+                <em>Type: Statement (Not a Question)</em>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚙️ Features</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📷</div>
+                    <h3>Real-time Webcam</h3>
+                    <p>Access your device's camera for live text detection</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>OCR Technology</h3>
+                    <p>Advanced text recognition using Tesseract.js</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">❓</div>
+                    <h3>Question Detection</h3>
+                    <p>Intelligent analysis to identify different question types</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Multi-language</h3>
+                    <p>Support for multiple languages including English, Spanish, French, and more</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Real-time Analysis</h3>
+                    <p>Continuous detection mode for live question monitoring</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Confidence Scoring</h3>
+                    <p>Accuracy indicators for detected questions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Get Started</h2>
+            <p>Ready to test the Webcam Question Checker? Click the button below to launch the application:</p>
+            <a href="webcam_question_checker.html" class="btn">Launch Question Checker</a>
+        </div>
+
+        <div class="test-section">
+            <h2>💡 Tips for Best Results</h2>
+            <ul>
+                <li><strong>Good Lighting:</strong> Ensure adequate lighting for better text recognition</li>
+                <li><strong>Clear Text:</strong> Use clear, readable fonts and avoid blurry or handwritten text</li>
+                <li><strong>Stable Position:</strong> Keep the text steady in front of the camera</li>
+                <li><strong>Appropriate Distance:</strong> Position text at a comfortable distance for clear visibility</li>
+                <li><strong>Language Settings:</strong> Select the correct OCR language for your text</li>
+                <li><strong>Confidence Threshold:</strong> Adjust the threshold based on your accuracy needs</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

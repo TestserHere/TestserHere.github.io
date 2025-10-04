@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Question Checker & Detection System</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .video-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #videoElement {
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            border-radius: 10px;
+            background: #000;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .results-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .status-dot.active {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.processing {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .detected-text {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            min-height: 100px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .detected-text h3 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .detected-text p {
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .question-analysis {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .question-analysis h3 {
+            margin-bottom: 10px;
+            color: #ff9800;
+        }
+
+        .question-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .question-item.no-question {
+            border-left-color: #f44336;
+        }
+
+        .question-type {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .question-type.no-question {
+            color: #f44336;
+        }
+
+        .confidence {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .settings-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .setting-group select,
+        .setting-group input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .setting-group select option {
+            background: #333;
+            color: white;
+        }
+
+        .setting-group input[type="range"] {
+            background: transparent;
+        }
+
+        .setting-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #4CAF50;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #ffcdd2;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #c8e6c9;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📷 Webcam Question Checker</h1>
+            <p>Detect and analyze questions from your webcam feed using AI-powered OCR</p>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="videoElement" autoplay muted></video>
+                    <div class="video-overlay" id="videoOverlay">Camera Off</div>
+                </div>
+                
+                <div class="controls">
+                    <button id="startCamera" class="btn btn-primary">Start Camera</button>
+                    <button id="stopCamera" class="btn btn-secondary" disabled>Stop Camera</button>
+                    <button id="captureFrame" class="btn btn-warning" disabled>Capture & Analyze</button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="results-header">
+                    <h2>Detection Results</h2>
+                    <div class="status-indicator">
+                        <div class="status-dot" id="statusDot"></div>
+                        <span id="statusText">Ready</span>
+                    </div>
+                </div>
+
+                <div class="detected-text">
+                    <h3>📝 Detected Text</h3>
+                    <p id="detectedTextContent">No text detected yet. Click "Capture & Analyze" to start detection.</p>
+                </div>
+
+                <div class="question-analysis">
+                    <h3>❓ Question Analysis</h3>
+                    <div id="questionAnalysisContent">
+                        <p>No analysis available yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <h3>⚙️ Detection Settings</h3>
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label for="ocrLanguage">OCR Language</label>
+                    <select id="ocrLanguage">
+                        <option value="eng">English</option>
+                        <option value="spa">Spanish</option>
+                        <option value="fra">French</option>
+                        <option value="deu">German</option>
+                        <option value="chi_sim">Chinese (Simplified)</option>
+                        <option value="jpn">Japanese</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="detectionMode">Detection Mode</label>
+                    <select id="detectionMode">
+                        <option value="manual">Manual Capture</option>
+                        <option value="continuous">Continuous Detection</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="confidenceThreshold">Confidence Threshold</label>
+                    <input type="range" id="confidenceThreshold" min="0" max="100" value="60">
+                    <span id="confidenceValue">60%</span>
+                </div>
+
+                <div class="setting-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="autoDetectQuestions" checked>
+                        <label for="autoDetectQuestions">Auto-detect Questions</label>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showConfidence" checked>
+                        <label for="showConfidence">Show Confidence Scores</label>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="highlightQuestions">
+                        <label for="highlightQuestions">Highlight Questions</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WebcamQuestionChecker {
+            constructor() {
+                this.video = document.getElementById('videoElement');
+                this.videoOverlay = document.getElementById('videoOverlay');
+                this.startBtn = document.getElementById('startCamera');
+                this.stopBtn = document.getElementById('stopCamera');
+                this.captureBtn = document.getElementById('captureFrame');
+                this.statusDot = document.getElementById('statusDot');
+                this.statusText = document.getElementById('statusText');
+                this.detectedTextContent = document.getElementById('detectedTextContent');
+                this.questionAnalysisContent = document.getElementById('questionAnalysisContent');
+                
+                this.stream = null;
+                this.isDetecting = false;
+                this.continuousDetectionInterval = null;
+                
+                this.initializeEventListeners();
+                this.updateSettings();
+            }
+
+            initializeEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startCamera());
+                this.stopBtn.addEventListener('click', () => this.stopCamera());
+                this.captureBtn.addEventListener('click', () => this.captureAndAnalyze());
+                
+                // Settings event listeners
+                document.getElementById('detectionMode').addEventListener('change', () => this.updateDetectionMode());
+                document.getElementById('confidenceThreshold').addEventListener('input', (e) => {
+                    document.getElementById('confidenceValue').textContent = e.target.value + '%';
+                });
+            }
+
+            async startCamera() {
+                try {
+                    this.updateStatus('Starting camera...', 'processing');
+                    
+                    const constraints = {
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'user'
+                        }
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.video.srcObject = this.stream;
+                    
+                    this.videoOverlay.textContent = 'Camera Active';
+                    this.startBtn.disabled = true;
+                    this.stopBtn.disabled = false;
+                    this.captureBtn.disabled = false;
+                    
+                    this.updateStatus('Camera ready', 'active');
+                    
+                    // Start continuous detection if enabled
+                    if (document.getElementById('detectionMode').value === 'continuous') {
+                        this.startContinuousDetection();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    this.showError('Failed to access camera. Please check permissions.');
+                    this.updateStatus('Camera error', 'error');
+                }
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+                
+                this.video.srcObject = null;
+                this.videoOverlay.textContent = 'Camera Off';
+                this.startBtn.disabled = false;
+                this.stopBtn.disabled = true;
+                this.captureBtn.disabled = true;
+                
+                this.stopContinuousDetection();
+                this.updateStatus('Camera stopped', 'inactive');
+            }
+
+            async captureAndAnalyze() {
+                if (!this.stream) {
+                    this.showError('Please start the camera first.');
+                    return;
+                }
+
+                this.updateStatus('Analyzing...', 'processing');
+                this.captureBtn.disabled = true;
+
+                try {
+                    // Capture frame from video
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = this.video.videoWidth;
+                    canvas.height = this.video.videoHeight;
+                    ctx.drawImage(this.video, 0, 0);
+
+                    // Perform OCR
+                    const result = await this.performOCR(canvas);
+                    
+                    // Analyze for questions
+                    const analysis = this.analyzeQuestions(result.text);
+                    
+                    // Display results
+                    this.displayResults(result, analysis);
+                    
+                } catch (error) {
+                    console.error('Error during analysis:', error);
+                    this.showError('Analysis failed. Please try again.');
+                } finally {
+                    this.captureBtn.disabled = false;
+                    this.updateStatus('Ready', 'active');
+                }
+            }
+
+            async performOCR(canvas) {
+                const language = document.getElementById('ocrLanguage').value;
+                
+                const { data: { text, confidence } } = await Tesseract.recognize(
+                    canvas,
+                    language,
+                    {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                this.updateStatus(`OCR: ${Math.round(m.progress * 100)}%`, 'processing');
+                            }
+                        }
+                    }
+                );
+
+                return {
+                    text: text.trim(),
+                    confidence: confidence
+                };
+            }
+
+            analyzeQuestions(text) {
+                if (!text || text.length < 3) {
+                    return {
+                        questions: [],
+                        summary: 'No text detected or text too short'
+                    };
+                }
+
+                const questions = [];
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                
+                sentences.forEach((sentence, index) => {
+                    const trimmedSentence = sentence.trim();
+                    if (this.isQuestion(trimmedSentence)) {
+                        const questionType = this.detectQuestionType(trimmedSentence);
+                        const confidence = this.calculateQuestionConfidence(trimmedSentence);
+                        
+                        if (confidence >= parseInt(document.getElementById('confidenceThreshold').value)) {
+                            questions.push({
+                                text: trimmedSentence,
+                                type: questionType,
+                                confidence: confidence,
+                                position: index
+                            });
+                        }
+                    }
+                });
+
+                return {
+                    questions: questions,
+                    summary: `${questions.length} question(s) detected`,
+                    totalSentences: sentences.length
+                };
+            }
+
+            isQuestion(text) {
+                const questionPatterns = [
+                    /^what/i,
+                    /^how/i,
+                    /^why/i,
+                    /^when/i,
+                    /^where/i,
+                    /^who/i,
+                    /^which/i,
+                    /^can you/i,
+                    /^could you/i,
+                    /^would you/i,
+                    /^do you/i,
+                    /^does/i,
+                    /^did/i,
+                    /^is/i,
+                    /^are/i,
+                    /^was/i,
+                    /^were/i,
+                    /\?$/,
+                    /^explain/i,
+                    /^describe/i,
+                    /^tell me/i,
+                    /^show me/i
+                ];
+
+                return questionPatterns.some(pattern => pattern.test(text));
+            }
+
+            detectQuestionType(text) {
+                const types = {
+                    'What': /^what/i,
+                    'How': /^how/i,
+                    'Why': /^why/i,
+                    'When': /^when/i,
+                    'Where': /^where/i,
+                    'Who': /^who/i,
+                    'Which': /^which/i,
+                    'Yes/No': /^(is|are|was|were|do|does|did|can|could|would|will)/i,
+                    'Request': /^(can you|could you|would you|please)/i,
+                    'Explanation': /^(explain|describe|tell me|show me)/i
+                };
+
+                for (const [type, pattern] of Object.entries(types)) {
+                    if (pattern.test(text)) {
+                        return type;
+                    }
+                }
+
+                return text.includes('?') ? 'Question' : 'Statement';
+            }
+
+            calculateQuestionConfidence(text) {
+                let confidence = 0;
+                
+                // Base confidence for question marks
+                if (text.includes('?')) confidence += 40;
+                
+                // Confidence for question words
+                const questionWords = ['what', 'how', 'why', 'when', 'where', 'who', 'which'];
+                questionWords.forEach(word => {
+                    if (text.toLowerCase().includes(word)) confidence += 15;
+                });
+                
+                // Confidence for question patterns
+                const questionPatterns = ['can you', 'could you', 'would you', 'do you', 'does', 'did', 'is', 'are'];
+                questionPatterns.forEach(pattern => {
+                    if (text.toLowerCase().includes(pattern)) confidence += 10;
+                });
+                
+                return Math.min(confidence, 100);
+            }
+
+            displayResults(ocrResult, analysis) {
+                // Display detected text
+                this.detectedTextContent.innerHTML = `
+                    <strong>Text:</strong> ${ocrResult.text || 'No text detected'}<br>
+                    <strong>Confidence:</strong> ${ocrResult.confidence ? Math.round(ocrResult.confidence) + '%' : 'N/A'}
+                `;
+
+                // Display question analysis
+                let analysisHTML = `<p><strong>Summary:</strong> ${analysis.summary}</p>`;
+                
+                if (analysis.questions.length > 0) {
+                    analysisHTML += '<div style="margin-top: 15px;">';
+                    analysis.questions.forEach((question, index) => {
+                        const showConfidence = document.getElementById('showConfidence').checked;
+                        const confidenceText = showConfidence ? `<span class="confidence">Confidence: ${question.confidence}%</span>` : '';
+                        
+                        analysisHTML += `
+                            <div class="question-item">
+                                <div class="question-type">${question.type} Question</div>
+                                <div>${question.text}</div>
+                                ${confidenceText}
+                            </div>
+                        `;
+                    });
+                    analysisHTML += '</div>';
+                } else {
+                    analysisHTML += '<div class="question-item no-question"><div class="question-type no-question">No Questions Detected</div><div>No questions found in the detected text.</div></div>';
+                }
+
+                this.questionAnalysisContent.innerHTML = analysisHTML;
+            }
+
+            startContinuousDetection() {
+                if (this.continuousDetectionInterval) return;
+                
+                this.continuousDetectionInterval = setInterval(() => {
+                    if (!this.isDetecting) {
+                        this.captureAndAnalyze();
+                    }
+                }, 3000); // Analyze every 3 seconds
+            }
+
+            stopContinuousDetection() {
+                if (this.continuousDetectionInterval) {
+                    clearInterval(this.continuousDetectionInterval);
+                    this.continuousDetectionInterval = null;
+                }
+            }
+
+            updateDetectionMode() {
+                const mode = document.getElementById('detectionMode').value;
+                if (mode === 'continuous' && this.stream) {
+                    this.startContinuousDetection();
+                } else {
+                    this.stopContinuousDetection();
+                }
+            }
+
+            updateStatus(message, type) {
+                this.statusText.textContent = message;
+                this.statusDot.className = `status-dot ${type}`;
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                
+                // Remove existing error messages
+                const existingErrors = document.querySelectorAll('.error-message');
+                existingErrors.forEach(error => error.remove());
+                
+                // Insert error message
+                this.container.insertBefore(errorDiv, this.container.firstChild);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.remove();
+                    }
+                }, 5000);
+            }
+
+            showSuccess(message) {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.textContent = message;
+                
+                // Remove existing success messages
+                const existingSuccess = document.querySelectorAll('.success-message');
+                existingSuccess.forEach(success => success.remove());
+                
+                // Insert success message
+                this.container.insertBefore(successDiv, this.container.firstChild);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    if (successDiv.parentNode) {
+                        successDiv.remove();
+                    }
+                }, 3000);
+            }
+
+            updateSettings() {
+                // Initialize settings display
+                const confidenceThreshold = document.getElementById('confidenceThreshold');
+                const confidenceValue = document.getElementById('confidenceValue');
+                confidenceValue.textContent = confidenceThreshold.value + '%';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new WebcamQuestionChecker();
+            
+            // Add container reference for error/success messages
+            app.container = document.querySelector('.container');
+            
+            // Show initial success message
+            app.showSuccess('Webcam Question Checker ready! Click "Start Camera" to begin.');
+        });
+    </script>
+</body>
+</html>
