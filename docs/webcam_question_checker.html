@@ -214,6 +214,19 @@
             color: #ff9800;
         }
 
+        .math-solutions {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            margin-top: 15px;
+        }
+
+        .math-solutions h3 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
         .question-item {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
@@ -369,6 +382,13 @@
                     <h3>❓ Question Analysis</h3>
                     <div id="questionAnalysisContent">
                         <p>No analysis available yet.</p>
+                    </div>
+                </div>
+
+                <div class="math-solutions" id="mathSolutions" style="display: none;">
+                    <h3>🧮 Math Solutions</h3>
+                    <div id="mathSolutionsContent">
+                        <p>No math problems detected.</p>
                     </div>
                 </div>
             </div>
@@ -1130,7 +1150,16 @@
                     /^explain/i,
                     /^describe/i,
                     /^tell me/i,
-                    /^show me/i
+                    /^show me/i,
+                    // Math problem patterns
+                    /\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*$/,  // (1) 30+50 =
+                    /\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*\?/,  // (1) 30+50 = ?
+                    /\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*___/,  // (1) 30+50 = ___
+                    /\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*\.\.\./,  // (1) 30+50 = ...
+                    /\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*$/,  // (1) 30+50 =
+                    /\(\d+\)\s*what\s+is\s+\d+[\+\-\*\/]\d+/i,  // (1) what is 30+50
+                    /\(\d+\)\s*solve\s*:?\s*\d+[\+\-\*\/]\d+/i,  // (1) solve: 30+50
+                    /\(\d+\)\s*calculate\s*:?\s*\d+[\+\-\*\/]\d+/i,  // (1) calculate: 30+50
                 ];
 
                 return questionPatterns.some(pattern => pattern.test(text));
@@ -1138,6 +1167,8 @@
 
             detectQuestionType(text) {
                 const types = {
+                    'Math Problem': /\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*$|\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*\?|\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*___|\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*\.\.\./,
+                    'Math Question': /\(\d+\)\s*what\s+is\s+\d+[\+\-\*\/]\d+|\(\d+\)\s*solve\s*:?\s*\d+[\+\-\*\/]\d+|\(\d+\)\s*calculate\s*:?\s*\d+[\+\-\*\/]\d+/i,
                     'What': /^what/i,
                     'How': /^how/i,
                     'Why': /^why/i,
@@ -1164,6 +1195,11 @@
                 
                 // Base confidence for question marks
                 if (text.includes('?')) confidence += 40;
+                
+                // High confidence for math problems
+                if (/\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*$/.test(text)) confidence += 50;
+                if (/\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*\?/.test(text)) confidence += 45;
+                if (/\(\d+\)\s*\d+[\+\-\*\/]\d+\s*=\s*___/.test(text)) confidence += 45;
                 
                 // Confidence for question words
                 const questionWords = ['what', 'how', 'why', 'when', 'where', 'who', 'which'];
@@ -1210,6 +1246,143 @@
                 }
 
                 this.questionAnalysisContent.innerHTML = analysisHTML;
+
+                // Display math solutions
+                this.displayMathSolutions(ocrResult.text);
+            }
+
+            displayMathSolutions(text) {
+                const mathProblems = this.extractMathProblems(text);
+                const mathSolutionsDiv = document.getElementById('mathSolutions');
+                const mathSolutionsContent = document.getElementById('mathSolutionsContent');
+
+                if (mathProblems.length > 0) {
+                    mathSolutionsDiv.style.display = 'block';
+                    
+                    let solutionsHTML = '';
+                    mathProblems.forEach(problem => {
+                        const solution = this.solveMathProblem(problem);
+                        solutionsHTML += `
+                            <div class="question-item">
+                                <div class="question-type">Math Problem</div>
+                                <div><strong>Problem:</strong> ${problem}</div>
+                                <div><strong>Solution:</strong> ${solution.expression} = <span style="color: #4CAF50; font-weight: bold;">${solution.result}</span></div>
+                                <div><strong>Steps:</strong> ${solution.steps}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    mathSolutionsContent.innerHTML = solutionsHTML;
+                } else {
+                    mathSolutionsDiv.style.display = 'none';
+                }
+            }
+
+            extractMathProblems(text) {
+                const mathPatterns = [
+                    /\(\d+\)\s*(\d+[\+\-\*\/]\d+)\s*=\s*$/g,
+                    /\(\d+\)\s*(\d+[\+\-\*\/]\d+)\s*=\s*\?/g,
+                    /\(\d+\)\s*(\d+[\+\-\*\/]\d+)\s*=\s*___/g,
+                    /\(\d+\)\s*(\d+[\+\-\*\/]\d+)\s*=\s*\.\.\./g
+                ];
+
+                const problems = [];
+                mathPatterns.forEach(pattern => {
+                    let match;
+                    while ((match = pattern.exec(text)) !== null) {
+                        problems.push(match[1]); // Extract just the math expression
+                    }
+                });
+
+                return problems;
+            }
+
+            solveMathProblem(expression) {
+                try {
+                    // Clean the expression
+                    const cleanExpr = expression.replace(/\s/g, '');
+                    
+                    // Parse and solve
+                    const result = this.evaluateMathExpression(cleanExpr);
+                    const steps = this.getMathSteps(cleanExpr);
+                    
+                    return {
+                        expression: cleanExpr,
+                        result: result,
+                        steps: steps
+                    };
+                } catch (error) {
+                    return {
+                        expression: expression,
+                        result: 'Error',
+                        steps: 'Could not solve this problem'
+                    };
+                }
+            }
+
+            evaluateMathExpression(expr) {
+                // Safe evaluation of simple math expressions
+                const operators = ['+', '-', '*', '/'];
+                let currentExpr = expr;
+                
+                // Handle multiplication and division first
+                while (currentExpr.includes('*') || currentExpr.includes('/')) {
+                    const multDivMatch = currentExpr.match(/(\d+)\s*([\*\/])\s*(\d+)/);
+                    if (multDivMatch) {
+                        const [, num1, op, num2] = multDivMatch;
+                        const result = op === '*' ? parseFloat(num1) * parseFloat(num2) : parseFloat(num1) / parseFloat(num2);
+                        currentExpr = currentExpr.replace(multDivMatch[0], result.toString());
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Handle addition and subtraction
+                while (currentExpr.includes('+') || (currentExpr.includes('-') && !currentExpr.startsWith('-'))) {
+                    const addSubMatch = currentExpr.match(/(\d+)\s*([\+\-])\s*(\d+)/);
+                    if (addSubMatch) {
+                        const [, num1, op, num2] = addSubMatch;
+                        const result = op === '+' ? parseFloat(num1) + parseFloat(num2) : parseFloat(num1) - parseFloat(num2);
+                        currentExpr = currentExpr.replace(addSubMatch[0], result.toString());
+                    } else {
+                        break;
+                    }
+                }
+                
+                return parseFloat(currentExpr);
+            }
+
+            getMathSteps(expr) {
+                const steps = [];
+                let currentExpr = expr;
+                
+                // Multiplication and division steps
+                while (currentExpr.includes('*') || currentExpr.includes('/')) {
+                    const multDivMatch = currentExpr.match(/(\d+)\s*([\*\/])\s*(\d+)/);
+                    if (multDivMatch) {
+                        const [, num1, op, num2] = multDivMatch;
+                        const result = op === '*' ? parseFloat(num1) * parseFloat(num2) : parseFloat(num1) / parseFloat(num2);
+                        steps.push(`${num1} ${op} ${num2} = ${result}`);
+                        currentExpr = currentExpr.replace(multDivMatch[0], result.toString());
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Addition and subtraction steps
+                while (currentExpr.includes('+') || (currentExpr.includes('-') && !currentExpr.startsWith('-'))) {
+                    const addSubMatch = currentExpr.match(/(\d+)\s*([\+\-])\s*(\d+)/);
+                    if (addSubMatch) {
+                        const [, num1, op, num2] = addSubMatch;
+                        const result = op === '+' ? parseFloat(num1) + parseFloat(num2) : parseFloat(num1) - parseFloat(num2);
+                        steps.push(`${num1} ${op} ${num2} = ${result}`);
+                        currentExpr = currentExpr.replace(addSubMatch[0], result.toString());
+                    } else {
+                        break;
+                    }
+                }
+                
+                return steps.join(' → ');
             }
 
             startContinuousDetection() {
