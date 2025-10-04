@@ -248,6 +248,13 @@
 
         <div class="settings">
             <div class="setting-group">
+                <label for="cameraSelect">Camera Device:</label>
+                <select id="cameraSelect">
+                    <option value="">Select Camera...</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
                 <label for="language">OCR Language:</label>
                 <select id="language">
                     <option value="eng">English</option>
@@ -286,6 +293,7 @@
         </div>
 
         <div class="controls">
+            <button id="refreshBtn" class="detect-btn">🔄 Refresh Cameras</button>
             <button id="startBtn" class="start-btn">📹 Start Camera</button>
             <button id="stopBtn" class="stop-btn" disabled>⏹️ Stop Camera</button>
             <button id="detectBtn" class="detect-btn" disabled>🔍 Detect Text</button>
@@ -307,6 +315,7 @@
                 this.startBtn = document.getElementById('startBtn');
                 this.stopBtn = document.getElementById('stopBtn');
                 this.detectBtn = document.getElementById('detectBtn');
+                this.refreshBtn = document.getElementById('refreshBtn');
                 this.status = document.getElementById('status');
                 this.results = document.getElementById('results');
                 this.detectedText = document.getElementById('detectedText');
@@ -315,18 +324,22 @@
                 this.confidence = document.getElementById('confidence');
                 this.confidenceValue = document.getElementById('confidenceValue');
                 this.autoDetect = document.getElementById('autoDetect');
+                this.cameraSelect = document.getElementById('cameraSelect');
                 
                 this.stream = null;
                 this.autoDetectInterval = null;
                 this.isDetecting = false;
+                this.availableCameras = [];
                 
                 this.initializeEventListeners();
+                this.loadAvailableCameras();
             }
 
             initializeEventListeners() {
                 this.startBtn.addEventListener('click', () => this.startCamera());
                 this.stopBtn.addEventListener('click', () => this.stopCamera());
                 this.detectBtn.addEventListener('click', () => this.detectText());
+                this.refreshBtn.addEventListener('click', () => this.loadAvailableCameras());
                 
                 this.confidence.addEventListener('input', (e) => {
                     this.confidenceValue.textContent = e.target.value;
@@ -335,17 +348,67 @@
                 this.autoDetect.addEventListener('change', (e) => {
                     this.setupAutoDetection();
                 });
+                
+                this.cameraSelect.addEventListener('change', (e) => {
+                    if (this.stream) {
+                        this.stopCamera();
+                    }
+                });
+            }
+
+            async loadAvailableCameras() {
+                try {
+                    this.updateStatus('Loading available cameras...', 'loading');
+                    
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+                    
+                    // Clear existing options
+                    this.cameraSelect.innerHTML = '<option value="">Select Camera...</option>';
+                    
+                    if (this.availableCameras.length === 0) {
+                        this.cameraSelect.innerHTML = '<option value="">No cameras found</option>';
+                        this.updateStatus('No cameras detected on this device', 'error');
+                        return;
+                    }
+                    
+                    // Add camera options
+                    this.availableCameras.forEach((camera, index) => {
+                        const option = document.createElement('option');
+                        option.value = camera.deviceId;
+                        option.textContent = camera.label || `Camera ${index + 1}`;
+                        this.cameraSelect.appendChild(option);
+                    });
+                    
+                    // Auto-select first camera if only one available
+                    if (this.availableCameras.length === 1) {
+                        this.cameraSelect.value = this.availableCameras[0].deviceId;
+                    }
+                    
+                    this.updateStatus(`Found ${this.availableCameras.length} camera(s)`, 'success');
+                    
+                } catch (error) {
+                    console.error('Error loading cameras:', error);
+                    this.updateStatus(`Error loading cameras: ${error.message}`, 'error');
+                }
             }
 
             async startCamera() {
                 try {
+                    const selectedCameraId = this.cameraSelect.value;
+                    
+                    if (!selectedCameraId) {
+                        this.updateStatus('Please select a camera first', 'error');
+                        return;
+                    }
+                    
                     this.updateStatus('Requesting camera access...', 'loading');
                     
                     const constraints = {
                         video: {
+                            deviceId: { exact: selectedCameraId },
                             width: { ideal: 1280 },
-                            height: { ideal: 720 },
-                            facingMode: 'environment' // Use back camera if available
+                            height: { ideal: 720 }
                         }
                     };
                     
@@ -359,6 +422,7 @@
                         this.startBtn.disabled = true;
                         this.stopBtn.disabled = false;
                         this.detectBtn.disabled = false;
+                        this.cameraSelect.disabled = true;
                         this.setupAutoDetection();
                     });
                     
@@ -382,6 +446,7 @@
                 this.startBtn.disabled = false;
                 this.stopBtn.disabled = true;
                 this.detectBtn.disabled = true;
+                this.cameraSelect.disabled = false;
                 this.results.style.display = 'none';
             }
 
