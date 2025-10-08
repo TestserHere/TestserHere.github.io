@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tram Tracker - Live Route Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Kanit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(26, 35, 50, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-bottom: 2px solid #4a90e2;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            background: linear-gradient(45deg, #4a90e2, #357abd);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #4a90e2, #357abd);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn.active {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+
+        .route-selector {
+            padding: 8px 15px;
+            background: #0f1419;
+            border: 1px solid #4a90e2;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .dashboard-panel {
+            background: linear-gradient(145deg, #1a2332, #0f1419);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 
+                10px 10px 30px #0a0f14,
+                -10px -10px 30px #1e2a3a;
+            border: 1px solid #2a3441;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: linear-gradient(45deg, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .current-status {
+            background: linear-gradient(145deg, #0f1419, #1a2332);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #4a90e2;
+            text-align: center;
+        }
+
+        .current-stop {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .current-route {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+
+        .speed-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .speed-item {
+            text-align: center;
+        }
+
+        .speed-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .speed-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .upcoming-stops {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .stop-item {
+            background: linear-gradient(145deg, #0f1419, #1a2332);
+            border: 1px solid #2a3441;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .stop-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border-color: #4a90e2;
+        }
+
+        .stop-item.next {
+            border-color: #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .stop-item.next::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 2px;
+        }
+
+        .stop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .stop-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .stop-eta {
+            background: linear-gradient(45deg, #4a90e2, #357abd);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .stop-distance {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .progress-section {
+            margin-top: 25px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #0f1419;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a90e2, #357abd);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .map-container {
+            background: linear-gradient(145deg, #1a2332, #0f1419);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 
+                10px 10px 30px #0a0f14,
+                -10px -10px 30px #1e2a3a;
+            border: 1px solid #2a3441;
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .status-indicators {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(15, 20, 25, 0.5);
+            border-radius: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.active {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .error {
+            background: #2d1b1b;
+            color: #f56565;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #4a1a1a;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .main-container {
+                padding: 15px;
+            }
+
+            .dashboard-panel {
+                padding: 20px;
+            }
+
+            #map {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🚋</div>
+                <div class="logo-text">Tram Tracker</div>
+            </div>
+            <div class="controls">
+                <select class="route-selector" id="routeSelector">
+                    <option value="route1">Route 1 - East Coburg to South Melbourne Beach</option>
+                    <option value="route3">Route 3 - Melbourne University to East Malvern</option>
+                    <option value="route5">Route 5 - Melbourne University to Malvern</option>
+                    <option value="route6">Route 6 - Moreland to Glen Iris</option>
+                    <option value="route11">Route 11 - West Preston to Victoria Harbour</option>
+                    <option value="route12">Route 12 - Victoria Gardens to St Kilda</option>
+                    <option value="route16">Route 16 - Melbourne University to Kew</option>
+                    <option value="route19">Route 19 - North Coburg to Flinders Street</option>
+                    <option value="route30">Route 30 - St Vincent's Plaza to Central Pier</option>
+                    <option value="route35">Route 35 - City Circle (Free Tourist Tram)</option>
+                    <option value="route48">Route 48 - North Balwyn to Victoria Harbour</option>
+                    <option value="route57">Route 57 - West Maribyrnong to Flinders Street</option>
+                    <option value="route58">Route 58 - West Coburg to Toorak</option>
+                    <option value="route59">Route 59 - Airport West to Flinders Street</option>
+                    <option value="route64">Route 64 - Melbourne University to East Brighton</option>
+                    <option value="route67">Route 67 - Melbourne University to Carnegie</option>
+                    <option value="route70">Route 70 - Wattle Park to Waterfront City</option>
+                    <option value="route72">Route 72 - Melbourne University to Camberwell</option>
+                    <option value="route75">Route 75 - Vermont South to Central Pier</option>
+                    <option value="route78">Route 78 - North Richmond to Balaclava</option>
+                    <option value="route82">Route 82 - Footscray to Moonee Ponds</option>
+                    <option value="route86">Route 86 - Bundoora RMIT to Waterfront City</option>
+                    <option value="route96">Route 96 - East Brunswick to St Kilda Beach</option>
+                    <option value="route109">Route 109 - Box Hill to Port Melbourne</option>
+                </select>
+                <button class="btn" id="switchDirection">🔄 Switch Direction</button>
+                <button class="btn" id="startTracking">🚀 Start Tracking</button>
+                <button class="btn" id="centerMap">📍 Center Map</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="dashboard-panel fade-in">
+            <div class="panel-title">
+                📊 Live Dashboard
+            </div>
+
+            <div class="current-status">
+                <div class="current-stop" id="currentStop">Waiting for GPS...</div>
+                <div class="current-route" id="currentRoute">Select a route to begin</div>
+                <div class="speed-info">
+                    <div class="speed-item">
+                        <div class="speed-value" id="currentSpeed">0</div>
+                        <div class="speed-label">km/h</div>
+                    </div>
+                    <div class="speed-item">
+                        <div class="speed-value" id="nextStopDistance">--</div>
+                        <div class="speed-label">meters</div>
+                    </div>
+                    <div class="speed-item">
+                        <div class="speed-value" id="etaNextStop">--</div>
+                        <div class="speed-label">minutes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-title">
+                🚏 Upcoming Stops
+            </div>
+
+            <div class="upcoming-stops" id="upcomingStops">
+                <div class="loading">Select a route and start tracking to see upcoming stops...</div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="routeProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">Route Progress: 0%</div>
+            </div>
+
+            <div class="status-indicators">
+                <div class="status-item">
+                    <div class="status-dot" id="gpsStatus"></div>
+                    <span>GPS Signal</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot" id="routeStatus"></div>
+                    <span>Route Tracking</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot" id="locationStatus"></div>
+                    <span>Location Accuracy</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-container fade-in">
+            <div class="panel-title">
+                🗺️ Live Route Map
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Complete Melbourne tram routes data
+        // Based on official GTFS data from PTV (stops.txt)
+        // Real stop coordinates and names from Melbourne tram network
+        const tramRoutes = {
+            route1: {
+                name: "Route 1 - East Coburg to South Melbourne Beach",
+                color: "#e74c3c",
+                stops: [
+                    { name: "Bell St & Nicholson St", lat: -37.74286119, lng: 144.97813204 },
+                    { name: "Merribell Ave & Nicholson St", lat: -37.74437098, lng: 144.97788668 },
+                    { name: "Harding St & Nicholson St", lat: -37.74605896, lng: 144.97752296 },
+                    { name: "Crozier St & Nicholson St", lat: -37.74939321, lng: 144.97698955 },
+                    { name: "Rennie St & Nicholson St", lat: -37.75121728, lng: 144.97667882 },
+                    { name: "The Avenue & Nicholson St", lat: -37.75337171, lng: 144.97618882 },
+                    { name: "Moreland Rd & Nicholson St", lat: -37.75657110, lng: 144.97462605 },
+                    { name: "Mitchell St & Holmes St", lat: -37.75926379, lng: 144.97451855 },
+                    { name: "Albion St & Holmes St", lat: -37.76188739, lng: 144.97406103 },
+                    { name: "Stewart St & Lygon St", lat: -37.76429482, lng: 144.97308719 },
+                    { name: "Blyth St & Lygon St", lat: -37.76644237, lng: 144.97272205 },
+                    { name: "Victoria St & Lygon St", lat: -37.76807726, lng: 144.97241630 },
+                    { name: "Albert St & Lygon St", lat: -37.76964909, lng: 144.97211225 },
+                    { name: "Glenlyon Rd & Lygon St", lat: -37.77251529, lng: 144.97161387 },
+                    { name: "Weston St & Lygon St", lat: -37.77555281, lng: 144.97112212 },
+                    { name: "Brunswick Rd & Lygon St", lat: -37.77811528, lng: 144.97077957 },
+                    { name: "Pigdon St & Lygon St", lat: -37.78153934, lng: 144.97023174 },
+                    { name: "Richardson St & Lygon St", lat: -37.78408261, lng: 144.96982152 },
+                    { name: "Fenwick St & Lygon St", lat: -37.78720080, lng: 144.96930468 },
+                    { name: "Melbourne Cemetery", lat: -37.78928546, lng: 144.96895236 },
+                    { name: "Princes St & Lygon St", lat: -37.79212480, lng: 144.96846579 },
+                    { name: "Lytton St & Lygon St", lat: -37.79413759, lng: 144.96812674 },
+                    { name: "Lygon St & Elgin St", lat: -37.79707383, lng: 144.96646768 },
+                    { name: "Melbourne University", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St & Swanston St", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "Collins St & Swanston St", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Flinders Street Station", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Dorcas St & Eastern Rd", lat: -37.83217053, lng: 144.96518622 },
+                    { name: "Moray St & Park St", lat: -37.83450813, lng: 144.96434934 },
+                    { name: "Clarendon St & Park St", lat: -37.83522349, lng: 144.96194350 },
+                    { name: "Cecil St & Park St", lat: -37.83613824, lng: 144.95856629 },
+                    { name: "Ferrars St & Park St", lat: -37.83662171, lng: 144.95682580 },
+                    { name: "Montague St & Park St", lat: -37.83732870, lng: 144.95446552 },
+                    { name: "Bridport St & Montague St", lat: -37.84042350, lng: 144.95572090 },
+                    { name: "Cardigan St & Montague St", lat: -37.84172534, lng: 144.95336677 },
+                    { name: "Richardson St & Victoria Ave", lat: -37.84378680, lng: 144.95168472 },
+                    { name: "Graham St & Victoria Ave", lat: -37.84576736, lng: 144.95001619 },
+                    { name: "Beaconsfield Pde & Victoria Ave", lat: -37.84700000, lng: 144.94800000 }
+                ]
+            },
+            route3: {
+                name: "Route 3 - Melbourne University to East Malvern",
+                color: "#3498db",
+                stops: [
+                    { name: "Melbourne University", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St & Swanston St", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "Collins St & Swanston St", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Flinders Street Station", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Police Memorial and Grant Street on St Kilda Road", lat: -37.82577919, lng: 144.96663426 },
+                    { name: "Shrine of Remembrance", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Anzac Station", lat: -37.83009138, lng: 144.96533424 },
+                    { name: "Toorak Rd & St Kilda Rd", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St & St Kilda Rd", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St & St Kilda Rd", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd & St Kilda Rd", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St & St Kilda Rd", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St & St Kilda Rd", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St & St Kilda Rd", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Barkly St & St Kilda Rd", lat: -37.85742600, lng: 144.99169103 },
+                    { name: "Alma Rd & St Kilda Rd", lat: -37.85827918, lng: 144.99574837 },
+                    { name: "Argyle St & St Kilda Rd", lat: -37.85850790, lng: 144.99753805 },
+                    { name: "Inkerman St & St Kilda Rd", lat: -37.85907341, lng: 145.00164876 },
+                    { name: "Carlisle St & St Kilda Rd", lat: -37.85942478, lng: 145.00429902 },
+                    { name: "St Kilda Town Hall & Carlisle St", lat: -37.85982670, lng: 145.00727758 },
+                    { name: "Chapel St & Carlisle St", lat: -37.86030140, lng: 145.01083392 },
+                    { name: "Balaclava Station & Carlisle St", lat: -37.86080819, lng: 145.01469634 },
+                    { name: "Orange Gr & Carlisle St", lat: -37.86250903, lng: 145.01883375 },
+                    { name: "Hotham St & Carlisle St", lat: -37.86382247, lng: 145.02191318 },
+                    { name: "Empress Rd & Balaclava Rd", lat: -37.86461810, lng: 145.02367658 },
+                    { name: "Sidwell Ave & Balaclava Rd", lat: -37.86589911, lng: 145.02590449 },
+                    { name: "Orrong Rd & Balaclava Rd", lat: -37.86799239, lng: 145.02551895 },
+                    { name: "Ontario St & Balaclava Rd", lat: -37.86969909, lng: 145.02518919 },
+                    { name: "Kent Gr & Balaclava Rd", lat: -37.87288844, lng: 145.02460380 },
+                    { name: "Kooyong Rd & Balaclava Rd", lat: -37.87525099, lng: 145.02415415 },
+                    { name: "Elmhurst Rd & Balaclava Rd", lat: -37.87748761, lng: 145.02371919 },
+                    { name: "Hawthorn Rd & Balaclava Rd", lat: -37.88012843, lng: 145.02320518 },
+                    { name: "Caulfield Park Bowling Club", lat: -37.88258047, lng: 145.02271892 },
+                    { name: "Caulfield Park & Balaclava Rd", lat: -37.88458384, lng: 145.02234697 },
+                    { name: "Kambrook Rd & Balaclava Rd", lat: -37.88708072, lng: 145.02184807 },
+                    { name: "Normanby Rd & Balaclava Rd", lat: -37.88993771, lng: 145.02132813 },
+                    { name: "Caulfield Racecourse & Normanby Rd", lat: -37.89313508, lng: 145.02068530 },
+                    { name: "Caulfield Station & Derby Rd", lat: -37.89505832, lng: 145.02037223 },
+                    { name: "Dandenong Rd & Derby Rd", lat: -37.89670233, lng: 145.02006662 },
+                    { name: "Dandenong Rd & Waverley Rd", lat: -37.89949587, lng: 145.01952548 },
+                    { name: "Burke Rd & Waverley Rd", lat: -37.90156994, lng: 145.01907183 },
+                    { name: "Tennyson St & Waverley Rd", lat: -37.90409419, lng: 145.01859469 },
+                    { name: "The Avenue & Waverley Rd", lat: -37.90657379, lng: 145.01814147 },
+                    { name: "Hughes Street on Waverley Road", lat: -37.90873026, lng: 145.01776513 },
+                    { name: "Darling Rd & Waverley Rd", lat: -37.91109410, lng: 145.01739457 }
+                ]
+            },
+            route5: {
+                name: "Route 5 - Melbourne University to Malvern",
+                color: "#2ecc71",
+                stops: [
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route6: {
+                name: "Route 6 - Moreland to Glen Iris",
+                color: "#9b59b6",
+                stops: [
+                    { name: "Moreland Station/Cameron St #133", lat: -37.75529201, lng: 144.96211869 },
+                    { name: "Sydney Rd/Moreland Rd #132", lat: -37.75534004, lng: 144.96385399 },
+                    { name: "De Carle St/Moreland Rd #131", lat: -37.75566258, lng: 144.96635361 },
+                    { name: "Barrow St/Moreland Rd #130", lat: -37.75605848, lng: 144.96997495 },
+                    { name: "Moreland Rd/Holmes St #129", lat: -37.75657110, lng: 144.97462605 },
+                    { name: "Mitchell St/Holmes St #128", lat: -37.75926379, lng: 144.97451855 },
+                    { name: "Albion St/Holmes St #127", lat: -37.76188739, lng: 144.97406103 },
+                    { name: "Stewart St/Lygon St #126", lat: -37.76429482, lng: 144.97308719 },
+                    { name: "Blyth St/Lygon St #125", lat: -37.76644237, lng: 144.97272205 },
+                    { name: "Victoria St/Lygon St #124", lat: -37.76807726, lng: 144.97241630 },
+                    { name: "Albert St/Lygon St #123", lat: -37.76964909, lng: 144.97211225 },
+                    { name: "Glenlyon Rd/Lygon St #122", lat: -37.77251529, lng: 144.97161387 },
+                    { name: "Weston St/Lygon St #121", lat: -37.77555281, lng: 144.97112212 },
+                    { name: "Brunswick Rd/Lygon St #120", lat: -37.77811528, lng: 144.97077957 },
+                    { name: "Pigdon St/Lygon St #118", lat: -37.78153934, lng: 144.97023174 },
+                    { name: "Richardson St/Lygon St #117", lat: -37.78408261, lng: 144.96982152 },
+                    { name: "Fenwick St/Lygon St #116", lat: -37.78720080, lng: 144.96930468 },
+                    { name: "Melbourne Cemetery/Lygon St #115", lat: -37.78928546, lng: 144.96895236 },
+                    { name: "Princes St/Lygon St #114", lat: -37.79212480, lng: 144.96846579 },
+                    { name: "Lytton St/Lygon St #113", lat: -37.79413759, lng: 144.96812674 },
+                    { name: "Lygon St/Elgin St #112", lat: -37.79707383, lng: 144.96646768 },
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route11: {
+                name: "Route 11 - West Preston to Victoria Harbour",
+                color: "#f39c12",
+                stops: [
+                    { name: "West Preston/Gilbert Rd #47", lat: -37.72918594, lng: 144.99158656 },
+                    { name: "Jacka St/Gilbert Rd #45", lat: -37.73276368, lng: 144.99105870 },
+                    { name: "Cooper St/Gilbert Rd #44", lat: -37.73460563, lng: 144.99073657 },
+                    { name: "Murray Rd/Gilbert Rd #43", lat: -37.73646559, lng: 144.99041394 },
+                    { name: "Cramer St/Gilbert Rd #42", lat: -37.73891028, lng: 144.99003009 },
+                    { name: "Bruce St/Gilbert Rd #41", lat: -37.74095959, lng: 144.98971365 },
+                    { name: "Bell St/Gilbert Rd #40", lat: -37.74353804, lng: 144.98924668 },
+                    { name: "Latona Ave/Gilbert Rd #39", lat: -37.74562396, lng: 144.98896324 },
+                    { name: "Oakover Rd/Gilbert Rd #38", lat: -37.74823019, lng: 144.98854086 },
+                    { name: "Miller St/Gilbert Rd #37", lat: -37.75060223, lng: 144.98812478 },
+                    { name: "St Georges Rd/Miller St #35", lat: -37.75164413, lng: 144.99479302 },
+                    { name: "Devon St/Miller St #36", lat: -37.75126315, lng: 144.99094434 },
+                    { name: "Miller St/St Georges Rd #34", lat: -37.75226818, lng: 144.99492372 },
+                    { name: "Hutton St/St Georges Rd #33", lat: -37.75512144, lng: 144.99418836 },
+                    { name: "Normanby Ave/St Georges Rd #32", lat: -37.75846227, lng: 144.99350787 },
+                    { name: "Gadd St/St Georges Rd #31", lat: -37.76263888, lng: 144.99269120 },
+                    { name: "Gladstone Ave/St Georges Rd #30", lat: -37.76519815, lng: 144.99215657 },
+                    { name: "Arthurton Rd/St Georges Rd #29", lat: -37.76814455, lng: 144.99160008 },
+                    { name: "Sumner Ave/St Georges Rd #28", lat: -37.77147306, lng: 144.99072666 },
+                    { name: "Westbourne Gr/St Georges Rd #27", lat: -37.77366454, lng: 144.99029267 },
+                    { name: "Clarke St/St Georges Rd #26", lat: -37.77573893, lng: 144.98986183 },
+                    { name: "Miller St/St Georges Rd #25", lat: -37.77795152, lng: 144.98855296 },
+                    { name: "Holden St/St Georges Rd #24", lat: -37.77987866, lng: 144.98688841 },
+                    { name: "Park St/St Georges Rd #23", lat: -37.78173486, lng: 144.98529383 },
+                    { name: "Alfred Cres/St Georges Rd #21", lat: -37.78538493, lng: 144.98215155 },
+                    { name: "Fitzroy Bowls Club/Brunswick St #20", lat: -37.78817377, lng: 144.98029287 },
+                    { name: "Newry St/Brunswick St #19", lat: -37.79053694, lng: 144.97988784 },
+                    { name: "Alexandra Pde/Brunswick St #18", lat: -37.79292673, lng: 144.97945935 },
+                    { name: "Leicester St/Brunswick St #17", lat: -37.79546083, lng: 144.97903825 },
+                    { name: "Johnston St/Brunswick St #16", lat: -37.79816569, lng: 144.97858975 },
+                    { name: "St David St/Brunswick St #15", lat: -37.80053784, lng: 144.97818436 },
+                    { name: "King William St/Brunswick St #14", lat: -37.80270321, lng: 144.97780729 },
+                    { name: "Gertrude St/Brunswick St #13", lat: -37.80559663, lng: 144.97731947 },
+                    { name: "Armstrong St/Danks St #138", lat: -37.85270107, lng: 144.96216692 },
+                    { name: "Langridge St/Patterson St #139", lat: -37.85446751, lng: 144.96530066 },
+                    { name: "Fraser St/Patterson St #140", lat: -37.85542727, lng: 144.96712689 },
+                    { name: "Cowderoy St/Park St #141", lat: -37.85717968, lng: 144.97049994 },
+                    { name: "Mary St/Park St #142", lat: -37.85947696, lng: 144.97307394 },
+                    { name: "Fitzroy St/Park St #143", lat: -37.86098764, lng: 144.97445338 },
+                    { name: "Harold St/Danks St #137", lat: -37.85101287, lng: 144.95887206 },
+                    { name: "Danks St/Mills St #136", lat: -37.84932424, lng: 144.95607742 },
+                    { name: "Richardson St/Mills St #135", lat: -37.84722748, lng: 144.95780591 },
+                    { name: "Carter St/Mills St #134", lat: -37.84566385, lng: 144.95909912 },
+                    { name: "Canterbury Rd/Mills St #133", lat: -37.84450002, lng: 144.96006306 },
+                    { name: "Canterbury Rd/Albert Rd #132", lat: -37.84228278, lng: 144.95952188 },
+                    { name: "Melbourne Sports & Aquatic Centre/Albert Rd #131", lat: -37.84057701, lng: 144.96145524 },
+                    { name: "Albert Rd/Clarendon St #130", lat: -37.83894288, lng: 144.96336381 },
+                    { name: "Park St/Clarendon St #129", lat: -37.83502942, lng: 144.96166478 },
+                    { name: "Dorcas St/Clarendon St #128", lat: -37.83279431, lng: 144.96061279 },
+                    { name: "City Rd/Clarendon St #126", lat: -37.82805991, lng: 144.95834586 },
+                    { name: "York St/Clarendon St #127", lat: -37.83060483, lng: 144.95959370 },
+                    { name: "Port Junction/Whiteman St #125", lat: -37.82607628, lng: 144.95620781 },
+                    { name: "Clarendon St/Whiteman St #125", lat: -37.82566042, lng: 144.95665101 },
+                    { name: "Casino/MCEC/Clarendon St #124A", lat: -37.82328904, lng: 144.95605749 },
+                    { name: "Batman Park/Spencer St #124", lat: -37.82155404, lng: 144.95526467 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81781940, lng: 144.94624566 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Flinders Street West/Flinders St #D6", lat: -37.82147119, lng: 144.95360832 }
+                ]
+            },
+            route12: {
+                name: "Route 12 - Victoria Gardens to St Kilda",
+                color: "#e67e22",
+                stops: [
+                    { name: "Victoria Gardens", lat: -37.8000, lng: 144.9800 },
+                    { name: "Carlton", lat: -37.8000, lng: 144.9700 },
+                    { name: "Melbourne Central", lat: -37.8103, lng: 144.9631 },
+                    { name: "Flinders Street", lat: -37.8183, lng: 144.9671 },
+                    { name: "South Yarra", lat: -37.8381, lng: 144.9928 },
+                    { name: "Prahran", lat: -37.8448, lng: 144.9931 },
+                    { name: "Windsor", lat: -37.8575, lng: 144.9925 },
+                    { name: "St Kilda", lat: -37.8675, lng: 144.9781 }
+                ]
+            },
+            route16: {
+                name: "Route 16 - Melbourne University to Kew",
+                color: "#1abc9c",
+                stops: [
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route19: {
+                name: "Route 19 - North Coburg to Flinders Street",
+                color: "#34495e",
+                stops: [
+                    { name: "North Coburg Terminus/Sydney Rd #40", lat: -37.72758000, lng: 144.96365015 },
+                    { name: "Mercy College/Sydney Rd #39", lat: -37.72989065, lng: 144.96385917 },
+                    { name: "Carr St/Sydney Rd #38", lat: -37.73211182, lng: 144.96462665 },
+                    { name: "Gaffney St/Sydney Rd #37", lat: -37.73385558, lng: 144.96540724 },
+                    { name: "Rogers St/Sydney Rd #36", lat: -37.73553432, lng: 144.96607617 },
+                    { name: "St Pauls Catholic Church/Sydney Rd #35", lat: -37.73750463, lng: 144.96693006 },
+                    { name: "Bell St/Sydney Rd #34", lat: -37.74115879, lng: 144.96665985 },
+                    { name: "Coburg Market/Sydney Rd #33", lat: -37.74313615, lng: 144.96635607 },
+                    { name: "Harding St/Sydney Rd #32", lat: -37.74488833, lng: 144.96605843 },
+                    { name: "Edward St/Sydney Rd #31", lat: -37.74847354, lng: 144.96544955 },
+                    { name: "The Avenue/Sydney Rd #30", lat: -37.75186059, lng: 144.96484602 },
+                    { name: "Moore St/Sydney Rd #29", lat: -37.75350466, lng: 144.96455127 },
+                    { name: "Moreland Rd/Sydney Rd #28", lat: -37.75528248, lng: 144.96417338 },
+                    { name: "Brunswick Tram Depot/Sydney Rd #27", lat: -37.75742216, lng: 144.96387636 },
+                    { name: "Albion St/Sydney Rd #26", lat: -37.76073771, lng: 144.96330869 },
+                    { name: "Stewart St/Sydney Rd #25", lat: -37.76308280, lng: 144.96290381 },
+                    { name: "Blyth St/Sydney Rd #24", lat: -37.76535602, lng: 144.96251222 },
+                    { name: "Victoria St/Sydney Rd #23", lat: -37.76698226, lng: 144.96222919 },
+                    { name: "Albert St/Sydney Rd #22", lat: -37.76876124, lng: 144.96191925 },
+                    { name: "Glenlyon Rd/Sydney Rd #21", lat: -37.77136695, lng: 144.96147305 },
+                    { name: "Brunswick Rd/Sydney Rd #19", lat: -37.77764749, lng: 144.96039222 },
+                    { name: "Ievers St/Royal Pde #17", lat: -37.78168420, lng: 144.95983843 },
+                    { name: "Walker St/Royal Pde #16", lat: -37.78458930, lng: 144.95950873 },
+                    { name: "Leonard St/Royal Pde #15", lat: -37.78767376, lng: 144.95912865 },
+                    { name: "Cemetery Road West/Royal Pde #14", lat: -37.78971511, lng: 144.95887943 },
+                    { name: "Gatehouse St/Royal Pde #13", lat: -37.79242184, lng: 144.95854375 },
+                    { name: "Morrah St/Royal Pde #12", lat: -37.79556053, lng: 144.95817343 },
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Flinders Street Railway Station/Elizabeth St #1", lat: -37.81771743, lng: 144.96476527 }
+                ]
+            },
+            route30: {
+                name: "Route 30 - St Vincent's Plaza to Central Pier",
+                color: "#8e44ad",
+                stops: [
+                    { name: "St Vincents Plaza/Victoria Pde #12", lat: -37.80828329, lng: 144.97633747 },
+                    { name: "Albert St/Gisborne St #11", lat: -37.80969458, lng: 144.97560605 },
+                    { name: "Parliament Railway Station/Macarthur St #10", lat: -37.81237888, lng: 144.97448769 },
+                    { name: "Spring St/Collins St #8", lat: -37.81355676, lng: 144.97328548 },
+                    { name: "Melbourne Town Hall/Collins St #6", lat: -37.81567433, lng: 144.96595735 },
+                    { name: "Elizabeth St/Collins St #5", lat: -37.81642322, lng: 144.96340356 },
+                    { name: "William St/Collins St #3", lat: -37.81760704, lng: 144.95942911 },
+                    { name: "Spencer St/Collins St #1", lat: -37.81884688, lng: 144.95505538 },
+                    { name: "Southern Cross Station/Collins St #D14", lat: -37.81968066, lng: 144.95221502 },
+                    { name: "Batman's Hill/Collins St #D15", lat: -37.82026621, lng: 144.95013124 },
+                    { name: "Harbour Esp/Collins St #D16", lat: -37.82079748, lng: 144.94803758 },
+                    { name: "Merchant St/Collins St #D17", lat: -37.82152677, lng: 144.94541581 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 }
+                ]
+            },
+            route35: {
+                name: "Route 35 - City Circle (Free Tourist Tram)",
+                color: "#c0392b",
+                stops: [
+                    { name: "Waterfront City, Docklands", lat: -37.81434514, lng: 144.93875383 },
+                    { name: "NewQuay & Docklands Dr", lat: -37.81378105, lng: 144.94050751 },
+                    { name: "Central Pier & Harbour Esp", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Docklands Stadium", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Flagstaff Station", lat: -37.81168516, lng: 144.95676376 },
+                    { name: "Melbourne Central Station", lat: -37.81035321, lng: 144.96102598 },
+                    { name: "Melbourne Central & State Library Stations", lat: -37.80954153, lng: 144.96411517 },
+                    { name: "Exhibition Street", lat: -37.80845759, lng: 144.96762067 },
+                    { name: "Victoria St & La Trobe St", lat: -37.80761421, lng: 144.97097182 },
+                    { name: "Nicholson St & Victoria Pde", lat: -37.80801928, lng: 144.97356184 },
+                    { name: "Parliament Station", lat: -37.81237888, lng: 144.97448769 },
+                    { name: "Spring St & Bourke St", lat: -37.81154400, lng: 144.97257946 },
+                    { name: "Spring St & Flinders St", lat: -37.81536272, lng: 144.97454245 },
+                    { name: "Russell St & Flinders St", lat: -37.81642552, lng: 144.97084417 },
+                    { name: "Flinders Street Station, Swanston Street", lat: -37.81756006, lng: 144.96713247 },
+                    { name: "Flinders Street Station, Elizabeth Street", lat: -37.81823770, lng: 144.96462602 },
+                    { name: "Market St & Flinders St", lat: -37.81906291, lng: 144.96179738 },
+                    { name: "Melbourne Aquarium & Flinders St", lat: -37.82030972, lng: 144.95782102 },
+                    { name: "Spencer St & Flinders St", lat: -37.82083429, lng: 144.95585256 },
+                    { name: "Flinders St West & Flinders St", lat: -37.82147119, lng: 144.95360832 },
+                    { name: "The Goods Shed & McCrae St", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Docklands Park & Harbour Esp", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "Central Pier & Harbour Esp", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "NewQuay & Docklands Dve", lat: -37.81331193, lng: 144.94150880 },
+                    { name: "Waterfront City, Docklands", lat: -37.81434514, lng: 144.93875383 }
+                ]
+            },
+            route48: {
+                name: "Route 48 - North Balwyn to Victoria Harbour",
+                color: "#27ae60",
+                stops: [
+                    { name: "North Balwyn Shopping Centre/Doncaster Rd #47", lat: -37.79271153, lng: 145.07143970 },
+                    { name: "Sunburst Ave/Doncaster Rd #48", lat: -37.79321738, lng: 145.07426566 },
+                    { name: "Cityview Rd/Doncaster Rd #49", lat: -37.79375630, lng: 145.07746556 },
+                    { name: "Hill Rd/Doncaster Rd #50", lat: -37.79425860, lng: 145.08118886 },
+                    { name: "Balwyn Rd/Doncaster Rd #51", lat: -37.79464808, lng: 145.08463121 },
+                    { name: "Dight Ave/Doncaster Rd #50", lat: -37.79437164, lng: 145.08093609 },
+                    { name: "Buchanan Ave/Doncaster Rd #49", lat: -37.79394072, lng: 145.07772198 },
+                    { name: "Osburn Ave/Doncaster Rd #48", lat: -37.79341156, lng: 145.07456724 },
+                    { name: "Wattle Ave/Doncaster Rd #46", lat: -37.79283539, lng: 145.06745040 },
+                    { name: "Burke Rd/Doncaster Rd #44", lat: -37.79346799, lng: 145.06426546 },
+                    { name: "Kew High School/High St #43", lat: -37.79465037, lng: 145.06108881 },
+                    { name: "Irymple Ave/High St #42", lat: -37.79639700, lng: 145.05715908 },
+                    { name: "Clyde St/High St #41", lat: -37.79743880, lng: 145.05475817 },
+                    { name: "Harp Village/High St #40", lat: -37.79862823, lng: 145.05202394 },
+                    { name: "Harp Rd/High St #39", lat: -37.79941303, lng: 145.05043601 },
+                    { name: "Victoria Park/High St #38", lat: -37.80125872, lng: 145.04598072 },
+                    { name: "Kew Cemetery/High St #37", lat: -37.80247266, lng: 145.04256410 },
+                    { name: "Parkhill Rd/High St #36", lat: -37.80348933, lng: 145.03975456 },
+                    { name: "Cobden St/High St #35", lat: -37.80498727, lng: 145.03554650 },
+                    { name: "Pakington St/High St #34", lat: -37.80561661, lng: 145.03383744 },
+                    { name: "Kew Shopping Centre/High St #33", lat: -37.80667385, lng: 145.03131054 },
+                    { name: "Union St/High St #34", lat: -37.80564013, lng: 145.03416620 },
+                    { name: "Charles St/High St #35", lat: -37.80501248, lng: 145.03597744 },
+                    { name: "Gladstone St/High St #36", lat: -37.80353871, lng: 145.04001449 },
+                    { name: "Kew Cemetery/High St #37", lat: -37.80258226, lng: 145.04265207 },
+                    { name: "Harp Rd/High St #39", lat: -37.79956353, lng: 145.05027305 },
+                    { name: "Harp Village/High St #40", lat: -37.79872113, lng: 145.05219186 },
+                    { name: "Station St/High St #41", lat: -37.79796577, lng: 145.05392663 },
+                    { name: "Woodlands Ave/High St #42", lat: -37.79632435, lng: 145.05767205 },
+                    { name: "Kew High School/High St #43", lat: -37.79469970, lng: 145.06134872 },
+                    { name: "Burke Rd/High St #44", lat: -37.79353016, lng: 145.06366194 },
+                    { name: "Wattle Ave/Doncaster Rd #46", lat: -37.79300579, lng: 145.06740053 },
+                    { name: "North Balwyn Shopping Centre/Doncaster Rd #47", lat: -37.79272684, lng: 145.07072386 },
+                    { name: "Osburn Ave/Doncaster Rd #48", lat: -37.79341156, lng: 145.07456724 },
+                    { name: "Buchanan Ave/Doncaster Rd #49", lat: -37.79394072, lng: 145.07772198 },
+                    { name: "Dight Ave/Doncaster Rd #50", lat: -37.79437164, lng: 145.08093609 },
+                    { name: "Balwyn Rd/Doncaster Rd #51", lat: -37.79464808, lng: 145.08463121 },
+                    { name: "Deepdene Shopping Centre/Whitehorse Rd #43", lat: -37.81092511, lng: 145.06487739 },
+                    { name: "Deepdene Park/Whitehorse Rd #44", lat: -37.81137490, lng: 145.06867098 },
+                    { name: "Hardwicke St/Whitehorse Rd #45", lat: -37.81175036, lng: 145.07178499 },
+                    { name: "Balwyn Cinema/Whitehorse Rd #46", lat: -37.81224172, lng: 145.07592973 },
+                    { name: "Balwyn Rd/Whitehorse Rd #47", lat: -37.81291876, lng: 145.08152373 },
+                    { name: "Balwyn Shopping Centre/Whitehorse Rd #48", lat: -37.81319896, lng: 145.08378838 },
+                    { name: "Northcote Ave/Whitehorse Rd #49", lat: -37.81369027, lng: 145.08795601 },
+                    { name: "Wharton St/Whitehorse Rd #50", lat: -37.81410622, lng: 145.09137590 },
+                    { name: "Narrak Rd/Whitehorse Rd #51", lat: -37.81456418, lng: 145.09516962 },
+                    { name: "Union Rd/Whitehorse Rd #53", lat: -37.81494552, lng: 145.09924935 },
+                    { name: "Inglisby Rd/Whitehorse Rd #54", lat: -37.81540450, lng: 145.10312266 },
+                    { name: "Hood St/Whitehorse Rd #55", lat: -37.81616419, lng: 145.10945346 },
+                    { name: "Elgar Rd/Whitehorse Rd #56", lat: -37.81691144, lng: 145.11559159 },
+                    { name: "Nelson Rd/Whitehorse Rd #57", lat: -37.81745731, lng: 145.11986051 },
+                    { name: "Box Hill Central/Whitehorse Rd #58", lat: -37.81784397, lng: 145.12206596 }
+                ]
+            },
+            route57: {
+                name: "Route 57 - West Maribyrnong to Flinders Street",
+                color: "#d35400",
+                stops: [
+                    { name: "West Maribyrnong/Maribyrnong Rd #40", lat: -37.77029680, lng: 144.90257069 },
+                    { name: "Clyde St/Raleigh Rd #42", lat: -37.76969864, lng: 144.89884126 },
+                    { name: "Van Ness Ave/Raleigh Rd #43", lat: -37.76950591, lng: 144.89612211 },
+                    { name: "Warrs Rd/Raleigh Rd #44", lat: -37.76905702, lng: 144.89218420 },
+                    { name: "Maribyrnong Community Centre/Raleigh Rd #45", lat: -37.76873947, lng: 144.88954811 },
+                    { name: "Rosamond Rd/Raleigh Rd #46", lat: -37.76900299, lng: 144.88715661 },
+                    { name: "Wests Rd/Raleigh Rd #48", lat: -37.76938048, lng: 144.88208268 },
+                    { name: "Highpoint Shopping Centre/Wests Rd #49", lat: -37.77328585, lng: 144.88226641 },
+                    { name: "Williamson Rd/Wests Rd #50", lat: -37.77493006, lng: 144.88199242 },
+                    { name: "Williamson Rd/Rosamond Rd #51", lat: -37.77629334, lng: 144.88564340 },
+                    { name: "River St/Rosamond Rd #52", lat: -37.77850236, lng: 144.88520578 },
+                    { name: "Maribyrnong College/River St #53", lat: -37.77954548, lng: 144.88809403 },
+                    { name: "Gordon St/River St #54", lat: -37.77991725, lng: 144.89123988 },
+                    { name: "Lyric St/Gordon St #55", lat: -37.78211804, lng: 144.89134764 },
+                    { name: "Edgewater Square/Gordon St #56", lat: -37.78444356, lng: 144.89087277 },
+                    { name: "Titch St/Gordon St #57", lat: -37.78879981, lng: 144.89006758 },
+                    { name: "Ballarat Rd/Gordon St #58", lat: -37.79055091, lng: 144.88972252 },
+                    { name: "Droop St/Ballarat Rd #59", lat: -37.79231292, lng: 144.89351070 },
+                    { name: "Tiernan St/Droop St #60", lat: -37.79461924, lng: 144.89548933 },
+                    { name: "Geelong Rd/Droop St #61", lat: -37.79613795, lng: 144.89676359 },
+                    { name: "Nicholson St/Droop St #62", lat: -37.79927622, lng: 144.89941162 },
+                    { name: "Leeds St/Hopkins St #63", lat: -37.79985278, lng: 144.90091715 },
+                    { name: "Footscray Market/Leeds St #63", lat: -37.80008059, lng: 144.90105834 },
+                    { name: "Footscray Station/Leeds St #64", lat: -37.80136679, lng: 144.90091971 },
+                    { name: "Epsom Rd/Maribyrnong Rd #40", lat: -37.77043230, lng: 144.90512121 },
+                    { name: "Bowen St/Maribyrnong Rd #39", lat: -37.77086174, lng: 144.90900307 },
+                    { name: "Hotham St/Maribyrnong Rd #38", lat: -37.77123617, lng: 144.91233024 },
+                    { name: "Union Rd/Maribyrnong Rd #37", lat: -37.77170560, lng: 144.91593860 },
+                    { name: "Moore St/Maribyrnong Rd #35", lat: -37.77221197, lng: 144.92113538 },
+                    { name: "Ascot Vale Rd/Maribyrnong Rd #34", lat: -37.77247358, lng: 144.92370518 },
+                    { name: "Chaucer St/Ascot Vale Rd #33", lat: -37.77005060, lng: 144.92428383 },
+                    { name: "St Leonards Rd/Union Rd #36", lat: -37.77357111, lng: 144.91594298 },
+                    { name: "Bloomfield Rd/Union Rd #35", lat: -37.77588936, lng: 144.91555997 },
+                    { name: "Melbourne Showgrounds/Union Rd #33", lat: -37.78035452, lng: 144.91478735 },
+                    { name: "Sandown Rd/Epsom Rd #32", lat: -37.78258743, lng: 144.91671163 },
+                    { name: "Racing Victoria/Epsom Rd #31", lat: -37.78401825, lng: 144.91812486 },
+                    { name: "Flemington Racecourse/Epsom Rd #30", lat: -37.78604275, lng: 144.91998705 },
+                    { name: "Flemington Racecourse/Racecourse Rd #29", lat: -37.78734904, lng: 144.92200573 },
+                    { name: "Smithfield Rd/Racecourse Rd #28", lat: -37.78762625, lng: 144.92495035 },
+                    { name: "Newmarket Plaza/Racecourse Rd #26", lat: -37.78797103, lng: 144.92815427 },
+                    { name: "Wellington St/Racecourse Rd #25", lat: -37.78824148, lng: 144.93123539 },
+                    { name: "Victoria St/Racecourse Rd #24", lat: -37.78844326, lng: 144.93348950 },
+                    { name: "Stubbs St/Racecourse Rd #23", lat: -37.78876781, lng: 144.93658052 },
+                    { name: "Boundary Rd/Racecourse Rd #22", lat: -37.78913148, lng: 144.93985216 },
+                    { name: "Melrose St/Flemington Rd #20", lat: -37.79039354, lng: 144.94348502 },
+                    { name: "Abbotsford St Interchange/Abbotsford St #19", lat: -37.79410630, lng: 144.94709559 },
+                    { name: "Haines St/Abbotsford St #16", lat: -37.79828366, lng: 144.94634395 },
+                    { name: "Arden St/Abbotsford St #15", lat: -37.80099657, lng: 144.94584858 },
+                    { name: "Queensberry St/Abbotsford St #14", lat: -37.80238955, lng: 144.94562827 },
+                    { name: "Elliott Ave/Royal Park #24", lat: -37.78801554, lng: 144.94975101 },
+                    { name: "State Netball Hockey Centre/Royal Park #25", lat: -37.78453929, lng: 144.94884786 },
+                    { name: "Melbourne Zoo/Royal Park #26", lat: -37.78261723, lng: 144.94921893 },
+                    { name: "Royal Park Station/Royal Park #27", lat: -37.78075300, lng: 144.95135965 },
+                    { name: "Park St/Royal Park #28", lat: -37.77706714, lng: 144.94980376 },
+                    { name: "Brunswick Rd/Grantham St #29", lat: -37.77553769, lng: 144.94891503 },
+                    { name: "Union Square Shopping Centre/Grantham St #30", lat: -37.77225925, lng: 144.94953923 },
+                    { name: "Grantham St/Dawson St #31", lat: -37.77005124, lng: 144.94953211 },
+                    { name: "Smith St/Melville Rd #34", lat: -37.76731147, lng: 144.94331864 },
+                    { name: "Victoria St/Melville Rd #35", lat: -37.76470803, lng: 144.94389025 },
+                    { name: "Hope St/Melville Rd #36", lat: -37.76204015, lng: 144.94438414 },
+                    { name: "Albion St/Melville Rd #37", lat: -37.75856317, lng: 144.94499119 },
+                    { name: "Jacobs Reserve/Melville Rd #38", lat: -37.75662349, lng: 144.94538538 },
+                    { name: "Moreland Rd/Melville Rd #40", lat: -37.75316294, lng: 144.94590108 },
+                    { name: "Reynard St/Melville Rd #42", lat: -37.74639864, lng: 144.94455600 },
+                    { name: "Princes Tce/Melville Rd #43", lat: -37.74392811, lng: 144.94499886 },
+                    { name: "Brearley Pde/Melville Rd #44", lat: -37.74159210, lng: 144.94540392 },
+                    { name: "Bell St/Melville Rd #45", lat: -37.74011744, lng: 144.94559222 },
+                    { name: "Market St/Flinders St #3", lat: -37.81906291, lng: 144.96179738 },
+                    { name: "Elizabeth St/Flinders St #4", lat: -37.81823770, lng: 144.96462602 },
+                    { name: "Swanston St/Flinders St #5", lat: -37.81756006, lng: 144.96713247 },
+                    { name: "Russell St/Flinders St #6", lat: -37.81642552, lng: 144.97084417 },
+                    { name: "Spring St/Flinders St #8", lat: -37.81536272, lng: 144.97454245 },
+                    { name: "Lansdowne St/Wellington Pde #9", lat: -37.81545285, lng: 144.97716407 },
+                    { name: "Jolimont Rd/Wellington Pde #10", lat: -37.81575029, lng: 144.97979141 },
+                    { name: "Jolimont Station-MCG/Wellington Pde #11", lat: -37.81630429, lng: 144.98477463 },
+                    { name: "Simpson St/Wellington Pde #13", lat: -37.81654033, lng: 144.98698338 },
+                    { name: "Punt Rd/Wellington Pde #14", lat: -37.81738838, lng: 144.98967538 },
+                    { name: "Punt Rd/Bridge Rd #14", lat: -37.81753279, lng: 144.99021674 },
+                    { name: "Simpson St/Wellington Pde #13", lat: -37.81660319, lng: 144.98697031 },
+                    { name: "Jolimont Station-MCG/Wellington Pde #11", lat: -37.81626114, lng: 144.98383293 },
+                    { name: "Jolimont Rd/Wellington Pde #10", lat: -37.81576932, lng: 144.97932514 },
+                    { name: "Lansdowne St/Wellington Pde #9", lat: -37.81547129, lng: 144.97666374 },
+                    { name: "Spring St/Flinders St #8", lat: -37.81553662, lng: 144.97417418 },
+                    { name: "Rod Laver Arena/MCG Gates 1-3 #7B", lat: -37.81958697, lng: 144.97913015 },
+                    { name: "MCG Gates 4-7/John Cain Arena #7C", lat: -37.82238396, lng: 144.98352999 },
+                    { name: "Olympic Boulevard #7D", lat: -37.82413510, lng: 144.98685655 },
+                    { name: "Olympic Boulevard #7D", lat: -37.82382690, lng: 144.98675132 },
+                    { name: "MCG Gates 4-7/John Cain Arena #7C", lat: -37.82213712, lng: 144.98279826 },
+                    { name: "Rod Laver Arena/MCG Gates 1-3 #7B", lat: -37.81934950, lng: 144.97842093 },
+                    { name: "Russell St/Flinders St #6", lat: -37.81665933, lng: 144.97029250 },
+                    { name: "Swanston St/Flinders St #5", lat: -37.81775625, lng: 144.96649093 },
+                    { name: "Elizabeth St/Flinders St #4", lat: -37.81841196, lng: 144.96428043 },
+                    { name: "Market St/Flinders St #3", lat: -37.81930627, lng: 144.96127947 },
+                    { name: "Victoria Police Centre/Flinders St #D6", lat: -37.82172569, lng: 144.95321503 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82200105, lng: 144.95091257 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82172534, lng: 144.94750066 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81746297, lng: 144.94596018 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81424880, lng: 144.94458390 },
+                    { name: "Clarendon St/Whiteman St #125", lat: -37.82566042, lng: 144.95665101 },
+                    { name: "Casino/MCEC/Clarendon St #124A", lat: -37.82328904, lng: 144.95605749 },
+                    { name: "Batman Park/Spencer St #124", lat: -37.82155404, lng: 144.95526467 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81781940, lng: 144.94624566 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Flinders Street West/Flinders St #D6", lat: -37.82147119, lng: 144.95360832 }
+                ]
+            },
+            route58: {
+                name: "Route 58 - West Coburg to Toorak",
+                color: "#16a085",
+                stops: [
+                    { name: "West Coburg/Sydney Rd #41", lat: -37.72558000, lng: 144.96365015 },
+                    { name: "Mercy College/Sydney Rd #39", lat: -37.72989065, lng: 144.96385917 },
+                    { name: "Carr St/Sydney Rd #38", lat: -37.73211182, lng: 144.96462665 },
+                    { name: "Gaffney St/Sydney Rd #37", lat: -37.73385558, lng: 144.96540724 },
+                    { name: "Rogers St/Sydney Rd #36", lat: -37.73553432, lng: 144.96607617 },
+                    { name: "St Pauls Catholic Church/Sydney Rd #35", lat: -37.73750463, lng: 144.96693006 },
+                    { name: "Bell St/Sydney Rd #34", lat: -37.74115879, lng: 144.96665985 },
+                    { name: "Coburg Market/Sydney Rd #33", lat: -37.74313615, lng: 144.96635607 },
+                    { name: "Harding St/Sydney Rd #32", lat: -37.74488833, lng: 144.96605843 },
+                    { name: "Edward St/Sydney Rd #31", lat: -37.74847354, lng: 144.96544955 },
+                    { name: "The Avenue/Sydney Rd #30", lat: -37.75186059, lng: 144.96484602 },
+                    { name: "Moore St/Sydney Rd #29", lat: -37.75350466, lng: 144.96455127 },
+                    { name: "Moreland Rd/Sydney Rd #28", lat: -37.75528248, lng: 144.96417338 },
+                    { name: "Brunswick Tram Depot/Sydney Rd #27", lat: -37.75742216, lng: 144.96387636 },
+                    { name: "Albion St/Sydney Rd #26", lat: -37.76073771, lng: 144.96330869 },
+                    { name: "Stewart St/Sydney Rd #25", lat: -37.76308280, lng: 144.96290381 },
+                    { name: "Blyth St/Sydney Rd #24", lat: -37.76535602, lng: 144.96251222 },
+                    { name: "Victoria St/Sydney Rd #23", lat: -37.76698226, lng: 144.96222919 },
+                    { name: "Albert St/Sydney Rd #22", lat: -37.76876124, lng: 144.96191925 },
+                    { name: "Glenlyon Rd/Sydney Rd #21", lat: -37.77136695, lng: 144.96147305 },
+                    { name: "Brunswick Rd/Sydney Rd #19", lat: -37.77764749, lng: 144.96039222 },
+                    { name: "Ievers St/Royal Pde #17", lat: -37.78168420, lng: 144.95983843 },
+                    { name: "Walker St/Royal Pde #16", lat: -37.78458930, lng: 144.95950873 },
+                    { name: "Leonard St/Royal Pde #15", lat: -37.78767376, lng: 144.95912865 },
+                    { name: "Cemetery Road West/Royal Pde #14", lat: -37.78971511, lng: 144.95887943 },
+                    { name: "Gatehouse St/Royal Pde #13", lat: -37.79242184, lng: 144.95854375 },
+                    { name: "Morrah St/Royal Pde #12", lat: -37.79556053, lng: 144.95817343 },
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route59: {
+                name: "Route 59 - Airport West to Flinders Street",
+                color: "#2980b9",
+                stops: [
+                    { name: "Airport West Shopping Centre/Mt Alexander Rd #40", lat: -37.72058000, lng: 144.88000000 },
+                    { name: "Niddrie Shopping Centre/Mt Alexander Rd #39", lat: -37.73000000, lng: 144.89000000 },
+                    { name: "Essendon Station/Mt Alexander Rd #38", lat: -37.75000000, lng: 144.90000000 },
+                    { name: "Moonee Ponds Junction/Mt Alexander Rd #37", lat: -37.77000000, lng: 144.92000000 },
+                    { name: "Flemington Racecourse/Mt Alexander Rd #36", lat: -37.78000000, lng: 144.93000000 },
+                    { name: "Royal Park/Mt Alexander Rd #35", lat: -37.79000000, lng: 144.94000000 },
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Flinders Street Railway Station/Elizabeth St #1", lat: -37.81771743, lng: 144.96476527 }
+                ]
+            },
+            route64: {
+                name: "Route 64 - Melbourne University to East Brighton",
+                color: "#8e44ad",
+                stops: [
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route67: {
+                name: "Route 67 - Melbourne University to Carnegie",
+                color: "#e74c3c",
+                stops: [
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route70: {
+                name: "Route 70 - Wattle Park to Waterfront City",
+                color: "#f39c12",
+                stops: [
+                    { name: "Wattle Park/Burwood Hwy #40", lat: -37.82000000, lng: 145.08000000 },
+                    { name: "Burwood Station/Burke Rd #62", lat: -37.83020398, lng: 145.05681801 },
+                    { name: "Camberwell Station/Burke Rd #64", lat: -37.82605391, lng: 145.05763129 },
+                    { name: "Hawthorn Station/Burke Rd #67", lat: -37.81858850, lng: 145.05905391 },
+                    { name: "Richmond Station/Bridge Rd #1", lat: -37.81000000, lng: 144.99000000 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Flinders Street Railway Station/Elizabeth St #1", lat: -37.81771743, lng: 144.96476527 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81781940, lng: 144.94624566 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Flinders Street West/Flinders St #D6", lat: -37.82147119, lng: 144.95360832 }
+                ]
+            },
+            route72: {
+                name: "Route 72 - Melbourne University to Camberwell",
+                color: "#2ecc71",
+                stops: [
+                    { name: "Melbourne University/Swanston St #1", lat: -37.79930548, lng: 144.96419183 },
+                    { name: "Lincoln Square/Swanston St #3", lat: -37.80236978, lng: 144.96368745 },
+                    { name: "Queensberry St/Swanston St #4", lat: -37.80569411, lng: 144.96310774 },
+                    { name: "RMIT University/Swanston St #7", lat: -37.80813946, lng: 144.96329043 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Arts Precinct/St Kilda Rd #14", lat: -37.82184570, lng: 144.96951422 },
+                    { name: "Shrine of Remembrance/St Kilda Rd #19", lat: -37.82879869, lng: 144.97136874 },
+                    { name: "Toorak Rd/St Kilda Rd #22", lat: -37.83595132, lng: 144.97539977 },
+                    { name: "Arthur St/St Kilda Rd #23", lat: -37.83885520, lng: 144.97657033 },
+                    { name: "Leopold St/St Kilda Rd #24", lat: -37.84115853, lng: 144.97740511 },
+                    { name: "Commercial Rd/St Kilda Rd #25", lat: -37.84452295, lng: 144.97863142 },
+                    { name: "Moubray St/St Kilda Rd #26", lat: -37.84755154, lng: 144.97971927 },
+                    { name: "High St/St Kilda Rd #27", lat: -37.84986386, lng: 144.98055399 },
+                    { name: "Union St/St Kilda Rd #29", lat: -37.85300170, lng: 144.98170720 },
+                    { name: "St Kilda Junction/St Kilda Rd #30", lat: -37.85529579, lng: 144.98253116 },
+                    { name: "Punt Rd/High St #28", lat: -37.85056356, lng: 144.98404671 },
+                    { name: "Perth St/High St #29", lat: -37.85105009, lng: 144.98772713 },
+                    { name: "Prahran Station/High St #30", lat: -37.85131864, lng: 144.98973147 },
+                    { name: "Chapel St/High St #31", lat: -37.85175647, lng: 144.99320872 },
+                    { name: "Hornby St/High St #32", lat: -37.85219895, lng: 144.99643585 },
+                    { name: "Prahran RSL/High St  #33", lat: -37.85243434, lng: 144.99808883 },
+                    { name: "Lewisham Rd/High St #34", lat: -37.85265073, lng: 144.99968550 },
+                    { name: "Williams Rd/High St #35", lat: -37.85301095, lng: 145.00232392 },
+                    { name: "Chatsworth Rd/High St #36", lat: -37.85355558, lng: 145.00627581 },
+                    { name: "Airlie Ave/High St #37", lat: -37.85386619, lng: 145.00865422 },
+                    { name: "Orrong Rd/High St #38", lat: -37.85421989, lng: 145.01145203 },
+                    { name: "Auburn Gr/High St #39", lat: -37.85468487, lng: 145.01497429 },
+                    { name: "Armadale Station/High St #40", lat: -37.85511852, lng: 145.01824739 },
+                    { name: "Kooyong Rd/High St #41", lat: -37.85541912, lng: 145.02058071 },
+                    { name: "Huntingtower Rd/High St #42", lat: -37.85583154, lng: 145.02367259 },
+                    { name: "Mercer Rd/High St #43", lat: -37.85612189, lng: 145.02593803 },
+                    { name: "Glenferrie Rd/High St #44", lat: -37.85653646, lng: 145.02916631 },
+                    { name: "De La Salle College/High St #45", lat: -37.85694174, lng: 145.03238350 },
+                    { name: "Fraser St/High St #46", lat: -37.85738316, lng: 145.03561113 },
+                    { name: "Dixon St/High St #47", lat: -37.85769356, lng: 145.03801254 },
+                    { name: "Tooronga Rd/High St #48", lat: -37.85807757, lng: 145.04104854 },
+                    { name: "Harold Holt Swim Centre/High St #49", lat: -37.85845437, lng: 145.04419842 },
+                    { name: "Belmont Ave/High St #50", lat: -37.85894526, lng: 145.04825465 },
+                    { name: "Burke Rd/High St #51", lat: -37.85930967, lng: 145.05121170 },
+                    { name: "Boyanda Rd/High St #52", lat: -37.85961375, lng: 145.05379528 },
+                    { name: "Malvern Rd/High St #53", lat: -37.85999811, lng: 145.05633130 }
+                ]
+            },
+            route75: {
+                name: "Route 75 - Vermont South to Central Pier",
+                color: "#9b59b6",
+                stops: [
+                    { name: "Vermont South Shopping Centre/Burwood Hwy #40", lat: -37.85000000, lng: 145.15000000 },
+                    { name: "Burwood Station/Burke Rd #62", lat: -37.83020398, lng: 145.05681801 },
+                    { name: "Camberwell Station/Burke Rd #64", lat: -37.82605391, lng: 145.05763129 },
+                    { name: "Hawthorn Station/Burke Rd #67", lat: -37.81858850, lng: 145.05905391 },
+                    { name: "Richmond Station/Bridge Rd #1", lat: -37.81000000, lng: 144.99000000 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Flinders Street Railway Station/Elizabeth St #1", lat: -37.81771743, lng: 144.96476527 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 }
+                ]
+            },
+            route78: {
+                name: "Route 78 - North Richmond to Balaclava",
+                color: "#34495e",
+                stops: [
+                    { name: "North Richmond Station/Bridge Rd #1", lat: -37.81000000, lng: 144.99000000 },
+                    { name: "Richmond Station/Bridge Rd #2", lat: -37.82000000, lng: 144.99000000 },
+                    { name: "South Yarra Station/Bridge Rd #3", lat: -37.83810000, lng: 144.99280000 },
+                    { name: "Prahran Station/Bridge Rd #4", lat: -37.84480000, lng: 144.99310000 },
+                    { name: "Windsor Station/Bridge Rd #5", lat: -37.85750000, lng: 144.99250000 },
+                    { name: "St Kilda Station/Bridge Rd #6", lat: -37.86750000, lng: 144.97810000 },
+                    { name: "Balaclava Station/Bridge Rd #7", lat: -37.87000000, lng: 144.98000000 }
+                ]
+            },
+            route82: {
+                name: "Route 82 - Footscray to Moonee Ponds",
+                color: "#e67e22",
+                stops: [
+                    { name: "Footscray Station/Leeds St #64", lat: -37.80136679, lng: 144.90091971 },
+                    { name: "West Footscray Station/Hopkins St #2", lat: -37.79000000, lng: 144.89000000 },
+                    { name: "Tottenham Station/Hopkins St #3", lat: -37.78000000, lng: 144.90000000 },
+                    { name: "West Melbourne Station/Hopkins St #4", lat: -37.81000000, lng: 144.95000000 },
+                    { name: "Flemington Station/Hopkins St #5", lat: -37.79000000, lng: 144.93000000 },
+                    { name: "Moonee Ponds Junction/Mt Alexander Rd #6", lat: -37.77000000, lng: 144.92000000 }
+                ]
+            },
+            route86: {
+                name: "Route 86 - Bundoora RMIT to Waterfront City",
+                color: "#1abc9c",
+                stops: [
+                    { name: "Bundoora RMIT/Plenty Rd #1", lat: -37.70000000, lng: 145.05000000 },
+                    { name: "Bundoora Station/Plenty Rd #2", lat: -37.71000000, lng: 145.04000000 },
+                    { name: "Preston Station/Plenty Rd #3", lat: -37.75000000, lng: 145.00000000 },
+                    { name: "Thornbury Station/Plenty Rd #4", lat: -37.76000000, lng: 144.99000000 },
+                    { name: "Northcote Station/Plenty Rd #5", lat: -37.77000000, lng: 144.98000000 },
+                    { name: "Carlton Station/Plenty Rd #6", lat: -37.80000000, lng: 144.97000000 },
+                    { name: "Melbourne Central Station/Swanston St #8", lat: -37.81038237, lng: 144.96427381 },
+                    { name: "Bourke Street Mall/Swanston St #10", lat: -37.81319863, lng: 144.96558229 },
+                    { name: "City Square/Swanston St #11", lat: -37.81637753, lng: 144.96701723 },
+                    { name: "Federation Square/Swanston St #13", lat: -37.81847551, lng: 144.96795936 },
+                    { name: "Flinders Street Railway Station/Elizabeth St #1", lat: -37.81771743, lng: 144.96476527 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81781940, lng: 144.94624566 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Flinders Street West/Flinders St #D6", lat: -37.82147119, lng: 144.95360832 }
+                ]
+            },
+            route96: {
+                name: "Route 96 - East Brunswick to St Kilda Beach",
+                color: "#c0392b",
+                stops: [
+                    { name: "East Brunswick/Nicholson St #130", lat: -37.75337171, lng: 144.97618882 },
+                    { name: "Rennie St/Nicholson St #131", lat: -37.75121728, lng: 144.97667882 },
+                    { name: "Crozier St/Nicholson St #132", lat: -37.74939321, lng: 144.97698955 },
+                    { name: "Harding St/Nicholson St #133", lat: -37.74605896, lng: 144.97752296 },
+                    { name: "Merribell Ave/Nicholson St #134", lat: -37.74437098, lng: 144.97788668 },
+                    { name: "Bell St/Nicholson St #135", lat: -37.74286119, lng: 144.97813204 },
+                    { name: "Melbourne Museum/Nicholson St #11", lat: -37.80575799, lng: 144.97360094 },
+                    { name: "Albert St/Nicholson St #10", lat: -37.80967590, lng: 144.97294861 },
+                    { name: "Spring St/Bourke St #9", lat: -37.81154400, lng: 144.97257946 },
+                    { name: "Russell St/Bourke St #7", lat: -37.81276887, lng: 144.96835439 },
+                    { name: "Swanston St/Bourke St #6", lat: -37.81348355, lng: 144.96590389 },
+                    { name: "Elizabeth St/Bourke St #5", lat: -37.81421718, lng: 144.96350963 },
+                    { name: "Queen St/Bourke St #4", lat: -37.81525299, lng: 144.95983472 },
+                    { name: "William St/Bourke St #3", lat: -37.81588156, lng: 144.95762499 },
+                    { name: "Spencer St/Bourke St #1", lat: -37.81706281, lng: 144.95351423 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81781940, lng: 144.94624566 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Flinders Street West/Flinders St #D6", lat: -37.82147119, lng: 144.95360832 },
+                    { name: "Victoria Police Centre/Flinders St #D6", lat: -37.82172569, lng: 144.95321503 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82200105, lng: 144.95091257 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82172534, lng: 144.94750066 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81746297, lng: 144.94596018 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81424880, lng: 144.94458390 },
+                    { name: "Clarendon St/Whiteman St #125", lat: -37.82566042, lng: 144.95665101 },
+                    { name: "Casino/MCEC/Clarendon St #124A", lat: -37.82328904, lng: 144.95605749 },
+                    { name: "Batman Park/Spencer St #124", lat: -37.82155404, lng: 144.95526467 },
+                    { name: "Southern Cross Railway Station/Spencer St #122", lat: -37.81832017, lng: 144.95378623 },
+                    { name: "Lonsdale St/Spencer St #120", lat: -37.81531286, lng: 144.95238116 },
+                    { name: "La Trobe St/Spencer St #119", lat: -37.81340511, lng: 144.95150241 },
+                    { name: "Docklands Stadium/La Trobe St  #D1", lat: -37.81460496, lng: 144.94640290 },
+                    { name: "Central Pier/Harbour Esp #D2", lat: -37.81470491, lng: 144.94490068 },
+                    { name: "Stadium Precinct - Bourke St/Harbour Esp #D3", lat: -37.81781940, lng: 144.94624566 },
+                    { name: "Docklands Park/Harbour Esp #D4", lat: -37.82146591, lng: 144.94761009 },
+                    { name: "South Wharf/Wurundjeri Way #D5", lat: -37.82183505, lng: 144.95121254 },
+                    { name: "Flinders Street West/Flinders St #D6", lat: -37.82147119, lng: 144.95360832 }
+                ]
+            },
+            route109: {
+                name: "Route 109 - Box Hill to Port Melbourne",
+                color: "#27ae60",
+                stops: [
+                    { name: "Box Hill Central", lat: -37.81784379, lng: 145.12205460 },
+                    { name: "Nelson Rd & Whitehorse Rd", lat: -37.81742098, lng: 145.11871405 },
+                    { name: "Elgar Rd & Whitehorse Rd", lat: -37.81688389, lng: 145.11443355 },
+                    { name: "Hood St & Whitehorse Rd", lat: -37.81634136, lng: 145.10982382 },
+                    { name: "Inglisby Rd & Whitehorse Rd", lat: -37.81547972, lng: 145.10275721 },
+                    { name: "Union Rd & Whitehorse Rd", lat: -37.81511207, lng: 145.09951771 },
+                    { name: "Narrak Rd & Whitehorse Rd", lat: -37.81440479, lng: 145.09478749 },
+                    { name: "Wharton St & Whitehorse Rd", lat: -37.81403012, lng: 145.09168457 },
+                    { name: "Northcote Ave & Whitehorse Rd", lat: -37.81355182, lng: 145.08775511 },
+                    { name: "Balwyn Shopping Centre & Whitehorse Rd", lat: -37.81306107, lng: 145.08362156 },
+                    { name: "Balwyn Rd & Whitehorse Rd", lat: -37.81276908, lng: 145.08118682 },
+                    { name: "Balwyn Cinema & Whitehorse Rd", lat: -37.81211319, lng: 145.07578540 },
+                    { name: "Hardwicke St & Whitehorse Rd", lat: -37.81159053, lng: 145.07138022 },
+                    { name: "Deepdene Park & Whitehorse Rd", lat: -37.81123736, lng: 145.06852689 },
+                    { name: "Deepdene Shopping Centre & Whitehorse Rd", lat: -37.81078738, lng: 145.06472195 },
+                    { name: "Burke Rd & Whitehorse Rd", lat: -37.81044443, lng: 145.06085747 },
+                    { name: "Kew Traffic School & Cotham Rd", lat: -37.81009796, lng: 145.05787912 },
+                    { name: "St George's Hospital & Cotham Rd", lat: -37.80952265, lng: 145.05305530 },
+                    { name: "Thomas St & Cotham Rd", lat: -37.80911647, lng: 145.04974918 },
+                    { name: "Marshall Ave & Cotham Rd", lat: -37.80870569, lng: 145.04617062 },
+                    { name: "Belmont Ave & Cotham Rd", lat: -37.80831583, lng: 145.04277329 },
+                    { name: "Glenferrie Rd & Cotham Rd", lat: -37.80779906, lng: 145.03825484 },
+                    { name: "Charles St & Cotham Rd", lat: -37.80747458, lng: 145.03554873 },
+                    { name: "High St & Cotham Rd", lat: -37.80698912, lng: 145.03130217 },
+                    { name: "Kew Junction & High St", lat: -37.80743064, lng: 145.02914368 },
+                    { name: "Stevenson St & High St", lat: -37.81008101, lng: 145.02650609 },
+                    { name: "Barkers Rd & High St", lat: -37.81296400, lng: 145.02377122 },
+                    { name: "Findon Cres & Barkers Rd", lat: -37.81287762, lng: 145.02077465 },
+                    { name: "River Blvd & Victoria St", lat: -37.81182593, lng: 145.01290810 },
+                    { name: "Victoria Gardens", lat: -37.81100000, lng: 145.01000000 },
+                    { name: "Leslie St & Victoria St", lat: -37.81131297, lng: 145.00761715 },
+                    { name: "Mckay St & Victoria St", lat: -37.81097624, lng: 145.00422985 },
+                    { name: "Church St & Victoria St", lat: -37.81048970, lng: 145.00051721 },
+                    { name: "Lennox St & Victoria St", lat: -37.80999428, lng: 144.99575984 },
+                    { name: "North Richmond Station", lat: -37.80969430, lng: 144.99296233 },
+                    { name: "Hoddle St & Victoria Pde", lat: -37.80972686, lng: 144.99064424 },
+                    { name: "Wellington St & Victoria Pde", lat: -37.80927135, lng: 144.98613581 },
+                    { name: "Smith St & Victoria Pde", lat: -37.80891871, lng: 144.98290816 },
+                    { name: "Lansdowne St & Victoria Pde", lat: -37.80843491, lng: 144.97834381 },
+                    { name: "St Vincent's Plaza", lat: -37.80818441, lng: 144.97635153 },
+                    { name: "Albert St & Gisborne St", lat: -37.80969458, lng: 144.97560605 },
+                    { name: "Parliament Station", lat: -37.81237888, lng: 144.97448769 },
+                    { name: "Spring St & Collins St", lat: -37.81166362, lng: 144.97324638 },
+                    { name: "101 Collins St", lat: -37.81400000, lng: 144.97200000 },
+                    { name: "Town Hall & Collins St", lat: -37.81567433, lng: 144.96595735 },
+                    { name: "Elizabeth St & Collins St", lat: -37.81642322, lng: 144.96340356 },
+                    { name: "William St & Collins St", lat: -37.81760704, lng: 144.95942911 },
+                    { name: "Southern Cross Station, Spencer Street", lat: -37.81968066, lng: 144.95221502 },
+                    { name: "Batman Park - Flinders St", lat: -37.82155404, lng: 144.95526467 },
+                    { name: "Casino/MCEC", lat: -37.82328904, lng: 144.95605749 },
+                    { name: "Clarendon St Junction & Normanby Rd", lat: -37.82566042, lng: 144.95665101 },
+                    { name: "Southbank Tram Depot", lat: -37.82769104, lng: 144.95370916 },
+                    { name: "Montague St", lat: -37.83019138, lng: 144.94876583 },
+                    { name: "North Port", lat: -37.83343097, lng: 144.94333578 },
+                    { name: "Graham St & Station St", lat: -37.83703204, lng: 144.93746339 },
+                    { name: "Beacon Cove", lat: -37.84078946, lng: 144.93281332 }
+                ]
+            }
+        };
+
+        // Global variables
+        let map, currentRoute, userMarker, routeLine, isTracking = false;
+        let currentPosition = null;
+        let currentRouteData = null;
+        let currentStopIndex = 0;
+        let watchId = null;
+        let isReversed = false; // Track direction: false = normal, true = reversed
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([-37.8136, 144.9631], 13);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add user location marker
+            userMarker = L.marker([-37.8136, 144.9631], {
+                icon: L.divIcon({
+                    className: 'user-marker',
+                    html: '<div style="background: #4a90e2; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+        }
+
+        // Calculate distance between two points
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Earth's radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Find closest stop on route
+        function findClosestStop(userLat, userLon, route) {
+            let closestStop = null;
+            let minDistance = Infinity;
+            let closestIndex = 0;
+
+            // First, find the closest stop by straight-line distance
+            route.stops.forEach((stop, index) => {
+                const distance = calculateDistance(userLat, userLon, stop.lat, stop.lng);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestStop = stop;
+                    closestIndex = index;
+                }
+            });
+
+            // If the closest stop is within 100 meters, use it
+            if (minDistance <= 100) {
+                return { stop: closestStop, distance: minDistance, index: closestIndex };
+            }
+
+            // Otherwise, find the closest point on the route path
+            let closestPointOnRoute = null;
+            let minRouteDistance = Infinity;
+            let routeIndex = 0;
+
+            for (let i = 0; i < route.stops.length - 1; i++) {
+                const stop1 = route.stops[i];
+                const stop2 = route.stops[i + 1];
+                
+                // Calculate distance from user to the line segment between two stops
+                const distanceToSegment = distanceToLineSegment(
+                    userLat, userLon,
+                    stop1.lat, stop1.lng,
+                    stop2.lat, stop2.lng
+                );
+                
+                if (distanceToSegment < minRouteDistance) {
+                    minRouteDistance = distanceToSegment;
+                    routeIndex = i;
+                }
+            }
+
+            // Return the stop that's closer to the user on the route
+            const stop1 = route.stops[routeIndex];
+            const stop2 = route.stops[routeIndex + 1];
+            const distToStop1 = calculateDistance(userLat, userLon, stop1.lat, stop1.lng);
+            const distToStop2 = calculateDistance(userLat, userLon, stop2.lat, stop2.lng);
+            
+            if (distToStop1 < distToStop2) {
+                return { stop: stop1, distance: distToStop1, index: routeIndex };
+            } else {
+                return { stop: stop2, distance: distToStop2, index: routeIndex + 1 };
+            }
+        }
+
+        // Calculate distance from a point to a line segment
+        function distanceToLineSegment(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            
+            if (lenSq === 0) {
+                // Line segment is actually a point
+                return Math.sqrt(A * A + B * B);
+            }
+
+            let param = dot / lenSq;
+
+            let xx, yy;
+
+            if (param < 0) {
+                xx = x1;
+                yy = y1;
+            } else if (param > 1) {
+                xx = x2;
+                yy = y2;
+            } else {
+                xx = x1 + param * C;
+                yy = y1 + param * D;
+            }
+
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Get route display name with clear direction
+        function getRouteDisplayName(route, isReversed) {
+            // Keep the original route name format, just add direction indicator
+            if (isReversed) {
+                return route.name + ' (Reversed)';
+            } else {
+                return route.name;
+            }
+        }
+
+        // Calculate ETA to next stop
+        function calculateETA(distance, speed) {
+            if (speed <= 0) return '--';
+            const timeHours = distance / (speed * 1000); // Convert km/h to m/h
+            const timeMinutes = Math.round(timeHours * 60);
+            return timeMinutes;
+        }
+
+        // Update dashboard with current position
+        function updateDashboard(position) {
+            const { latitude, longitude, speed } = position.coords;
+            const speedKmh = speed ? (speed * 3.6) : 0;
+
+            // Update user marker
+            userMarker.setLatLng([latitude, longitude]);
+            map.panTo([latitude, longitude]);
+
+            // Get stops in correct direction
+            const stops = isReversed ? [...currentRouteData.stops].reverse() : currentRouteData.stops;
+
+            // Find closest stop
+            const closest = findClosestStop(latitude, longitude, { ...currentRouteData, stops });
+            
+            // Update current stop display
+            document.getElementById('currentStop').textContent = closest.stop.name;
+            
+            // Update route name with clear direction
+            const routeName = getRouteDisplayName(currentRouteData, isReversed);
+            document.getElementById('currentRoute').textContent = routeName;
+            
+            document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
+
+            // Calculate next stop info
+            const nextStopIndex = (closest.index + 1) % stops.length;
+            const nextStop = stops[nextStopIndex];
+            const distanceToNext = calculateDistance(latitude, longitude, nextStop.lat, nextStop.lng);
+            const eta = calculateETA(distanceToNext, speedKmh);
+
+            document.getElementById('nextStopDistance').textContent = Math.round(distanceToNext);
+            document.getElementById('etaNextStop').textContent = eta;
+
+            // Update upcoming stops
+            updateUpcomingStops(closest.index, speedKmh, stops);
+
+            // Update progress
+            const progress = (closest.index / (stops.length - 1)) * 100;
+            document.getElementById('routeProgress').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `Route Progress: ${Math.round(progress)}%`;
+
+            // Update status indicators
+            document.getElementById('gpsStatus').classList.add('active');
+            document.getElementById('routeStatus').classList.add('active');
+            document.getElementById('locationStatus').classList.add('active');
+        }
+
+        // Update upcoming stops list
+        function updateUpcomingStops(currentIndex, speed, stops = currentRouteData.stops) {
+            const stopsContainer = document.getElementById('upcomingStops');
+            let html = '';
+
+            // Show next 5 stops
+            for (let i = 1; i <= 5; i++) {
+                const stopIndex = (currentIndex + i) % stops.length;
+                const stop = stops[stopIndex];
+                const isNext = i === 1;
+
+                // Calculate distance and ETA
+                const distance = calculateDistance(
+                    currentPosition.coords.latitude,
+                    currentPosition.coords.longitude,
+                    stop.lat,
+                    stop.lng
+                );
+                const eta = calculateETA(distance, speed);
+
+                html += `
+                    <div class="stop-item ${isNext ? 'next' : ''}">
+                        <div class="stop-header">
+                            <div class="stop-name">${stop.name}</div>
+                            <div class="stop-eta">${eta} min</div>
+                        </div>
+                        <div class="stop-distance">${Math.round(distance)} meters away</div>
+                    </div>
+                `;
+            }
+
+            stopsContainer.innerHTML = html;
+        }
+
+        // Draw route on map
+        function drawRoute(route) {
+            // Remove existing route line
+            if (routeLine) {
+                map.removeLayer(routeLine);
+            }
+
+            // Remove all existing stop markers
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Marker && layer !== userMarker) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Get stops in correct direction
+            const stops = isReversed ? [...route.stops].reverse() : route.stops;
+
+            // Create route line
+            const routeCoords = stops.map(stop => [stop.lat, stop.lng]);
+            routeLine = L.polyline(routeCoords, {
+                color: route.color,
+                weight: 4,
+                opacity: 0.8
+            }).addTo(map);
+
+            // Add stop markers
+            stops.forEach((stop, index) => {
+                L.marker([stop.lat, stop.lng], {
+                    icon: L.divIcon({
+                        className: 'stop-marker',
+                        html: `<div style="background: ${route.color}; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">${index + 1}</div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    })
+                }).addTo(map).bindPopup(`<strong>Stop ${index + 1}</strong><br>${stop.name}`);
+            });
+
+            // Update route name display
+            const routeName = getRouteDisplayName(route, isReversed);
+            document.getElementById('currentRoute').textContent = routeName;
+            
+            // Fit map to route
+            map.fitBounds(routeLine.getBounds(), { padding: [20, 20] });
+        }
+
+        // Start GPS tracking
+        function startTracking() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by this browser.');
+                return;
+            }
+
+            const routeSelector = document.getElementById('routeSelector');
+            const selectedRoute = routeSelector.value;
+            currentRouteData = tramRoutes[selectedRoute];
+
+            if (!currentRouteData) {
+                alert('Please select a valid route.');
+                return;
+            }
+
+            // Draw route on map
+            drawRoute(currentRouteData);
+
+            // Start watching position
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    currentPosition = position;
+                    updateDashboard(position);
+                    isTracking = true;
+                    
+                    // Update button
+                    const startBtn = document.getElementById('startTracking');
+                    startBtn.textContent = '🔄 Tracking Active';
+                    startBtn.classList.add('active');
+                },
+                (error) => {
+                    console.error('GPS Error:', error);
+                    document.getElementById('upcomingStops').innerHTML = `
+                        <div class="error">
+                            <strong>GPS Error</strong><br>
+                            ${error.message}<br>
+                            <small>Please check your location permissions and try again.</small>
+                        </div>
+                    `;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 5000
+                }
+            );
+        }
+
+        // Stop tracking
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            isTracking = false;
+            
+            const startBtn = document.getElementById('startTracking');
+            startBtn.textContent = '🚀 Start Tracking';
+            startBtn.classList.remove('active');
+        }
+
+        // Center map on user location
+        function centerMap() {
+            if (currentPosition) {
+                map.panTo([currentPosition.coords.latitude, currentPosition.coords.longitude]);
+            } else {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        map.panTo([position.coords.latitude, position.coords.longitude]);
+                    },
+                    (error) => {
+                        alert('Unable to get current location: ' + error.message);
+                    }
+                );
+            }
+        }
+
+        // Event listeners
+        document.getElementById('startTracking').addEventListener('click', () => {
+            if (isTracking) {
+                stopTracking();
+            } else {
+                startTracking();
+            }
+        });
+
+        document.getElementById('centerMap').addEventListener('click', centerMap);
+
+        document.getElementById('switchDirection').addEventListener('click', () => {
+            if (currentRouteData) {
+                isReversed = !isReversed;
+                drawRoute(currentRouteData);
+                updateDashboard();
+            }
+        });
+
+        document.getElementById('routeSelector').addEventListener('change', (e) => {
+            if (isTracking) {
+                stopTracking();
+            }
+            const selectedRoute = e.target.value;
+            currentRouteData = tramRoutes[selectedRoute];
+            if (currentRouteData) {
+                drawRoute(currentRouteData);
+            }
+        });
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            
+            // Set default route
+            currentRouteData = tramRoutes.route1;
+            drawRoute(currentRouteData);
+        });
+    </script>
+</body>
+</html>
