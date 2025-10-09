@@ -96,6 +96,26 @@
             background: linear-gradient(45deg, #10b981, #059669);
         }
 
+        /* Stop marker styling */
+        .stop-marker {
+            background: transparent !important;
+        }
+
+        .stop-marker div {
+            background: inherit !important;
+            color: white !important;
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: bold !important;
+            border: 2px solid white !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+            font-size: 12px !important;
+        }
+
         .route-selector {
             padding: 8px 15px;
             background: #0f1419;
@@ -386,30 +406,14 @@
             </div>
             <div class="controls">
                 <select class="route-selector" id="routeSelector">
-                    <option value="route1">Route 1 - East Coburg to South Melbourne Beach</option>
-                    <option value="route3">Route 3 - Melbourne University to East Malvern</option>
-                    <option value="route5">Route 5 - Melbourne University to Malvern</option>
-                    <option value="route6">Route 6 - Moreland to Glen Iris</option>
-                    <option value="route11">Route 11 - West Preston to Victoria Harbour</option>
-                    <option value="route12">Route 12 - Victoria Gardens to St Kilda</option>
-                    <option value="route16">Route 16 - Melbourne University to Kew</option>
-                    <option value="route19">Route 19 - North Coburg to Flinders Street</option>
-                    <option value="route30">Route 30 - St Vincent's Plaza to Central Pier</option>
-                    <option value="route35">Route 35 - City Circle (Free Tourist Tram)</option>
-                    <option value="route48">Route 48 - North Balwyn to Victoria Harbour</option>
-                    <option value="route57">Route 57 - West Maribyrnong to Flinders Street</option>
-                    <option value="route58">Route 58 - West Coburg to Toorak</option>
-                    <option value="route59">Route 59 - Airport West to Flinders Street</option>
-                    <option value="route64">Route 64 - Melbourne University to East Brighton</option>
-                    <option value="route67">Route 67 - Melbourne University to Carnegie</option>
-                    <option value="route70">Route 70 - Wattle Park to Waterfront City</option>
-                    <option value="route72">Route 72 - Melbourne University to Camberwell</option>
-                    <option value="route75">Route 75 - Vermont South to Central Pier</option>
-                    <option value="route78">Route 78 - North Richmond to Balaclava</option>
-                    <option value="route82">Route 82 - Footscray to Moonee Ponds</option>
-                    <option value="route86">Route 86 - Bundoora RMIT to Waterfront City</option>
-                    <option value="route96">Route 96 - East Brunswick to St Kilda Beach</option>
-                    <option value="route109">Route 109 - Box Hill to Port Melbourne</option>
+                    <option value="route1">✅ Route 1 - East Coburg to South Melbourne Beach</option>
+                    <option value="route3">✅ Route 3 - Melbourne University to East Malvern</option>
+                    <option value="route35">✅ Route 35 - City Circle (Free Tourist Tram)</option>
+                    <option value="route48">✅ Route 48 - North Balwyn to Victoria Harbour</option>
+                    <option value="route58">✅ Route 58 - West Coburg to Toorak</option>
+                    <option value="route64">✅ Route 64 - Melbourne University to East Brighton</option>
+                    <option value="route72">✅ Route 72 - Melbourne University to Camberwell</option>
+                    <option value="route109">✅ Route 109 - Box Hill to Port Melbourne</option>
                 </select>
                 <button class="btn" id="switchDirection">🔄 Switch Direction</button>
                 <button class="btn" id="startTracking">🚀 Start Tracking</button>
@@ -947,58 +951,52 @@
                 name: "Route 48 - North Balwyn to Victoria Harbour",
                 color: "#27ae60",
                 stops: [
-                    { name: "North Balwyn Shopping Centre/Doncaster Rd #47", lat: -37.79271153, lng: 145.07143970 },
-                    { name: "Sunburst Ave/Doncaster Rd #48", lat: -37.79321738, lng: 145.07426566 },
-                    { name: "Cityview Rd/Doncaster Rd #49", lat: -37.79375630, lng: 145.07746556 },
-                    { name: "Hill Rd/Doncaster Rd #50", lat: -37.79425860, lng: 145.08118886 },
-                    { name: "Balwyn Rd/Doncaster Rd #51", lat: -37.79464808, lng: 145.08463121 },
-                    { name: "Dight Ave/Doncaster Rd #50", lat: -37.79437164, lng: 145.08093609 },
-                    { name: "Buchanan Ave/Doncaster Rd #49", lat: -37.79394072, lng: 145.07772198 },
-                    { name: "Osburn Ave/Doncaster Rd #48", lat: -37.79341156, lng: 145.07456724 },
-                    { name: "Wattle Ave/Doncaster Rd #46", lat: -37.79283539, lng: 145.06745040 },
-                    { name: "Burke Rd/Doncaster Rd #44", lat: -37.79346799, lng: 145.06426546 },
-                    { name: "Kew High School/High St #43", lat: -37.79465037, lng: 145.06108881 },
-                    { name: "Irymple Ave/High St #42", lat: -37.79639700, lng: 145.05715908 },
-                    { name: "Clyde St/High St #41", lat: -37.79743880, lng: 145.05475817 },
-                    { name: "Harp Village/High St #40", lat: -37.79862823, lng: 145.05202394 },
-                    { name: "Harp Rd/High St #39", lat: -37.79941303, lng: 145.05043601 },
-                    { name: "Victoria Park/High St #38", lat: -37.80125872, lng: 145.04598072 },
-                    { name: "Kew Cemetery/High St #37", lat: -37.80247266, lng: 145.04256410 },
-                    { name: "Parkhill Rd/High St #36", lat: -37.80348933, lng: 145.03975456 },
-                    { name: "Cobden St/High St #35", lat: -37.80498727, lng: 145.03554650 },
-                    { name: "Pakington St/High St #34", lat: -37.80561661, lng: 145.03383744 },
-                    { name: "Kew Shopping Centre/High St #33", lat: -37.80667385, lng: 145.03131054 },
-                    { name: "Union St/High St #34", lat: -37.80564013, lng: 145.03416620 },
-                    { name: "Charles St/High St #35", lat: -37.80501248, lng: 145.03597744 },
-                    { name: "Gladstone St/High St #36", lat: -37.80353871, lng: 145.04001449 },
-                    { name: "Kew Cemetery/High St #37", lat: -37.80258226, lng: 145.04265207 },
-                    { name: "Harp Rd/High St #39", lat: -37.79956353, lng: 145.05027305 },
-                    { name: "Harp Village/High St #40", lat: -37.79872113, lng: 145.05219186 },
-                    { name: "Station St/High St #41", lat: -37.79796577, lng: 145.05392663 },
-                    { name: "Woodlands Ave/High St #42", lat: -37.79632435, lng: 145.05767205 },
-                    { name: "Kew High School/High St #43", lat: -37.79469970, lng: 145.06134872 },
-                    { name: "Burke Rd/High St #44", lat: -37.79353016, lng: 145.06366194 },
-                    { name: "Wattle Ave/Doncaster Rd #46", lat: -37.79300579, lng: 145.06740053 },
-                    { name: "North Balwyn Shopping Centre/Doncaster Rd #47", lat: -37.79272684, lng: 145.07072386 },
-                    { name: "Osburn Ave/Doncaster Rd #48", lat: -37.79341156, lng: 145.07456724 },
-                    { name: "Buchanan Ave/Doncaster Rd #49", lat: -37.79394072, lng: 145.07772198 },
-                    { name: "Dight Ave/Doncaster Rd #50", lat: -37.79437164, lng: 145.08093609 },
-                    { name: "Balwyn Rd/Doncaster Rd #51", lat: -37.79464808, lng: 145.08463121 },
-                    { name: "Deepdene Shopping Centre/Whitehorse Rd #43", lat: -37.81092511, lng: 145.06487739 },
-                    { name: "Deepdene Park/Whitehorse Rd #44", lat: -37.81137490, lng: 145.06867098 },
-                    { name: "Hardwicke St/Whitehorse Rd #45", lat: -37.81175036, lng: 145.07178499 },
-                    { name: "Balwyn Cinema/Whitehorse Rd #46", lat: -37.81224172, lng: 145.07592973 },
-                    { name: "Balwyn Rd/Whitehorse Rd #47", lat: -37.81291876, lng: 145.08152373 },
-                    { name: "Balwyn Shopping Centre/Whitehorse Rd #48", lat: -37.81319896, lng: 145.08378838 },
-                    { name: "Northcote Ave/Whitehorse Rd #49", lat: -37.81369027, lng: 145.08795601 },
-                    { name: "Wharton St/Whitehorse Rd #50", lat: -37.81410622, lng: 145.09137590 },
-                    { name: "Narrak Rd/Whitehorse Rd #51", lat: -37.81456418, lng: 145.09516962 },
-                    { name: "Union Rd/Whitehorse Rd #53", lat: -37.81494552, lng: 145.09924935 },
-                    { name: "Inglisby Rd/Whitehorse Rd #54", lat: -37.81540450, lng: 145.10312266 },
-                    { name: "Hood St/Whitehorse Rd #55", lat: -37.81616419, lng: 145.10945346 },
-                    { name: "Elgar Rd/Whitehorse Rd #56", lat: -37.81691144, lng: 145.11559159 },
-                    { name: "Nelson Rd/Whitehorse Rd #57", lat: -37.81745731, lng: 145.11986051 },
-                    { name: "Box Hill Central/Whitehorse Rd #58", lat: -37.81784397, lng: 145.12206596 }
+                    { name: "Balwyn Rd & Doncaster Rd", lat: -37.79464808, lng: 145.08463121 },
+                    { name: "Dight Ave & Doncaster Rd", lat: -37.79437164, lng: 145.08093609 },
+                    { name: "Buchanan Ave & Doncaster Rd", lat: -37.79394072, lng: 145.07772198 },
+                    { name: "Osburn Ave & Doncaster Rd", lat: -37.79341156, lng: 145.07456724 },
+                    { name: "North Balwyn Shopping Centre", lat: -37.79272684, lng: 145.07072386 },
+                    { name: "Wattle Ave & Doncaster Rd", lat: -37.79300579, lng: 145.06740053 },
+                    { name: "Burke Rd & Doncaster Rd", lat: -37.79346799, lng: 145.06426546 },
+                    { name: "Kew High School & High St", lat: -37.79465037, lng: 145.06108881 },
+                    { name: "Woodlands Ave & High St", lat: -37.79632435, lng: 145.05767205 },
+                    { name: "Station St & High St", lat: -37.79796577, lng: 145.05392663 },
+                    { name: "Harp Village & High St", lat: -37.79872113, lng: 145.05219186 },
+                    { name: "Harp Rd & High St", lat: -37.79956353, lng: 145.05027305 },
+                    { name: "Victoria Park & High St", lat: -37.80131597, lng: 145.04617229 },
+                    { name: "Kew Cemetery & High St", lat: -37.80258226, lng: 145.04265207 },
+                    { name: "Park Hill Rd & High St", lat: -37.80353871, lng: 145.04001449 },
+                    { name: "Charles St & High St", lat: -37.80501248, lng: 145.03597744 },
+                    { name: "Union St & High St", lat: -37.80564013, lng: 145.03416620 },
+                    { name: "Cotham Rd & High St", lat: -37.80667385, lng: 145.03131054 },
+                    { name: "Kew Junction & High St", lat: -37.80759248, lng: 145.02858281 },
+                    { name: "Stevenson St & High St", lat: -37.81022844, lng: 145.02616139 },
+                    { name: "Barkers Rd & High St", lat: -37.81302615, lng: 145.02317888 },
+                    { name: "Brook St & Church St", lat: -37.81575588, lng: 145.02098178 },
+                    { name: "Hill St & Church St", lat: -37.81797135, lng: 145.01875282 },
+                    { name: "Hawthorn Bridge & Bridge Rd", lat: -37.81994990, lng: 145.01637102 },
+                    { name: "Westbank Tce & Bridge Rd", lat: -37.82009867, lng: 145.01396998 },
+                    { name: "Burnley St & Bridge Rd", lat: -37.81953496, lng: 145.00887293 },
+                    { name: "Coppin St & Bridge Rd", lat: -37.81897658, lng: 145.00357133 },
+                    { name: "Richmond Town Hall & Bridge Rd", lat: -37.81875004, lng: 145.00137354 },
+                    { name: "Church St & Bridge Rd", lat: -37.81847187, lng: 144.99879093 },
+                    { name: "Waltham St & Bridge Rd", lat: -37.81829814, lng: 144.99652359 },
+                    { name: "Epworth Hospital & Bridge Rd", lat: -37.81790945, lng: 144.99380768 },
+                    { name: "Punt Rd & Bridge Rd", lat: -37.81753279, lng: 144.99021674 },
+                    { name: "Simpson St & Wellington Pde", lat: -37.81654033, lng: 144.98698338 },
+                    { name: "Jolimont Station/MCG & Wellington Pde", lat: -37.81630429, lng: 144.98477463 },
+                    { name: "Jolimont Rd & Wellington Pde", lat: -37.81575029, lng: 144.97979141 },
+                    { name: "Lansdowne St & Wellington Pde", lat: -37.81545285, lng: 144.97716407 },
+                    { name: "Spring St & Collins St", lat: -37.81355676, lng: 144.97328548 },
+                    { name: "101 Collins St", lat: -37.81567433, lng: 144.96595735 },
+                    { name: "Town Hall & Collins St", lat: -37.81642322, lng: 144.96340356 },
+                    { name: "Elizabeth St & Collins St", lat: -37.81760704, lng: 144.95942911 },
+                    { name: "William St & Collins St", lat: -37.81884688, lng: 144.95505538 },
+                    { name: "Southern Cross Station, Spencer Street", lat: -37.81968066, lng: 144.95221502 },
+                    { name: "Batman's Hill", lat: -37.82026621, lng: 144.95013124 },
+                    { name: "Harbour Esplanade & Collins St", lat: -37.82079748, lng: 144.94803758 },
+                    { name: "Collins Landing", lat: -37.82152677, lng: 144.94541581 },
+                    { name: "Victoria Harbour Docklands", lat: -37.81455555, lng: 144.93841856 }
                 ]
             },
             route57: {
@@ -1834,7 +1832,7 @@
                 L.marker([stop.lat, stop.lng], {
                     icon: L.divIcon({
                         className: 'stop-marker',
-                        html: `<div style="background: ${route.color}; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">${index + 1}</div>`,
+                        html: `<div style="background-color: ${route.color} !important; color: white !important; width: 30px !important; height: 30px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; font-weight: bold !important; border: 2px solid white !important; box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important; font-size: 12px !important;">${index + 1}</div>`,
                         iconSize: [30, 30],
                         iconAnchor: [15, 15]
                     })
