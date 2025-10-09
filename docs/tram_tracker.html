@@ -116,6 +116,573 @@
             font-size: 12px !important;
         }
 
+        /* Tram Immersive Mode - Authentic Tram Display */
+        .mobile-dashboard {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            padding: 8px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .tram-display {
+            display: flex;
+            flex: 1;
+            background: linear-gradient(145deg, #2a2a2a, #1e1e1e);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 
+                0 4px 20px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid #444;
+        }
+
+        .tram-left-panel {
+            flex: 2.2;
+            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 100%);
+            color: #2c2c2c;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #d0d0d0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .tram-route-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 6px;
+            border: 1px solid #d0d0d0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .route-number {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 12px;
+            min-width: 45px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 1px solid #8b0000;
+        }
+
+        .route-destination {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c2c2c;
+            flex: 1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .tram-stops-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+            position: relative;
+            background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .tram-stops-list::before {
+            content: '';
+            position: absolute;
+            left: 18px;
+            top: 0;
+            bottom: var(--line-end, 100%);
+            width: 3px;
+            background: linear-gradient(180deg, #d32f2f 0%, #b71c1c 100%);
+            z-index: 1;
+            border-radius: 2px;
+            box-shadow: 0 0 4px rgba(211, 47, 47, 0.3);
+        }
+
+        .stop-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            padding-left: 30px;
+            margin-bottom: 3px;
+            position: relative;
+            z-index: 2;
+            background: rgba(255,255,255,0.7);
+            border-radius: 4px;
+            margin: 2px 4px;
+            transition: all 0.2s ease;
+        }
+
+        .stop-item:hover {
+            background: rgba(255,255,255,0.9);
+            transform: translateX(2px);
+        }
+
+        .stop-item:hover .stop-name {
+            color: #1a1a1a !important;
+        }
+
+        .stop-item:hover .eta-time {
+            color: #0d47a1 !important;
+        }
+
+        .stop-item:hover .accessibility-icon {
+            color: #0d47a1 !important;
+        }
+
+        .stop-item.current-stop {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-radius: 6px;
+            padding: 12px 8px 12px 30px;
+            margin: 4px 4px;
+            box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+            border: 1px solid #ffb74d;
+        }
+
+        .stop-item.current-stop .stop-name {
+            color: #e65100 !important;
+            font-weight: 600;
+        }
+
+        .stop-item.current-stop .eta-time {
+            color: #d84315 !important;
+            font-weight: 700;
+        }
+
+        .stop-item.current-stop .accessibility-icon {
+            color: #d84315 !important;
+        }
+
+        .stop-item::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .stop-item.current-stop::before {
+            background: #ff9800;
+            width: 10px;
+            height: 10px;
+            border: 2px solid white;
+        }
+
+        .stop-item.terminus-stop::before {
+            background: #4caf50;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+        }
+
+        .stop-item.terminus-stop {
+            border-left: 3px solid #4caf50;
+        }
+
+        .stop-number {
+            background: #d32f2f;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .stop-item.current-stop .stop-number {
+            background: #ff9800;
+        }
+
+        .stop-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .eta-display {
+            font-size: 11px;
+            margin-right: 4px;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .eta-current {
+            background: #ff9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        .eta-time {
+            color: #ffffff !important;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .accessibility-icon {
+            font-size: 14px;
+            color: #ffffff !important;
+            flex-shrink: 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .tram-time {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-top: 8px;
+            padding: 8px;
+            background: #e0e0e0;
+            border-radius: 3px;
+        }
+
+        .tram-right-panel {
+            flex: 1;
+            background: linear-gradient(180deg, #2c2c2c 0%, #1a1a1a 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-left: 2px solid #444;
+            box-shadow: inset 2px 0 10px rgba(0,0,0,0.3);
+        }
+
+        .panel-mode {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Analog Clock Mode */
+        .tram-clock {
+            margin-bottom: 15px;
+        }
+
+        .analog-clock {
+            width: 100px;
+            height: 100px;
+            border: 2px solid white;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .clock-face {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .hour-hand, .minute-hand, .second-hand {
+            position: absolute;
+            background: white;
+            transform-origin: bottom center;
+            left: 50%;
+            bottom: 50%;
+        }
+
+        .hour-hand {
+            width: 2px;
+            height: 25px;
+            margin-left: -1px;
+        }
+
+        .minute-hand {
+            width: 1.5px;
+            height: 35px;
+            margin-left: -0.75px;
+        }
+
+        .second-hand {
+            width: 1px;
+            height: 40px;
+            margin-left: -0.5px;
+            background: #d32f2f;
+        }
+
+        .tram-date {
+            font-size: 12px;
+            text-align: center;
+            color: #bdbdbd;
+            line-height: 1.3;
+        }
+
+        /* Weather Mode */
+        .weather-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .weather-icon {
+            font-size: 32px;
+            margin-right: 10px;
+        }
+
+        .current-temp {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .weather-forecast {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .forecast-day {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #555;
+        }
+
+        .forecast-day:last-child {
+            border-bottom: none;
+        }
+
+        .day-name {
+            font-size: 14px;
+            color: #bdbdbd;
+        }
+
+        .day-weather {
+            font-size: 14px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Digital Clock Mode */
+        .digital-clock {
+            text-align: center;
+            width: 100%;
+        }
+
+        .digital-time {
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .digital-date {
+            font-size: 12px;
+            color: #bdbdbd;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .digital-seconds {
+            font-size: 18px;
+            color: #d32f2f;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Route Info Mode */
+        .route-info-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .route-info-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .route-info-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .route-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .route-detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #555;
+        }
+
+        .route-detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #bdbdbd;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Connections Mode */
+        .connections-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .connections-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+
+        .connections-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .connections-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .connection-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #555;
+        }
+
+        .connection-item:last-child {
+            border-bottom: none;
+        }
+
+        .connection-stop {
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .connection-lines {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .connection-line {
+            font-size: 10px;
+            background: #333;
+            color: #bdbdbd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+
+        .mobile-controls {
+            display: flex;
+            gap: 10px;
+            padding: 16px;
+            background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+            justify-content: center;
+            flex-wrap: wrap;
+            border-top: 2px solid #555;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+
+        .mobile-route-selector {
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            color: #333;
+            font-size: 13px;
+            min-width: 220px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+
+        .mobile-btn {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-btn:hover {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .mobile-btn.active {
+            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+            box-shadow: 0 2px 6px rgba(56, 142, 60, 0.3);
+        }
+
+        /* Hide desktop elements in mobile mode */
+        .mobile-mode .header,
+        .mobile-mode .main-container {
+            display: none !important;
+        }
+
+        .mobile-mode .mobile-dashboard {
+            display: flex !important;
+        }
+
         .route-selector {
             padding: 8px 15px;
             background: #0f1419;
@@ -405,6 +972,7 @@
                 <div class="logo-text">Tram Tracker</div>
             </div>
             <div class="controls">
+                <button class="btn" id="modeSwitch">🚋 Tram Immersive Mode</button>
                 <select class="route-selector" id="routeSelector">
                     <option value="route1">✅ Route 1 - East Coburg to South Melbourne Beach</option>
                     <option value="route3">✅ Route 3 - Melbourne University to East Malvern</option>
@@ -422,7 +990,161 @@
         </div>
     </div>
 
-    <div class="main-container">
+    <!-- Mobile Tram Dashboard Mode -->
+    <div class="mobile-dashboard" id="mobileDashboard" style="display: none;">
+        <div class="tram-display">
+            <!-- Left Panel: Route and Stops -->
+            <div class="tram-left-panel">
+                <div class="tram-route-header">
+                    <div class="route-number" id="mobileRouteNumber">109</div>
+                    <div class="route-destination" id="mobileRouteDestination">Box Hill via Collins St</div>
+                </div>
+                <div class="tram-stops-list" id="mobileStopsList">
+                    <div class="stop-item">
+                        <div class="stop-number">1</div>
+                        <div class="stop-name">Southern Cross Station</div>
+                        <div class="accessibility-icon">♿</div>
+                    </div>
+                    <div class="stop-item">
+                        <div class="stop-number">3</div>
+                        <div class="stop-name">William St</div>
+                        <div class="accessibility-icon">♿</div>
+                    </div>
+                    <div class="stop-item">
+                        <div class="stop-number">5</div>
+                        <div class="stop-name">Elizabeth St</div>
+                        <div class="accessibility-icon">♿</div>
+                    </div>
+                </div>
+                <div class="tram-time" id="mobileTime">08:17 am</div>
+            </div>
+            
+            <!-- Right Panel: Three Modes -->
+            <div class="tram-right-panel">
+                <!-- Mode 1: Analog Clock -->
+                <div class="panel-mode" id="analogClockMode">
+                    <div class="tram-clock">
+                        <div class="analog-clock" id="analogClock">
+                            <div class="clock-face">
+                                <div class="hour-hand"></div>
+                                <div class="minute-hand"></div>
+                                <div class="second-hand"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tram-date" id="mobileDate">Monday 02 April 2018</div>
+                </div>
+
+                <!-- Mode 2: Weather Conditions -->
+                <div class="panel-mode" id="weatherMode" style="display: none;">
+                    <div class="weather-header">
+                        <div class="weather-icon">☀️</div>
+                        <div class="current-temp" id="currentTemp">22°C</div>
+                    </div>
+                    <div class="weather-forecast">
+                        <div class="forecast-day">
+                            <div class="day-name">Today</div>
+                            <div class="day-weather">☀️ 22°C</div>
+                        </div>
+                        <div class="forecast-day">
+                            <div class="day-name">Tomorrow</div>
+                            <div class="day-weather">⛅ 19°C</div>
+                        </div>
+                        <div class="forecast-day">
+                            <div class="day-name">Day 3</div>
+                            <div class="day-weather">🌧️ 16°C</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 3: Digital Clock -->
+                <div class="panel-mode" id="digitalClockMode" style="display: none;">
+                    <div class="digital-clock">
+                        <div class="digital-time" id="digitalTime">08:17:42</div>
+                        <div class="digital-date" id="digitalDate">Monday 02 April 2018</div>
+                        <div class="digital-seconds" id="digitalSeconds">42</div>
+                    </div>
+                </div>
+
+                <!-- Mode 4: Route Information -->
+                <div class="panel-mode" id="routeInfoMode" style="display: none;">
+                    <div class="route-info-header">
+                        <div class="route-info-icon">🚋</div>
+                        <div class="route-info-title">Route Info</div>
+                    </div>
+                    <div class="route-details">
+                        <div class="route-detail-item">
+                            <div class="detail-label">Route</div>
+                            <div class="detail-value" id="routeInfoNumber">109</div>
+                        </div>
+                        <div class="route-detail-item">
+                            <div class="detail-label">Direction</div>
+                            <div class="detail-value" id="routeInfoDirection">Box Hill → Port Melbourne</div>
+                        </div>
+                        <div class="route-detail-item">
+                            <div class="detail-label">Total Stops</div>
+                            <div class="detail-value" id="routeInfoStops">60</div>
+                        </div>
+                        <div class="route-detail-item">
+                            <div class="detail-label">Frequency</div>
+                            <div class="detail-value" id="routeInfoFrequency">Every 8-12 min</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 5: Next Connections -->
+                <div class="panel-mode" id="connectionsMode" style="display: none;">
+                    <div class="connections-header">
+                        <div class="connections-icon">🔗</div>
+                        <div class="connections-title">Connections</div>
+                    </div>
+                    <div class="connections-list">
+                        <div class="connection-item">
+                            <div class="connection-stop">Flinders Street Station</div>
+                            <div class="connection-lines">
+                                <span class="connection-line">🚇 Metro</span>
+                                <span class="connection-line">🚌 Bus</span>
+                            </div>
+                        </div>
+                        <div class="connection-item">
+                            <div class="connection-stop">Southern Cross Station</div>
+                            <div class="connection-lines">
+                                <span class="connection-line">🚂 V/Line</span>
+                                <span class="connection-line">🚇 Metro</span>
+                            </div>
+                        </div>
+                        <div class="connection-item">
+                            <div class="connection-stop">Box Hill Central</div>
+                            <div class="connection-lines">
+                                <span class="connection-line">🚇 Metro</span>
+                                <span class="connection-line">🚌 Bus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- Mobile Controls -->
+        <div class="mobile-controls">
+            <select class="mobile-route-selector" id="mobileRouteSelector">
+                <option value="route1">✅ Route 1 - East Coburg to South Melbourne Beach</option>
+                <option value="route3">✅ Route 3 - Melbourne University to East Malvern</option>
+                <option value="route35">✅ Route 35 - City Circle (Free Tourist Tram)</option>
+                <option value="route48">✅ Route 48 - North Balwyn to Victoria Harbour</option>
+                <option value="route58">✅ Route 58 - West Coburg to Toorak</option>
+                <option value="route64">✅ Route 64 - Melbourne University to East Brighton</option>
+                <option value="route72">✅ Route 72 - Melbourne University to Camberwell</option>
+                <option value="route109">✅ Route 109 - Box Hill to Port Melbourne</option>
+            </select>
+            <button class="mobile-btn" id="mobileRouteSwitch">🔄 Switch Direction</button>
+            <button class="mobile-btn" id="mobileStartTracking">🚀 Start Tracking</button>
+            <button class="mobile-btn" id="mobileModeSwitch">🖥️ Exit Immersive Mode</button>
+        </div>
+    </div>
+
+    <div class="main-container" id="desktopContainer">
         <div class="dashboard-panel fade-in">
             <div class="panel-title">
                 📊 Live Dashboard
@@ -1779,14 +2501,19 @@
                 const stop = stops[stopIndex];
                 const isNext = i === 1;
 
-                // Calculate distance and ETA
-                const distance = calculateDistance(
-                    currentPosition.coords.latitude,
-                    currentPosition.coords.longitude,
-                    stop.lat,
-                    stop.lng
-                );
-                const eta = calculateETA(distance, speed);
+                // Calculate distance and ETA - check if currentPosition exists
+                let distance = 0;
+                let eta = '-- min';
+                
+                if (currentPosition && currentPosition.coords) {
+                    distance = calculateDistance(
+                        currentPosition.coords.latitude,
+                        currentPosition.coords.longitude,
+                        stop.lat,
+                        stop.lng
+                    );
+                    eta = calculateETA(distance, speed);
+                }
 
                 html += `
                     <div class="stop-item ${isNext ? 'next' : ''}">
@@ -1871,6 +2598,9 @@
                 (position) => {
                     currentPosition = position;
                     updateDashboard(position);
+                    if (isMobileMode) {
+                        updateMobileDashboard(position);
+                    }
                     isTracking = true;
                     
                     // Update button
@@ -1940,11 +2670,17 @@
             if (currentRouteData) {
                 isReversed = !isReversed;
                 drawRoute(currentRouteData);
-                updateDashboard();
+                // If tracking is active, update with current position to find closest stop in new direction
+                if (isTracking && currentPosition) {
+                    updateDashboard(currentPosition);
+                } else {
+                    updateDashboard();
+                }
             }
         });
 
         document.getElementById('routeSelector').addEventListener('change', (e) => {
+            const wasTracking = isTracking;
             if (isTracking) {
                 stopTracking();
             }
@@ -1952,8 +2688,574 @@
             currentRouteData = tramRoutes[selectedRoute];
             if (currentRouteData) {
                 drawRoute(currentRouteData);
+                // If was tracking and we have position data, update with current position
+                if (wasTracking && currentPosition) {
+                    updateMobileDashboard(currentPosition);
+                } else {
+                    updateMobileDashboard();
+                }
             }
         });
+
+        // Mode switching functionality
+        let isMobileMode = false;
+
+        document.getElementById('modeSwitch').addEventListener('click', () => {
+            switchToMobileMode();
+        });
+
+        document.getElementById('mobileModeSwitch').addEventListener('click', () => {
+            switchToDesktopMode();
+        });
+
+        function switchToMobileMode() {
+            console.log('Switching to mobile mode');
+            isMobileMode = true;
+            document.body.classList.add('mobile-mode');
+            document.getElementById('modeSwitch').textContent = '🖥️ Exit Immersive Mode';
+            
+            // Sync mobile route selector with desktop route selector
+            const desktopRouteSelector = document.getElementById('routeSelector');
+            const mobileRouteSelector = document.getElementById('mobileRouteSelector');
+            
+            if (desktopRouteSelector.value) {
+                mobileRouteSelector.value = desktopRouteSelector.value;
+                currentRouteData = tramRoutes[desktopRouteSelector.value];
+            } else if (!currentRouteData) {
+                // Set default route if none selected
+                currentRouteData = tramRoutes['route109'];
+                mobileRouteSelector.value = 'route109';
+                desktopRouteSelector.value = 'route109';
+            }
+            
+            console.log('Mobile mode - currentRouteData:', currentRouteData);
+            console.log('Mobile mode - watchId:', watchId);
+            console.log('Mobile mode - currentPosition:', currentPosition);
+            
+            // If tracking is already active, get current position and update mobile dashboard
+            if (watchId && currentPosition) {
+                console.log('Mobile mode - updating with current position');
+                updateMobileDashboard(currentPosition);
+            } else {
+                console.log('Mobile mode - updating without position');
+                updateMobileDashboard();
+            }
+            
+            updateMobileClock();
+            
+            // Start panel mode cycling (every 8 seconds)
+            panelModeInterval = setInterval(cyclePanelModes, 8000);
+            
+            // Start weather updates (every 5 minutes)
+            weatherUpdateInterval = setInterval(updateWeatherDisplay, 5 * 60 * 1000);
+            
+            // Initial weather update
+            updateWeatherDisplay();
+        }
+
+        function switchToDesktopMode() {
+            isMobileMode = false;
+            document.body.classList.remove('mobile-mode');
+            document.getElementById('modeSwitch').textContent = '🚋 Tram Immersive Mode';
+            
+            // Stop panel mode cycling
+            if (panelModeInterval) {
+                clearInterval(panelModeInterval);
+                panelModeInterval = null;
+            }
+            
+            // Clear weather update interval
+            if (weatherUpdateInterval) {
+                clearInterval(weatherUpdateInterval);
+                weatherUpdateInterval = null;
+            }
+            
+            // Sync desktop route selector with mobile route selector
+            const mobileRouteSelector = document.getElementById('mobileRouteSelector');
+            const desktopRouteSelector = document.getElementById('routeSelector');
+            
+            if (mobileRouteSelector.value && currentRouteData) {
+                desktopRouteSelector.value = mobileRouteSelector.value;
+                // Redraw the route on the map
+                drawRoute(currentRouteData);
+            }
+        }
+
+        // Mobile dashboard updates - using exact desktop logic
+        function updateMobileDashboard(position = null) {
+            if (!currentRouteData) return;
+
+            const routeNumber = currentRouteData.name.match(/Route (\d+)/)[1];
+            const routeDestination = currentRouteData.name.split(' - ')[1] || currentRouteData.name;
+            
+            document.getElementById('mobileRouteNumber').textContent = routeNumber;
+            document.getElementById('mobileRouteDestination').textContent = routeDestination;
+
+            // Use exact same logic as desktop mode
+            if (position && position.coords) {
+                const { latitude, longitude, speed } = position.coords;
+                const speedKmh = speed ? (speed * 3.6) : 0;
+
+                // Get stops in correct direction
+                const stops = isReversed ? [...currentRouteData.stops].reverse() : currentRouteData.stops;
+
+                // Find closest stop
+                const closest = findClosestStop(latitude, longitude, { ...currentRouteData, stops });
+                
+                // Update mobile stops list with same logic as desktop
+                updateMobileUpcomingStops(closest.index, speedKmh, stops);
+                
+                console.log('Mobile Dashboard Updated with GPS:', { latitude, longitude, speedKmh, closestIndex: closest.index });
+            } else {
+                // No GPS data - show static stops
+                const stops = isReversed ? [...currentRouteData.stops].reverse() : currentRouteData.stops;
+                updateMobileStopsListStatic(stops);
+                console.log('Mobile Dashboard Updated without GPS - showing static stops');
+            }
+        }
+
+        // Update mobile upcoming stops - using exact desktop logic
+        function updateMobileUpcomingStops(currentIndex, speed, stops = currentRouteData.stops) {
+            console.log('updateMobileUpcomingStops called:', { currentIndex, speed, stopsLength: stops.length });
+            const stopsContainer = document.getElementById('mobileStopsList');
+            let html = '';
+            
+            for (let i = 1; i <= 8; i++) {
+                const stopIndex = (currentIndex + i) % stops.length;
+                const stop = stops[stopIndex];
+                
+                // Check if this is a terminus stop
+                const isLastStop = stopIndex === stops.length - 1;
+                const isTerminus = isLastStop || stop.name.toLowerCase().includes('terminus') || 
+                                 stop.name.toLowerCase().includes('end') || 
+                                 stop.name.toLowerCase().includes('depot');
+                
+                // Calculate distance and ETA (same logic as desktop)
+                let distance = 0;
+                let eta = '-- min';
+                
+                if (currentPosition && currentPosition.coords) {
+                    for (let j = 0; j < i; j++) {
+                        const fromIndex = (currentIndex + j) % stops.length;
+                        const toIndex = (currentIndex + j + 1) % stops.length;
+                        distance += calculateDistance(
+                            stops[fromIndex].lat, stops[fromIndex].lng,
+                            stops[toIndex].lat, stops[toIndex].lng
+                        );
+                    }
+                    eta = calculateETA(distance, speed);
+                }
+                
+                html += `
+                    <div class="stop-item ${isTerminus ? 'terminus-stop' : ''}">
+                        <div class="stop-number">${stopIndex + 1}</div>
+                        <div class="stop-name">${stop.name}</div>
+                        <div class="eta-display"><span class="eta-time">${eta}</span></div>
+                        <div class="accessibility-icon">♿</div>
+                    </div>
+                `;
+            }
+            stopsContainer.innerHTML = html;
+            console.log('Mobile stops list updated with', stops.length, 'stops');
+        }
+
+        // Update the stop line to end at terminus
+        function updateStopLine(stops, currentIndex) {
+            const stopsList = document.getElementById('mobileStopsList');
+            const line = stopsList.querySelector('::before');
+            
+            // Find the next terminus stop
+            let terminusIndex = -1;
+            for (let i = currentIndex; i < stops.length; i++) {
+                const stop = stops[i];
+                const isLastStop = i === stops.length - 1;
+                const isTerminus = isLastStop || stop.name.toLowerCase().includes('terminus') || 
+                                 stop.name.toLowerCase().includes('end') || 
+                                 stop.name.toLowerCase().includes('depot');
+                if (isTerminus) {
+                    terminusIndex = i;
+                    break;
+                }
+            }
+            
+            // If we found a terminus, limit the line height
+            if (terminusIndex !== -1) {
+                const stopItems = stopsList.querySelectorAll('.stop-item');
+                const terminusItem = stopItems[terminusIndex - currentIndex];
+                if (terminusItem) {
+                    const terminusPosition = terminusItem.offsetTop + terminusItem.offsetHeight / 2;
+                    stopsList.style.setProperty('--line-end', `${terminusPosition}px`);
+                }
+            } else {
+                stopsList.style.setProperty('--line-end', '100%');
+            }
+        }
+
+        // Update mobile stops list without GPS (static)
+        function updateMobileStopsListStatic(stops) {
+            const stopsList = document.getElementById('mobileStopsList');
+            let html = '';
+
+            stops.slice(0, 8).forEach((stop, index) => {
+                // Check if this is a terminus stop
+                const isLastStop = index === stops.length - 1;
+                const isTerminus = isLastStop || stop.name.toLowerCase().includes('terminus') || 
+                                 stop.name.toLowerCase().includes('end') || 
+                                 stop.name.toLowerCase().includes('depot');
+
+                html += `
+                    <div class="stop-item ${isTerminus ? 'terminus-stop' : ''}">
+                        <div class="stop-number">${index + 1}</div>
+                        <div class="stop-name">${stop.name}</div>
+                        <div class="eta-display"><span class="eta-time">-- min</span></div>
+                        <div class="accessibility-icon">♿</div>
+                    </div>
+                `;
+            });
+            stopsList.innerHTML = html;
+            
+            // Update the line for static display
+            updateStopLineStatic(stops);
+        }
+
+        // Update the stop line for static display
+        function updateStopLineStatic(stops) {
+            const stopsList = document.getElementById('mobileStopsList');
+            
+            // Find the first terminus stop in the displayed stops
+            let terminusIndex = -1;
+            for (let i = 0; i < Math.min(8, stops.length); i++) {
+                const stop = stops[i];
+                const isLastStop = i === stops.length - 1;
+                const isTerminus = isLastStop || stop.name.toLowerCase().includes('terminus') || 
+                                 stop.name.toLowerCase().includes('end') || 
+                                 stop.name.toLowerCase().includes('depot');
+                if (isTerminus) {
+                    terminusIndex = i;
+                    break;
+                }
+            }
+            
+            // If we found a terminus, limit the line height
+            if (terminusIndex !== -1) {
+                const stopItems = stopsList.querySelectorAll('.stop-item');
+                const terminusItem = stopItems[terminusIndex];
+                if (terminusItem) {
+                    const terminusPosition = terminusItem.offsetTop + terminusItem.offsetHeight / 2;
+                    stopsList.style.setProperty('--line-end', `${terminusPosition}px`);
+                }
+            } else {
+                stopsList.style.setProperty('--line-end', '100%');
+            }
+        }
+
+        // Mobile panel mode cycling
+        let currentPanelMode = 0; // 0 = analog, 1 = weather, 2 = digital, 3 = route info, 4 = next connections
+        let panelModeInterval;
+        let weatherUpdateInterval;
+        let currentWeather = null;
+
+        function cyclePanelModes() {
+            if (!isMobileMode) return;
+
+            // Hide all modes
+            document.getElementById('analogClockMode').style.display = 'none';
+            document.getElementById('weatherMode').style.display = 'none';
+            document.getElementById('digitalClockMode').style.display = 'none';
+            document.getElementById('routeInfoMode').style.display = 'none';
+            document.getElementById('connectionsMode').style.display = 'none';
+
+            // Show current mode
+            switch(currentPanelMode) {
+                case 0: // Analog Clock
+                    document.getElementById('analogClockMode').style.display = 'flex';
+                    break;
+                case 1: // Weather
+                    document.getElementById('weatherMode').style.display = 'flex';
+                    break;
+                case 2: // Digital Clock
+                    document.getElementById('digitalClockMode').style.display = 'flex';
+                    break;
+                case 3: // Route Info
+                    document.getElementById('routeInfoMode').style.display = 'flex';
+                    updateRouteInfo();
+                    break;
+                case 4: // Connections
+                    document.getElementById('connectionsMode').style.display = 'flex';
+                    updateConnections();
+                    break;
+            }
+
+            // Move to next mode
+            currentPanelMode = (currentPanelMode + 1) % 5;
+        }
+
+        // Mobile clock functionality
+        function updateMobileClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+
+            document.getElementById('mobileTime').textContent = timeString;
+            document.getElementById('mobileDate').textContent = dateString;
+
+            // Update analog clock
+            const hours = now.getHours() % 12;
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            const hourHand = document.querySelector('.hour-hand');
+            const minuteHand = document.querySelector('.minute-hand');
+            const secondHand = document.querySelector('.second-hand');
+
+            if (hourHand) {
+                hourHand.style.transform = `rotate(${(hours * 30) + (minutes * 0.5)}deg)`;
+            }
+            if (minuteHand) {
+                minuteHand.style.transform = `rotate(${minutes * 6}deg)`;
+            }
+            if (secondHand) {
+                secondHand.style.transform = `rotate(${seconds * 6}deg)`;
+            }
+
+            // Update digital clock
+            const digitalTime = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false 
+            });
+            const digitalSeconds = now.getSeconds().toString().padStart(2, '0');
+
+            document.getElementById('digitalTime').textContent = digitalTime;
+            document.getElementById('digitalDate').textContent = dateString;
+            document.getElementById('digitalSeconds').textContent = digitalSeconds;
+
+            // Weather is updated separately on a timer, not every second
+        }
+
+        // Update weather display with realistic data
+        function updateWeatherDisplay() {
+            // Only update weather if we don't have cached data or it's been more than 5 minutes
+            const now = new Date();
+            if (currentWeather && (now - currentWeather.lastUpdate) < 5 * 60 * 1000) {
+                // Use cached weather data
+                displayWeatherData(currentWeather);
+                return;
+            }
+            
+            const hour = now.getHours();
+            
+            // Simulate weather based on time of day
+            let weatherIcon, currentTemp;
+            if (hour >= 6 && hour < 12) {
+                weatherIcon = '☀️';
+                currentTemp = Math.floor(Math.random() * 5) + 18; // 18-22°C
+            } else if (hour >= 12 && hour < 18) {
+                weatherIcon = '☀️';
+                currentTemp = Math.floor(Math.random() * 8) + 22; // 22-29°C
+            } else if (hour >= 18 && hour < 22) {
+                weatherIcon = '⛅';
+                currentTemp = Math.floor(Math.random() * 6) + 20; // 20-25°C
+            } else {
+                weatherIcon = '🌙';
+                currentTemp = Math.floor(Math.random() * 4) + 15; // 15-18°C
+            }
+            
+            // Cache the weather data
+            currentWeather = {
+                icon: weatherIcon,
+                temp: currentTemp,
+                lastUpdate: now
+            };
+            
+            displayWeatherData(currentWeather);
+        }
+        
+        // Display weather data on screen
+        function displayWeatherData(weather) {
+            document.querySelector('.weather-icon').textContent = weather.icon;
+            document.getElementById('currentTemp').textContent = `${weather.temp}°C`;
+
+            // Update forecast (use cached data to avoid changing every time)
+            const forecastDays = document.querySelectorAll('.day-weather');
+            const icons = ['☀️', '⛅', '🌧️', '🌤️', '🌦️'];
+            const temps = [weather.temp, weather.temp - 2, weather.temp - 4];
+
+            forecastDays.forEach((day, index) => {
+                // Use a consistent icon based on the main weather
+                const icon = weather.icon === '☀️' ? '☀️' : 
+                           weather.icon === '⛅' ? '⛅' : 
+                           weather.icon === '🌙' ? '🌙' : '🌤️';
+                const temp = temps[index];
+                day.textContent = `${icon} ${temp}°C`;
+            });
+        }
+
+        // Update Route Info Mode
+        function updateRouteInfo() {
+            if (!currentRouteData) return;
+            
+            const routeNumber = currentRouteData.name.split(' ')[1]; // Extract route number
+            const routeDirection = isReversed ? 
+                currentRouteData.name.split(' - ')[1].split(' to ').reverse().join(' → ') :
+                currentRouteData.name.split(' - ')[1].replace(' to ', ' → ');
+            
+            document.getElementById('routeInfoNumber').textContent = routeNumber;
+            document.getElementById('routeInfoDirection').textContent = routeDirection;
+            document.getElementById('routeInfoStops').textContent = currentRouteData.stops.length;
+            
+            // Simulate frequency based on route
+            const frequencies = {
+                '1': 'Every 6-10 min',
+                '3': 'Every 8-12 min', 
+                '35': 'Every 12 min',
+                '48': 'Every 8-15 min',
+                '58': 'Every 10-15 min',
+                '64': 'Every 8-12 min',
+                '72': 'Every 6-10 min',
+                '109': 'Every 8-12 min'
+            };
+            document.getElementById('routeInfoFrequency').textContent = frequencies[routeNumber] || 'Every 8-12 min';
+        }
+
+        // Update Connections Mode
+        function updateConnections() {
+            if (!currentRouteData) return;
+            
+            // Get major stops from current route for connections
+            const majorStops = currentRouteData.stops.filter(stop => 
+                stop.name.toLowerCase().includes('station') || 
+                stop.name.toLowerCase().includes('central') ||
+                stop.name.toLowerCase().includes('junction') ||
+                stop.name.toLowerCase().includes('flinders') ||
+                stop.name.toLowerCase().includes('southern cross')
+            ).slice(0, 3);
+            
+            const connectionsList = document.querySelector('.connections-list');
+            let html = '';
+            
+            majorStops.forEach(stop => {
+                const connections = getConnectionsForStop(stop.name);
+                html += `
+                    <div class="connection-item">
+                        <div class="connection-stop">${stop.name}</div>
+                        <div class="connection-lines">
+                            ${connections.map(conn => `<span class="connection-line">${conn}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            connectionsList.innerHTML = html;
+        }
+
+        // Get connections for a specific stop
+        function getConnectionsForStop(stopName) {
+            const connections = {
+                'Flinders Street Station': ['🚇 Metro', '🚌 Bus', '🚂 V/Line'],
+                'Southern Cross Station': ['🚂 V/Line', '🚇 Metro', '🚌 Bus'],
+                'Box Hill Central': ['🚇 Metro', '🚌 Bus'],
+                'Melbourne Central Station': ['🚇 Metro', '🚌 Bus'],
+                'Parliament Station': ['🚇 Metro', '🚌 Bus'],
+                'Flagstaff Station': ['🚇 Metro', '🚌 Bus'],
+                'St Kilda Junction': ['🚌 Bus', '🚇 Metro'],
+                'Camberwell Station': ['🚇 Metro', '🚌 Bus'],
+                'Toorak Station': ['🚇 Metro', '🚌 Bus'],
+                'South Yarra Station': ['🚇 Metro', '🚌 Bus']
+            };
+            
+            return connections[stopName] || ['🚌 Bus'];
+        }
+
+
+        // Get weather description from icon
+        function getWeatherDescription(icon) {
+            const descriptions = {
+                '☀️': 'Clear',
+                '⛅': 'Partly Cloudy',
+                '🌧️': 'Light Rain',
+                '🌤️': 'Sunny',
+                '🌦️': 'Showers',
+                '🌙': 'Clear Night'
+            };
+            return descriptions[icon] || 'Clear';
+        }
+
+        // Mobile route selector - using exact desktop logic
+        document.getElementById('mobileRouteSelector').addEventListener('change', (e) => {
+            const wasTracking = isTracking;
+            if (isTracking) {
+                stopTracking();
+            }
+            const selectedRoute = e.target.value;
+            currentRouteData = tramRoutes[selectedRoute];
+            if (currentRouteData) {
+                // Sync with desktop route selector
+                document.getElementById('routeSelector').value = selectedRoute;
+                // If was tracking and we have position data, update with current position
+                if (wasTracking && currentPosition) {
+                    updateMobileDashboard(currentPosition);
+                } else {
+                    updateMobileDashboard();
+                }
+            }
+        });
+
+        // Mobile controls
+        document.getElementById('mobileRouteSwitch').addEventListener('click', () => {
+            if (currentRouteData) {
+                isReversed = !isReversed;
+                // If tracking is active, update with current position
+                if (watchId && currentPosition) {
+                    updateMobileDashboard(currentPosition);
+                    updateDashboard(currentPosition);
+                } else {
+                    updateMobileDashboard();
+                }
+            }
+        });
+
+        document.getElementById('mobileStartTracking').addEventListener('click', () => {
+            console.log('Mobile Start Tracking clicked');
+            if (navigator.geolocation) {
+                // Start tracking for both desktop and mobile
+                navigator.geolocation.getCurrentPosition((position) => {
+                    console.log('Mobile GPS Position received:', position.coords);
+                    updateDashboard(position);
+                    if (isMobileMode) {
+                        updateMobileDashboard(position);
+                    }
+                });
+                watchId = navigator.geolocation.watchPosition((position) => {
+                    console.log('Mobile GPS Watch Position:', position.coords);
+                    updateDashboard(position);
+                    if (isMobileMode) {
+                        updateMobileDashboard(position);
+                    }
+                });
+                document.getElementById('mobileStartTracking').classList.add('active');
+                document.getElementById('startTracking').classList.add('active');
+            } else {
+                console.log('Geolocation not supported');
+            }
+        });
+
+        // Update mobile clock every second
+        setInterval(() => {
+            if (isMobileMode) {
+                updateMobileClock();
+            }
+        }, 1000);
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
