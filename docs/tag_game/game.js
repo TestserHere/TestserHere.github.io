@@ -238,9 +238,13 @@ function checkCollisions() {
             
             if (distance < tagger.radius + player.radius) {
                 // Collision detected - switch tagger
-                tagger.isTagger = false;
+                // First, remove tagger status from current tagger
+                gameState.players[gameState.taggerIndex].isTagger = false;
+                
+                // Then assign tagger status to the new player
                 player.isTagger = true;
                 gameState.taggerIndex = index;
+                
                 updatePlayerInfo();
             }
         }
@@ -297,13 +301,13 @@ function drawPlayer(player) {
     gameState.ctx.lineWidth = 2;
     gameState.ctx.stroke();
     
-    // Draw tagger indicator (white arrow)
+    // Draw tagger indicator (white arrow pointing down)
     if (player.isTagger) {
         gameState.ctx.fillStyle = 'white';
         gameState.ctx.beginPath();
-        gameState.ctx.moveTo(player.x, player.y - player.radius - 10);
-        gameState.ctx.lineTo(player.x - 5, player.y - player.radius - 5);
-        gameState.ctx.lineTo(player.x + 5, player.y - player.radius - 5);
+        gameState.ctx.moveTo(player.x, player.y + player.radius + 10);
+        gameState.ctx.lineTo(player.x - 5, player.y + player.radius + 5);
+        gameState.ctx.lineTo(player.x + 5, player.y + player.radius + 5);
         gameState.ctx.closePath();
         gameState.ctx.fill();
     }
