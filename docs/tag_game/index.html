@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag Game - Multiplayer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>Tag Game</h1>
+            <div class="timer">Time: <span id="timer">120</span>s</div>
+            <div class="game-status" id="gameStatus">Press SPACE to start!</div>
+        </div>
+        
+        <div class="player-selection">
+            <h3>Select Number of Players:</h3>
+            <div class="player-buttons">
+                <button onclick="setPlayers(2)" class="player-btn">2 Players</button>
+                <button onclick="setPlayers(3)" class="player-btn">3 Players</button>
+                <button onclick="setPlayers(4)" class="player-btn">4 Players</button>
+            </div>
+        </div>
+        
+        <div class="controls-info">
+            <div class="control-group">
+                <h4>Player 1 (WASD)</h4>
+                <div class="keys">W A S D</div>
+            </div>
+            <div class="control-group">
+                <h4>Player 2 (Arrow Keys)</h4>
+                <div class="keys">↑ ← ↓ →</div>
+            </div>
+            <div class="control-group">
+                <h4>Player 3 (IJKL)</h4>
+                <div class="keys">I J K L</div>
+            </div>
+            <div class="control-group">
+                <h4>Player 4 (TFGH)</h4>
+                <div class="keys">T F G H</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="game-info">
+            <div class="player-info">
+                <div class="player-item" id="player1-info">
+                    <span class="player-color" style="background-color: #ff6b6b;"></span>
+                    <span>Player 1</span>
+                    <span class="status" id="player1-status">Ready</span>
+                </div>
+                <div class="player-item" id="player2-info">
+                    <span class="player-color" style="background-color: #4ecdc4;"></span>
+                    <span>Player 2</span>
+                    <span class="status" id="player2-status">Ready</span>
+                </div>
+                <div class="player-item" id="player3-info">
+                    <span class="player-color" style="background-color: #45b7d1;"></span>
+                    <span>Player 3</span>
+                    <span class="status" id="player3-status">Ready</span>
+                </div>
+                <div class="player-item" id="player4-info">
+                    <span class="player-color" style="background-color: #96ceb4;"></span>
+                    <span>Player 4</span>
+                    <span class="status" id="player4-status">Ready</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
