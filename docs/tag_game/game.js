@@ -8,7 +8,9 @@ let gameState = {
     taggerIndex: 0,
     gameTimer: null,
     canvas: null,
-    ctx: null
+    ctx: null,
+    lastTagTime: 0,
+    tagCooldown: 500 // 500ms cooldown between tags
 };
 
 // Player colors
@@ -30,6 +32,9 @@ function initGame() {
     // Set up event listeners
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+    
+    // Set up fullscreen functionality
+    setupFullscreen();
     
     // Initialize players
     createPlayers();
@@ -74,7 +79,14 @@ function setPlayers(num) {
     document.querySelectorAll('.player-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    
+    // Find and activate the correct button
+    const buttons = document.querySelectorAll('.player-btn');
+    buttons.forEach((btn, index) => {
+        if (btn.textContent.includes(num)) {
+            btn.classList.add('active');
+        }
+    });
     
     // Update control groups visibility
     document.querySelectorAll('.control-group').forEach((group, index) => {
@@ -99,8 +111,14 @@ function setPlayers(num) {
 
 // Handle key down events
 function handleKeyDown(event) {
+    // Prevent default behavior for arrow keys to avoid page scrolling
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
+        event.preventDefault();
+    }
+    
     if (!gameState.gameRunning) {
         if (event.code === 'Space') {
+            event.preventDefault();
             startGame();
         }
         return;
@@ -110,10 +128,22 @@ function handleKeyDown(event) {
     gameState.players.forEach((player, playerIndex) => {
         const mapping = keyMappings[playerIndex];
         if (mapping) {
-            if (event.code === mapping.up) player.keys.up = true;
-            if (event.code === mapping.down) player.keys.down = true;
-            if (event.code === mapping.left) player.keys.left = true;
-            if (event.code === mapping.right) player.keys.right = true;
+            if (event.code === mapping.up) {
+                event.preventDefault();
+                player.keys.up = true;
+            }
+            if (event.code === mapping.down) {
+                event.preventDefault();
+                player.keys.down = true;
+            }
+            if (event.code === mapping.left) {
+                event.preventDefault();
+                player.keys.left = true;
+            }
+            if (event.code === mapping.right) {
+                event.preventDefault();
+                player.keys.right = true;
+            }
         }
     });
 }
@@ -228,6 +258,13 @@ function updatePlayers() {
 
 // Check for collisions between players
 function checkCollisions() {
+    const currentTime = Date.now();
+    
+    // Check if we're in cooldown period
+    if (currentTime - gameState.lastTagTime < gameState.tagCooldown) {
+        return;
+    }
+    
     const tagger = gameState.players[gameState.taggerIndex];
     
     gameState.players.forEach((player, index) => {
@@ -244,6 +281,9 @@ function checkCollisions() {
                 // Then assign tagger status to the new player
                 player.isTagger = true;
                 gameState.taggerIndex = index;
+                
+                // Update cooldown timer
+                gameState.lastTagTime = currentTime;
                 
                 updatePlayerInfo();
             }
@@ -301,13 +341,13 @@ function drawPlayer(player) {
     gameState.ctx.lineWidth = 2;
     gameState.ctx.stroke();
     
-    // Draw tagger indicator (white arrow pointing down)
+    // Draw tagger indicator (white arrow on top pointing down)
     if (player.isTagger) {
         gameState.ctx.fillStyle = 'white';
         gameState.ctx.beginPath();
-        gameState.ctx.moveTo(player.x, player.y + player.radius + 10);
-        gameState.ctx.lineTo(player.x - 5, player.y + player.radius + 5);
-        gameState.ctx.lineTo(player.x + 5, player.y + player.radius + 5);
+        gameState.ctx.moveTo(player.x, player.y - player.radius - 15);
+        gameState.ctx.lineTo(player.x - 6, player.y - player.radius - 5);
+        gameState.ctx.lineTo(player.x + 6, player.y - player.radius - 5);
         gameState.ctx.closePath();
         gameState.ctx.fill();
     }
@@ -324,6 +364,55 @@ function gameLoop() {
     updatePlayers();
     render();
     requestAnimationFrame(gameLoop);
+}
+
+// Setup fullscreen functionality
+function setupFullscreen() {
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    
+    fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            // Enter fullscreen
+            document.documentElement.requestFullscreen().then(() => {
+                document.body.classList.add('fullscreen');
+                fullscreenBtn.textContent = 'Exit Fullscreen';
+                // Resize canvas for fullscreen
+                resizeCanvas();
+            }).catch(err => {
+                console.log('Error attempting to enable fullscreen:', err);
+            });
+        } else {
+            // Exit fullscreen
+            document.exitFullscreen().then(() => {
+                document.body.classList.remove('fullscreen');
+                fullscreenBtn.textContent = 'Enter Fullscreen';
+                // Resize canvas back to normal
+                resizeCanvas();
+            }).catch(err => {
+                console.log('Error attempting to exit fullscreen:', err);
+            });
+        }
+    });
+    
+    // Listen for fullscreen changes
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            document.body.classList.remove('fullscreen');
+            fullscreenBtn.textContent = 'Enter Fullscreen';
+            resizeCanvas();
+        }
+    });
+}
+
+// Resize canvas based on current state
+function resizeCanvas() {
+    if (document.body.classList.contains('fullscreen')) {
+        gameState.canvas.width = window.innerWidth - 20;
+        gameState.canvas.height = window.innerHeight - 120;
+    } else {
+        gameState.canvas.width = 800;
+        gameState.canvas.height = 600;
+    }
 }
 
 // Initialize game when page loads
