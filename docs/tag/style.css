@@ -51,63 +51,6 @@ body {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.fullscreen-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    margin-top: 10px;
-}
-
-.fullscreen-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-}
-
-.fullscreen-btn:active {
-    transform: translateY(0);
-}
-
-/* Fullscreen styles */
-body.fullscreen {
-    padding: 0;
-    margin: 0;
-    background: #2c3e50;
-}
-
-body.fullscreen .game-container {
-    max-width: none;
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-}
-
-body.fullscreen .game-header {
-    margin-bottom: 10px;
-}
-
-body.fullscreen .player-selection,
-body.fullscreen .controls-info,
-body.fullscreen .game-info {
-    display: none;
-}
-
-body.fullscreen #gameCanvas {
-    flex: 1;
-    width: 100%;
-    height: calc(100vh - 120px);
-    max-width: none;
-    max-height: none;
-}
-
 .player-selection {
     text-align: center;
     margin-bottom: 20px;
