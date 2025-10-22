@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SunSmart - Your Guide to Sun Safety</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #FFE4B5 100%);
+            min-height: 100%;
+        }
+        
+        html {
+            height: 100%;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .sun-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        h1 {
+            color: #FF6B35;
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #2C5F2D;
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(45deg, #2C5F2D, #4A7C59);
+        }
+
+        .section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tip-card {
+            background: linear-gradient(135deg, #FFF8DC, #F0E68C);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #FF6B35;
+            transition: transform 0.3s ease;
+        }
+
+        .tip-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .tip-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .uv-meter {
+            background: linear-gradient(to right, #4CAF50, #FFEB3B, #FF9800, #F44336, #9C27B0);
+            height: 40px;
+            border-radius: 20px;
+            position: relative;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .uv-indicator {
+            position: absolute;
+            top: 0;
+            left: 20%;
+            width: 4px;
+            height: 100%;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: left 0.5s ease;
+        }
+
+        .uv-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .quiz-question {
+            background: #E8F5E8;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quiz-option {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            border-color: #FF6B35;
+            background: #FFF8DC;
+        }
+
+        .quiz-option.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .quiz-option.incorrect {
+            background: #F44336;
+            color: white;
+            border-color: #F44336;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2C5F2D;
+            margin: 20px 0;
+        }
+
+        .protection-level {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #FF6B35;
+        }
+
+        .spf-calculator {
+            background: #F0F8FF;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #2C5F2D;
+        }
+
+        .input-group select, .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .result-box {
+            background: #E8F5E8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-btn {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="sun-icon">☀️</div>
+            <h1>SunSmart</h1>
+            <p class="subtitle">Your complete guide to sun safety and UV protection</p>
+        </header>
+
+        <nav class="nav-buttons">
+            <button class="nav-btn active" onclick="showSection('tips')">Sun Safety Tips</button>
+            <button class="nav-btn" onclick="showSection('uv')">UV Index Guide</button>
+            <button class="nav-btn" onclick="showSection('protection')">Protection Levels</button>
+            <button class="nav-btn" onclick="showSection('calculator')">SPF Calculator</button>
+            <button class="nav-btn" onclick="showSection('ingredients')">Sunscreen Science</button>
+            <button class="nav-btn" onclick="showSection('sunburn')">Sunburn Guide</button>
+            <button class="nav-btn" onclick="showSection('quiz')">Safety Quiz</button>
+        </nav>
+
+        <main>
+            <section id="tips" class="section active">
+                <h2>🌞 Essential Sun Safety Tips</h2>
+                <div class="tips-grid">
+                    <div class="tip-card">
+                        <div class="tip-icon">🧴</div>
+                        <h3>Use Sunscreen Daily</h3>
+                        <p>Apply SPF 30+ sunscreen 15-30 minutes before going outside. Reapply every 2 hours or after swimming/sweating.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🕶️</div>
+                        <h3>Wear Protective Gear</h3>
+                        <p>Use sunglasses, hats, and wear long sleeve shirts when possible. Dark colors have better protection.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">🌳</div>
+                        <h3>Seek Shade</h3>
+                        <p>Stay in shade during peak UV hours (10 AM - 4 PM). Remember: UV rays can reflect off water, sand, and snow.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">💧</div>
+                        <h3>Stay Hydrated</h3>
+                        <p>Drink plenty of water throughout the day. Sun exposure increases dehydration risk, especially during physical activities.</p>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-icon">☁️</div>
+                        <h3>Cloudy Day Protection</h3>
+                        <p>Up to 80% of UV rays can penetrate clouds. Don't skip sunscreen on overcast days.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="uv" class="section">
+                <h2>📊 UV Index Guide</h2>
+                <p>The UV Index measures the strength of ultraviolet radiation. Check your local UV index daily!</p>
+                
+                <div class="uv-meter">
+                    <div class="uv-indicator" id="uvIndicator"></div>
+                </div>
+                <div class="uv-labels">
+                    <span>Low (1-2)</span>
+                    <span>Moderate (3-5)</span>
+                    <span>High (6-7)</span>
+                    <span>Very High (8-10)</span>
+                    <span>Extreme (11+)</span>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <label for="uvSlider"><strong>Adjust UV Index: <span id="uvValue">3</span></strong></label>
+                    <input type="range" id="uvSlider" min="1" max="12" value="3" style="width: 100%; margin: 10px 0;">
+                </div>
+
+                <div id="uvRecommendation" style="background: #E8F5E8; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <h3>Current Recommendation:</h3>
+                    <p id="uvAdvice">Minimal protection needed. Wear sunglasses on bright days.</p>
+                </div>
+            </section>
+
+            <section id="protection" class="section">
+                <h2>🛡️ Sun Protection Levels</h2>
+                <p>Different situations require different levels of protection:</p>
+
+                <div class="protection-level">
+                    <div style="font-size: 2rem;">🏠</div>
+                    <div>
+                        <h3>Indoor/Minimal Exposure</h3>
+                        <p>Basic moisturizer with SPF 15-30. Perfect for brief outdoor walk.</p>
+                    </div>
+                </div>
+
+                <div class="protection-level">
+                    <div style="font-size: 2rem;">🚶</div>
+                    <div>
+                        <h3>Daily Activities</h3>
+                        <p>SPF 30+ sunscreen, sunglasses, and hat. Ideal for walking or shopping.</p>
+                    </div>
+                </div>
+
+                <div class="protection-level">
+                    <div style="font-size: 2rem;">🏃</div>
+                    <div>
+                        <h3>Outdoor Exercise</h3>
+                        <p>Water-resistant SPF 30+, protective clothing, reapply every 2 hours.</p>
+                    </div>
+                </div>
+
+                <div class="protection-level">
+                    <div style="font-size: 2rem;">🏖️</div>
+                    <div>
+                        <h3>Beach/Pool Days</h3>
+                        <p>SPF 50+ water-resistant, wide-brimmed hat, UV shirt, umbrella, and often shade breaks.</p>
+                    </div>
+                </div>
+
+                <div class="protection-level">
+                    <div style="font-size: 2rem;">⛷️</div>
+                    <div>
+                        <h3>Snow/High Altitude</h3>
+                        <p>SPF 50+, UV goggles, face protection. Snow reflects up to 90% of UV rays!</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="calculator" class="section">
+                <h2>🧮 SPF Calculator</h2>
+                <p>Find the right SPF level for your skin type and conditions:</p>
+
+                <div class="spf-calculator">
+                    <div class="input-group">
+                        <label for="skinType">Your Skin Type:</label>
+                        <select id="skinType">
+                            <option value="1">Very Fair (Always burns, never tans)</option>
+                            <option value="2">Fair (Burns easily, tans minimally)</option>
+                            <option value="3">Medium (Burns moderately, tans gradually)</option>
+                            <option value="4">Olive (Burns minimally, tans well)</option>
+                            <option value="5">Brown (Rarely burns, tans profusely)</option>
+                            <option value="6">Dark (Never burns, deeply pigmented)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="uvIndex">Expected UV Index:</label>
+                        <select id="uvIndex">
+                            <option value="2">Low (1-2)</option>
+                            <option value="4">Moderate (3-5)</option>
+                            <option value="7">High (6-7)</option>
+                            <option value="9">Very High (8-10)</option>
+                            <option value="11">Extreme (11+)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="duration">Time Outdoors (hours):</label>
+                        <input type="number" id="duration" min="0.5" max="12" step="0.5" value="2">
+                    </div>
+
+                    <button class="calculate-btn" onclick="calculateSPF()">Calculate Recommended SPF</button>
+
+                    <div id="spfResult" class="result-box" style="display: none;">
+                        <h3>Your Recommendation:</h3>
+                        <p id="spfAdvice"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ingredients" class="section">
+                <h2>🧪 Sunscreen Science & Ingredients</h2>
+                <p>Understanding how sunscreen ingredients protect your skin from harmful UV radiation:</p>
+
+                <div style="background: #E8F5E8; padding: 20px; border-radius: 15px; margin: 20px 0;">
+                    <h3>🛡️ How Sunscreen Works</h3>
+                    <p>Sunscreen protects your skin through two main mechanisms: <strong>absorption</strong> and <strong>reflection</strong> of UV rays. The ingredients work together to create a protective barrier on your skin.</p>
+                </div>
+
+                <div class="tips-grid">
+                    <div class="tip-card" style="background: linear-gradient(135deg, #FFE4E1, #FFF0F5);">
+                        <div class="tip-icon">⚛️</div>
+                        <h3>Chemical Filters (Organic)</h3>
+                        <p><strong>How they work:</strong> Absorb UV rays and convert them to heat</p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li><strong>Avobenzone:</strong> Protects against UVA rays</li>
+                            <li><strong>Octinoxate:</strong> Absorbs UVB rays effectively</li>
+                            <li><strong>Oxybenzone:</strong> Broad-spectrum protection</li>
+                            <li><strong>Homosalate:</strong> UVB absorption, often combined with others</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #E0F6FF, #F0F8FF);">
+                        <div class="tip-icon">🪨</div>
+                        <h3>Physical Filters (Mineral)</h3>
+                        <p><strong>How they work:</strong> Create a physical barrier that reflects UV rays</p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li><strong>Zinc Oxide:</strong> Broad-spectrum protection, gentle on skin</li>
+                            <li><strong>Titanium Dioxide:</strong> Primarily UVB protection, less whitening</li>
+                            <li><strong>Benefits:</strong> Immediate protection, less irritating</li>
+                            <li><strong>Ideal for:</strong> Sensitive skin, children, face application</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #F0FFF0, #F5FFFA);">
+                        <div class="tip-icon">🔬</div>
+                        <h3>Supporting Ingredients</h3>
+                        <p><strong>Enhance protection and application:</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li><strong>Antioxidants:</strong> Vitamin E, Vitamin C fight free radicals</li>
+                            <li><strong>Moisturizers:</strong> Hyaluronic acid, glycerin prevent dryness</li>
+                            <li><strong>Stabilizers:</strong> Keep active ingredients effective</li>
+                            <li><strong>Water-resistant agents:</strong> Help sunscreen stay on during activities</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #FFF8DC, #FFFACD);">
+                        <div class="tip-icon">⚡</div>
+                        <h3>UV Ray Types</h3>
+                        <p><strong>Understanding what you're protecting against:</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li><strong>UVA rays:</strong> Cause aging, wrinkles, penetrate deep</li>
+                            <li><strong>UVB rays:</strong> Cause burning, affect skin surface</li>
+                            <li><strong>UVC rays:</strong> Blocked by ozone layer (not a concern)</li>
+                            <li><strong>Broad-spectrum:</strong> Protects against both UVA and UVB</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="background: #FFF8DC; padding: 25px; border-radius: 15px; margin: 20px 0; border-left: 5px solid #FF6B35;">
+                    <h3>🎯 Choosing the Right Sunscreen</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 15px;">
+                        <div>
+                            <h4>For Sensitive Skin:</h4>
+                            <p>Choose mineral sunscreens with zinc oxide or titanium dioxide.</p>
+                        </div>
+                        <div>
+                            <h4>For Daily Use:</h4>
+                            <p>Lightweight chemical sunscreens that absorb quickly. Look for moisturizing ingredients.</p>
+                        </div>
+                        <div>
+                            <h4>For Sports/Water:</h4>
+                            <p>Water-resistant formulas with higher SPF. Reapply  dring activities.</p>
+                        </div>
+                        <div>
+                            <h4>For Face:</h4>
+                            <p>Non-comedogenic formulas that won't clog pores. Consider tinted options for daily wear.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spf-calculator">
+                    <h3>🧬 Ingredient Checker</h3>
+                    <p>Learn about common sunscreen ingredients:</p>
+                    <div class="input-group">
+                        <label for="ingredientSelect">Select an ingredient to learn more:</label>
+                        <select id="ingredientSelect" onchange="showIngredientInfo()">
+                            <option value="">Choose an ingredient...</option>
+                            <option value="avobenzone">Avobenzone</option>
+                            <option value="zinc">Zinc Oxide</option>
+                            <option value="titanium">Titanium Dioxide</option>
+                            <option value="octinoxate">Octinoxate</option>
+                            <option value="oxybenzone">Oxybenzone</option>
+                            <option value="homosalate">Homosalate</option>
+                        </select>
+                    </div>
+                    <div id="ingredientInfo" class="result-box" style="display: none;">
+                        <h4 id="ingredientName"></h4>
+                        <p id="ingredientDetails"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sunburn" class="section">
+                <h2>🔥 Understanding Sunburn</h2>
+                <p>Learn about sunburn stages, treatment, and prevention to keep your skin healthy:</p>
+
+                <div style="background: #FFE4E1; padding: 20px; border-radius: 15px; margin: 20px 0; border-left: 5px solid #FF6B35;">
+                    <h3>⚠️ What is Sunburn?</h3>
+                    <p>Sunburn is your skin's response to UV radiation damage. It occurs when UV rays penetrate the skin and damage DNA in skin cells, that causes redness, pain, and swelling.</p>
+                </div>
+
+                <div class="tips-grid">
+                    <div class="tip-card" style="background: linear-gradient(135deg, #FFF0F5, #FFE4E1);">
+                        <div class="tip-icon">1️⃣</div>
+                        <h3>First Degree Sunburn</h3>
+                        <p><strong>Mild sunburn affecting outer skin layer</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li>Red, warm skin</li>
+                            <li>Mild pain and tenderness</li>
+                            <li>Skin may feel tight</li>
+                            <li>Heals in 3-5 days</li>
+                            <li>May peel as it heals</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #FFE4E1, #FFC0CB);">
+                        <div class="tip-icon">2️⃣</div>
+                        <h3>Second Degree Sunburn</h3>
+                        <p><strong>Severe sunburn affecting deeper skin layers</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li>Deep red or purple skin</li>
+                            <li>Severe pain and swelling</li>
+                            <li>Blistering may occur</li>
+                            <li>Takes 1-3 weeks to heal</li>
+                            <li>May require medical attention</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #E0F6FF, #F0F8FF);">
+                        <div class="tip-icon">🩹</div>
+                        <h3>Immediate Treatment</h3>
+                        <p><strong>First aid for sunburn:</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li>Get out of the sun immediately</li>
+                            <li>Cool the skin with cold compresses</li>
+                            <li>Take cool (not cold) baths or showers</li>
+                            <li>Apply aloe vera or moisturizer</li>
+                            <li>Drink plenty of water</li>
+                            <li>Take pain relievers if needed</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #F0FFF0, #F5FFFA);">
+                        <div class="tip-icon">💊</div>
+                        <h3>Home Remedies</h3>
+                        <p><strong>Natural sunburn relief:</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li><strong>Aloe vera:</strong> Natural anti-inflammatory</li>
+                            <li><strong>Cool milk compresses:</strong> Proteins help heal skin</li>
+                            <li><strong>Oatmeal baths:</strong> Soothe irritated skin</li>
+                            <li><strong>Cucumber slices:</strong> Cool and hydrate</li>
+                            <li><strong>Green tea compresses:</strong> Antioxidants reduce inflammation</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #FFF8DC, #FFFACD);">
+                        <div class="tip-icon">⏰</div>
+                        <h3>Healing Timeline</h3>
+                        <p><strong>What to expect during recovery:</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li><strong>0-6 hours:</strong> Skin starts to redden</li>
+                            <li><strong>12-24 hours:</strong> Peak redness and pain</li>
+                            <li><strong>2-3 days:</strong> Pain begins to subside</li>
+                            <li><strong>4-7 days:</strong> Skin may start peeling</li>
+                            <li><strong>1-2 weeks:</strong> Complete healing for mild burns</li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-card" style="background: linear-gradient(135deg, #FFE4B5, #FFEFD5);">
+                        <div class="tip-icon">🚨</div>
+                        <h3>When to See a Doctor</h3>
+                        <p><strong>Seek medical attention if you have:</strong></p>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li>Severe blistering over large areas</li>
+                            <li>Fever, chills, or nausea</li>
+                            <li>Signs of infection (pus, red streaks)</li>
+                            <li>Severe pain that doesn't improve</li>
+                            <li>Dehydration symptoms</li>
+                            <li>Sunburn covering large body areas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="background: #E8F5E8; padding: 25px; border-radius: 15px; margin: 20px 0;">
+                    <h3>🛡️ Prevention is Key</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px;">
+                        <div>
+                            <h4>Before Sun Exposure:</h4>
+                            <ul>
+                                <li>Apply sunscreen 15-30 minutes before going outside</li>
+                                <li>Use broad-spectrum SPF 30+</li>
+                                <li>Don't forget ears, feet, and lips</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>During Sun Exposure:</h4>
+                            <ul>
+                                <li>Reapply sunscreen every 2 hours</li>
+                                <li>Seek shade during peak hours</li>
+                                <li>Wear protective clothing</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>High-Risk Situations:</h4>
+                            <ul>
+                                <li>Beach and pool activities</li>
+                                <li>Snow sports (reflection)</li>
+                                <li>High altitude locations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spf-calculator">
+                    <h3>🌡️ Sunburn Risk Assessment</h3>
+                    <p>Check your current risk level:</p>
+                    <div class="input-group">
+                        <label for="riskSkinType">Your Skin Type:</label>
+                        <select id="riskSkinType">
+                            <option value="1">Very Fair (Always burns)</option>
+                            <option value="2">Fair (Burns easily)</option>
+                            <option value="3">Medium (Burns moderately)</option>
+                            <option value="4">Olive (Burns minimally)</option>
+                            <option value="5">Brown (Rarely burns)</option>
+                            <option value="6">Dark (Never burns)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="riskUV">Current UV Index:</label>
+                        <select id="riskUV">
+                            <option value="2">Low (1-2)</option>
+                            <option value="4">Moderate (3-5)</option>
+                            <option value="7">High (6-7)</option>
+                            <option value="9">Very High (8-10)</option>
+                            <option value="11">Extreme (11+)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="riskTime">Time in sun without protection (minutes):</label>
+                        <input type="number" id="riskTime" min="5" max="300" step="5" value="30">
+                    </div>
+                    <button class="calculate-btn" onclick="assessSunburnRisk()">Assess Risk</button>
+                    <div id="riskResult" class="result-box" style="display: none;">
+                        <h4>Your Sunburn Risk:</h4>
+                        <p id="riskAdvice"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quiz" class="section">
+                <h2>🧠 Sun Safety Quiz</h2>
+                <p>Test your sun safety knowledge!</p>
+
+                <div class="score-display">
+                    Score: <span id="score">0</span>/5
+                </div>
+
+                <div id="quizContainer">
+                    <!-- Quiz questions will be loaded here -->
+                </div>
+
+                <button class="calculate-btn" onclick="resetQuiz()" style="margin-top: 20px;">Reset Quiz</button>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let currentScore = 0;
+        let questionsAnswered = 0;
+
+        const quizQuestions = [
+            {
+                question: "What SPF level provides adequate protection for daily use?",
+                options: ["SPF 15", "SPF 30", "SPF 50", "SPF 100"],
+                correct: 1,
+                explanation: "SPF 30 blocks about 97% of UVB rays and is recommended for daily use."
+            },
+            {
+                question: "When should you reapply sunscreen?",
+                options: ["Once a day", "Every 2 hours", "Only when swimming", "Every 4 hours"],
+                correct: 1,
+                explanation: "Sunscreen should be reapplied every 2 hours, or immediately after swimming or sweating."
+            },
+            {
+                question: "Which time of day has the strongest UV rays?",
+                options: ["8 AM - 10 AM", "10 AM - 4 PM", "4 PM - 6 PM", "6 PM - 8 PM"],
+                correct: 1,
+                explanation: "UV rays are strongest between 10 AM and 4 PM when the sun is highest in the sky."
+            },
+            {
+                question: "Can you get sunburned on a cloudy day?",
+                options: ["No, clouds block all UV rays", "Yes, up to 80% of UV rays penetrate clouds", "Only if it's partially cloudy", "Only in summer"],
+                correct: 1,
+                explanation: "Up to 80% of UV rays can penetrate clouds, so protection is needed even on overcast days."
+            },
+            {
+                question: "What does 'broad-spectrum' sunscreen protect against?",
+                options: ["Only UVA rays", "Only UVB rays", "Both UVA and UVB rays", "Only visible light"],
+                correct: 2,
+                explanation: "Broad-spectrum sunscreen protects against both UVA (aging) and UVB (burning) rays."
+            }
+        ];
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            // Initialize section-specific content
+            if (sectionId === 'quiz') {
+                loadQuiz();
+            }
+        }
+
+        // UV Index functionality
+        document.getElementById('uvSlider').addEventListener('input', function() {
+            const uvValue = parseInt(this.value);
+            document.getElementById('uvValue').textContent = uvValue;
+            
+            // Update indicator position
+            const indicator = document.getElementById('uvIndicator');
+            const position = ((uvValue - 1) / 11) * 100;
+            indicator.style.left = position + '%';
+            
+            // Update recommendation
+            updateUVRecommendation(uvValue);
+        });
+
+        function updateUVRecommendation(uvIndex) {
+            const advice = document.getElementById('uvAdvice');
+            let recommendation = '';
+            
+            if (uvIndex <= 2) {
+                recommendation = "Minimal protection needed. Wear sunglasses on bright days.";
+            } else if (uvIndex <= 5) {
+                recommendation = "Moderate protection needed. Use SPF 30+ sunscreen, hat, and sunglasses.";
+            } else if (uvIndex <= 7) {
+                recommendation = "High protection needed. Use SPF 30+, seek shade during midday, wear protective clothing.";
+            } else if (uvIndex <= 10) {
+                recommendation = "Very high protection needed. Use SPF 50+, avoid midday sun, wear full protective gear.";
+            } else {
+                recommendation = "Extreme protection needed. Avoid outdoor activities during midday. Use SPF 50+ and full coverage.";
+            }
+            
+            advice.textContent = recommendation;
+        }
+
+        function calculateSPF() {
+            const skinType = parseInt(document.getElementById('skinType').value);
+            const uvIndex = parseInt(document.getElementById('uvIndex').value);
+            const duration = parseFloat(document.getElementById('duration').value);
+            
+            let recommendedSPF = 15;
+            
+            // Base SPF on skin type
+            if (skinType <= 2) recommendedSPF = 50;
+            else if (skinType <= 3) recommendedSPF = 30;
+            else if (skinType <= 4) recommendedSPF = 25;
+            else recommendedSPF = 15;
+            
+            // Adjust for UV index
+            if (uvIndex >= 8) recommendedSPF = Math.max(recommendedSPF, 50);
+            else if (uvIndex >= 6) recommendedSPF = Math.max(recommendedSPF, 30);
+            
+            // Adjust for duration
+            if (duration > 4) recommendedSPF = Math.max(recommendedSPF, 30);
+            
+            const result = document.getElementById('spfResult');
+            const advice = document.getElementById('spfAdvice');
+            
+            advice.innerHTML = `
+                <strong>Recommended SPF: ${recommendedSPF}+</strong><br>
+                Based on your skin type and conditions, use at least SPF ${recommendedSPF} sunscreen. 
+                ${duration > 2 ? 'Remember to reapply every 2 hours!' : ''}
+                ${uvIndex >= 8 ? ' Consider staying indoors during peak hours.' : ''}
+            `;
+            
+            result.style.display = 'block';
+        }
+
+        function loadQuiz() {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+            
+            quizQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'quiz-question';
+                questionDiv.innerHTML = `
+                    <h3>Question ${index + 1}: ${q.question}</h3>
+                    <div class="quiz-options">
+                        ${q.options.map((option, optIndex) => `
+                            <div class="quiz-option" onclick="answerQuestion(${index}, ${optIndex})">
+                                ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div id="explanation-${index}" style="display: none; margin-top: 15px; padding: 15px; background: #E8F5E8; border-radius: 8px;">
+                        <strong>Explanation:</strong> ${q.explanation}
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function answerQuestion(questionIndex, selectedOption) {
+            const question = quizQuestions[questionIndex];
+            const options = document.querySelectorAll(`#quizContainer .quiz-question:nth-child(${questionIndex + 1}) .quiz-option`);
+            const explanation = document.getElementById(`explanation-${questionIndex}`);
+            
+            // Disable all options for this question
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none';
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedOption && selectedOption !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Show explanation
+            explanation.style.display = 'block';
+            
+            // Update score
+            if (selectedOption === question.correct) {
+                currentScore++;
+            }
+            questionsAnswered++;
+            
+            document.getElementById('score').textContent = currentScore;
+        }
+
+        function resetQuiz() {
+            currentScore = 0;
+            questionsAnswered = 0;
+            document.getElementById('score').textContent = '0';
+            loadQuiz();
+        }
+
+        function showIngredientInfo() {
+            const ingredient = document.getElementById('ingredientSelect').value;
+            const infoDiv = document.getElementById('ingredientInfo');
+            const nameDiv = document.getElementById('ingredientName');
+            const detailsDiv = document.getElementById('ingredientDetails');
+
+            const ingredientData = {
+                avobenzone: {
+                    name: "Avobenzone (Butyl Methoxydibenzoylmethane)",
+                    details: "A chemical UV filter that provides excellent UVA protection. It absorbs UVA rays (320-400nm) and converts them to heat. Often combined with other ingredients for stability. Can cause skin sensitivity in some people. Commonly found in daily-use sunscreens."
+                },
+                zinc: {
+                    name: "Zinc Oxide",
+                    details: "A mineral UV filter that provides broad-spectrum protection against both UVA and UVB rays. Works by creating a physical barrier that reflects and scatters UV radiation. Gentle on sensitive skin, safe for children, and provides immediate protection upon application. May leave a white cast on darker skin tones."
+                },
+                titanium: {
+                    name: "Titanium Dioxide",
+                    details: "A mineral UV filter that primarily protects against UVB rays and some UVA rays. Creates a physical barrier on the skin surface. Less likely to cause white cast compared to zinc oxide. Often used in face sunscreens and makeup products. Generally well-tolerated by sensitive skin."
+                },
+                octinoxate: {
+                    name: "Octinoxate (Octyl Methoxycinnamate)",
+                    details: "A chemical UV filter that absorbs UVB rays effectively. Lightweight and easily absorbed into skin. Often combined with other ingredients for broad-spectrum protection. Some environmental concerns regarding coral reef safety. Commonly used in daily moisturizers with SPF."
+                },
+                oxybenzone: {
+                    name: "Oxybenzone (Benzophenone-3)",
+                    details: "A chemical UV filter providing broad-spectrum protection against both UVA and UVB rays. Absorbs UV radiation and converts it to heat. Can cause allergic reactions in some people. Environmental concerns have led to bans in some locations. Often found in sport and water-resistant sunscreens."
+                },
+                homosalate: {
+                    name: "Homosalate (Homomethyl Salicylate)",
+                    details: "A chemical UV filter that absorbs UVB rays. Often used in combination with other UV filters to enhance protection. Helps stabilize other sunscreen ingredients. Generally well-tolerated with low irritation potential. Commonly found in sport sunscreens and water-resistant formulas."
+                }
+            };
+
+            if (ingredient && ingredientData[ingredient]) {
+                nameDiv.textContent = ingredientData[ingredient].name;
+                detailsDiv.textContent = ingredientData[ingredient].details;
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+
+        function assessSunburnRisk() {
+            const skinType = parseInt(document.getElementById('riskSkinType').value);
+            const uvIndex = parseInt(document.getElementById('riskUV').value);
+            const timeMinutes = parseInt(document.getElementById('riskTime').value);
+
+            // Calculate base burn time for skin type (minutes)
+            const baseBurnTime = {
+                1: 10,  // Very fair
+                2: 20,  // Fair
+                3: 30,  // Medium
+                4: 45,  // Olive
+                5: 60,  // Brown
+                6: 90   // Dark
+            };
+
+            // Adjust burn time based on UV index
+            const uvMultiplier = {
+                2: 1.0,   // Low
+                4: 0.7,   // Moderate
+                7: 0.4,   // High
+                9: 0.25,  // Very High
+                11: 0.15  // Extreme
+            };
+
+            const adjustedBurnTime = baseBurnTime[skinType] * uvMultiplier[uvIndex];
+            const riskLevel = timeMinutes / adjustedBurnTime;
+
+            const resultDiv = document.getElementById('riskResult');
+            const adviceDiv = document.getElementById('riskAdvice');
+
+            let riskText, advice, riskColor;
+
+            if (riskLevel < 0.5) {
+                riskText = "LOW RISK";
+                riskColor = "#4CAF50";
+                advice = "Your current exposure time is relatively safe for your skin type, but it's still recommended to use sunscreen for optimal protection.";
+            } else if (riskLevel < 1.0) {
+                riskText = "MODERATE RISK";
+                riskColor = "#FF9800";
+                advice = "You're approaching your skin's natural protection limit. Apply sunscreen immediately and consider seeking shade.";
+            } else if (riskLevel < 2.0) {
+                riskText = "HIGH RISK";
+                riskColor = "#FF5722";
+                advice = "You're likely to experience sunburn. Get out of the sun immediately, apply sunscreen, and seek shade. Consider covering up with clothing.";
+            } else {
+                riskText = "EXTREME RISK";
+                riskColor = "#F44336";
+                advice = "Severe sunburn is very likely. Get indoors immediately! Apply cool compresses and aloe vera. Monitor for signs of sun poisoning and consider medical attention if symptoms worsen.";
+            }
+
+            adviceDiv.innerHTML = `
+                <div style="color: ${riskColor}; font-weight: bold; font-size: 1.2em; margin-bottom: 10px;">
+                    ${riskText}
+                </div>
+                <p>${advice}</p>
+                <p><strong>Estimated burn time for your skin:</strong> ${Math.round(adjustedBurnTime)} minutes</p>
+                <p><strong>Your current exposure:</strong> ${timeMinutes} minutes</p>
+            `;
+
+            resultDiv.style.display = 'block';
+        }
+
+        // Initialize UV recommendation
+        updateUVRecommendation(3);
+        
+        // Initialize quiz
+        loadQuiz();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'992c5e9af7a45a98',t:'MTc2MTE3MTQ5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
