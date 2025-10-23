@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dichotomous Key Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            position: relative;
+            min-height: 600px;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #ffffff;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+            min-height: 600px;
+        }
+
+        #keyCanvas {
+            display: block;
+            cursor: crosshair;
+            z-index: 1;
+        }
+
+        .floating-toolbar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toolbar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .toolbar-section h4 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .icon-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .icon-btn.active {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            transform: scale(1.1);
+        }
+
+        .icon-btn.danger {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #8b0000;
+        }
+
+        .icon-btn.success {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #006400;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 99999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .icon-btn:hover .tooltip {
+            opacity: 1;
+        }
+
+        .connection-input {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 999999;
+            min-width: 250px;
+        }
+
+        .connection-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .connection-input button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .node {
+            position: absolute;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: move;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            min-width: 120px;
+            text-align: center;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .node.selected {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            transform: scale(1.1);
+        }
+
+        .node.terminal {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .node.connection-first {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            transform: scale(1.15);
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4);
+        }
+
+        .node.connection-second {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            transform: scale(1.15);
+            box-shadow: 0 8px 25px rgba(155, 89, 182, 0.4);
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            z-index: 999999;
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal h3 {
+            margin: 0 0 20px 0;
+            color: #667eea;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Dichotomous Key Creator</h1>
+            <p>Build interactive identification keys.</p>
+        </div>
+
+        <div class="main-content">
+            <div class="floating-toolbar">
+                <div class="toolbar-section">
+                    <h4>Nodes</h4>
+                    <button class="icon-btn" onclick="addNode()" title="Add Decision Node">
+                        ➕
+                        <div class="tooltip">Add Decision Node</div>
+                    </button>
+                    <button class="icon-btn success" onclick="addTerminalNode()" title="Add Terminal Node">
+                        🎯
+                        <div class="tooltip">Add Terminal Node</div>
+                    </button>
+                    <button class="icon-btn danger" onclick="deleteSelectedNode()" title="Delete Selected">
+                        🗑️
+                        <div class="tooltip">Delete Selected</div>
+                    </button>
+                    <button class="icon-btn danger" onclick="clearAll()" title="Clear All">
+                        🧹
+                        <div class="tooltip">Clear All</div>
+                    </button>
+                </div>
+
+                <div class="toolbar-section">
+                    <h4>Edit</h4>
+                    <button class="icon-btn" onclick="editSelectedNode()" title="Edit Node">
+                        ✏️
+                        <div class="tooltip">Edit Node</div>
+                    </button>
+                </div>
+
+                <div class="toolbar-section">
+                    <h4>Connect</h4>
+                    <button class="icon-btn" id="connectBtn" onclick="startConnectionMode()" title="Connect Two Nodes">
+                        🔗
+                        <div class="tooltip">Connect Two Nodes</div>
+                    </button>
+                    <button class="icon-btn danger" onclick="removeConnection()" title="Remove Connection">
+                        ✂️
+                        <div class="tooltip">Remove Connection</div>
+                    </button>
+                </div>
+
+                <div class="toolbar-section">
+                    <h4>Export</h4>
+                    <button class="icon-btn success" onclick="exportToPNG()" title="Export as PNG">
+                        📥
+                        <div class="tooltip">Export as PNG</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="connection-input" id="connectionInput" style="display: none;">
+                <input type="text" id="connectionLabel" placeholder="Yes / No / Has legs / etc.">
+                <button onclick="addConnectionLabel()">Add Label</button>
+            </div>
+
+            <div class="status-indicator" id="statusIndicator">
+                Ready
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="keyCanvas" width="1200" height="800"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3>Edit Node Text</h3>
+            <input type="text" id="editInput" placeholder="Enter new text...">
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="saveEdit()">Save</button>
+                <button class="modal-btn secondary" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DichotomousKeyCreator {
+            constructor() {
+                this.canvas = document.getElementById('keyCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.nodes = [];
+                this.manualConnections = new Set();
+                this.connectionLabels = new Map();
+                this.selectedNode = null;
+                this.dragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.connectionMode = false;
+                this.firstConnectionNode = null;
+                this.selectedConnection = null;
+                
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.updateStatus('Ready');
+            }
+
+            setupCanvas() {
+                const container = this.canvas.parentElement;
+                const rect = container.getBoundingClientRect();
+                
+                // Set canvas size to fill container
+                this.canvas.width = rect.width;
+                this.canvas.height = rect.height;
+                
+                // Redraw after resize
+                this.draw();
+            }
+
+            setupEventListeners() {
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+                this.canvas.addEventListener('click', (e) => this.handleClick(e));
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.setupCanvas(), 100);
+                });
+                
+                // Handle fullscreen changes
+                document.addEventListener('fullscreenchange', () => {
+                    setTimeout(() => this.setupCanvas(), 100);
+                });
+            }
+
+            handleMouseDown(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const node = this.getNodeAt(x, y);
+                if (node) {
+                    this.selectedNode = node;
+                    this.dragging = true;
+                    this.dragOffset = {
+                        x: x - node.x,
+                        y: y - node.y
+                    };
+                } else {
+                    this.selectedNode = null;
+                }
+                this.draw();
+            }
+
+            handleMouseMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (this.dragging && this.selectedNode) {
+                    this.selectedNode.x = x - this.dragOffset.x;
+                    this.selectedNode.y = y - this.dragOffset.y;
+                    this.draw();
+                }
+            }
+
+            handleMouseUp(e) {
+                this.dragging = false;
+            }
+
+            handleClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // First check if clicking on a connection line
+                const clickedConnection = this.getConnectionAt(x, y);
+                if (clickedConnection) {
+                    this.selectedConnection = clickedConnection;
+                    this.updateStatus('Connection selected - add label below');
+                    document.getElementById('connectionInput').style.display = 'block';
+                    this.draw();
+                    return;
+                }
+                
+                const node = this.getNodeAt(x, y);
+                if (node) {
+                    if (this.connectionMode) {
+                        if (this.firstConnectionNode === null) {
+                            this.firstConnectionNode = node;
+                            this.updateStatus('Click second node to connect');
+                        } else if (this.firstConnectionNode !== node) {
+                            const connectionId = [this.firstConnectionNode.id, node.id].sort().join('-');
+                            this.manualConnections.add(connectionId);
+                            
+                            this.connectionMode = false;
+                            this.firstConnectionNode = null;
+                            this.updateStatus('Connection created!');
+                            this.updateConnectButton();
+                            
+                            // Show connection input
+                            document.getElementById('connectionInput').style.display = 'block';
+                        }
+                    } else {
+                        this.selectedNode = node;
+                        this.selectedConnection = null;
+                        this.updateStatus('Node selected');
+                    }
+                } else {
+                    if (this.connectionMode) {
+                        this.connectionMode = false;
+                        this.firstConnectionNode = null;
+                        this.updateStatus('Connection cancelled');
+                        this.updateConnectButton();
+                    }
+                    this.selectedNode = null;
+                    this.selectedConnection = null;
+                    this.updateStatus('Ready');
+                }
+                this.draw();
+            }
+
+            getNodeAt(x, y) {
+                for (let i = this.nodes.length - 1; i >= 0; i--) {
+                    const node = this.nodes[i];
+                    if (x >= node.x && x <= node.x + node.width &&
+                        y >= node.y && y <= node.y + node.height) {
+                        return node;
+                    }
+                }
+                return null;
+            }
+
+            getConnectionAt(x, y) {
+                // Check if click is near any connection line
+                for (let connectionId of this.manualConnections) {
+                    const [node1Id, node2Id] = connectionId.split('-').map(id => parseInt(id));
+                    const node1 = this.nodes.find(n => n.id === node1Id);
+                    const node2 = this.nodes.find(n => n.id === node2Id);
+                    
+                    if (node1 && node2) {
+                        const x1 = node1.x + node1.width / 2;
+                        const y1 = node1.y + node1.height / 2;
+                        const x2 = node2.x + node2.width / 2;
+                        const y2 = node2.y + node2.height / 2;
+                        
+                        // Calculate distance from point to line
+                        const distance = this.pointToLineDistance(x, y, x1, y1, x2, y2);
+                        
+                        // If click is within 10 pixels of the line
+                        if (distance < 10) {
+                            return connectionId;
+                        }
+                    }
+                }
+                return null;
+            }
+
+            pointToLineDistance(px, py, x1, y1, x2, y2) {
+                const A = px - x1;
+                const B = py - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+                
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                
+                if (lenSq === 0) return Math.sqrt(A * A + B * B);
+                
+                let param = dot / lenSq;
+                
+                let xx, yy;
+                if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                }
+                
+                const dx = px - xx;
+                const dy = py - yy;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            addNode(type = 'decision') {
+                const node = {
+                    id: Date.now(),
+                    x: (this.canvas.width - 150) / 2, // Center horizontally
+                    y: (this.canvas.height - 60) / 2, // Center vertically
+                    width: 150,
+                    height: 60,
+                    text: type === 'terminal' ? 'Species/Item' : 'Question?',
+                    type: type
+                };
+                
+                this.nodes.push(node);
+                this.selectedNode = node;
+                this.updateStatus('Node added');
+                this.draw();
+            }
+
+            addTerminalNode() {
+                this.addNode('terminal');
+            }
+
+            deleteSelectedNode() {
+                if (this.selectedNode) {
+                    const index = this.nodes.indexOf(this.selectedNode);
+                    if (index > -1) {
+                        this.nodes.splice(index, 1);
+                        this.selectedNode = null;
+                        this.updateStatus('Node deleted');
+                        this.draw();
+                    }
+                }
+            }
+
+            clearAll() {
+                if (confirm('Are you sure you want to clear all nodes?')) {
+                    this.nodes = [];
+                    this.manualConnections = new Set();
+                    this.connectionLabels = new Map();
+                    this.selectedNode = null;
+                    this.connectionMode = false;
+                    this.firstConnectionNode = null;
+                    this.updateStatus('All cleared');
+                    this.updateConnectButton();
+                    this.draw();
+                }
+            }
+
+            editSelectedNode() {
+                if (this.selectedNode) {
+                    this.showEditModal(this.selectedNode.text);
+                } else {
+                    this.showAlert('Please select a node first.');
+                }
+            }
+
+            showEditModal(currentText) {
+                const modal = document.getElementById('editModal');
+                const input = document.getElementById('editInput');
+                
+                if (input) {
+                    input.value = currentText;
+                    input.focus();
+                    input.select();
+                }
+                
+                modal.style.display = 'flex';
+                
+                // Handle Enter key
+                if (input) {
+                    input.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            this.saveEdit();
+                        } else if (e.key === 'Escape') {
+                            this.cancelEdit();
+                        }
+                    };
+                }
+            }
+
+            saveEdit() {
+                const input = document.getElementById('editInput');
+                const newText = input ? input.value.trim() : '';
+                
+                if (newText && this.selectedNode) {
+                    this.selectedNode.text = newText;
+                    this.draw();
+                    this.hideEditModal();
+                    // Hide connection input after editing
+                    document.getElementById('connectionInput').style.display = 'none';
+                }
+            }
+
+            cancelEdit() {
+                this.hideEditModal();
+                // Hide connection input when canceling
+                document.getElementById('connectionInput').style.display = 'none';
+            }
+
+            hideEditModal() {
+                const modal = document.getElementById('editModal');
+                modal.style.display = 'none';
+            }
+
+            showAlert(message) {
+                // Simple alert replacement - could be enhanced with a custom alert modal
+                const modal = document.getElementById('editModal');
+                const modalContent = modal.querySelector('.modal');
+                
+                if (modalContent) {
+                    modalContent.innerHTML = `
+                        <h3>Notice</h3>
+                        <p style="text-align: center; margin: 20px 0; color: #666;">${message}</p>
+                        <div class="modal-buttons">
+                            <button class="modal-btn primary" onclick="keyCreator.hideEditModal()">OK</button>
+                        </div>
+                    `;
+                }
+                
+                modal.style.display = 'flex';
+            }
+
+            startConnectionMode() {
+                this.connectionMode = true;
+                this.firstConnectionNode = null;
+                this.selectedNode = null;
+                this.updateStatus('Click first node to connect');
+                this.updateConnectButton();
+                this.draw();
+            }
+
+            removeConnection() {
+                if (this.selectedNode) {
+                    let removed = false;
+                    const connectionsToRemove = [];
+                    
+                    this.manualConnections.forEach(connectionId => {
+                        if (connectionId.includes(this.selectedNode.id.toString())) {
+                            connectionsToRemove.push(connectionId);
+                            removed = true;
+                        }
+                    });
+                    
+                    connectionsToRemove.forEach(connectionId => {
+                        this.manualConnections.delete(connectionId);
+                        this.connectionLabels.delete(connectionId);
+                    });
+                    
+                    if (removed) {
+                        this.updateStatus('Connection removed');
+                        this.draw();
+                    } else {
+                        alert('No manual connections found for this node.');
+                    }
+                } else {
+                    alert('Please select a node first.');
+                }
+            }
+
+            addConnectionLabel() {
+                const label = document.getElementById('connectionLabel').value.trim();
+                if (label) {
+                    if (this.selectedConnection) {
+                        // Add label to the selected connection
+                        this.connectionLabels.set(this.selectedConnection, label);
+                        document.getElementById('connectionLabel').value = '';
+                        this.updateStatus('Label added to connection');
+                        this.selectedConnection = null;
+                        document.getElementById('connectionInput').style.display = 'none';
+                    } else if (this.selectedNode) {
+                        // Legacy method for node-based selection
+                        let closestConnection = null;
+                        let minDistance = Infinity;
+                        
+                        this.manualConnections.forEach(connectionId => {
+                            if (connectionId.includes(this.selectedNode.id.toString())) {
+                                const [node1Id, node2Id] = connectionId.split('-').map(id => parseInt(id));
+                                const node1 = this.nodes.find(n => n.id === node1Id);
+                                const node2 = this.nodes.find(n => n.id === node2Id);
+                                
+                                if (node1 && node2) {
+                                    const distance = Math.sqrt(
+                                        Math.pow(node1.x - node2.x, 2) + 
+                                        Math.pow(node1.y - node2.y, 2)
+                                    );
+                                    if (distance < minDistance) {
+                                        minDistance = distance;
+                                        closestConnection = connectionId;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        if (closestConnection) {
+                            this.connectionLabels.set(closestConnection, label);
+                            document.getElementById('connectionLabel').value = '';
+                            this.updateStatus('Label added');
+                        } else {
+                            alert('No connection found for this node.');
+                        }
+                    } else {
+                        alert('Please select a connection or node first.');
+                    }
+                    this.draw();
+                } else {
+                    alert('Please enter a label.');
+                }
+            }
+
+            updateConnectButton() {
+                const btn = document.getElementById('connectBtn');
+                if (this.connectionMode) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+
+            updateStatus(message) {
+                document.getElementById('statusIndicator').textContent = message;
+            }
+
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw connections first (behind nodes)
+                this.drawConnections();
+                
+                // Draw nodes
+                this.nodes.forEach(node => {
+                    this.drawNode(node);
+                });
+            }
+
+            drawNode(node) {
+                let isSelected = node === this.selectedNode;
+                let isFirstConnection = node === this.firstConnectionNode;
+                
+                // Determine node style
+                if (isFirstConnection) {
+                    this.ctx.fillStyle = '#f39c12';
+                } else if (isSelected) {
+                    this.ctx.fillStyle = '#ff6b6b';
+                } else if (node.type === 'terminal') {
+                    this.ctx.fillStyle = '#2ecc71';
+                } else {
+                    this.ctx.fillStyle = '#667eea';
+                }
+                
+                this.ctx.fillRect(node.x, node.y, node.width, node.height);
+                
+                // Node border
+                this.ctx.strokeStyle = isSelected || isFirstConnection ? '#ff4757' : '#5a67d8';
+                this.ctx.lineWidth = isSelected || isFirstConnection ? 3 : 2;
+                this.ctx.strokeRect(node.x, node.y, node.width, node.height);
+                
+                // Node text
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                
+                const textX = node.x + node.width / 2;
+                const textY = node.y + node.height / 2;
+                
+                // Wrap text if too long
+                const words = node.text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                
+                for (let word of words) {
+                    const testLine = currentLine + word + ' ';
+                    const metrics = this.ctx.measureText(testLine);
+                    if (metrics.width > node.width - 20) {
+                        lines.push(currentLine);
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                lines.push(currentLine);
+                
+                const lineHeight = 14;
+                const startY = textY - (lines.length - 1) * lineHeight / 2;
+                
+                lines.forEach((line, index) => {
+                    this.ctx.fillText(line.trim(), textX, startY + index * lineHeight);
+                });
+            }
+
+            drawConnections() {
+                // Only draw manual connections
+                this.manualConnections.forEach(connectionId => {
+                    const [node1Id, node2Id] = connectionId.split('-').map(id => parseInt(id));
+                    const node1 = this.nodes.find(n => n.id === node1Id);
+                    const node2 = this.nodes.find(n => n.id === node2Id);
+                    
+                    if (node1 && node2) {
+                        this.drawConnection(node1, node2, connectionId);
+                    }
+                });
+            }
+
+            drawConnection(node1, node2, connectionId) {
+                const x1 = node1.x + node1.width / 2;
+                const y1 = node1.y + node1.height / 2;
+                const x2 = node2.x + node2.width / 2;
+                const y2 = node2.y + node2.height / 2;
+                
+                // Highlight selected connection
+                const isSelected = connectionId === this.selectedConnection;
+                
+                this.ctx.strokeStyle = isSelected ? '#ff6b6b' : '#667eea';
+                this.ctx.lineWidth = isSelected ? 5 : 3;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+                
+                // Draw connection label if it exists
+                const label = this.connectionLabels.get(connectionId);
+                if (label) {
+                    const midX = (x1 + x2) / 2;
+                    const midY = (y1 + y2) / 2;
+                    
+                    // Draw label background
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.strokeStyle = isSelected ? '#ff6b6b' : '#667eea';
+                    this.ctx.lineWidth = 2;
+                    
+                    const textMetrics = this.ctx.measureText(label);
+                    const padding = 8;
+                    const labelWidth = textMetrics.width + padding * 2;
+                    const labelHeight = 20;
+                    
+                    this.ctx.fillRect(midX - labelWidth/2, midY - labelHeight/2, labelWidth, labelHeight);
+                    this.ctx.strokeRect(midX - labelWidth/2, midY - labelHeight/2, labelWidth, labelHeight);
+                    
+                    // Draw label text
+                    this.ctx.fillStyle = isSelected ? '#ff6b6b' : '#667eea';
+                    this.ctx.font = 'bold 12px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(label, midX, midY);
+                }
+            }
+
+            exportToPNG() {
+                const title = 'Dichotomous Key';
+                
+                // Create a temporary canvas with higher resolution
+                const exportCanvas = document.createElement('canvas');
+                const exportCtx = exportCanvas.getContext('2d');
+                
+                // Set export canvas size
+                exportCanvas.width = 1200;
+                exportCanvas.height = 800;
+                
+                // Fill background
+                exportCtx.fillStyle = '#ffffff';
+                exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+                
+                // Add title
+                exportCtx.fillStyle = '#333333';
+                exportCtx.font = 'bold 32px Arial';
+                exportCtx.textAlign = 'center';
+                exportCtx.fillText(title, exportCanvas.width / 2, 50);
+                
+                // Scale factors
+                const scaleX = exportCanvas.width / this.canvas.width;
+                const scaleY = exportCanvas.height / this.canvas.height;
+                
+                // Draw connections first (behind nodes)
+                this.manualConnections.forEach(connectionId => {
+                    const [node1Id, node2Id] = connectionId.split('-').map(id => parseInt(id));
+                    const node1 = this.nodes.find(n => n.id === node1Id);
+                    const node2 = this.nodes.find(n => n.id === node2Id);
+                    
+                    if (node1 && node2) {
+                        const x1 = (node1.x + node1.width / 2) * scaleX;
+                        const y1 = (node1.y + node1.height / 2) * scaleY + 80;
+                        const x2 = (node2.x + node2.width / 2) * scaleX;
+                        const y2 = (node2.y + node2.height / 2) * scaleY + 80;
+                        
+                        // Draw connection line
+                        exportCtx.strokeStyle = '#667eea';
+                        exportCtx.lineWidth = 3;
+                        exportCtx.setLineDash([5, 5]);
+                        exportCtx.beginPath();
+                        exportCtx.moveTo(x1, y1);
+                        exportCtx.lineTo(x2, y2);
+                        exportCtx.stroke();
+                        exportCtx.setLineDash([]);
+                        
+                        // Draw connection label if it exists
+                        const label = this.connectionLabels.get(connectionId);
+                        if (label) {
+                            const midX = (x1 + x2) / 2;
+                            const midY = (y1 + y2) / 2;
+                            
+                            // Draw label background
+                            exportCtx.fillStyle = 'white';
+                            exportCtx.strokeStyle = '#667eea';
+                            exportCtx.lineWidth = 2;
+                            
+                            const textMetrics = exportCtx.measureText(label);
+                            const padding = 8;
+                            const labelWidth = textMetrics.width + padding * 2;
+                            const labelHeight = 20;
+                            
+                            exportCtx.fillRect(midX - labelWidth/2, midY - labelHeight/2, labelWidth, labelHeight);
+                            exportCtx.strokeRect(midX - labelWidth/2, midY - labelHeight/2, labelWidth, labelHeight);
+                            
+                            // Draw label text
+                            exportCtx.fillStyle = '#667eea';
+                            exportCtx.font = 'bold 16px Arial';
+                            exportCtx.textAlign = 'center';
+                            exportCtx.textBaseline = 'middle';
+                            exportCtx.fillText(label, midX, midY);
+                        }
+                    }
+                });
+                
+                // Then draw nodes on top
+                this.nodes.forEach(node => {
+                    const scaledNode = {
+                        x: node.x * scaleX,
+                        y: node.y * scaleY + 80,
+                        width: node.width * scaleX,
+                        height: node.height * scaleY,
+                        text: node.text,
+                        type: node.type
+                    };
+                    
+                    this.drawNodeOnCanvas(exportCtx, scaledNode);
+                });
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = 'dichotomous_key.png';
+                link.href = exportCanvas.toDataURL();
+                link.click();
+            }
+
+            drawNodeOnCanvas(ctx, node) {
+                // Node background
+                ctx.fillStyle = node.type === 'terminal' ? '#2ecc71' : '#667eea';
+                ctx.fillRect(node.x, node.y, node.width, node.height);
+                
+                // Node border
+                ctx.strokeStyle = node.type === 'terminal' ? '#27ae60' : '#5a67d8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(node.x, node.y, node.width, node.height);
+                
+                // Node text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const textX = node.x + node.width / 2;
+                const textY = node.y + node.height / 2;
+                
+                // Wrap text
+                const words = node.text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                
+                for (let word of words) {
+                    const testLine = currentLine + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > node.width - 20) {
+                        lines.push(currentLine);
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                lines.push(currentLine);
+                
+                const lineHeight = 18;
+                const startY = textY - (lines.length - 1) * lineHeight / 2;
+                
+                lines.forEach((line, index) => {
+                    ctx.fillText(line.trim(), textX, startY + index * lineHeight);
+                });
+            }
+        }
+
+        // Global functions for button clicks
+        let keyCreator;
+
+        function addNode() {
+            keyCreator.addNode();
+        }
+
+        function addTerminalNode() {
+            keyCreator.addTerminalNode();
+        }
+
+        function deleteSelectedNode() {
+            keyCreator.deleteSelectedNode();
+        }
+
+        function clearAll() {
+            keyCreator.clearAll();
+        }
+
+        function editSelectedNode() {
+            keyCreator.editSelectedNode();
+        }
+
+        function startConnectionMode() {
+            keyCreator.startConnectionMode();
+        }
+
+        function removeConnection() {
+            keyCreator.removeConnection();
+        }
+
+        function addConnectionLabel() {
+            keyCreator.addConnectionLabel();
+        }
+
+        function exportToPNG() {
+            keyCreator.exportToPNG();
+        }
+
+        function saveEdit() {
+            keyCreator.saveEdit();
+        }
+
+        function cancelEdit() {
+            keyCreator.cancelEdit();
+        }
+
+        // Initialize the application
+        window.addEventListener('load', () => {
+            keyCreator = new DichotomousKeyCreator();
+        });
+    </script>
+</body>
+</html>
