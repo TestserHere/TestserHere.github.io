@@ -449,7 +449,7 @@
                 <div class="info-box">
                     <h4>Privacy Features:</h4>
                     <ul>
-                        <li>Messages auto-delete after 30 minutes</li>
+                        <li>Messages auto-delete from view after 1 hour (saved in Firebase)</li>
                         <li>No personal data stored</li>
                         <li>Username-based identification</li>
                         <li>Content filtering enabled</li>
@@ -558,7 +558,7 @@
                 this.isConnected = false;
                 this.messages = [];
                 this.users = new Map();
-                this.messageTimeout = 30 * 60 * 1000; // 30 minutes for privacy
+                this.messageTimeout = 60 * 60 * 1000; // 1 hour for privacy
                 this.roomId = 'public-room';
                 this.unsubscribe = null;
                 
@@ -1000,12 +1000,22 @@
 
             handleMessagesUpdate(snapshot) {
                 const messages = [];
+                const now = Date.now();
+                const oneHourAgo = now - this.messageTimeout;
+                
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    messages.push({
-                        id: doc.id,
-                        ...data
-                    });
+                    // Only include messages that are less than 1 hour old
+                    if (data.timestamp && data.timestamp.toDate) {
+                        const messageTime = data.timestamp.toDate().getTime();
+                        if (messageTime > oneHourAgo) {
+                            messages.push({
+                                id: doc.id,
+                                ...data,
+                                clientExpiresAt: messageTime + this.messageTimeout
+                            });
+                        }
+                    }
                 });
 
                 messages.reverse();
@@ -1029,14 +1039,25 @@
             }
 
             displayMessages(messages) {
+                // Filter out messages older than 1 hour
+                const now = Date.now();
+                const oneHourAgo = now - this.messageTimeout;
+                const recentMessages = messages.filter(message => {
+                    if (message.timestamp && message.timestamp.toDate) {
+                        const messageTime = message.timestamp.toDate().getTime();
+                        return messageTime > oneHourAgo;
+                    }
+                    return true; // Keep messages without timestamp (shouldn't happen)
+                });
+
                 this.chatMessages.innerHTML = '';
 
-                if (messages.length === 0) {
+                if (recentMessages.length === 0) {
                     this.showEmptyChat();
                     return;
                 }
 
-                messages.forEach(message => {
+                recentMessages.forEach(message => {
                     this.addMessageToUI(message);
                 });
 
@@ -1047,6 +1068,13 @@
                 const messageDiv = document.createElement('div');
                 const isOwnMessage = message.userId === this.userId;
                 messageDiv.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
+                messageDiv.dataset.messageId = message.id;
+                
+                // Store expiration time for client-side cleanup
+                if (message.timestamp && message.timestamp.toDate) {
+                    const messageTime = message.timestamp.toDate().getTime();
+                    messageDiv.dataset.expiresAt = (messageTime + this.messageTimeout).toString();
+                }
 
                 const messageInfo = document.createElement('div');
                 messageInfo.className = 'message-info';
@@ -1088,8 +1116,9 @@
                             content: encryptedContent,
                             userId: this.userId,
                             nickname: this.nickname,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                            expiresAt: new Date(Date.now() + this.messageTimeout)
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            // Note: Messages are saved permanently in Firebase
+                            // Client-side deletion happens after 1 hour
                         });
 
                     this.messageInput.value = '';
@@ -1171,23 +1200,28 @@
             }
 
             startMessageCleanup() {
-                setInterval(async () => {
-                    try {
-                        const expiredMessages = await db.collection('chatRooms')
-                            .doc(this.roomId)
-                            .collection('messages')
-                            .where('expiresAt', '<=', new Date())
-                            .get();
-
-                        const batch = db.batch();
-                        expiredMessages.forEach(doc => {
-                            batch.delete(doc.ref);
-                        });
-                        await batch.commit();
-                    } catch (error) {
-                        console.error('Error cleaning up messages:', error);
+                // Client-side cleanup: Remove messages older than 1 hour from UI
+                // Messages remain in Firebase but are hidden from view
+                setInterval(() => {
+                    if (!this.isConnected) return;
+                    
+                    const now = Date.now();
+                    const messageElements = this.chatMessages.querySelectorAll('.message');
+                    let removedCount = 0;
+                    
+                    messageElements.forEach(messageDiv => {
+                        const expiresAt = messageDiv.dataset.expiresAt;
+                        if (expiresAt && parseInt(expiresAt) <= now) {
+                            messageDiv.remove();
+                            removedCount++;
+                        }
+                    });
+                    
+                    // If all messages were removed, show empty chat
+                    if (this.chatMessages.querySelectorAll('.message').length === 0) {
+                        this.showEmptyChat();
                     }
-                }, 5 * 60 * 1000);
+                }, 60000); // Check every minute
             }
 
             setupTabCloseCleanup() {
