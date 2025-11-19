@@ -451,7 +451,7 @@
                     <ul>
                         <li>Messages auto-delete after 30 minutes</li>
                         <li>No personal data stored</li>
-                        <li>Anonymous nicknames only</li>
+                        <li>Username-based identification</li>
                         <li>Content filtering enabled</li>
                         <li>End-to-end encryption</li>
                     </ul>
@@ -487,9 +487,6 @@
 
                 <div class="connection-section" id="roomSection" style="display: none;">
                     <h3>Room Options</h3>
-                    <div class="input-group">
-                        <input type="text" id="nicknameInput" placeholder="Enter your nickname" maxlength="20">
-                    </div>
                     <div class="input-group">
                         <button class="btn" id="createRoomBtn">Create Private Room</button>
                         <button class="btn secondary" id="joinPublicBtn">Join Public Chat</button>
@@ -583,7 +580,6 @@
                 this.loginBtn = document.getElementById('loginBtn');
                 this.registerBtn = document.getElementById('registerBtn');
                 this.logoutBtn = document.getElementById('logoutBtn');
-                this.nicknameInput = document.getElementById('nicknameInput');
                 this.createRoomBtn = document.getElementById('createRoomBtn');
                 this.joinPublicBtn = document.getElementById('joinPublicBtn');
                 this.joinRoomBtn = document.getElementById('joinRoomBtn');
@@ -622,11 +618,6 @@
                     }
                 });
 
-                this.nicknameInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.createPrivateRoom();
-                    }
-                });
                 this.roomIdInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         this.joinRoomById();
@@ -827,19 +818,15 @@
             }
 
             async createPrivateRoom() {
-                const nickname = this.nicknameInput.value.trim();
-                if (!nickname) {
-                    this.showStatus('Please enter a nickname', 'error');
+                if (!this.username) {
+                    this.showStatus('Please login first', 'error');
                     return;
                 }
 
-                if (nickname.length < 2) {
-                    this.showStatus('Nickname must be at least 2 characters', 'error');
-                    return;
-                }
-
+                const nickname = this.username;
+                
                 if (this.isInappropriate(nickname)) {
-                    this.showStatus('Please choose a different nickname', 'error');
+                    this.showStatus('Please choose a different username', 'error');
                     return;
                 }
 
@@ -865,19 +852,15 @@
             }
 
             async joinPublicChat() {
-                const nickname = this.nicknameInput.value.trim();
-                if (!nickname) {
-                    this.showStatus('Please enter a nickname', 'error');
+                if (!this.username) {
+                    this.showStatus('Please login first', 'error');
                     return;
                 }
 
-                if (nickname.length < 2) {
-                    this.showStatus('Nickname must be at least 2 characters', 'error');
-                    return;
-                }
-
+                const nickname = this.username;
+                
                 if (this.isInappropriate(nickname)) {
-                    this.showStatus('Please choose a different nickname', 'error');
+                    this.showStatus('Please choose a different username', 'error');
                     return;
                 }
 
@@ -903,21 +886,16 @@
             }
 
             async joinRoomById() {
-                const nickname = this.nicknameInput.value.trim();
-                const roomId = this.roomIdInput.value.trim().toUpperCase();
-
-                if (!nickname) {
-                    this.showStatus('Please enter a nickname', 'error');
+                if (!this.username) {
+                    this.showStatus('Please login first', 'error');
                     return;
                 }
+
+                const nickname = this.username;
+                const roomId = this.roomIdInput.value.trim().toUpperCase();
 
                 if (!roomId) {
                     this.showStatus('Please enter a room ID', 'error');
-                    return;
-                }
-
-                if (nickname.length < 2) {
-                    this.showStatus('Nickname must be at least 2 characters', 'error');
                     return;
                 }
 
@@ -927,7 +905,7 @@
                 }
 
                 if (this.isInappropriate(nickname)) {
-                    this.showStatus('Please choose a different nickname', 'error');
+                    this.showStatus('Please choose a different username', 'error');
                     return;
                 }
 
@@ -1268,7 +1246,6 @@
                 this.leaveBtn.disabled = !inChat;
                 this.messageInput.disabled = !inChat;
                 this.sendBtn.disabled = !inChat;
-                this.nicknameInput.disabled = inChat;
                 this.roomIdInput.disabled = inChat;
             }
 
