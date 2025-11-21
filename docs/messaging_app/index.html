@@ -1131,11 +1131,11 @@
             isInappropriate(text) {
                 const inappropriateWords = [
                     'spam', 'scam', 'hack', 'virus', 'malware',
-                    'illegal', 'drugs', 'weapon', 'violence', ''
+                    'illegal', 'drugs', 'weapon', 'violence'
                 ];
                 
                 const lowerText = text.toLowerCase();
-                return inappropriateWords.some(word => lowerText.includes(word));
+                return inappropriateWords.some(word => word && lowerText.includes(word));
             }
 
             async leaveChat() {
