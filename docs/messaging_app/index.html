@@ -553,7 +553,6 @@
 
         class PrivateChatApp {
             constructor() {
-                this.nickname = null;
                 this.userId = null;
                 this.isConnected = false;
                 this.messages = [];
@@ -793,44 +792,12 @@
             }
 
             resetConnectionState() {
-                this.nickname = null;
                 this.userId = null;
                 this.roomId = 'public-room';
                 this.isConnected = false;
                 this.updateButtonStates(false);
             }
 
-            async checkNicknameAvailability(nickname, roomId) {
-                try {
-                    // Since nickname = username in this app, and usernames are unique,
-                    // if nickname matches current username, it's the same person - always allow
-                    if (nickname === this.username) {
-                        // Same user trying to use their own nickname - always allow
-                        // (usernames are unique, so this nickname belongs to this user)
-                        return true;
-                    }
-                    
-                    // Different nickname - check if it's available
-                    const usersSnapshot = await db.collection('chatRooms')
-                        .doc(roomId)
-                        .collection('users')
-                        .where('nickname', '==', nickname)
-                        .get();
-                    
-                    return usersSnapshot.empty;
-                } catch (error) {
-                    console.error('Error checking nickname:', error);
-                    return false;
-                }
-            }
-
-            async validateUniqueNickname(nickname, roomId) {
-                const isAvailable = await this.checkNicknameAvailability(nickname, roomId);
-                if (!isAvailable) {
-                    throw new Error(`Nickname "${nickname}" is already taken. Please choose a different nickname.`);
-                }
-                return nickname;
-            }
 
             async createPrivateRoom() {
                 if (!this.username) {
@@ -838,9 +805,7 @@
                     return;
                 }
 
-                const nickname = this.username;
-                
-                if (this.isInappropriate(nickname)) {
+                if (this.isInappropriate(this.username)) {
                     this.showStatus('Please choose a different username', 'error');
                     return;
                 }
@@ -849,7 +814,6 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
                     this.showStatus(`Creating room ${this.roomId}...`, 'connecting');
@@ -872,9 +836,7 @@
                     return;
                 }
 
-                const nickname = this.username;
-                
-                if (this.isInappropriate(nickname)) {
+                if (this.isInappropriate(this.username)) {
                     this.showStatus('Please choose a different username', 'error');
                     return;
                 }
@@ -883,17 +845,16 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
-                    this.showStatus(`Joining public chat as ${this.nickname}...`, 'connecting');
+                    this.showStatus(`Joining public chat as ${this.username}...`, 'connecting');
                     this.updateButtonStates(true);
-                    this.updateChatTitle(`Public Chat - ${this.nickname}`);
+                    this.updateChatTitle(`Public Chat - ${this.username}`);
                     this.hideRoomInfo();
                     this.clearEmptyChat();
 
                     await this.connectToFirebase();
-                    this.showStatus(`Joined public chat as ${this.nickname}`, 'connected');
+                    this.showStatus(`Joined public chat as ${this.username}`, 'connected');
                 } catch (error) {
                     this.showStatus(error.message, 'error');
                     this.resetConnectionState();
@@ -906,7 +867,6 @@
                     return;
                 }
 
-                const nickname = this.username;
                 const roomId = this.roomIdInput.value.trim().toUpperCase();
 
                 if (!roomId) {
@@ -919,7 +879,7 @@
                     return;
                 }
 
-                if (this.isInappropriate(nickname)) {
+                if (this.isInappropriate(this.username)) {
                     this.showStatus('Please choose a different username', 'error');
                     return;
                 }
@@ -928,17 +888,16 @@
                 this.userId = this.generateUserId();
                 
                 try {
-                    this.nickname = await this.validateUniqueNickname(nickname, this.roomId);
                     this.isConnected = true;
 
-                    this.showStatus(`Joining room ${roomId} as ${this.nickname}...`, 'connecting');
+                    this.showStatus(`Joining room ${roomId} as ${this.username}...`, 'connecting');
                     this.updateButtonStates(true);
-                    this.updateChatTitle(`Room: ${roomId} - ${this.nickname}`);
+                    this.updateChatTitle(`Room: ${roomId} - ${this.username}`);
                     this.showRoomInfo();
                     this.clearEmptyChat();
 
                     await this.connectToFirebase();
-                    this.showStatus(`Joined room ${roomId} as ${this.nickname}`, 'connected');
+                    this.showStatus(`Joined room ${roomId} as ${this.username}`, 'connected');
                 } catch (error) {
                     this.showStatus(error.message, 'error');
                     this.resetConnectionState();
@@ -1001,16 +960,16 @@
                         this.handleUsersUpdate(snapshot);
                     });
 
-                await db.collection('chatRooms')
-                    .doc(this.roomId)
-                    .collection('users')
-                    .doc(this.userId)
-                    .set({
-                        userId: this.userId,
-                        nickname: this.nickname,
-                        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    await db.collection('chatRooms')
+                        .doc(this.roomId)
+                        .collection('users')
+                        .doc(this.userId)
+                        .set({
+                            userId: this.userId,
+                            username: this.username,
+                            lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                            joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
             }
 
             handleMessagesUpdate(snapshot) {
@@ -1043,7 +1002,7 @@
                     const data = doc.data();
                     users.set(data.userId, {
                         userId: data.userId,
-                        nickname: data.nickname,
+                        username: data.username || data.nickname, // Support both for backward compatibility
                         lastSeen: data.lastSeen,
                         joinedAt: data.joinedAt
                     });
@@ -1093,7 +1052,7 @@
 
                 const messageInfo = document.createElement('div');
                 messageInfo.className = 'message-info';
-                messageInfo.textContent = isOwnMessage ? 'You' : message.nickname;
+                messageInfo.textContent = isOwnMessage ? 'You' : (message.username || message.nickname || 'Unknown');
 
                 const messageContent = document.createElement('div');
                 messageContent.className = 'message-content';
@@ -1130,7 +1089,7 @@
                         .add({
                             content: encryptedContent,
                             userId: this.userId,
-                            nickname: this.nickname,
+                            username: this.username,
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                             // Note: Messages are saved permanently in Firebase
                             // Client-side deletion happens after 1 hour
@@ -1199,7 +1158,6 @@
                     this.usersUnsubscribe();
                 }
 
-                this.nickname = null;
                 this.userId = null;
                 this.isConnected = false;
                 this.messages = [];
