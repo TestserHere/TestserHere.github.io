@@ -718,9 +718,15 @@
             }
 
             async register(username, password) {
+                // Check if username already exists
                 const userDoc = await db.collection('users').doc(username).get();
                 if (userDoc.exists) {
-                    throw new Error('Username already exists');
+                    throw new Error('Username already exists. Please choose a different username.');
+                }
+
+                // Check if username is appropriate
+                if (this.isInappropriate(username)) {
+                    throw new Error('Username contains inappropriate content. Please choose a different username.');
                 }
 
                 const hashedPassword = await this.hashPassword(password);
@@ -796,6 +802,15 @@
 
             async checkNicknameAvailability(nickname, roomId) {
                 try {
+                    // Since nickname = username in this app, and usernames are unique,
+                    // if nickname matches current username, it's the same person - always allow
+                    if (nickname === this.username) {
+                        // Same user trying to use their own nickname - always allow
+                        // (usernames are unique, so this nickname belongs to this user)
+                        return true;
+                    }
+                    
+                    // Different nickname - check if it's available
                     const usersSnapshot = await db.collection('chatRooms')
                         .doc(roomId)
                         .collection('users')
@@ -1157,7 +1172,7 @@
             isInappropriate(text) {
                 const inappropriateWords = [
                     'spam', 'scam', 'hack', 'virus', 'malware',
-                    'illegal', 'drugs', 'weapon', 'violence'
+                    'illegal', 'drugs', 'weapon', 'violence', ''
                 ];
                 
                 const lowerText = text.toLowerCase();
