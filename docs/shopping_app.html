@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Directions Section */
+        .directions-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .direction-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .direction-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .direction-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Shopping List Section */
+        .shopping-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .list-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .list-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .list-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .list-stats {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .formatting-toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .format-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .format-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .format-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Image Upload Section */
+        .image-upload-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .upload-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #5568d3;
+        }
+
+        .upload-btn input[type="file"] {
+            display: none;
+        }
+
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            aspect-ratio: 1;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .image-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,0,0,0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-item .remove-btn:hover {
+            background: rgba(255,0,0,1);
+        }
+
+        .image-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        /* Checklist Items */
+        .checklist-container {
+            margin-top: 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .checklist-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .checklist-item-content {
+            flex: 1;
+        }
+
+        .checklist-item-text {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .checklist-item-price-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .price-input-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .price-input {
+            width: 100px;
+            padding: 6px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .price-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .price-label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .checklist-item-images {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .checklist-item-images img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid #ddd;
+        }
+
+        .checklist-item-images img:hover {
+            border-color: #667eea;
+        }
+
+        .attach-image-btn {
+            background: #f0f0f0;
+            border: 1px dashed #667eea;
+            color: #667eea;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .attach-image-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .image-selector {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 2000;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .image-selector.active {
+            display: block;
+        }
+
+        .image-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .image-selector-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid #ddd;
+        }
+
+        .image-selector-item:hover {
+            border-color: #667eea;
+        }
+
+        .image-selector-item.selected {
+            border-color: #667eea;
+            border-width: 3px;
+        }
+
+        .image-selector-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Drag and Drop */
+        .drop-zone {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            color: #667eea;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .drop-zone.drag-over {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #764ba2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .directions-buttons {
+                flex-direction: column;
+            }
+
+            .direction-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+
+        .total-price-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .total-price-label {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .total-price-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .total-price-breakdown {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Shopping App</h1>
+        </div>
+
+        <!-- Directions Section -->
+        <div class="section">
+            <h2 class="section-title">📍 Directions</h2>
+            <div style="margin-bottom: 20px;">
+                <input 
+                    type="text" 
+                    id="destinationInput" 
+                    placeholder="Enter shopping destination address..."
+                    style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
+                    onchange="saveDestination()"
+                    oninput="saveDestination()"
+                >
+            </div>
+            <div class="directions-buttons">
+                <button class="direction-btn" onclick="openDirections('google')">
+                    🗺️ Google Maps
+                </button>
+                <button class="direction-btn" onclick="openDirections('apple')">
+                    🍎 Apple Maps
+                </button>
+                <button class="direction-btn" onclick="openDirections('waze')">
+                    🧭 Waze
+                </button>
+                <button class="direction-btn" onclick="openDirections('here')">
+                    📍 HERE WeGo
+                </button>
+            </div>
+        </div>
+
+        <!-- Shopping List Section -->
+        <div class="section">
+            <h2 class="section-title">📝 Shopping List</h2>
+            
+            <div class="shopping-list-container">
+                <!-- Formatting Toolbar -->
+                <div class="formatting-toolbar">
+                    <button class="format-btn" onclick="formatText('bold')" title="Bold">
+                        <strong>B</strong>
+                    </button>
+                    <button class="format-btn" onclick="formatText('bullet')" title="Bullet">
+                        •
+                    </button>
+                    <button class="format-btn" onclick="formatText('clear')" title="Clear Formatting">
+                        Clear
+                    </button>
+                </div>
+
+                <!-- Text Area -->
+                <textarea 
+                    id="shoppingListText" 
+                    class="list-textarea" 
+                    placeholder="Add items (one per line) — tap + to add image"
+                    oninput="updateStats(); saveToLocalStorage(); parseItems();"
+                ></textarea>
+
+                <!-- Stats -->
+                <div class="list-stats">
+                    <span id="charCount">Characters: 0</span>
+                    <span id="itemCount">Items: 0</span>
+                </div>
+
+                <!-- Image Upload Section -->
+                <div class="image-upload-section">
+                    <h3 style="margin-bottom: 15px; color: #667eea;">📷 Images</h3>
+                    
+                    <div class="upload-options">
+                        <label class="upload-btn">
+                            📁 Upload from Device
+                            <input type="file" accept="image/jpeg,image/png,image/heic,image/gif" multiple onchange="handleFileSelect(event)">
+                        </label>
+                        <label class="upload-btn">
+                            📷 Take Photo
+                            <input type="file" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+                        </label>
+                        <button class="upload-btn" onclick="pasteFromClipboard()">
+                            📋 Paste from Clipboard
+                        </button>
+                    </div>
+
+                    <!-- Drop Zone -->
+                    <div class="drop-zone" id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        Drag and drop images here (Desktop)
+                    </div>
+
+                    <!-- Image Gallery -->
+                    <div class="image-gallery" id="imageGallery"></div>
+                </div>
+
+                <!-- Checklist -->
+                <div class="checklist-container" id="checklistContainer"></div>
+
+                <!-- Total Price Section -->
+                <div class="total-price-section" id="totalPriceSection">
+                    <div class="total-price-label">Total Estimated Cost</div>
+                    <div class="total-price-amount" id="totalPriceAmount">$0.00</div>
+                    <div class="total-price-breakdown" id="totalPriceBreakdown">
+                        <span id="itemsWithPrice">0 items with prices</span> | 
+                        <span id="itemsWithoutPrice">0 items without prices</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <div class="image-modal-content" onclick="event.stopPropagation()">
+            <button class="image-modal-close" onclick="closeImageModal()">×</button>
+            <img id="modalImage" src="" alt="Full size image">
+        </div>
+    </div>
+
+    <!-- Save Indicator -->
+    <div class="save-indicator" id="saveIndicator">💾 Saved!</div>
+
+    <!-- Image Selector Modal -->
+    <div class="image-selector" id="imageSelector">
+        <h3 style="margin-bottom: 15px; color: #667eea;">Select Image to Attach</h3>
+        <button onclick="closeImageSelector()" style="position: absolute; top: 10px; right: 10px; background: #f0f0f0; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">×</button>
+        <div class="image-selector-grid" id="imageSelectorGrid"></div>
+    </div>
+
+    <script>
+        // Data storage
+        let shoppingData = {
+            text: '',
+            images: [],
+            checklist: [],
+            destination: ''
+        };
+
+        // Image zoom state
+        let imageZoomState = {
+            scale: 1,
+            lastTouchDistance: 0,
+            lastTouchCenter: { x: 0, y: 0 },
+            offset: { x: 0, y: 0 }
+        };
+
+        let currentAttachingToItem = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            updateStats();
+            parseItems();
+            renderImages();
+            renderChecklist();
+            setupImageZoom();
+            updateTotalPrice();
+        });
+
+        // Directions Functions
+        function saveDestination() {
+            shoppingData.destination = document.getElementById('destinationInput').value;
+            saveToLocalStorage();
+        }
+
+        function openDirections(app) {
+            const destination = document.getElementById('destinationInput').value || 'Shopping Center';
+            const encodedDestination = encodeURIComponent(destination);
+
+            let url = '';
+            switch(app) {
+                case 'google':
+                    url = `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}`;
+                    break;
+                case 'apple':
+                    url = `http://maps.apple.com/?daddr=${encodedDestination}`;
+                    break;
+                case 'waze':
+                    url = `https://waze.com/ul?q=${encodedDestination}`;
+                    break;
+                case 'here':
+                    url = `https://wego.here.com/directions/mix/${encodedDestination}`;
+                    break;
+            }
+            window.open(url, '_blank');
+        }
+
+        // Text Formatting
+        function formatText(type) {
+            const textarea = document.getElementById('shoppingListText');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end);
+            let replacement = '';
+            let newCursorPos = start;
+
+            switch(type) {
+                case 'bold':
+                    replacement = `**${selectedText || 'bold text'}**`;
+                    newCursorPos = start + replacement.length;
+                    break;
+                case 'bullet':
+                    // Find the start of the current line
+                    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+                    const lineEnd = text.indexOf('\n', end);
+                    const actualLineEnd = lineEnd === -1 ? text.length : lineEnd;
+                    const currentLine = text.substring(lineStart, actualLineEnd);
+                    
+                    // If bullet is at the start, just add it
+                    if (start === lineStart) {
+                        replacement = '• ';
+                        newCursorPos = start + 2;
+                    } else {
+                        // If bullet is in the middle or end, move to start of line
+                        const beforeSelection = text.substring(lineStart, start);
+                        const afterSelection = text.substring(end, actualLineEnd);
+                        const newLine = '• ' + beforeSelection + selectedText + afterSelection;
+                        
+                        // Replace the entire line
+                        textarea.value = text.substring(0, lineStart) + newLine + text.substring(actualLineEnd);
+                        newCursorPos = lineStart + 2 + beforeSelection.length + selectedText.length;
+                        updateStats();
+                        saveToLocalStorage();
+                        parseItems();
+                        textarea.focus();
+                        textarea.setSelectionRange(newCursorPos, newCursorPos);
+                        return;
+                    }
+                    break;
+                case 'clear':
+                    replacement = selectedText.replace(/\*\*/g, '').replace(/^•\s*/gm, '');
+                    newCursorPos = start + replacement.length;
+                    break;
+            }
+
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            updateStats();
+            saveToLocalStorage();
+            parseItems();
+        }
+
+        // Convert markdown to HTML for display
+        function renderMarkdown(text) {
+            if (!text) return '';
+            // Convert **bold** to <strong>bold</strong>
+            let html = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // Keep bullet points as-is (they're handled separately)
+            return html;
+        }
+
+        // Stats Update
+        function updateStats() {
+            const text = document.getElementById('shoppingListText').value;
+            const charCount = text.length;
+            const itemCount = text.split('\n').filter(line => line.trim().length > 0).length;
+            
+            document.getElementById('charCount').textContent = `Characters: ${charCount}`;
+            document.getElementById('itemCount').textContent = `Items: ${itemCount}`;
+        }
+
+        // Parse Items for Checklist
+        function parseItems() {
+            const text = document.getElementById('shoppingListText').value;
+            const lines = text.split('\n').filter(line => line.trim().length > 0);
+            
+            shoppingData.checklist = lines.map((line, index) => {
+                // Check if item already exists
+                const existing = shoppingData.checklist.find(item => item.id === `item-${index}`);
+                // Keep the original line with markdown for display, but store clean text for matching
+                const cleanText = line.trim().replace(/^•\s*/, '');
+                return {
+                    id: existing ? existing.id : `item-${index}`,
+                    text: cleanText, // Store clean text for matching
+                    originalText: line.trim(), // Store original with markdown
+                    completed: existing ? existing.completed : false,
+                    images: existing && existing.images ? existing.images : [],
+                    price: existing && existing.price !== undefined ? existing.price : ''
+                };
+            });
+
+            renderChecklist();
+            saveToLocalStorage();
+            updateTotalPrice();
+        }
+
+        // Image Handling
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            processFiles(files);
+        }
+
+        function processFiles(files) {
+            files.forEach(file => {
+                if (!file.type.match('image.*')) {
+                    alert('Please select an image file');
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Image size must be less than 5MB');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageData = {
+                        id: Date.now() + Math.random(),
+                        data: e.target.result,
+                        caption: '',
+                        type: file.type
+                    };
+                    shoppingData.images.push(imageData);
+                    renderImages();
+                    saveToLocalStorage();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Drag and Drop
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('dropZone').classList.add('drag-over');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('dropZone').classList.remove('drag-over');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('dropZone').classList.remove('drag-over');
+            
+            const files = Array.from(event.dataTransfer.files);
+            processFiles(files);
+        }
+
+        // Paste from Clipboard
+        async function pasteFromClipboard() {
+            try {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+                        const blob = await item.getType(item.types.find(type => type.startsWith('image/')));
+                        const file = new File([blob], 'pasted-image.png', { type: blob.type });
+                        processFiles([file]);
+                    }
+                }
+            } catch (err) {
+                alert('Could not paste from clipboard. Please use Ctrl+V or Cmd+V in the text area, or upload an image file.');
+            }
+        }
+
+        // Render Images
+        function renderImages() {
+            const gallery = document.getElementById('imageGallery');
+            gallery.innerHTML = '';
+
+            shoppingData.images.forEach(image => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                imageItem.innerHTML = `
+                    <img src="${image.data}" alt="Shopping list image" onclick="openImageModal('${image.id}')">
+                    <button class="remove-btn" onclick="removeImage('${image.id}')">×</button>
+                    ${image.caption ? `<div class="image-caption">${image.caption}</div>` : ''}
+                `;
+                gallery.appendChild(imageItem);
+            });
+        }
+
+        function removeImage(imageId) {
+            shoppingData.images = shoppingData.images.filter(img => img.id !== imageId);
+            // Also remove from checklist items
+            shoppingData.checklist.forEach(item => {
+                item.images = item.images.filter(imgId => imgId !== imageId);
+            });
+            renderImages();
+            renderChecklist();
+            saveToLocalStorage();
+        }
+
+        // Image Modal
+        function openImageModal(imageId) {
+            const image = shoppingData.images.find(img => img.id === imageId);
+            if (image) {
+                document.getElementById('modalImage').src = image.data;
+                document.getElementById('imageModal').classList.add('active');
+            }
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        // Render Checklist
+        function renderChecklist() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = '';
+
+            shoppingData.checklist.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `checklist-item ${item.completed ? 'completed' : ''}`;
+                
+                const itemImages = shoppingData.images.filter(img => item.images && item.images.includes(img.id));
+                const price = item.price || '';
+                
+                // Get the original text with markdown
+                const originalText = item.originalText || item.text;
+                const displayText = renderMarkdown(originalText);
+                
+                itemDiv.innerHTML = `
+                    <input type="checkbox" ${item.completed ? 'checked' : ''} 
+                           onchange="toggleItem('${item.id}')">
+                    <div class="checklist-item-content">
+                        <div class="checklist-item-text">${displayText}</div>
+                        <div class="checklist-item-price-row">
+                            <div class="price-input-container">
+                                <span class="price-label">💰 Price:</span>
+                                <input type="number" 
+                                       class="price-input" 
+                                       placeholder="0.00" 
+                                       step="0.01" 
+                                       min="0"
+                                       value="${price}"
+                                       onchange="updateItemPrice('${item.id}', this.value)"
+                                       oninput="updateItemPrice('${item.id}', this.value)">
+                            </div>
+                            ${shoppingData.images.length > 0 ? `
+                                <button class="attach-image-btn" onclick="showImageSelector('${item.id}')">
+                                    📷 ${itemImages.length > 0 ? `Change Image` : `Attach Image`}
+                                </button>
+                            ` : ''}
+                        </div>
+                        ${itemImages.length > 0 ? `
+                            <div class="checklist-item-images">
+                                ${itemImages.map(img => `
+                                    <img src="${img.data}" alt="Item image" onclick="openImageModal('${img.id}')" title="Click to view full size">
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+            
+            updateTotalPrice();
+        }
+
+        function toggleItem(itemId) {
+            const item = shoppingData.checklist.find(i => i.id === itemId);
+            if (item) {
+                item.completed = !item.completed;
+                renderChecklist();
+                saveToLocalStorage();
+            }
+        }
+
+        function updateItemPrice(itemId, price) {
+            const item = shoppingData.checklist.find(i => i.id === itemId);
+            if (item) {
+                item.price = price === '' ? '' : parseFloat(price) || 0;
+                updateTotalPrice();
+                saveToLocalStorage();
+            }
+        }
+
+        function updateTotalPrice() {
+            let total = 0;
+            let itemsWithPrice = 0;
+            let itemsWithoutPrice = 0;
+
+            shoppingData.checklist.forEach(item => {
+                if (item.price && item.price !== '' && !isNaN(parseFloat(item.price))) {
+                    total += parseFloat(item.price);
+                    itemsWithPrice++;
+                } else {
+                    itemsWithoutPrice++;
+                }
+            });
+
+            document.getElementById('totalPriceAmount').textContent = formatCurrency(total);
+            document.getElementById('itemsWithPrice').textContent = `${itemsWithPrice} item${itemsWithPrice !== 1 ? 's' : ''} with prices`;
+            document.getElementById('itemsWithoutPrice').textContent = `${itemsWithoutPrice} item${itemsWithoutPrice !== 1 ? 's' : ''} without prices`;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Attach image to checklist item
+        function attachImageToItem(itemId, imageId) {
+            const item = shoppingData.checklist.find(i => i.id === itemId);
+            if (item) {
+                if (!item.images) item.images = [];
+                // Toggle: if already attached, remove it; otherwise add it
+                if (item.images.includes(imageId)) {
+                    item.images = item.images.filter(id => id !== imageId);
+                } else {
+                    // Remove from other items first (one image per item)
+                    shoppingData.checklist.forEach(i => {
+                        if (i.id !== itemId && i.images) {
+                            i.images = i.images.filter(id => id !== imageId);
+                        }
+                    });
+                    // Add to this item
+                    item.images = [imageId]; // Only one image per item
+                }
+                renderChecklist();
+                saveToLocalStorage();
+                // Refresh the selector to show updated state
+                showImageSelector(itemId);
+            }
+        }
+
+        function removeImageFromItem(itemId) {
+            const item = shoppingData.checklist.find(i => i.id === itemId);
+            if (item) {
+                item.images = [];
+                renderChecklist();
+                saveToLocalStorage();
+                closeImageSelector();
+            }
+        }
+
+        // Local Storage
+        function saveToLocalStorage() {
+            shoppingData.text = document.getElementById('shoppingListText').value;
+            try {
+                localStorage.setItem('shoppingAppData', JSON.stringify(shoppingData));
+                showSaveIndicator();
+            } catch (e) {
+                console.error('Error saving to localStorage:', e);
+                // Handle quota exceeded error
+                if (e.name === 'QuotaExceededError') {
+                    alert('Storage limit exceeded. Please remove some images.');
+                }
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('shoppingAppData');
+                if (saved) {
+                    shoppingData = JSON.parse(saved);
+                    document.getElementById('shoppingListText').value = shoppingData.text || '';
+                    document.getElementById('destinationInput').value = shoppingData.destination || '';
+                    // Ensure checklist items have images array and price
+                    if (shoppingData.checklist) {
+                        shoppingData.checklist.forEach(item => {
+                            if (!item.images) item.images = [];
+                            if (item.price === undefined) item.price = '';
+                            // Ensure originalText exists (for backward compatibility)
+                            if (!item.originalText) {
+                                item.originalText = item.text || '';
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
+            }
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveToLocalStorage();
+            }
+        });
+
+        // Image Selector for attaching to items
+        function showImageSelector(itemId) {
+            currentAttachingToItem = itemId;
+            const selector = document.getElementById('imageSelector');
+            const grid = document.getElementById('imageSelectorGrid');
+            
+            if (shoppingData.images.length === 0) {
+                alert('No images available. Please upload images first.');
+                return;
+            }
+            
+            const item = shoppingData.checklist.find(i => i.id === itemId);
+            const itemImageIds = item && item.images ? item.images : [];
+            
+            grid.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>Select an image to attach to: "${item ? item.text : 'item'}"</strong>
+                </div>
+                ${shoppingData.images.map(img => {
+                    const isAttached = itemImageIds.includes(img.id);
+                    return `
+                        <div class="image-selector-item ${isAttached ? 'selected' : ''}" 
+                             onclick="attachImageToItem('${itemId}', '${img.id}')"
+                             style="${isAttached ? 'border-color: #667eea; border-width: 3px;' : ''}">
+                            <img src="${img.data}" alt="Select image">
+                            ${isAttached ? '<div style="position: absolute; top: 5px; right: 5px; background: #667eea; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>' : ''}
+                        </div>
+                    `;
+                }).join('')}
+                ${itemImageIds.length > 0 ? `
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
+                        <button onclick="removeImageFromItem('${itemId}')" style="background: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                            Remove Image from This Item
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            selector.classList.add('active');
+        }
+
+        function closeImageSelector() {
+            document.getElementById('imageSelector').classList.remove('active');
+            currentAttachingToItem = null;
+        }
+
+        // Pinch to zoom setup
+        function setupImageZoom() {
+            const modal = document.getElementById('imageModal');
+            const img = document.getElementById('modalImage');
+            
+            let initialDistance = 0;
+            let initialScale = 1;
+            let currentScale = 1;
+            let currentTranslate = { x: 0, y: 0 };
+            let startTranslate = { x: 0, y: 0 };
+            
+            // Touch events for pinch zoom
+            let touches = [];
+            
+            modal.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    touches = Array.from(e.touches);
+                    initialDistance = getDistance(touches[0], touches[1]);
+                    initialScale = currentScale;
+                    startTranslate = { ...currentTranslate };
+                } else if (e.touches.length === 1) {
+                    touches = Array.from(e.touches);
+                    startTranslate = { ...currentTranslate };
+                }
+            });
+            
+            modal.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    touches = Array.from(e.touches);
+                    const distance = getDistance(touches[0], touches[1]);
+                    const scale = initialScale * (distance / initialDistance);
+                    currentScale = Math.max(1, Math.min(scale, 5));
+                    
+                    const center = getCenter(touches[0], touches[1]);
+                    const deltaX = center.x - (touches[0].clientX + touches[1].clientX) / 2;
+                    const deltaY = center.y - (touches[0].clientY + touches[1].clientY) / 2;
+                    
+                    currentTranslate = {
+                        x: startTranslate.x + deltaX,
+                        y: startTranslate.y + deltaY
+                    };
+                    
+                    applyTransform();
+                } else if (e.touches.length === 1 && currentScale > 1) {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - touches[0].clientX;
+                    const deltaY = touch.clientY - touches[0].clientY;
+                    
+                    currentTranslate = {
+                        x: startTranslate.x + deltaX,
+                        y: startTranslate.y + deltaY
+                    };
+                    
+                    applyTransform();
+                }
+            });
+            
+            modal.addEventListener('touchend', () => {
+                touches = [];
+            });
+            
+            // Mouse wheel zoom
+            img.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                currentScale = Math.max(1, Math.min(currentScale * delta, 5));
+                applyTransform();
+            });
+            
+            // Double click to reset
+            img.addEventListener('dblclick', () => {
+                currentScale = 1;
+                currentTranslate = { x: 0, y: 0 };
+                applyTransform();
+            });
+            
+            function getDistance(touch1, touch2) {
+                const dx = touch1.clientX - touch2.clientX;
+                const dy = touch1.clientY - touch2.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            function getCenter(touch1, touch2) {
+                return {
+                    x: (touch1.clientX + touch2.clientX) / 2,
+                    y: (touch1.clientY + touch2.clientY) / 2
+                };
+            }
+            
+            function applyTransform() {
+                img.style.transform = `translate(${currentTranslate.x}px, ${currentTranslate.y}px) scale(${currentScale})`;
+                img.style.transformOrigin = 'center center';
+            }
+            
+            // Reset on modal close
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    currentScale = 1;
+                    currentTranslate = { x: 0, y: 0 };
+                    img.style.transform = '';
+                }
+            });
+        }
+
+        // Handle paste in textarea
+        document.getElementById('shoppingListText').addEventListener('paste', (e) => {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const blob = items[i].getAsFile();
+                    const file = new File([blob], 'pasted-image.png', { type: blob.type });
+                    processFiles([file]);
+                }
+            }
+        });
+
+        // Handle bullet point typing - move to start of line
+        document.getElementById('shoppingListText').addEventListener('input', (e) => {
+            const textarea = e.target;
+            const cursorPos = textarea.selectionStart;
+            const text = textarea.value;
+            
+            // Check if user just typed a bullet point (•)
+            if (text[cursorPos - 1] === '•') {
+                // Find the start of the current line
+                const lineStart = text.lastIndexOf('\n', cursorPos - 2) + 1;
+                
+                // If bullet is not at the start of the line, move it
+                if (cursorPos - 1 !== lineStart) {
+                    // Get the line content
+                    const lineEnd = text.indexOf('\n', cursorPos);
+                    const actualLineEnd = lineEnd === -1 ? text.length : lineEnd;
+                    const beforeBullet = text.substring(lineStart, cursorPos - 1);
+                    const afterBullet = text.substring(cursorPos, actualLineEnd);
+                    
+                    // Reconstruct the line with bullet at start
+                    const newLine = '• ' + beforeBullet + afterBullet;
+                    const newText = text.substring(0, lineStart) + newLine + text.substring(actualLineEnd);
+                    
+                    // Update textarea
+                    textarea.value = newText;
+                    
+                    // Set cursor position after the bullet and space
+                    const newCursorPos = lineStart + 2 + beforeBullet.length;
+                    textarea.setSelectionRange(newCursorPos, newCursorPos);
+                    
+                    // Trigger updates
+                    updateStats();
+                    saveToLocalStorage();
+                    parseItems();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

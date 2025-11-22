@@ -998,6 +998,8 @@
 
             handleUsersUpdate(snapshot) {
                 const users = new Map();
+                let currentUserFound = false;
+                
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     users.set(data.userId, {
@@ -1006,7 +1008,20 @@
                         lastSeen: data.lastSeen,
                         joinedAt: data.joinedAt
                     });
+                    
+                    // Check if current user is still in the room
+                    if (data.userId === this.userId) {
+                        currentUserFound = true;
+                    }
                 });
+
+                // If current user was removed from the room, force them to leave
+                if (this.userId && this.isConnected && !currentUserFound) {
+                    console.log('User was removed from room, forcing leave...');
+                    this.showStatus('You were removed from this room', 'error');
+                    this.leaveChat();
+                    return;
+                }
 
                 this.users = users;
                 this.updateUserCount();
