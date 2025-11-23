@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping App</title>
+    <!-- Favicon - Using emoji as data URI -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
+    <!-- Alternative: If you have an icon file, uncomment and use this instead:
+    <link rel="icon" type="image/png" href="shopping-icon.png">
+    <link rel="apple-touch-icon" href="shopping-icon.png">
+    -->
     <style>
         * {
             margin: 0;
@@ -223,6 +229,54 @@
             margin-top: 20px;
             padding-top: 20px;
             border-top: 2px solid #e0e0e0;
+        }
+
+        .image-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 10px;
+            margin: -10px -10px 15px -10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .image-section-header:hover {
+            background: #f5f5f5;
+        }
+
+        .image-section-header h3 {
+            margin: 0;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .image-section-toggle {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            color: #667eea;
+        }
+
+        .image-section-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .image-section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s;
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        .image-section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
+            margin: 0;
         }
 
         .upload-options {
@@ -816,9 +870,13 @@
 
                 <!-- Image Upload Section -->
                 <div class="image-upload-section">
-                    <h3 style="margin-bottom: 15px; color: #667eea;">📷 Images</h3>
+                    <div class="image-section-header" onclick="toggleImageSection()">
+                        <h3>📷 Images</h3>
+                        <span class="image-section-toggle collapsed" id="imageSectionToggle">▼</span>
+                    </div>
                     
-                    <div class="upload-options">
+                    <div class="image-section-content collapsed" id="imageSectionContent">
+                        <div class="upload-options">
                         <label class="upload-btn">
                             📁 Upload from Device
                             <input type="file" accept="image/jpeg,image/png,image/heic,image/gif" multiple onchange="handleFileSelect(event)">
@@ -837,8 +895,10 @@
                         Drag and drop images here (Desktop)
                     </div>
 
-                    <!-- Image Gallery -->
-                    <div class="image-gallery" id="imageGallery"></div>
+                        <!-- Image Gallery -->
+                        <div class="image-gallery" id="imageGallery"></div>
+                    </div>
+                </div>
                 </div>
 
                 <!-- Checklist -->
@@ -1173,6 +1233,15 @@
             parseItems();
         }
 
+        // Toggle Image Section
+        function toggleImageSection() {
+            const content = document.getElementById('imageSectionContent');
+            const toggle = document.getElementById('imageSectionToggle');
+            
+            content.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+        }
+
         // Summary Statistics
         function updateSummaryStats() {
             const totalItems = shoppingData.checklist.length;
@@ -1260,9 +1329,18 @@
                     }
                     break;
                 case 'clear':
-                    replacement = selectedText.replace(/\*\*/g, '').replace(/^•\s*/gm, '');
-                    newCursorPos = start + replacement.length;
-                    break;
+                    // Clear the entire textarea
+                    if (confirm('Are you sure you want to clear the entire shopping list?')) {
+                        textarea.value = '';
+                        newCursorPos = 0;
+                        updateStats();
+                        saveToLocalStorage();
+                        parseItems();
+                        textarea.focus();
+                        textarea.setSelectionRange(0, 0);
+                        return;
+                    }
+                    return;
             }
 
             textarea.value = text.substring(0, start) + replacement + text.substring(end);
@@ -1825,6 +1903,34 @@
             const cursorPos = textarea.selectionStart;
             const text = textarea.value;
             
+            // Check if first line needs a bullet point
+            const firstLineEnd = text.indexOf('\n');
+            const firstLine = firstLineEnd === -1 ? text : text.substring(0, firstLineEnd);
+            const isOnFirstLine = cursorPos <= (firstLineEnd === -1 ? text.length : firstLineEnd);
+            
+            // If first line doesn't start with bullet and we're on the first line, add it
+            if (isOnFirstLine && !firstLine.trim().startsWith('•') && firstLine.length > 0) {
+                // Check if we just started typing (first character or after clearing)
+                const needsBullet = firstLine.length === 1 || (firstLine.length > 0 && !firstLine.startsWith('•'));
+                
+                if (needsBullet) {
+                    const newFirstLine = '• ' + firstLine.trim();
+                    const restOfText = firstLineEnd === -1 ? '' : text.substring(firstLineEnd);
+                    textarea.value = newFirstLine + restOfText;
+                    
+                    // Adjust cursor position
+                    const newCursorPos = cursorPos + 2;
+                    setTimeout(() => {
+                        textarea.setSelectionRange(newCursorPos, newCursorPos);
+                    }, 0);
+                    
+                    updateStats();
+                    saveToLocalStorage();
+                    parseItems();
+                    return;
+                }
+            }
+            
             // Check if user just typed a bullet point (•)
             if (text[cursorPos - 1] === '•') {
                 // Find the start of the current line
@@ -1853,6 +1959,30 @@
                     updateStats();
                     saveToLocalStorage();
                     parseItems();
+                }
+            }
+        });
+
+        // Ensure first line has bullet point on focus if empty
+        document.getElementById('shoppingListText').addEventListener('focus', (e) => {
+            const textarea = e.target;
+            const text = textarea.value;
+            
+            // If textarea is empty, add bullet point
+            if (text.length === 0) {
+                textarea.value = '• ';
+                textarea.setSelectionRange(2, 2);
+            } else {
+                // Check if first line has bullet point
+                const firstLineEnd = text.indexOf('\n');
+                const firstLine = firstLineEnd === -1 ? text : text.substring(0, firstLineEnd);
+                if (firstLine.length > 0 && !firstLine.trim().startsWith('•')) {
+                    // Add bullet point to first line
+                    const newFirstLine = '• ' + firstLine.trim();
+                    const restOfText = firstLineEnd === -1 ? '' : text.substring(firstLineEnd);
+                    textarea.value = newFirstLine + restOfText;
+                    const cursorPos = textarea.selectionStart;
+                    textarea.setSelectionRange(cursorPos + 2, cursorPos + 2);
                 }
             }
         });
