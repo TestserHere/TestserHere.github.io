@@ -15,7 +15,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
             color: #333;
         }
 
@@ -27,20 +27,87 @@
         .header {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            padding: 15px 0;
         }
 
         .header h1 {
-            font-size: 2.5rem;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .section {
             background: white;
             border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
@@ -466,10 +533,79 @@
             border-color: #764ba2;
         }
 
+        /* Voice Recognition */
+        .voice-btn {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .voice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .voice-btn.recording {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .voice-status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+            display: none;
+        }
+
+        .voice-status.active {
+            display: block;
+        }
+
+        .voice-status.recording {
+            background: #ffebee;
+            color: #c62828;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
+            }
+
+            .section {
+                padding: 15px;
+            }
+
+            .tab {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+                min-width: 100px;
+            }
+
+            .tab-content {
+                padding: 15px;
             }
 
             .directions-buttons {
@@ -479,6 +615,68 @@
             .direction-btn {
                 width: 100%;
                 justify-content: center;
+                padding: 12px 20px;
+            }
+
+            .formatting-toolbar {
+                flex-wrap: wrap;
+            }
+
+            .format-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+
+            .list-textarea {
+                min-height: 150px;
+                font-size: 0.9rem;
+            }
+
+            .checklist-item {
+                padding: 12px;
+            }
+
+            .checklist-item-price-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .price-input {
+                width: 100%;
+            }
+
+            .total-price-amount {
+                font-size: 2rem;
+            }
+
+            .upload-options {
+                flex-direction: column;
+            }
+
+            .upload-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .image-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .tab {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+                min-width: 80px;
+            }
+
+            .total-price-amount {
+                font-size: 1.8rem;
             }
         }
 
@@ -534,40 +732,61 @@
             <h1>🛒 Shopping App</h1>
         </div>
 
-        <!-- Directions Section -->
-        <div class="section">
-            <h2 class="section-title">📍 Directions</h2>
-            <div style="margin-bottom: 20px;">
-                <input 
-                    type="text" 
-                    id="destinationInput" 
-                    placeholder="Enter shopping destination address..."
-                    style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
-                    onchange="saveDestination()"
-                    oninput="saveDestination()"
-                >
-            </div>
-            <div class="directions-buttons">
-                <button class="direction-btn" onclick="openDirections('google')">
-                    🗺️ Google Maps
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('directions', this)">
+                    📍 Directions
                 </button>
-                <button class="direction-btn" onclick="openDirections('apple')">
-                    🍎 Apple Maps
+                <button class="tab" onclick="switchTab('list', this)">
+                    📝 Shopping List
                 </button>
-                <button class="direction-btn" onclick="openDirections('waze')">
-                    🧭 Waze
-                </button>
-                <button class="direction-btn" onclick="openDirections('here')">
-                    📍 HERE WeGo
+                <button class="tab" onclick="switchTab('summary', this)">
+                    📊 Summary
                 </button>
             </div>
-        </div>
 
-        <!-- Shopping List Section -->
-        <div class="section">
-            <h2 class="section-title">📝 Shopping List</h2>
+            <!-- Directions Tab -->
+            <div id="directionsTab" class="tab-content active">
+                <h2 class="section-title">📍 Directions</h2>
+                <div style="margin-bottom: 20px;">
+                    <input 
+                        type="text" 
+                        id="destinationInput" 
+                        placeholder="Enter shopping destination address..."
+                        style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem;"
+                        onchange="saveDestination()"
+                        oninput="saveDestination()"
+                    >
+                </div>
+                <div class="directions-buttons">
+                    <button class="direction-btn" onclick="openDirections('google')">
+                        🗺️ Google Maps
+                    </button>
+                    <button class="direction-btn" onclick="openDirections('apple')">
+                        🍎 Apple Maps
+                    </button>
+                    <button class="direction-btn" onclick="openDirections('waze')">
+                        🧭 Waze
+                    </button>
+                    <button class="direction-btn" onclick="openDirections('here')">
+                        📍 HERE WeGo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Shopping List Tab -->
+            <div id="listTab" class="tab-content">
+                <h2 class="section-title">📝 Shopping List</h2>
             
             <div class="shopping-list-container">
+                <!-- Voice Recognition -->
+                <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecognition()">
+                    <span id="voiceIcon">🎤</span>
+                    <span id="voiceText">Voice Input</span>
+                </button>
+                <div class="voice-status" id="voiceStatus"></div>
+
                 <!-- Formatting Toolbar -->
                 <div class="formatting-toolbar">
                     <button class="format-btn" onclick="formatText('bold')" title="Bold">
@@ -585,7 +804,7 @@
                 <textarea 
                     id="shoppingListText" 
                     class="list-textarea" 
-                    placeholder="Add items (one per line) — tap + to add image"
+                    placeholder="Add items (one per line) — tap 🎤 for voice input or + to add image"
                     oninput="updateStats(); saveToLocalStorage(); parseItems();"
                 ></textarea>
 
@@ -625,6 +844,13 @@
                 <!-- Checklist -->
                 <div class="checklist-container" id="checklistContainer"></div>
 
+                </div>
+            </div>
+
+            <!-- Summary Tab -->
+            <div id="summaryTab" class="tab-content">
+                <h2 class="section-title">📊 Summary</h2>
+                
                 <!-- Total Price Section -->
                 <div class="total-price-section" id="totalPriceSection">
                     <div class="total-price-label">Total Estimated Cost</div>
@@ -632,6 +858,29 @@
                     <div class="total-price-breakdown" id="totalPriceBreakdown">
                         <span id="itemsWithPrice">0 items with prices</span> | 
                         <span id="itemsWithoutPrice">0 items without prices</span>
+                    </div>
+                </div>
+
+                <!-- Shopping Stats -->
+                <div class="section" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px; color: #667eea;">📈 Shopping Statistics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #667eea;" id="statTotalItems">0</div>
+                            <div style="color: #666; margin-top: 5px;">Total Items</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #4caf50;" id="statCompletedItems">0</div>
+                            <div style="color: #666; margin-top: 5px;">Completed</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #ff9800;" id="statRemainingItems">0</div>
+                            <div style="color: #666; margin-top: 5px;">Remaining</div>
+                        </div>
+                        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #2196f3;" id="statItemsWithImages">0</div>
+                            <div style="color: #666; margin-top: 5px;">With Images</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -674,6 +923,8 @@
         };
 
         let currentAttachingToItem = null;
+        let recognition = null;
+        let isRecording = false;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -684,7 +935,258 @@
             renderChecklist();
             setupImageZoom();
             updateTotalPrice();
+            updateSummaryStats();
+            initializeVoiceRecognition();
         });
+
+        // Tab Switching
+        function switchTab(tabName, buttonElement) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            if (buttonElement) {
+                buttonElement.classList.add('active');
+            }
+
+            // Update stats when switching to summary
+            if (tabName === 'summary') {
+                updateSummaryStats();
+            }
+        }
+
+        // Voice Recognition
+        function initializeVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'en-US';
+                recognition.maxAlternatives = 3; // Get multiple alternatives for better accuracy
+
+                recognition.onstart = () => {
+                    isRecording = true;
+                    updateVoiceUI(true);
+                    updateVoiceStatus('Listening... Speak your items');
+                };
+
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    let bestTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const result = event.results[i];
+                        // Use the best alternative (first one) or check confidence
+                        const transcript = result[0].transcript;
+                        const confidence = result[0].confidence || 0.5;
+                        
+                        if (result.isFinal) {
+                            // Prefer higher confidence alternatives
+                            if (confidence > 0.7 || !bestTranscript) {
+                                bestTranscript = transcript;
+                            }
+                            finalTranscript += transcript + ' ';
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+
+                    if (finalTranscript) {
+                        // Use best transcript if available, otherwise use finalTranscript
+                        const textToAdd = bestTranscript || finalTranscript.trim();
+                        addVoiceTextToTextarea(textToAdd);
+                    }
+                    updateVoiceStatus(interimTranscript || 'Listening...');
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    if (event.error === 'no-speech') {
+                        updateVoiceStatus('No speech detected. Try again.');
+                    } else if (event.error === 'not-allowed') {
+                        updateVoiceStatus('Microphone permission denied. Please enable it in settings.');
+                        stopVoiceRecognition();
+                    } else {
+                        updateVoiceStatus('Error: ' + event.error);
+                    }
+                };
+
+                recognition.onend = () => {
+                    if (isRecording) {
+                        // Restart if still recording
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            stopVoiceRecognition();
+                        }
+                    } else {
+                        updateVoiceUI(false);
+                        updateVoiceStatus('');
+                    }
+                };
+            } else {
+                document.getElementById('voiceBtn').style.display = 'none';
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                alert('Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+                return;
+            }
+
+            if (isRecording) {
+                stopVoiceRecognition();
+            } else {
+                startVoiceRecognition();
+            }
+        }
+
+        function startVoiceRecognition() {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error('Error starting recognition:', e);
+                updateVoiceStatus('Error starting voice recognition');
+            }
+        }
+
+        function stopVoiceRecognition() {
+            isRecording = false;
+            if (recognition) {
+                recognition.stop();
+            }
+            updateVoiceUI(false);
+            updateVoiceStatus('');
+        }
+
+        function updateVoiceUI(recording) {
+            const btn = document.getElementById('voiceBtn');
+            const icon = document.getElementById('voiceIcon');
+            const text = document.getElementById('voiceText');
+
+            if (recording) {
+                btn.classList.add('recording');
+                icon.textContent = '🔴';
+                text.textContent = 'Stop Recording';
+            } else {
+                btn.classList.remove('recording');
+                icon.textContent = '🎤';
+                text.textContent = 'Voice Input';
+            }
+        }
+
+        function updateVoiceStatus(message) {
+            const status = document.getElementById('voiceStatus');
+            if (message) {
+                status.textContent = message;
+                status.classList.add('active');
+                if (isRecording) {
+                    status.classList.add('recording');
+                } else {
+                    status.classList.remove('recording');
+                }
+            } else {
+                status.classList.remove('active');
+                status.classList.remove('recording');
+            }
+        }
+
+        function addVoiceTextToTextarea(text) {
+            const textarea = document.getElementById('shoppingListText');
+            const currentText = textarea.value;
+            
+            // Clean and normalize the text
+            let cleanedText = text
+                .toLowerCase()
+                .replace(/\b(um|uh|er|ah)\b/gi, '') // Remove filler words
+                .replace(/\s+/g, ' ') // Normalize whitespace
+                .trim();
+            
+            // Better splitting - handle various patterns
+            // Split by common separators and conjunctions (in order of priority)
+            const separators = [
+                /\s+and\s+then\s+/i,  // "and then" first
+                /\s+,\s+and\s+/i,     // ", and"
+                /\s+,\s*/i,            // Commas
+                /\s+and\s+/i,          // "and"
+                /\s+then\s+/i,         // "then"
+                /\s+also\s+/i,         // "also"
+                /\s+plus\s+/i,         // "plus"
+                /\s+next\s+/i,          // "next"
+                /\s*\.\s+/i,           // Periods
+            ];
+            
+            let items = [cleanedText];
+            
+            // Apply separators one at a time to avoid over-splitting
+            for (const separator of separators) {
+                const newItems = [];
+                items.forEach(item => {
+                    const split = item.split(separator);
+                    if (split.length > 1) {
+                        newItems.push(...split);
+                    } else {
+                        newItems.push(item);
+                    }
+                });
+                items = newItems;
+            }
+            
+            // Clean up items
+            items = items
+                .map(item => {
+                    // Remove common prefixes/suffixes
+                    item = item
+                        .replace(/^(i need|i want|get|buy|add|please)\s+/i, '')
+                        .replace(/\s+(please|thanks|thank you)$/i, '')
+                        .trim();
+                    return item;
+                })
+                .filter(item => item.length > 0 && item.length > 2) // Filter out very short items
+                .map(item => {
+                    // Capitalize first letter
+                    return item.charAt(0).toUpperCase() + item.slice(1);
+                });
+
+            if (items.length === 0) return;
+
+            // Add items to textarea with bullet points
+            let newText = currentText;
+            if (newText && !newText.endsWith('\n')) {
+                newText += '\n';
+            }
+            // Add bullet points automatically
+            newText += items.map(item => '• ' + item).join('\n') + '\n';
+
+            textarea.value = newText;
+            updateStats();
+            saveToLocalStorage();
+            parseItems();
+        }
+
+        // Summary Statistics
+        function updateSummaryStats() {
+            const totalItems = shoppingData.checklist.length;
+            const completedItems = shoppingData.checklist.filter(item => item.completed).length;
+            const remainingItems = totalItems - completedItems;
+            const itemsWithImages = shoppingData.checklist.filter(item => 
+                item.images && item.images.length > 0
+            ).length;
+
+            document.getElementById('statTotalItems').textContent = totalItems;
+            document.getElementById('statCompletedItems').textContent = completedItems;
+            document.getElementById('statRemainingItems').textContent = remainingItems;
+            document.getElementById('statItemsWithImages').textContent = itemsWithImages;
+        }
 
         // Directions Functions
         function saveDestination() {
@@ -813,6 +1315,7 @@
             renderChecklist();
             saveToLocalStorage();
             updateTotalPrice();
+            updateSummaryStats();
         }
 
         // Image Handling
@@ -988,6 +1491,7 @@
                 item.completed = !item.completed;
                 renderChecklist();
                 saveToLocalStorage();
+                updateSummaryStats();
             }
         }
 
@@ -1017,6 +1521,9 @@
             document.getElementById('totalPriceAmount').textContent = formatCurrency(total);
             document.getElementById('itemsWithPrice').textContent = `${itemsWithPrice} item${itemsWithPrice !== 1 ? 's' : ''} with prices`;
             document.getElementById('itemsWithoutPrice').textContent = `${itemsWithoutPrice} item${itemsWithoutPrice !== 1 ? 's' : ''} without prices`;
+            
+            // Also update summary stats
+            updateSummaryStats();
         }
 
         function formatCurrency(amount) {
@@ -1281,6 +1788,34 @@
                     const file = new File([blob], 'pasted-image.png', { type: blob.type });
                     processFiles([file]);
                 }
+            }
+        });
+
+        // Handle Enter key - add bullet point automatically on new lines
+        document.getElementById('shoppingListText').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const textarea = e.target;
+                const cursorPos = textarea.selectionStart;
+                const text = textarea.value;
+                
+                // Always add bullet point on new line
+                const beforeCursor = text.substring(0, cursorPos);
+                const afterCursor = text.substring(cursorPos);
+                
+                // Insert bullet point on new line
+                textarea.value = beforeCursor + '\n• ' + afterCursor;
+                const newCursorPos = cursorPos + 3; // After "• "
+                
+                // Use setTimeout to ensure the cursor position is set after the value change
+                setTimeout(() => {
+                    textarea.setSelectionRange(newCursorPos, newCursorPos);
+                    textarea.focus();
+                }, 0);
+                
+                e.preventDefault();
+                updateStats();
+                saveToLocalStorage();
+                parseItems();
             }
         });
 
