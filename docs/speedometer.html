@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedometer - Real-time Speed Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .speedometer-container {
+            position: relative;
+            width: 400px;
+            height: 250px;
+            margin: 0 auto 30px;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .speed-display {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .speed-value {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #667eea;
+            line-height: 1;
+            margin-bottom: 5px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .speed-unit {
+            font-size: 1.2em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .status.waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .info {
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .hud-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .hud-toggle:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .hud-toggle.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .container.hud-mode {
+            transform: scaleX(-1) scaleY(-1);
+        }
+    </style>
+</head>
+<body>
+    <button class="hud-toggle" id="hudToggle">HUD Mode</button>
+    <div class="container" id="container">
+        <h1>🚗 Speedometer</h1>
+        <div class="speedometer-container">
+            <canvas id="speedometer" width="400" height="250"></canvas>
+            <div class="speed-display">
+                <div class="speed-value" id="speedValue">0</div>
+                <div class="speed-unit">km/h</div>
+            </div>
+        </div>
+        <div class="status waiting" id="status">Waiting for GPS signal...</div>
+        <div class="info" id="info">Make sure location services are enabled</div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Max Speed</div>
+                <div class="stat-value" id="maxSpeed">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Avg Speed</div>
+                <div class="stat-value" id="avgSpeed">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Distance</div>
+                <div class="stat-value" id="distance">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('speedometer');
+        const ctx = canvas.getContext('2d');
+        const speedValue = document.getElementById('speedValue');
+        const status = document.getElementById('status');
+        const info = document.getElementById('info');
+        const maxSpeedEl = document.getElementById('maxSpeed');
+        const avgSpeedEl = document.getElementById('avgSpeed');
+        const distanceEl = document.getElementById('distance');
+        const hudToggle = document.getElementById('hudToggle');
+        const container = document.getElementById('container');
+
+        let hudMode = false;
+        let currentSpeed = 0;
+        let targetSpeed = 0;
+        let maxSpeed = 0;
+        let speedHistory = [];
+        let totalDistance = 0;
+        let lastPosition = null;
+        let lastUpdateTime = Date.now();
+        let watchId = null;
+
+        // Speedometer configuration
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height - 20;
+        const radius = 180;
+        const minAngle = Math.PI;
+        const maxAngle = 0;
+        const maxSpeedDisplay = 200; // Maximum speed to display on gauge
+
+        // Smooth animation using requestAnimationFrame
+        function animate() {
+            // Smooth interpolation for speed display
+            const smoothingFactor = 0.15;
+            currentSpeed += (targetSpeed - currentSpeed) * smoothingFactor;
+            
+            drawSpeedometer();
+            updateDisplay();
+            
+            requestAnimationFrame(animate);
+        }
+
+        function drawSpeedometer() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background arc
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 20;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, minAngle, maxAngle);
+            ctx.stroke();
+
+            // Calculate speed percentage
+            const speedPercent = Math.min(currentSpeed / maxSpeedDisplay, 1);
+            const angle = minAngle + (maxAngle - minAngle) * speedPercent;
+
+            // Draw speed arc with gradient
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            gradient.addColorStop(0, '#4CAF50');
+            gradient.addColorStop(0.6, '#FFC107');
+            gradient.addColorStop(1, '#F44336');
+
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 20;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, minAngle, angle);
+            ctx.stroke();
+
+            // Draw tick marks
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            for (let i = 0; i <= 10; i++) {
+                const tickAngle = minAngle + (maxAngle - minAngle) * (i / 10);
+                const x1 = centerX + Math.cos(tickAngle) * (radius - 10);
+                const y1 = centerY + Math.sin(tickAngle) * (radius - 10);
+                const x2 = centerX + Math.cos(tickAngle) * (radius + 10);
+                const y2 = centerY + Math.sin(tickAngle) * (radius + 10);
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                // Draw speed labels
+                const speed = (i / 10) * maxSpeedDisplay;
+                const labelX = centerX + Math.cos(tickAngle) * (radius - 35);
+                const labelY = centerY + Math.sin(tickAngle) * (radius - 35);
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(Math.round(speed), labelX, labelY);
+            }
+
+            // Draw needle
+            const needleAngle = minAngle + (maxAngle - minAngle) * speedPercent;
+            const needleLength = radius - 30;
+            const needleX = centerX + Math.cos(needleAngle) * needleLength;
+            const needleY = centerY + Math.sin(needleAngle) * needleLength;
+
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(needleX, needleY);
+            ctx.stroke();
+
+            // Draw center circle
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function updateDisplay() {
+            speedValue.textContent = Math.round(currentSpeed);
+            
+            // Update max speed
+            if (targetSpeed > maxSpeed) {
+                maxSpeed = targetSpeed;
+            }
+            maxSpeedEl.textContent = Math.round(maxSpeed);
+
+            // Calculate average speed (last 10 readings)
+            if (speedHistory.length > 0) {
+                const avg = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+                avgSpeedEl.textContent = Math.round(avg);
+            }
+
+            // Update distance
+            distanceEl.textContent = (totalDistance / 1000).toFixed(2) + ' km';
+        }
+
+        function updateSpeed(speed) {
+            // Convert m/s to km/h if needed
+            if (speed < 100) {
+                speed = speed * 3.6; // Assuming speed is in m/s
+            }
+            
+            targetSpeed = Math.max(0, speed);
+            
+            // Add to history for average calculation
+            speedHistory.push(targetSpeed);
+            if (speedHistory.length > 10) {
+                speedHistory.shift();
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function handlePosition(position) {
+            const speed = position.coords.speed;
+            const now = Date.now();
+            
+            if (speed !== null && speed !== undefined) {
+                updateSpeed(speed);
+                status.className = 'status active';
+                status.textContent = 'GPS Active';
+                info.textContent = `Accuracy: ±${Math.round(position.coords.accuracy)}m`;
+            } else if (lastPosition) {
+                // Calculate speed from position changes if GPS speed is not available
+                const timeDiff = (now - lastUpdateTime) / 1000; // in seconds
+                if (timeDiff > 0) {
+                    const dist = calculateDistance(
+                        lastPosition.coords.latitude,
+                        lastPosition.coords.longitude,
+                        position.coords.latitude,
+                        position.coords.longitude
+                    );
+                    totalDistance += dist;
+                    const calculatedSpeed = dist / timeDiff; // m/s
+                    updateSpeed(calculatedSpeed);
+                    status.className = 'status active';
+                    status.textContent = 'GPS Active (Calculated Speed)';
+                    info.textContent = `Accuracy: ±${Math.round(position.coords.accuracy)}m`;
+                }
+            }
+
+            lastPosition = position;
+            lastUpdateTime = now;
+        }
+
+        function handleError(error) {
+            status.className = 'status error';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    status.textContent = 'Location permission denied';
+                    info.textContent = 'Please enable location access in your browser settings';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    status.textContent = 'Location unavailable';
+                    info.textContent = 'GPS signal not available';
+                    break;
+                case error.TIMEOUT:
+                    status.textContent = 'Location request timeout';
+                    info.textContent = 'Please try again';
+                    break;
+                default:
+                    status.textContent = 'Unknown error';
+                    info.textContent = 'An error occurred';
+                    break;
+            }
+        }
+
+        // Start geolocation tracking with high frequency updates
+        if (navigator.geolocation) {
+            const options = {
+                enableHighAccuracy: true,
+                maximumAge: 0, // Always get fresh data
+                timeout: 5000
+            };
+
+            // Use watchPosition for continuous updates
+            watchId = navigator.geolocation.watchPosition(
+                handlePosition,
+                handleError,
+                options
+            );
+        } else {
+            status.className = 'status error';
+            status.textContent = 'Geolocation not supported';
+            info.textContent = 'Your browser does not support geolocation';
+        }
+
+        // HUD mode toggle
+        hudToggle.addEventListener('click', () => {
+            hudMode = !hudMode;
+            if (hudMode) {
+                container.classList.add('hud-mode');
+                hudToggle.classList.add('active');
+                hudToggle.textContent = 'Normal Mode';
+            } else {
+                container.classList.remove('hud-mode');
+                hudToggle.classList.remove('active');
+                hudToggle.textContent = 'HUD Mode';
+            }
+        });
+
+        // Start animation loop (runs at ~60fps)
+        animate();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+        });
+    </script>
+</body>
+</html>
