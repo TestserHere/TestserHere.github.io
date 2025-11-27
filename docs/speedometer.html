@@ -19,7 +19,19 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            overflow: hidden;
+            overflow: auto;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
         }
 
         .container {
@@ -27,27 +39,69 @@
             border-radius: 30px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: min(90vw, 600px);
             width: 100%;
             text-align: center;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+                max-width: 95vw;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                border-radius: 15px;
+                max-width: 98vw;
+            }
         }
 
         h1 {
             color: #333;
             margin-bottom: 30px;
-            font-size: 2em;
+            font-size: clamp(1.5em, 4vw, 2em);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                margin-bottom: 20px;
+            }
         }
 
         .speedometer-container {
             position: relative;
-            width: 400px;
-            height: 250px;
+            width: 100%;
+            max-width: min(90vw, 700px);
+            height: auto;
             margin: 0 auto 30px;
+        }
+
+        @media (max-width: 768px) {
+            .speedometer-container {
+                max-width: 95vw;
+                margin: 0 auto 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .speedometer-container {
+                max-width: 98vw;
+                margin: 0 auto 15px;
+            }
         }
 
         canvas {
             display: block;
             margin: 0 auto;
+            width: 100%;
+            max-width: 700px;
+            height: auto;
         }
 
         .speed-display {
@@ -59,7 +113,7 @@
         }
 
         .speed-value {
-            font-size: 3.5em;
+            font-size: clamp(2em, 8vw, 3.5em);
             font-weight: bold;
             color: #667eea;
             line-height: 1;
@@ -96,6 +150,28 @@
             color: #721c24;
         }
 
+        /* Theme modes - make status text white with semi-transparent backgrounds */
+        .container.theme-night:not(.simple-mode) .status.waiting,
+        .container.theme-night:not(.simple-mode) .status.active,
+        .container.theme-night:not(.simple-mode) .status.error {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .container.theme-classic:not(.simple-mode) .status.waiting,
+        .container.theme-classic:not(.simple-mode) .status.active,
+        .container.theme-classic:not(.simple-mode) .status.error {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .container.theme-blue:not(.simple-mode) .status.waiting,
+        .container.theme-blue:not(.simple-mode) .status.active,
+        .container.theme-blue:not(.simple-mode) .status.error {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
         .info {
             margin-top: 20px;
             color: #666;
@@ -126,10 +202,10 @@
             color: #667eea;
         }
 
+        .simple-toggle,
         .hud-toggle {
             position: fixed;
             top: 20px;
-            right: 20px;
             z-index: 1000;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #667eea;
@@ -143,28 +219,462 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .simple-toggle {
+            right: 20px;
+        }
+
+        .hud-toggle {
+            right: 180px;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .theme-menu {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            min-width: 200px;
+        }
+
+        .theme-menu.active {
+            display: block;
+        }
+
+        .theme-option {
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .theme-option:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        .theme-option.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .simple-toggle:hover,
         .hud-toggle:hover {
             background: #667eea;
             color: white;
             transform: scale(1.05);
         }
 
+        .simple-toggle.active,
         .hud-toggle.active {
             background: #667eea;
             color: white;
         }
 
-        .container.hud-mode {
-            transform: scaleX(-1) scaleY(-1);
+        @media (max-width: 768px) {
+            .hud-toggle {
+                right: 20px;
+                top: 70px;
+            }
+        }
+
+        .container.simple-mode {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .container.simple-mode h1 {
+            display: none;
+        }
+
+        .container.simple-mode .speedometer-container {
+            display: none;
+        }
+
+        .container.simple-mode .status,
+        .container.simple-mode .info {
+            display: none;
+        }
+
+        .container.hud-flip {
+            transform: scaleX(-1) scaleY(-1); /* Flip both horizontally and vertically for HUD display */
+        }
+
+        /* Theme: Night (Black/White/Green) */
+        body.theme-night {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        }
+
+        .container.theme-night {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+        }
+
+        /* Normal mode - white text */
+        .container.theme-night:not(.simple-mode) h1,
+        .container.theme-night:not(.simple-mode) .speed-value,
+        .container.theme-night:not(.simple-mode) .stat-value,
+        .container.theme-night:not(.simple-mode) .stat-label,
+        .container.theme-night:not(.simple-mode) .speed-unit,
+        .container.theme-night:not(.simple-mode) .status,
+        .container.theme-night:not(.simple-mode) .info {
+            color: #fff;
+        }
+
+        /* Simple mode - keep green colors */
+        .container.theme-night .hud-speed {
+            color: #00ff00;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .container.theme-night .hud-stat-value {
+            color: #00ff00;
+        }
+
+        .container.theme-night .hud-unit {
+            color: rgba(0, 255, 0, 0.8);
+        }
+
+        .container.theme-night .hud-stat-label {
+            color: rgba(0, 255, 0, 0.7);
+        }
+
+        .container.theme-night.simple-mode {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+        }
+
+        /* Theme: Classic (Red/Amber) */
+        body.theme-classic {
+            background: linear-gradient(135deg, #1a0000 0%, #2d0000 100%);
+        }
+
+        .container.theme-classic {
+            background: rgba(20, 0, 0, 0.95);
+            border: 2px solid #ff4444;
+        }
+
+        /* Normal mode - white text */
+        .container.theme-classic:not(.simple-mode) h1,
+        .container.theme-classic:not(.simple-mode) .speed-value,
+        .container.theme-classic:not(.simple-mode) .stat-value,
+        .container.theme-classic:not(.simple-mode) .stat-label,
+        .container.theme-classic:not(.simple-mode) .speed-unit,
+        .container.theme-classic:not(.simple-mode) .status,
+        .container.theme-classic:not(.simple-mode) .info {
+            color: #fff;
+        }
+
+        /* Simple mode - keep amber colors */
+        .container.theme-classic .hud-speed {
+            color: #ffaa00;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+        }
+
+        .container.theme-classic .hud-stat-value {
+            color: #ffaa00;
+        }
+
+        .container.theme-classic .hud-unit {
+            color: rgba(255, 170, 0, 0.8);
+        }
+
+        .container.theme-classic .hud-stat-label {
+            color: rgba(255, 170, 0, 0.7);
+        }
+
+        .container.theme-classic.simple-mode {
+            background: rgba(20, 0, 0, 0.95);
+            border: 2px solid #ff4444;
+        }
+
+        /* Theme: Blue (Modern) */
+        body.theme-blue {
+            background: linear-gradient(135deg, #001122 0%, #003366 100%);
+        }
+
+        .container.theme-blue {
+            background: rgba(0, 20, 40, 0.95);
+            border: 2px solid #00aaff;
+        }
+
+        /* Normal mode - white text */
+        .container.theme-blue:not(.simple-mode) h1,
+        .container.theme-blue:not(.simple-mode) .speed-value,
+        .container.theme-blue:not(.simple-mode) .stat-value,
+        .container.theme-blue:not(.simple-mode) .stat-label,
+        .container.theme-blue:not(.simple-mode) .speed-unit,
+        .container.theme-blue:not(.simple-mode) .status,
+        .container.theme-blue:not(.simple-mode) .info {
+            color: #fff;
+        }
+
+        /* Simple mode - keep blue colors */
+        .container.theme-blue .hud-speed {
+            color: #00aaff;
+            text-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+        }
+
+        .container.theme-blue .hud-stat-value {
+            color: #00aaff;
+        }
+
+        .container.theme-blue .hud-unit {
+            color: rgba(0, 170, 255, 0.8);
+        }
+
+        .container.theme-blue .hud-stat-label {
+            color: rgba(0, 170, 255, 0.7);
+        }
+
+        .container.theme-blue.simple-mode {
+            background: rgba(0, 20, 40, 0.95);
+            border: 2px solid #00aaff;
+        }
+
+        .hud-display {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .container.simple-mode .hud-display {
+            display: block;
+        }
+
+        .hud-speed {
+            font-size: clamp(4em, 15vw, 8em);
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            line-height: 1;
+            margin-bottom: 10px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hud-unit {
+            font-size: clamp(1em, 4vw, 2em);
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+        }
+
+        .hud-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .hud-stat {
+            text-align: center;
+        }
+
+        .hud-stat-label {
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hud-stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            font-variant-numeric: tabular-nums;
+        }
+
+        @media (max-width: 768px) {
+            .hud-speed {
+                font-size: 5em;
+            }
+
+            .hud-unit {
+                font-size: 1.5em;
+            }
+
+            .hud-stats {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .hud-stat-value {
+                font-size: 2em;
+            }
+        }
+
+        .debug-panel {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 300px;
+            max-height: 70vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .debug-panel {
+                max-width: calc(100vw - 40px);
+                bottom: 80px;
+            }
+        }
+
+        .debug-panel.active {
+            display: block;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #ff6b6b;
+            border-radius: 25px;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .debug-toggle:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .debug-toggle.active {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .debug-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .debug-button {
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .debug-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .debug-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .debug-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .debug-input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .debug-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">Theme</button>
+    <div class="theme-menu" id="themeMenu">
+        <div class="theme-option active" data-theme="default">Default</div>
+        <div class="theme-option" data-theme="night">Night (Green)</div>
+        <div class="theme-option" data-theme="classic">Classic (Amber)</div>
+        <div class="theme-option" data-theme="blue">Blue (Modern)</div>
+    </div>
+    <button class="simple-toggle" id="simpleToggle">Simple Mode</button>
     <button class="hud-toggle" id="hudToggle">HUD Mode</button>
+    <button class="debug-toggle" id="debugToggle">Debug Mode</button>
+    <div class="debug-panel" id="debugPanel">
+        <div class="debug-label">Debug Controls</div>
+        <div class="debug-controls">
+            <input type="range" class="debug-slider" id="speedSlider" min="0" max="130" value="0">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <span id="sliderValue">0</span> km/h
+            </div>
+            <div class="debug-button" onclick="setSpeed(0)">Stop (0 km/h)</div>
+            <div class="debug-button" onclick="setSpeed(30)">City (30 km/h)</div>
+            <div class="debug-button" onclick="setSpeed(50)">Urban (50 km/h)</div>
+            <div class="debug-button" onclick="setSpeed(80)">Highway (80 km/h)</div>
+            <div class="debug-button" onclick="setSpeed(120)">Fast (120 km/h)</div>
+            <div class="debug-input-group">
+                <input type="number" class="debug-input" id="customSpeed" placeholder="Speed" min="0" max="130">
+                <button class="debug-button" onclick="setCustomSpeed()">Set</button>
+            </div>
+            <div class="debug-button" onclick="simulateAcceleration()">Simulate Acceleration</div>
+            <div class="debug-button" onclick="simulateDeceleration()">Simulate Deceleration</div>
+            <div class="debug-button" onclick="resetStats()">Reset Stats</div>
+        </div>
+    </div>
     <div class="container" id="container">
         <h1>🚗 Speedometer</h1>
         <div class="speedometer-container">
-            <canvas id="speedometer" width="400" height="250"></canvas>
+            <canvas id="speedometer" width="700" height="350"></canvas>
             <div class="speed-display">
                 <div class="speed-value" id="speedValue">0</div>
                 <div class="speed-unit">km/h</div>
@@ -186,6 +696,25 @@
                 <div class="stat-value" id="distance">0</div>
             </div>
         </div>
+        <!-- HUD Mode Display -->
+        <div class="hud-display">
+            <div class="hud-speed" id="hudSpeedValue">0</div>
+            <div class="hud-unit">km/h</div>
+            <div class="hud-stats">
+                <div class="hud-stat">
+                    <div class="hud-stat-label">Max</div>
+                    <div class="hud-stat-value" id="hudMaxSpeed">0</div>
+                </div>
+                <div class="hud-stat">
+                    <div class="hud-stat-label">Avg</div>
+                    <div class="hud-stat-value" id="hudAvgSpeed">0</div>
+                </div>
+                <div class="hud-stat">
+                    <div class="hud-stat-label">Distance</div>
+                    <div class="hud-stat-value" id="hudDistance">0</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -197,10 +726,14 @@
         const maxSpeedEl = document.getElementById('maxSpeed');
         const avgSpeedEl = document.getElementById('avgSpeed');
         const distanceEl = document.getElementById('distance');
+        const simpleToggle = document.getElementById('simpleToggle');
         const hudToggle = document.getElementById('hudToggle');
         const container = document.getElementById('container');
 
-        let hudMode = false;
+        let simpleMode = false;
+        let hudFlipMode = false;
+        let debugMode = false;
+        let currentTheme = 'default';
         let currentSpeed = 0;
         let targetSpeed = 0;
         let maxSpeed = 0;
@@ -209,88 +742,177 @@
         let lastPosition = null;
         let lastUpdateTime = Date.now();
         let watchId = null;
+        let debugSpeed = 0;
+        let simulationInterval = null;
+        let gpsReadingsCount = 0; // Track number of GPS readings to filter initial spikes
+        const MAX_REALISTIC_SPEED = 150; // Maximum realistic speed in km/h (filter anything above)
+        const MIN_GPS_READINGS = 3; // Minimum readings before accepting high speeds
 
-        // Speedometer configuration
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height - 20;
-        const radius = 180;
-        const minAngle = Math.PI;
-        const maxAngle = 0;
-        const maxSpeedDisplay = 200; // Maximum speed to display on gauge
+        // Responsive canvas sizing
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const maxWidth = Math.min(700, window.innerWidth - 40);
+            const aspectRatio = 700 / 350;
+            canvas.width = maxWidth;
+            canvas.height = maxWidth / aspectRatio;
+        }
+
+        // Initial resize
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Speedometer configuration - clockwise from bottom left to bottom right
+        let centerX = canvas.width / 2;
+        let centerY = canvas.height;
+        let radius = canvas.width * 0.4; // Responsive radius based on canvas width
+        // Start at bottom left (225 degrees) and go clockwise to bottom right (315 degrees)
+        // For clockwise movement, we go from 315° (max speed) to 225° (0 speed) in reverse
+        const startAngle = Math.PI * 1.75; // 315 degrees (bottom right) - where max speed is
+        const endAngle = Math.PI * 1.25; // 225 degrees (bottom left) - where 0 speed is
+        const maxSpeedDisplay = 130; // Maximum speed to display on gauge
 
         // Smooth animation using requestAnimationFrame
         function animate() {
+            // Update dimensions in case of resize
+            centerX = canvas.width / 2;
+            centerY = canvas.height;
+            radius = canvas.width * 0.4;
+            
             // Smooth interpolation for speed display
             const smoothingFactor = 0.15;
             currentSpeed += (targetSpeed - currentSpeed) * smoothingFactor;
             
-            drawSpeedometer();
+            // Update distance in debug mode (simulate movement)
+            if (debugMode && currentSpeed > 0) {
+                const now = Date.now();
+                const timeDiff = (now - lastUpdateTime) / 1000; // seconds
+                if (timeDiff > 0) {
+                    // Distance = speed * time (convert km/h to m/s)
+                    const distanceMeters = (currentSpeed / 3.6) * timeDiff;
+                    totalDistance += distanceMeters;
+                    lastUpdateTime = now;
+                }
+            }
+            
+            // Only draw speedometer if not in simple mode
+            if (!simpleMode) {
+                drawSpeedometer();
+            }
             updateDisplay();
             
             requestAnimationFrame(animate);
         }
 
+        function getThemeColors() {
+            switch(currentTheme) {
+                case 'night':
+                    return {
+                        arc: '#333',
+                        activeArc: '#00ff00',
+                        ticks: '#00ff00',
+                        labels: '#00ff00',
+                        needle: '#00ff00',
+                        center: '#00ff00'
+                    };
+                case 'classic':
+                    return {
+                        arc: '#440000',
+                        activeArc: '#ffaa00',
+                        ticks: '#ffaa00',
+                        labels: '#ffaa00',
+                        needle: '#ffaa00',
+                        center: '#ffaa00'
+                    };
+                case 'blue':
+                    return {
+                        arc: '#003366',
+                        activeArc: '#00aaff',
+                        ticks: '#00aaff',
+                        labels: '#00aaff',
+                        needle: '#00aaff',
+                        center: '#00aaff'
+                    };
+                default:
+                    return {
+                        arc: '#444',
+                        activeArc: '#000',
+                        ticks: '#000',
+                        labels: '#000',
+                        needle: '#000',
+                        center: '#000'
+                    };
+            }
+        }
+
         function drawSpeedometer() {
-            // Clear canvas
+            // Clear canvas (transparent background)
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw background arc
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 20;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, minAngle, maxAngle);
-            ctx.stroke();
+            const colors = getThemeColors();
 
-            // Calculate speed percentage
-            const speedPercent = Math.min(currentSpeed / maxSpeedDisplay, 1);
-            const angle = minAngle + (maxAngle - minAngle) * speedPercent;
-
-            // Draw speed arc with gradient
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, '#4CAF50');
-            gradient.addColorStop(0.6, '#FFC107');
-            gradient.addColorStop(1, '#F44336');
-
-            ctx.strokeStyle = gradient;
+            // Draw background arc (inactive portion)
+            ctx.strokeStyle = colors.arc;
             ctx.lineWidth = 20;
             ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, minAngle, angle);
+            // Draw from 225° to 315° - canvas will take the shorter clockwise path
+            ctx.arc(centerX, centerY, radius, endAngle, startAngle);
             ctx.stroke();
 
-            // Draw tick marks
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            for (let i = 0; i <= 10; i++) {
-                const tickAngle = minAngle + (maxAngle - minAngle) * (i / 10);
-                const x1 = centerX + Math.cos(tickAngle) * (radius - 10);
-                const y1 = centerY + Math.sin(tickAngle) * (radius - 10);
-                const x2 = centerX + Math.cos(tickAngle) * (radius + 10);
-                const y2 = centerY + Math.sin(tickAngle) * (radius + 10);
+            // Calculate speed percentage
+            // At 0 speed, needle at endAngle (225°, bottom left)
+            // At max speed, needle at startAngle (315°, bottom right)
+            // As speed increases, angle goes from endAngle to startAngle (clockwise)
+            const speedPercent = Math.min(currentSpeed / maxSpeedDisplay, 1);
+            const angle = endAngle + (startAngle - endAngle) * speedPercent;
+
+            // Draw active speed arc
+            ctx.strokeStyle = colors.activeArc;
+            ctx.lineWidth = 20;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            // Draw from endAngle (225°) to current angle - clockwise
+            ctx.arc(centerX, centerY, radius, endAngle, angle);
+            ctx.stroke();
+
+            // Draw tick marks (every 10 km/h: 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130)
+            ctx.strokeStyle = colors.ticks;
+            const totalTicks = 13; // 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130
+            for (let i = 0; i <= totalTicks; i++) {
+                const tickAngle = endAngle + (startAngle - endAngle) * (i / totalTicks);
+                const tickLength = 20;
+                const tickRadius = radius - 30;
                 
+                const x1 = centerX + Math.cos(tickAngle) * tickRadius;
+                const y1 = centerY + Math.sin(tickAngle) * tickRadius;
+                const x2 = centerX + Math.cos(tickAngle) * (radius + tickLength);
+                const y2 = centerY + Math.sin(tickAngle) * (radius + tickLength);
+                
+                ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
 
-                // Draw speed labels
-                const speed = (i / 10) * maxSpeedDisplay;
-                const labelX = centerX + Math.cos(tickAngle) * (radius - 35);
-                const labelY = centerY + Math.sin(tickAngle) * (radius - 35);
-                ctx.fillStyle = '#666';
-                ctx.font = '12px Arial';
+                // Draw speed labels (every 10 km/h)
+                const speed = (i / totalTicks) * maxSpeedDisplay;
+                const labelX = centerX + Math.cos(tickAngle) * (radius - 60);
+                const labelY = centerY + Math.sin(tickAngle) * (radius - 60);
+                ctx.fillStyle = colors.labels;
+                const fontSize = Math.max(12, canvas.width / 45); // Responsive font size
+                ctx.font = `bold ${fontSize}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(Math.round(speed), labelX, labelY);
             }
 
             // Draw needle
-            const needleAngle = minAngle + (maxAngle - minAngle) * speedPercent;
-            const needleLength = radius - 30;
+            const needleAngle = endAngle + (startAngle - endAngle) * speedPercent;
+            const needleLength = radius - 40;
             const needleX = centerX + Math.cos(needleAngle) * needleLength;
             const needleY = centerY + Math.sin(needleAngle) * needleLength;
 
-            ctx.strokeStyle = '#333';
+            ctx.strokeStyle = colors.needle;
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
@@ -298,14 +920,15 @@
             ctx.stroke();
 
             // Draw center circle
-            ctx.fillStyle = '#333';
+            ctx.fillStyle = colors.center;
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 8, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, 12, 0, Math.PI * 2);
             ctx.fill();
         }
 
         function updateDisplay() {
-            speedValue.textContent = Math.round(currentSpeed);
+            const roundedSpeed = Math.round(currentSpeed);
+            speedValue.textContent = roundedSpeed;
             
             // Update max speed
             if (targetSpeed > maxSpeed) {
@@ -314,22 +937,57 @@
             maxSpeedEl.textContent = Math.round(maxSpeed);
 
             // Calculate average speed (last 10 readings)
+            let avg = 0;
             if (speedHistory.length > 0) {
-                const avg = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+                avg = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
                 avgSpeedEl.textContent = Math.round(avg);
             }
 
             // Update distance
-            distanceEl.textContent = (totalDistance / 1000).toFixed(2) + ' km';
+            const distanceKm = (totalDistance / 1000).toFixed(2);
+            distanceEl.textContent = distanceKm + ' km';
+
+            // Update HUD display if in simple mode
+            if (simpleMode) {
+                const hudSpeedValue = document.getElementById('hudSpeedValue');
+                const hudMaxSpeed = document.getElementById('hudMaxSpeed');
+                const hudAvgSpeed = document.getElementById('hudAvgSpeed');
+                const hudDistance = document.getElementById('hudDistance');
+                
+                if (hudSpeedValue) hudSpeedValue.textContent = roundedSpeed;
+                if (hudMaxSpeed) hudMaxSpeed.textContent = Math.round(maxSpeed);
+                if (hudAvgSpeed) hudAvgSpeed.textContent = Math.round(avg);
+                if (hudDistance) hudDistance.textContent = distanceKm;
+            }
         }
 
-        function updateSpeed(speed) {
-            // Convert m/s to km/h if needed
-            if (speed < 100) {
+        function updateSpeed(speed, isKmh = false) {
+            // Convert m/s to km/h if needed (only if not already in km/h and not in debug mode)
+            if (!isKmh && !debugMode && speed < 100) {
                 speed = speed * 3.6; // Assuming speed is in m/s
             }
             
-            targetSpeed = Math.max(0, speed);
+            // Validate speed to prevent spikes
+            speed = Math.max(0, speed);
+            
+            // Filter out unrealistic speeds (especially on initial GPS readings)
+            if (!debugMode) {
+                // If speed is very high and we don't have many readings yet, cap it
+                if (speed > MAX_REALISTIC_SPEED && gpsReadingsCount < MIN_GPS_READINGS) {
+                    // Likely a GPS spike, set to 0 or current speed
+                    speed = Math.min(speed, currentSpeed || 0);
+                }
+                
+                // If speed jumps from 0 to very high (>80 km/h), it's likely a GPS error
+                if (currentSpeed < 5 && speed > 80 && gpsReadingsCount < MIN_GPS_READINGS) {
+                    speed = 0; // Ignore the spike
+                }
+                
+                // Always cap at maximum realistic speed
+                speed = Math.min(speed, MAX_REALISTIC_SPEED);
+            }
+            
+            targetSpeed = speed;
             
             // Add to history for average calculation
             speedHistory.push(targetSpeed);
@@ -351,31 +1009,68 @@
         }
 
         function handlePosition(position) {
+            // Skip GPS updates if debug mode is active
+            if (debugMode) {
+                return;
+            }
+
             const speed = position.coords.speed;
             const now = Date.now();
+            const accuracy = position.coords.accuracy;
+            
+            // Increment GPS readings counter
+            gpsReadingsCount++;
+            
+            // Ignore readings with very poor accuracy (>100m) on initial readings
+            if (gpsReadingsCount < MIN_GPS_READINGS && accuracy > 100) {
+                return; // Skip this reading
+            }
             
             if (speed !== null && speed !== undefined) {
+                // GPS provides speed directly
                 updateSpeed(speed);
                 status.className = 'status active';
                 status.textContent = 'GPS Active';
-                info.textContent = `Accuracy: ±${Math.round(position.coords.accuracy)}m`;
+                info.textContent = `Accuracy: ±${Math.round(accuracy)}m`;
             } else if (lastPosition) {
                 // Calculate speed from position changes if GPS speed is not available
                 const timeDiff = (now - lastUpdateTime) / 1000; // in seconds
-                if (timeDiff > 0) {
+                
+                // Only calculate if we have a reasonable time difference (>0.5s to avoid spikes)
+                if (timeDiff > 0.5) {
                     const dist = calculateDistance(
                         lastPosition.coords.latitude,
                         lastPosition.coords.longitude,
                         position.coords.latitude,
                         position.coords.longitude
                     );
-                    totalDistance += dist;
+                    
+                    // Only update distance if movement is reasonable (not a GPS jump)
+                    if (dist < 1000) { // Less than 1km in one update
+                        totalDistance += dist;
+                    }
+                    
                     const calculatedSpeed = dist / timeDiff; // m/s
-                    updateSpeed(calculatedSpeed);
-                    status.className = 'status active';
-                    status.textContent = 'GPS Active (Calculated Speed)';
-                    info.textContent = `Accuracy: ±${Math.round(position.coords.accuracy)}m`;
+                    
+                    // Only use calculated speed if it's reasonable
+                    // Ignore if accuracy is poor and speed seems too high
+                    if (calculatedSpeed < 50 || (accuracy < 50 && calculatedSpeed < 100)) {
+                        updateSpeed(calculatedSpeed);
+                        status.className = 'status active';
+                        status.textContent = 'GPS Active (Calculated Speed)';
+                        info.textContent = `Accuracy: ±${Math.round(accuracy)}m`;
+                    } else {
+                        // Likely a GPS error, don't update speed
+                        status.className = 'status active';
+                        status.textContent = 'GPS Active (Filtering)';
+                        info.textContent = `Accuracy: ±${Math.round(accuracy)}m`;
+                    }
                 }
+            } else {
+                // First position reading - just store it, don't calculate speed
+                status.className = 'status active';
+                status.textContent = 'GPS Active (Initializing)';
+                info.textContent = `Accuracy: ±${Math.round(accuracy)}m`;
             }
 
             lastPosition = position;
@@ -424,19 +1119,205 @@
             info.textContent = 'Your browser does not support geolocation';
         }
 
-        // HUD mode toggle
-        hudToggle.addEventListener('click', () => {
-            hudMode = !hudMode;
-            if (hudMode) {
-                container.classList.add('hud-mode');
-                hudToggle.classList.add('active');
-                hudToggle.textContent = 'Normal Mode';
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeMenu = document.getElementById('themeMenu');
+        const themeOptions = document.querySelectorAll('.theme-option');
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            
+            // Remove all theme classes from body and container
+            document.body.classList.remove('theme-night', 'theme-classic', 'theme-blue');
+            container.classList.remove('theme-night', 'theme-classic', 'theme-blue');
+            
+            // Add new theme class
+            if (theme !== 'default') {
+                document.body.classList.add(`theme-${theme}`);
+                container.classList.add(`theme-${theme}`);
+            }
+            
+            // Update active theme option
+            themeOptions.forEach(option => {
+                if (option.dataset.theme === theme) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        }
+
+        themeToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeMenu.classList.toggle('active');
+        });
+
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.dataset.theme;
+                setTheme(theme);
+                themeMenu.classList.remove('active');
+            });
+        });
+
+        // Close theme menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!themeMenu.contains(e.target) && !themeToggle.contains(e.target)) {
+                themeMenu.classList.remove('active');
+            }
+        });
+
+        // Simple mode toggle
+        simpleToggle.addEventListener('click', () => {
+            simpleMode = !simpleMode;
+            if (simpleMode) {
+                container.classList.add('simple-mode');
+                simpleToggle.classList.add('active');
+                simpleToggle.textContent = 'Normal Mode';
             } else {
-                container.classList.remove('hud-mode');
+                container.classList.remove('simple-mode');
+                simpleToggle.classList.remove('active');
+                simpleToggle.textContent = 'Simple Mode';
+            }
+        });
+
+        // HUD flip mode toggle
+        hudToggle.addEventListener('click', () => {
+            hudFlipMode = !hudFlipMode;
+            if (hudFlipMode) {
+                container.classList.add('hud-flip');
+                hudToggle.classList.add('active');
+                hudToggle.textContent = 'HUD: ON';
+            } else {
+                container.classList.remove('hud-flip');
                 hudToggle.classList.remove('active');
                 hudToggle.textContent = 'HUD Mode';
             }
         });
+
+        // Debug mode toggle
+        const debugToggle = document.getElementById('debugToggle');
+        const debugPanel = document.getElementById('debugPanel');
+        const speedSlider = document.getElementById('speedSlider');
+        const sliderValue = document.getElementById('sliderValue');
+
+        debugToggle.addEventListener('click', () => {
+            debugMode = !debugMode;
+            if (debugMode) {
+                debugPanel.classList.add('active');
+                debugToggle.classList.add('active');
+                debugToggle.textContent = 'Debug: ON';
+                status.className = 'status active';
+                status.textContent = 'Debug Mode Active';
+                info.textContent = 'Use controls or console commands to simulate speed';
+                // Set initial debug speed to current slider value
+                const initialSpeed = parseInt(speedSlider.value);
+                setSpeed(initialSpeed);
+            } else {
+                debugPanel.classList.remove('active');
+                debugToggle.classList.remove('active');
+                debugToggle.textContent = 'Debug Mode';
+                status.className = 'status waiting';
+                status.textContent = 'Waiting for GPS signal...';
+                info.textContent = 'Make sure location services are enabled';
+                // Stop any simulations
+                if (simulationInterval) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                }
+                // Reset speed to 0 when exiting debug mode
+                targetSpeed = 0;
+                currentSpeed = 0;
+            }
+        });
+
+        // Speed slider
+        speedSlider.addEventListener('input', (e) => {
+            const speed = parseInt(e.target.value);
+            sliderValue.textContent = speed;
+            if (debugMode) {
+                setSpeed(speed);
+            }
+        });
+
+        // Debug functions - available in console and UI
+        window.setSpeed = function(speed) {
+            if (!debugMode) {
+                console.log('Enable debug mode first!');
+                return;
+            }
+            debugSpeed = Math.max(0, Math.min(130, speed));
+            updateSpeed(debugSpeed, true); // Pass true to indicate speed is already in km/h
+            speedSlider.value = debugSpeed;
+            sliderValue.textContent = debugSpeed;
+            status.className = 'status active';
+            status.textContent = `Debug: ${debugSpeed} km/h`;
+        };
+
+        window.setCustomSpeed = function() {
+            const input = document.getElementById('customSpeed');
+            const speed = parseInt(input.value);
+            if (!isNaN(speed) && speed >= 0 && speed <= 130) {
+                setSpeed(speed);
+                input.value = '';
+            }
+        };
+
+        window.simulateAcceleration = function() {
+            if (!debugMode) {
+                console.log('Enable debug mode first!');
+                return;
+            }
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+            }
+            let simSpeed = currentSpeed;
+            simulationInterval = setInterval(() => {
+                simSpeed = Math.min(130, simSpeed + 2);
+                setSpeed(simSpeed);
+                if (simSpeed >= 130) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                }
+            }, 100);
+        };
+
+        window.simulateDeceleration = function() {
+            if (!debugMode) {
+                console.log('Enable debug mode first!');
+                return;
+            }
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+            }
+            let simSpeed = currentSpeed;
+            simulationInterval = setInterval(() => {
+                simSpeed = Math.max(0, simSpeed - 2);
+                setSpeed(simSpeed);
+                if (simSpeed <= 0) {
+                    clearInterval(simulationInterval);
+                    simulationInterval = null;
+                }
+            }, 100);
+        };
+
+        window.resetStats = function() {
+            maxSpeed = 0;
+            speedHistory = [];
+            totalDistance = 0;
+            maxSpeedEl.textContent = '0';
+            avgSpeedEl.textContent = '0';
+            distanceEl.textContent = '0.00 km';
+        };
+
+        // Console help
+        console.log('%cSpeedometer Debug Tools', 'color: #667eea; font-size: 16px; font-weight: bold;');
+        console.log('Available console commands:');
+        console.log('  setSpeed(speed) - Set speed directly (0-130 km/h)');
+        console.log('  simulateAcceleration() - Gradually increase speed');
+        console.log('  simulateDeceleration() - Gradually decrease speed');
+        console.log('  resetStats() - Reset max speed, average, and distance');
+        console.log('Enable Debug Mode from the UI to use these functions.');
 
         // Start animation loop (runs at ~60fps)
         animate();
