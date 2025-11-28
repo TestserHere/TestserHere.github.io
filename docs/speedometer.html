@@ -782,16 +782,24 @@
             const smoothingFactor = 0.15;
             currentSpeed += (targetSpeed - currentSpeed) * smoothingFactor;
             
-            // Update distance in debug mode (simulate movement)
-            if (debugMode && currentSpeed > 0) {
-                const now = Date.now();
-                const timeDiff = (now - lastUpdateTime) / 1000; // seconds
-                if (timeDiff > 0) {
-                    // Distance = speed * time (convert km/h to m/s)
-                    const distanceMeters = (currentSpeed / 3.6) * timeDiff;
-                    totalDistance += distanceMeters;
-                    lastUpdateTime = now;
-                }
+            // Calculate distance using speed-based logic: Δd = v_m/s × Δt
+            const now = Date.now();
+            const timeDiff = (now - lastUpdateTime) / 1000; // seconds
+            
+            if (timeDiff > 0 && currentSpeed > 0) {
+                // Convert speed from km/h to m/s: v_m/s = v_km/h × 0.277778
+                const speedMs = currentSpeed * 0.277778;
+                
+                // Calculate distance increment: Δd = v_m/s × Δt
+                const deltaDistance = speedMs * timeDiff;
+                
+                // Accumulate distance: d = d + Δd
+                totalDistance += deltaDistance;
+                
+                lastUpdateTime = now;
+            } else if (timeDiff > 0) {
+                // Update time even if speed is 0
+                lastUpdateTime = now;
             }
             
             // Only draw speedometer if not in simple mode
@@ -936,7 +944,7 @@
             }
             maxSpeedEl.textContent = Math.round(maxSpeed);
 
-            // Calculate average speed (last 10 readings)
+            // Calculate average speed (all speeds in this session)
             let avg = 0;
             if (speedHistory.length > 0) {
                 avg = speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
@@ -989,11 +997,9 @@
             
             targetSpeed = speed;
             
-            // Add to history for average calculation
+            // Add to history for average calculation (keep all speeds from this session)
             speedHistory.push(targetSpeed);
-            if (speedHistory.length > 10) {
-                speedHistory.shift();
-            }
+            // No limit - keep all speeds for session average
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1026,6 +1032,8 @@
                 return; // Skip this reading
             }
             
+            // Handle speed updates
+            // Note: Distance is now calculated using speed-based logic in the animate loop
             if (speed !== null && speed !== undefined) {
                 // GPS provides speed directly
                 updateSpeed(speed);
@@ -1044,11 +1052,6 @@
                         position.coords.latitude,
                         position.coords.longitude
                     );
-                    
-                    // Only update distance if movement is reasonable (not a GPS jump)
-                    if (dist < 1000) { // Less than 1km in one update
-                        totalDistance += dist;
-                    }
                     
                     const calculatedSpeed = dist / timeDiff; // m/s
                     
@@ -1074,7 +1077,7 @@
             }
 
             lastPosition = position;
-            lastUpdateTime = now;
+            // Note: lastUpdateTime is updated in the animate loop for distance calculation
         }
 
         function handleError(error) {
