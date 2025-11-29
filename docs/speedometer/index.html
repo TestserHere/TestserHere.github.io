@@ -1371,15 +1371,14 @@
         function hideButtons() {
             buttons.forEach(btn => {
                 if (btn) {
-                    // Don't hide if button is active
-                    const isActive = btn.classList.contains('active');
-                    // Don't hide debug toggle if debug panel is open
-                    const isDebugPanelOpen = btn === debugToggle && debugPanel && debugPanel.classList.contains('active');
-                    if (!isActive && !isDebugPanelOpen) {
-                        btn.classList.add('hidden');
-                    }
+                    // Hide all buttons, including active ones
+                    btn.classList.add('hidden');
                 }
             });
+            // Also hide theme menu if it's open
+            if (themeMenu && themeMenu.classList.contains('active')) {
+                themeMenu.classList.remove('active');
+            }
         }
 
         function resetInactivityTimer() {
@@ -1395,6 +1394,34 @@
 
         // Start timer on page load
         resetInactivityTimer();
+
+        // Wake Lock - Keep screen on while using the page
+        let wakeLock = null;
+
+        async function enableWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request("screen");
+                    // Re-acquire the lock if it's lost (e.g., switching tabs)
+                    wakeLock.addEventListener("release", () => {
+                        console.log("Wake Lock was released");
+                    });
+                    console.log("Wake Lock is active");
+                }
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
+
+        // Enable wake lock when page becomes visible
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                enableWakeLock();
+            }
+        });
+
+        // Enable wake lock on page load
+        enableWakeLock();
     </script>
 </body>
 </html>
