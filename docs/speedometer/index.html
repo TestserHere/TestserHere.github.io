@@ -1373,6 +1373,11 @@
             if (themeMenu && themeMenu.classList.contains('active')) {
                 themeMenu.classList.remove('hidden');
             }
+            
+            // Vibrate when buttons reappear
+            if ('vibrate' in navigator) {
+                navigator.vibrate(50); // Short vibration (50ms)
+            }
         }
 
         function hideButtons() {
