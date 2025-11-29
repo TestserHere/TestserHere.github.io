@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Table Assigner</title>
+    <link rel="icon" type="image/png" href="Logo.png">
+    <link rel="apple-touch-icon" href="Logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            height: -webkit-fill-available;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            align-self: flex-start;
+            position: sticky;
+            top: 0;
+            min-height: fit-content;
+        }
+
+        .settings-panel {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], select, textarea {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-bottom: 15px;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .table-container .teams-grid {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .table-plan {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 15px;
+        }
+
+        .table-plan td {
+            border: 2px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            font-size: 16px;
+            min-height: 50px;
+            vertical-align: middle;
+            border-radius: 8px;
+        }
+
+        .table-plan td.empty {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .table-plan td.filled {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .table-plan thead td {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+        }
+
+        .table-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .empty-message {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 40px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Visual Grid Builder */
+        .grid-builder {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 200px;
+            height: 200px;
+            background: #f9f9f9;
+            position: relative;
+            margin-bottom: 15px;
+            overflow: auto;
+        }
+
+        .grid-builder.grid-active {
+            background-image: 
+                linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+                linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Grid Editor Modal */
+        .grid-editor-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .grid-editor-modal.show {
+            display: flex;
+        }
+
+        .grid-editor-content {
+            background: white;
+            border-radius: 15px;
+            width: 95%;
+            height: 95%;
+            max-width: 1400px;
+            max-height: 900px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .grid-editor-header {
+            padding: 20px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-editor-header h2 {
+            color: #667eea;
+            margin: 0;
+        }
+
+        .grid-editor-close {
+            background: #ff4757;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .grid-editor-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .grid-editor-tools {
+            padding: 15px 20px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #f9f9f9;
+        }
+
+        .grid-editor-tools button {
+            padding: 8px 15px;
+            font-size: 14px;
+            width: auto;
+        }
+
+        .tool-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+        }
+
+        .duplicate-btn {
+            background: linear-gradient(135deg, #52BE80 0%, #45B7D1 100%);
+        }
+
+        .grid-editor-main {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .grid-editor-grid {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            min-width: 1200px;
+            min-height: 800px;
+            background: #f9f9f9;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .grid-editor-grid.grid-active {
+            background-image: 
+                linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+                linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .team-box {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            cursor: move;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: box-shadow 0.1s, border-color 0.1s;
+            user-select: none;
+            z-index: 10;
+            min-width: 60px;
+            min-height: 60px;
+        }
+
+        .team-box:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            z-index: 20;
+        }
+
+        .team-box.selected {
+            border: 3px solid #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            z-index: 30;
+        }
+
+        .team-box.dragging {
+            opacity: 0.7;
+            z-index: 100;
+        }
+
+        .team-box.resizing {
+            opacity: 0.8;
+            z-index: 100;
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            cursor: nwse-resize;
+            z-index: 11;
+            opacity: 0.5;
+            transition: opacity 0.2s, background 0.2s;
+        }
+
+        .team-box:hover .resize-handle {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .team-box.resizing .resize-handle {
+            opacity: 1;
+            background: rgba(102, 126, 234, 0.6);
+        }
+
+        .resize-handle.se {
+            bottom: 0;
+            right: 0;
+            cursor: nwse-resize;
+        }
+
+        .resize-handle.sw {
+            bottom: 0;
+            left: 0;
+            cursor: nesw-resize;
+        }
+
+        .resize-handle.ne {
+            top: 0;
+            right: 0;
+            cursor: nesw-resize;
+        }
+
+        .resize-handle.nw {
+            top: 0;
+            left: 0;
+            cursor: nwse-resize;
+        }
+
+        .resize-handle.e {
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+
+        .resize-handle.w {
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+
+        .resize-handle.n {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .resize-handle.s {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .team-box-number {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .team-box-seats {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .team-box-controls {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .team-box-controls button {
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-box-controls button:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: none;
+        }
+
+        .team-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .team-controls button {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .add-team-btn {
+            background: linear-gradient(135deg, #52BE80 0%, #45B7D1 100%);
+        }
+
+        .remove-team-btn {
+            background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .auto-grid-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            margin-bottom: 15px;
+        }
+
+        /* Team Cards Display */
+        .teams-grid {
+            display: grid;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .team-card {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-height: 150px;
+            position: absolute;
+        }
+
+        .team-card-header {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .team-card-names {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            max-height: calc(100% - 40px);
+        }
+
+        .team-card-name {
+            padding: 6px 10px;
+            background: #f0f0f0;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .team-card-name.empty {
+            background: #f9f9f9;
+            color: #999;
+            font-style: italic;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .table-panel {
+                order: 1;
+                position: relative;
+                align-self: center;
+                width: 100%;
+                margin-bottom: 20px;
+                top: auto;
+            }
+
+            .settings-panel {
+                order: 2;
+                flex: 1;
+                max-width: 100%;
+                max-height: none;
+                overflow-y: visible;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 15px;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+
+            .table-plan td {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            input[type="text"], select, textarea {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 10px;
+                border-radius: 15px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 10px;
+            }
+
+            .table-container {
+                padding: 10px;
+            }
+
+            .table-plan td {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="table-panel">
+            <h1>🪑 Table Assigner</h1>
+            <div class="table-container" id="tableContainer">
+                <div class="empty-message">Enter names and select a table plan, then click Generate to create your table assignment!</div>
+            </div>
+            <button class="download-btn" id="downloadBtn" disabled>Download PNG</button>
+        </div>
+
+        <div class="settings-panel">
+            <div class="section">
+                <div class="section-title">Visual Table Plan Builder</div>
+                <div class="preset-buttons">
+                    <button class="preset-btn" id="preset1Btn">Preset 1 (2×3 Grid)</button>
+                    <button class="preset-btn" id="preset2Btn">Preset 2</button>
+                </div>
+                <button class="auto-grid-btn" id="autoGridBtn">Auto-Grid Layout</button>
+                <div class="team-controls">
+                    <button class="add-team-btn" id="addTeamBtn">+ Add Team</button>
+                    <button class="remove-team-btn" id="removeTeamBtn">- Remove Last</button>
+                </div>
+                <button class="tool-btn" id="openGridEditorBtn" style="margin-bottom: 15px;">📐 Open Grid Editor</button>
+                <div class="grid-builder" id="gridBuilder"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Names</div>
+                <div class="input-group">
+                    <label class="label" for="namesInput">Enter names (one per line or comma-separated):</label>
+                    <textarea id="namesInput" placeholder="John Doe&#10;Jane Smith&#10;Bob Johnson"></textarea>
+                </div>
+            </div>
+
+            <button class="generate-btn" id="generateBtn">Generate Table Plan</button>
+        </div>
+    </div>
+
+    <!-- Grid Editor Modal -->
+    <div class="grid-editor-modal" id="gridEditorModal">
+        <div class="grid-editor-content">
+            <div class="grid-editor-header">
+                <h2>📐 Grid Editor</h2>
+                <button class="grid-editor-close" id="closeGridEditorBtn">Close</button>
+            </div>
+            <div class="grid-editor-body">
+                <div class="grid-editor-tools">
+                    <button class="tool-btn" id="modalAddTeamBtn">+ Add Team</button>
+                    <button class="delete-btn" id="modalDeleteBtn">🗑️ Delete Selected (Del)</button>
+                    <button class="duplicate-btn" id="modalDuplicateBtn">📋 Duplicate Selected</button>
+                    <button class="tool-btn" id="modalSelectAllBtn">Select All</button>
+                    <button class="tool-btn" id="modalDeselectAllBtn">Deselect All</button>
+                    <button class="auto-grid-btn" id="modalAutoGridBtn">Auto-Grid Layout</button>
+                </div>
+                <div class="grid-editor-main">
+                    <div class="grid-editor-grid grid-active" id="gridEditorGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const namesInput = document.getElementById('namesInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const tableContainer = document.getElementById('tableContainer');
+        const gridBuilder = document.getElementById('gridBuilder');
+        const addTeamBtn = document.getElementById('addTeamBtn');
+        const removeTeamBtn = document.getElementById('removeTeamBtn');
+        const autoGridBtn = document.getElementById('autoGridBtn');
+        const preset1Btn = document.getElementById('preset1Btn');
+        const preset2Btn = document.getElementById('preset2Btn');
+
+        let teams = [];
+        let teamColors = [
+            '#FFB6C1', // Light Pink
+            '#FFE4B5', // Light Yellow
+            '#98FB98', // Light Green
+            '#B0E0E6', // Light Blue
+            '#DDA0DD', // Light Purple
+            '#FF69B4', // Pink
+            '#F0E68C', // Khaki
+            '#87CEEB', // Sky Blue
+            '#D8BFD8', // Thistle
+            '#FFA07A', // Light Salmon
+        ];
+        let currentTablePlan = null;
+        let draggedTeam = null;
+        let dragOffset = { x: 0, y: 0 };
+        let resizingTeam = null;
+        let resizeHandle = null;
+        let resizeStart = { x: 0, y: 0, width: 0, height: 0 };
+        let selectedTeams = new Set();
+        let currentGridContainer = gridBuilder;
+        let isModalOpen = false;
+        
+        // Modal elements
+        const gridEditorModal = document.getElementById('gridEditorModal');
+        const openGridEditorBtn = document.getElementById('openGridEditorBtn');
+        const closeGridEditorBtn = document.getElementById('closeGridEditorBtn');
+        const gridEditorGrid = document.getElementById('gridEditorGrid');
+        const modalAddTeamBtn = document.getElementById('modalAddTeamBtn');
+        const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+        const modalDuplicateBtn = document.getElementById('modalDuplicateBtn');
+        const modalSelectAllBtn = document.getElementById('modalSelectAllBtn');
+        const modalDeselectAllBtn = document.getElementById('modalDeselectAllBtn');
+        const modalAutoGridBtn = document.getElementById('modalAutoGridBtn');
+
+        // Parse names from input
+        function parseNames(input) {
+            if (!input || !input.trim()) return [];
+            
+            // Try comma-separated first
+            let names = input.split(',').map(name => name.trim()).filter(name => name);
+            
+            // If that didn't work well, try newline-separated
+            if (names.length === 1 && input.includes('\n')) {
+                names = input.split('\n').map(name => name.trim()).filter(name => name);
+            }
+            
+            return names;
+        }
+
+        // Create a team box element
+        function createTeamBox(team, index, container) {
+            const box = document.createElement('div');
+            box.className = 'team-box';
+            if (selectedTeams.has(index)) {
+                box.classList.add('selected');
+            }
+            box.dataset.teamIndex = index;
+            box.style.left = (team.x || 0) + 'px';
+            box.style.top = (team.y || 0) + 'px';
+            box.style.width = (team.width || 80) + 'px';
+            box.style.height = (team.height || 80) + 'px';
+            box.style.backgroundColor = team.color;
+            box.innerHTML = `
+                <div class="team-box-number">Team ${team.number}</div>
+                <div class="team-box-seats">${team.seats} seats</div>
+                <div class="team-box-controls">
+                    <button onclick="changeSeats(${index}, -1)">−</button>
+                    <button onclick="changeSeats(${index}, 1)">+</button>
+                </div>
+                <div class="resize-handle se" data-handle="se"></div>
+                <div class="resize-handle sw" data-handle="sw"></div>
+                <div class="resize-handle ne" data-handle="ne"></div>
+                <div class="resize-handle nw" data-handle="nw"></div>
+                <div class="resize-handle e" data-handle="e"></div>
+                <div class="resize-handle w" data-handle="w"></div>
+                <div class="resize-handle n" data-handle="n"></div>
+                <div class="resize-handle s" data-handle="s"></div>
+            `;
+            
+            // Click to select/deselect
+            box.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.classList.contains('resize-handle')) {
+                    return;
+                }
+                e.stopPropagation();
+                toggleSelection(index);
+            });
+            
+            // Drag functionality
+            box.addEventListener('mousedown', startDrag);
+            box.addEventListener('touchstart', startDrag, { passive: false });
+            
+            // Resize functionality
+            const handles = box.querySelectorAll('.resize-handle');
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', startResize);
+                handle.addEventListener('touchstart', startResize, { passive: false });
+            });
+            
+            return box;
+        }
+
+        // Toggle selection
+        function toggleSelection(index) {
+            if (selectedTeams.has(index)) {
+                selectedTeams.delete(index);
+            } else {
+                selectedTeams.add(index);
+            }
+            updateGridDisplay();
+        }
+
+        // Select all
+        function selectAll() {
+            teams.forEach((_, index) => selectedTeams.add(index));
+            updateGridDisplay();
+        }
+
+        // Deselect all
+        function deselectAll() {
+            selectedTeams.clear();
+            updateGridDisplay();
+        }
+
+        // Delete selected teams
+        function deleteSelected() {
+            if (selectedTeams.size === 0) return;
+            
+            const indicesToDelete = Array.from(selectedTeams).sort((a, b) => b - a);
+            indicesToDelete.forEach(index => {
+                teams.splice(index, 1);
+            });
+            selectedTeams.clear();
+            
+            // Renumber teams
+            teams.forEach((team, index) => {
+                team.number = index + 1;
+            });
+            
+            updateGridDisplay();
+        }
+
+        // Duplicate selected teams
+        function duplicateSelected() {
+            if (selectedTeams.size === 0) return;
+            
+            const indicesToDuplicate = Array.from(selectedTeams).sort((a, b) => b - a);
+            const newTeams = [];
+            
+            indicesToDuplicate.forEach(index => {
+                const original = teams[index];
+                const newTeam = {
+                    number: teams.length + newTeams.length + 1,
+                    seats: original.seats,
+                    x: (original.x || 0) + 100,
+                    y: (original.y || 0) + 100,
+                    width: original.width || 80,
+                    height: original.height || 80,
+                    color: original.color
+                };
+                newTeams.push(newTeam);
+            });
+            
+            teams.push(...newTeams);
+            selectedTeams.clear();
+            updateGridDisplay();
+        }
+
+        // Change seats for a team
+        window.changeSeats = function(teamIndex, delta) {
+            event.stopPropagation();
+            const team = teams[teamIndex];
+            team.seats = Math.max(1, team.seats + delta);
+            updateGridDisplay();
+        };
+
+        // Start dragging
+        function startDrag(e) {
+            // Don't start drag if clicking on a button or resize handle
+            if (e.target.tagName === 'BUTTON' || e.target.classList.contains('resize-handle')) {
+                return;
+            }
+            
+            e.preventDefault();
+            const box = e.currentTarget;
+            const teamIndex = parseInt(box.dataset.teamIndex);
+            draggedTeam = teams[teamIndex];
+            
+            box.classList.add('dragging');
+            currentGridContainer.classList.add('grid-active');
+            
+            const rect = box.getBoundingClientRect();
+            const gridRect = currentGridContainer.getBoundingClientRect();
+            dragOffset.x = (e.clientX || e.touches[0].clientX) - rect.left;
+            dragOffset.y = (e.clientY || e.touches[0].clientY) - rect.top;
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        // Start resizing
+        function startResize(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const handle = e.currentTarget;
+            const box = handle.parentElement;
+            const teamIndex = parseInt(box.dataset.teamIndex);
+            resizingTeam = teams[teamIndex];
+            resizeHandle = handle.dataset.handle;
+            
+            box.classList.add('resizing');
+            currentGridContainer.classList.add('grid-active');
+            
+            const rect = box.getBoundingClientRect();
+            const gridRect = currentGridContainer.getBoundingClientRect();
+            resizeStart.x = e.clientX || e.touches[0].clientX;
+            resizeStart.y = e.clientY || e.touches[0].clientY;
+            resizeStart.width = rect.width;
+            resizeStart.height = rect.height;
+            resizeStart.left = rect.left - gridRect.left;
+            resizeStart.top = rect.top - gridRect.top;
+            
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+            document.addEventListener('touchmove', resize, { passive: false });
+            document.addEventListener('touchend', stopResize);
+        }
+
+        // Resize
+        function resize(e) {
+            if (!resizingTeam || !resizeHandle) return;
+            e.preventDefault();
+            
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            const gridRect = currentGridContainer.getBoundingClientRect();
+            
+            const deltaX = clientX - resizeStart.x;
+            const deltaY = clientY - resizeStart.y;
+            
+            let newWidth = resizeStart.width;
+            let newHeight = resizeStart.height;
+            let newX = resizeStart.left;
+            let newY = resizeStart.top;
+            
+            const minSize = 60;
+            const gridSize = 40;
+            
+            // Handle different resize handles
+            if (resizeHandle.includes('e')) {
+                newWidth = Math.max(minSize, resizeStart.width + deltaX);
+                newWidth = Math.round(newWidth / gridSize) * gridSize;
+            }
+            if (resizeHandle.includes('w')) {
+                newWidth = Math.max(minSize, resizeStart.width - deltaX);
+                newWidth = Math.round(newWidth / gridSize) * gridSize;
+                newX = resizeStart.left + resizeStart.width - newWidth;
+            }
+            if (resizeHandle.includes('s')) {
+                newHeight = Math.max(minSize, resizeStart.height + deltaY);
+                newHeight = Math.round(newHeight / gridSize) * gridSize;
+            }
+            if (resizeHandle.includes('n')) {
+                newHeight = Math.max(minSize, resizeStart.height - deltaY);
+                newHeight = Math.round(newHeight / gridSize) * gridSize;
+                newY = resizeStart.top + resizeStart.height - newHeight;
+            }
+            
+            // Keep within bounds (with padding)
+            const padding = 20;
+            newX = Math.max(padding, Math.min(newX, currentGridContainer.offsetWidth - newWidth - padding));
+            newY = Math.max(padding, Math.min(newY, currentGridContainer.offsetHeight - newHeight - padding));
+            
+            resizingTeam.x = newX;
+            resizingTeam.y = newY;
+            resizingTeam.width = newWidth;
+            resizingTeam.height = newHeight;
+            
+            updateGridDisplay();
+        }
+
+        // Stop resizing
+        function stopResize() {
+            if (resizingTeam) {
+                snapToGrid(resizingTeam);
+                resizingTeam = null;
+                resizeHandle = null;
+                currentGridContainer.classList.remove('grid-active');
+                updateGridDisplay();
+            }
+            
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+            document.removeEventListener('touchmove', resize);
+            document.removeEventListener('touchend', stopResize);
+        }
+
+        // Drag
+        function drag(e) {
+            if (!draggedTeam) return;
+            e.preventDefault();
+            
+            const gridRect = currentGridContainer.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            let x = clientX - gridRect.left - dragOffset.x;
+            let y = clientY - gridRect.top - dragOffset.y;
+            
+            // Keep within bounds (with padding)
+            const padding = 20;
+            const teamWidth = draggedTeam.width || 80;
+            const teamHeight = draggedTeam.height || 80;
+            x = Math.max(padding, Math.min(x, currentGridContainer.offsetWidth - teamWidth - padding));
+            y = Math.max(padding, Math.min(y, currentGridContainer.offsetHeight - teamHeight - padding));
+            
+            draggedTeam.x = x;
+            draggedTeam.y = y;
+            
+            updateGridDisplay();
+        }
+
+        // Stop dragging
+        function stopDrag() {
+            if (draggedTeam) {
+                snapToGrid(draggedTeam);
+                draggedTeam = null;
+                currentGridContainer.classList.remove('grid-active');
+                updateGridDisplay();
+            }
+            
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        // Snap to grid
+        function snapToGrid(team) {
+            const gridSize = 40;
+            team.x = Math.round(team.x / gridSize) * gridSize;
+            team.y = Math.round(team.y / gridSize) * gridSize;
+            if (team.width) {
+                team.width = Math.round(team.width / gridSize) * gridSize;
+            }
+            if (team.height) {
+                team.height = Math.round(team.height / gridSize) * gridSize;
+            }
+        }
+
+        // Update grid display
+        function updateGridDisplay() {
+            currentGridContainer.innerHTML = '';
+            teams.forEach((team, index) => {
+                const box = createTeamBox(team, index, currentGridContainer);
+                currentGridContainer.appendChild(box);
+            });
+        }
+
+        // Add team
+        function addTeam() {
+            const teamNumber = teams.length + 1;
+            const color = teamColors[(teamNumber - 1) % teamColors.length];
+            const newTeam = {
+                number: teamNumber,
+                seats: 4,
+                x: (teams.length % 3) * 100 + 20,
+                y: Math.floor(teams.length / 3) * 100 + 20,
+                width: 80,
+                height: 80,
+                color: color
+            };
+            teams.push(newTeam);
+            updateGridDisplay();
+        }
+
+        // Remove last team
+        function removeTeam() {
+            if (teams.length > 0) {
+                teams.pop();
+                updateGridDisplay();
+            }
+        }
+
+        // Auto-grid layout
+        function autoGridLayout() {
+            if (teams.length === 0) return;
+            
+            const gridSize = 40;
+            const boxWidth = 80;
+            const boxHeight = 80;
+            const spacing = 20;
+            
+            // Calculate grid dimensions
+            const cols = Math.ceil(Math.sqrt(teams.length * 1.5));
+            const rows = Math.ceil(teams.length / cols);
+            
+            teams.forEach((team, index) => {
+                const col = index % cols;
+                const row = Math.floor(index / cols);
+                team.x = col * (boxWidth + spacing) + spacing;
+                team.y = row * (boxHeight + spacing) + spacing;
+                if (!team.width) team.width = boxWidth;
+                if (!team.height) team.height = boxHeight;
+            });
+            
+            updateGridDisplay();
+        }
+
+        // Preset 1: 2x3 Grid (6 teams) - aligned to grid
+        function loadPreset1() {
+            teams = [];
+            const gridSize = 40;
+            const boxSize = 80;
+            const spacing = 20;
+            
+            // Aligned positions (2 rows, 3 columns)
+            const presetLayout = [
+                { x: spacing, y: spacing },                    // Row 1, Col 1
+                { x: spacing + boxSize + spacing, y: spacing }, // Row 1, Col 2
+                { x: spacing + (boxSize + spacing) * 2, y: spacing }, // Row 1, Col 3
+                { x: spacing, y: spacing + boxSize + spacing }, // Row 2, Col 1
+                { x: spacing + boxSize + spacing, y: spacing + boxSize + spacing }, // Row 2, Col 2
+                { x: spacing + (boxSize + spacing) * 2, y: spacing + boxSize + spacing } // Row 2, Col 3
+            ];
+            
+            for (let i = 0; i < 6; i++) {
+                // Snap to grid
+                const gridX = Math.round(presetLayout[i].x / gridSize) * gridSize;
+                const gridY = Math.round(presetLayout[i].y / gridSize) * gridSize;
+                
+                teams.push({
+                    number: i + 1,
+                    seats: 4,
+                    x: gridX,
+                    y: gridY,
+                    width: boxSize,
+                    height: boxSize,
+                    color: teamColors[i % teamColors.length]
+                });
+            }
+            updateGridDisplay();
+        }
+
+        // Preset 2: U-Shaped Layout (13 teams)
+        function loadPreset2() {
+            teams = [];
+            const gridSize = 40;
+            const baseX = 40;
+            const baseY = 40;
+            
+            // Left L Structure
+            // Vertical segment (left edge)
+            teams.push({
+                number: 1,
+                seats: 4,
+                x: baseX,
+                y: baseY,
+                width: 80,
+                height: 80,
+                color: '#98FB98' // Light Green
+            });
+            
+            teams.push({
+                number: 2,
+                seats: 4,
+                x: baseX,
+                y: baseY + 100,
+                width: 80,
+                height: 120,
+                color: '#FFA07A' // Light Salmon (Orange)
+            });
+            
+            teams.push({
+                number: 3,
+                seats: 4,
+                x: baseX,
+                y: baseY + 240,
+                width: 80,
+                height: 80,
+                color: '#FFE4B5' // Light Yellow
+            });
+            
+            // Bottom horizontal segment (left L)
+            teams.push({
+                number: 4,
+                seats: 4,
+                x: baseX + 100,
+                y: baseY + 240,
+                width: 120,
+                height: 80,
+                color: '#DDA0DD' // Light Purple
+            });
+            
+            teams.push({
+                number: 5,
+                seats: 4,
+                x: baseX + 240,
+                y: baseY + 240,
+                width: 120,
+                height: 80,
+                color: '#FF69B4' // Pink (Magenta)
+            });
+            
+            teams.push({
+                number: 6,
+                seats: 4,
+                x: baseX + 380,
+                y: baseY + 240,
+                width: 120,
+                height: 80,
+                color: '#FF6B6B' // Red
+            });
+            
+            // Inner horizontal segment (left L)
+            teams.push({
+                number: 7,
+                seats: 4,
+                x: baseX + 100,
+                y: baseY + 120,
+                width: 120,
+                height: 80,
+                color: '#B0E0E6' // Light Blue
+            });
+            
+            // Right L Structure (mirrored)
+            // Vertical segment (right edge)
+            teams.push({
+                number: 8,
+                seats: 4,
+                x: baseX + 620,
+                y: baseY,
+                width: 80,
+                height: 80,
+                color: '#FFE4B5' // Light Yellow
+            });
+            
+            teams.push({
+                number: 9,
+                seats: 4,
+                x: baseX + 620,
+                y: baseY + 100,
+                width: 80,
+                height: 120,
+                color: '#B0E0E6' // Light Blue
+            });
+            
+            teams.push({
+                number: 10,
+                seats: 4,
+                x: baseX + 620,
+                y: baseY + 240,
+                width: 80,
+                height: 80,
+                color: '#98FB98' // Light Green
+            });
+            
+            // Top horizontal segment (right L)
+            teams.push({
+                number: 11,
+                seats: 4,
+                x: baseX + 500,
+                y: baseY,
+                width: 120,
+                height: 80,
+                color: '#DDA0DD' // Light Purple
+            });
+            
+            teams.push({
+                number: 12,
+                seats: 4,
+                x: baseX + 360,
+                y: baseY,
+                width: 120,
+                height: 80,
+                color: '#FF6B6B' // Red
+            });
+            
+            // Inner horizontal segment (right L)
+            teams.push({
+                number: 13,
+                seats: 4,
+                x: baseX + 500,
+                y: baseY + 120,
+                width: 120,
+                height: 80,
+                color: '#FFA07A' // Light Salmon (Orange)
+            });
+            
+            // Snap all to grid
+            teams.forEach(team => {
+                team.x = Math.round(team.x / gridSize) * gridSize;
+                team.y = Math.round(team.y / gridSize) * gridSize;
+                team.width = Math.round(team.width / gridSize) * gridSize;
+                team.height = Math.round(team.height / gridSize) * gridSize;
+            });
+            
+            updateGridDisplay();
+        }
+
+        // Shuffle array (Fisher-Yates)
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Generate table assignment
+        function generateTablePlan() {
+            const names = parseNames(namesInput.value);
+            if (names.length === 0) {
+                alert('Please enter at least one name');
+                return;
+            }
+
+            if (teams.length === 0) {
+                alert('Please add at least one team to the grid');
+                return;
+            }
+
+            const totalSeats = teams.reduce((sum, team) => sum + team.seats, 0);
+            if (names.length > totalSeats) {
+                alert(`You have ${names.length} names but only ${totalSeats} seats. Please add more teams or increase seat counts.`);
+                return;
+            }
+
+            // Shuffle names
+            const shuffledNames = shuffleArray(names);
+
+            // Assign names to teams based on grid order
+            const sortedTeams = [...teams].sort((a, b) => {
+                if (a.y !== b.y) return a.y - b.y;
+                return a.x - b.x;
+            });
+
+            let nameIndex = 0;
+            const assignment = sortedTeams.map(team => {
+                const table = {
+                    number: team.number,
+                    seats: [],
+                    color: team.color,
+                    x: team.x,
+                    y: team.y,
+                    width: team.width || 80,
+                    height: team.height || 80
+                };
+                for (let i = 0; i < team.seats; i++) {
+                    if (nameIndex < shuffledNames.length) {
+                        table.seats.push(shuffledNames[nameIndex++]);
+                    } else {
+                        table.seats.push(null); // Empty seat
+                    }
+                }
+                return table;
+            });
+
+            currentTablePlan = assignment;
+            displayTablePlan(assignment);
+            downloadBtn.disabled = false;
+        }
+
+        // Display table plan
+        function displayTablePlan(assignment) {
+            if (!assignment || assignment.length === 0) {
+                tableContainer.innerHTML = '<div class="empty-message">No table plan generated yet.</div>';
+                return;
+            }
+
+            // Find the bounds to calculate scaling
+            const minX = Math.min(...assignment.map(t => t.x || 0));
+            const minY = Math.min(...assignment.map(t => t.y || 0));
+            const maxX = Math.max(...assignment.map(t => (t.x || 0) + (t.width || 80)));
+            const maxY = Math.max(...assignment.map(t => (t.y || 0) + (t.height || 80)));
+            
+            const gridWidth = maxX - minX || 300;
+            const gridHeight = maxY - minY || 300;
+            
+            // Calculate scale to fit in container (with padding)
+            const containerWidth = tableContainer.offsetWidth - 60;
+            const containerHeight = 600; // Fixed height for display
+            const scaleX = containerWidth / gridWidth;
+            const scaleY = containerHeight / gridHeight;
+            const scale = Math.min(scaleX, scaleY, 1.5); // Allow slight scaling up if needed
+            
+            // Sort by position (top to bottom, left to right)
+            const sorted = [...assignment].sort((a, b) => {
+                if ((a.y || 0) !== (b.y || 0)) return (a.y || 0) - (b.y || 0);
+                return (a.x || 0) - (b.x || 0);
+            });
+
+            let html = '<div class="teams-grid" style="width: ' + (gridWidth * scale) + 'px; height: ' + (gridHeight * scale) + 'px;">';
+            sorted.forEach(table => {
+                const x = ((table.x || 0) - minX) * scale;
+                const y = ((table.y || 0) - minY) * scale;
+                const width = (table.width || 80) * scale;
+                const height = (table.height || 80) * scale;
+                
+                html += `<div class="team-card" style="background: ${table.color}; left: ${x}px; top: ${y}px; width: ${width}px; height: ${height}px; overflow: hidden;">`;
+                html += `<div class="team-card-header">Team ${table.number}</div>`;
+                html += '<div class="team-card-names">';
+                table.seats.forEach(name => {
+                    if (name) {
+                        html += `<div class="team-card-name">${name}</div>`;
+                    } else {
+                        html += `<div class="team-card-name empty">Empty seat</div>`;
+                    }
+                });
+                html += '</div></div>';
+            });
+            html += '</div>';
+
+            tableContainer.innerHTML = html;
+        }
+
+        // Download as PNG
+        function downloadAsPNG() {
+            if (!currentTablePlan) {
+                alert('No table plan to download. Please generate one first.');
+                return;
+            }
+
+            html2canvas(tableContainer, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `table-plan-${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(error => {
+                console.error('Error generating PNG:', error);
+                alert('Error generating PNG. Please try again.');
+            });
+        }
+
+        // Open grid editor modal
+        function openGridEditor() {
+            isModalOpen = true;
+            currentGridContainer = gridEditorGrid;
+            gridEditorModal.classList.add('show');
+            updateGridDisplay();
+        }
+
+        // Close grid editor modal
+        function closeGridEditor() {
+            isModalOpen = false;
+            currentGridContainer = gridBuilder;
+            gridEditorModal.classList.remove('show');
+            updateGridDisplay();
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Only handle shortcuts when modal is open or when focused on grid
+            if (!isModalOpen && document.activeElement !== gridBuilder) return;
+            
+            // Delete/Backspace to delete selected
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTeams.size > 0) {
+                e.preventDefault();
+                deleteSelected();
+            }
+            
+            // Escape to close modal
+            if (e.key === 'Escape' && isModalOpen) {
+                closeGridEditor();
+            }
+            
+            // Ctrl+A to select all
+            if (e.ctrlKey && e.key === 'a' && isModalOpen) {
+                e.preventDefault();
+                selectAll();
+            }
+        });
+
+        // Event listeners
+        addTeamBtn.addEventListener('click', addTeam);
+        removeTeamBtn.addEventListener('click', removeTeam);
+        autoGridBtn.addEventListener('click', autoGridLayout);
+        preset1Btn.addEventListener('click', loadPreset1);
+        preset2Btn.addEventListener('click', loadPreset2);
+        generateBtn.addEventListener('click', generateTablePlan);
+        downloadBtn.addEventListener('click', downloadAsPNG);
+        
+        // Modal event listeners
+        openGridEditorBtn.addEventListener('click', openGridEditor);
+        closeGridEditorBtn.addEventListener('click', closeGridEditor);
+        modalAddTeamBtn.addEventListener('click', addTeam);
+        modalDeleteBtn.addEventListener('click', deleteSelected);
+        modalDuplicateBtn.addEventListener('click', duplicateSelected);
+        modalSelectAllBtn.addEventListener('click', selectAll);
+        modalDeselectAllBtn.addEventListener('click', deselectAll);
+        modalAutoGridBtn.addEventListener('click', autoGridLayout);
+        
+        // Close modal when clicking outside
+        gridEditorModal.addEventListener('click', (e) => {
+            if (e.target === gridEditorModal) {
+                closeGridEditor();
+            }
+        });
+
+        // Initialize with grid active
+        gridBuilder.classList.add('grid-active');
+        
+        // Add initial team
+        if (teams.length === 0) {
+            addTeam();
+        }
+    </script>
+</body>
+</html>
+
