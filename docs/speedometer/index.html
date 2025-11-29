@@ -221,6 +221,15 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
+        .simple-toggle.hidden,
+        .hud-toggle.hidden,
+        .theme-toggle.hidden,
+        .debug-toggle.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8);
+        }
+
         .simple-toggle {
             right: 20px;
         }
@@ -579,6 +588,10 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-menu.hidden {
+            display: none !important;
         }
 
         .debug-toggle:hover {
@@ -1338,6 +1351,50 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
+
+        // Auto-hide buttons after inactivity
+        let inactivityTimer = null;
+        const INACTIVITY_TIME = 10000; // 10 seconds
+        
+        // Get all buttons (they're already defined above)
+        const buttons = [themeToggle, simpleToggle, hudToggle, debugToggle].filter(btn => btn !== null);
+
+        function showButtons() {
+            buttons.forEach(btn => {
+                if (btn) btn.classList.remove('hidden');
+            });
+            if (themeMenu && themeMenu.classList.contains('active')) {
+                themeMenu.classList.remove('hidden');
+            }
+        }
+
+        function hideButtons() {
+            buttons.forEach(btn => {
+                if (btn) {
+                    // Don't hide if button is active
+                    const isActive = btn.classList.contains('active');
+                    // Don't hide debug toggle if debug panel is open
+                    const isDebugPanelOpen = btn === debugToggle && debugPanel && debugPanel.classList.contains('active');
+                    if (!isActive && !isDebugPanelOpen) {
+                        btn.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        function resetInactivityTimer() {
+            showButtons();
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(hideButtons, INACTIVITY_TIME);
+        }
+
+        // Track user activity
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer, true);
+        });
+
+        // Start timer on page load
+        resetInactivityTimer();
     </script>
 </body>
 </html>
