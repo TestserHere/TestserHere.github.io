@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Speedometer</title>
     <link rel="icon" type="image/png" href="speedometer.png">
     <link rel="apple-touch-icon" href="speedometer.png">
+    <!-- Make the status bar black with white text -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         * {
             margin: 0;
@@ -13,14 +15,25 @@
             box-sizing: border-box;
         }
 
+        html {
+            height: 100%;
+            height: -webkit-fill-available; /* iOS Safari */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            min-height: -webkit-fill-available; /* iOS Safari */
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: max(20px, env(safe-area-inset-left));
+            padding-right: max(20px, env(safe-area-inset-right));
             overflow: auto;
         }
 
