@@ -440,8 +440,13 @@
             display: none;
         }
 
+        .container.simple-mode .stats {
+            display: none;
+        }
+
         .container.hud-flip {
-            transform: scaleX(-1) scaleY(-1); /* Flip both horizontally and vertically for HUD display */
+            transform: scale(-1, -1); /* Flip both horizontally and vertically for HUD display */
+            -webkit-transform: scale(-1, -1); /* Safari support */
         }
 
         /* Theme: Night (Black/White/Green) */
