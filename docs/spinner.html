@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Decision Spinner</title>
     <link rel="icon" type="image/png" href="Logo.png">
+    <link rel="apple-touch-icon" href="Logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         * {
@@ -25,36 +27,82 @@
             min-height: 100vh;
             min-height: -webkit-fill-available;
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top));
             padding-bottom: max(20px, env(safe-area-inset-bottom));
             padding-left: max(20px, env(safe-area-inset-left));
             padding-right: max(20px, env(safe-area-inset-right));
-            overflow: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
-        .container {
+        .main-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1400px;
+            width: 100%;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
+        }
+
+        .wheel-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            align-self: flex-start;
+            position: sticky;
+            top: 0;
+            min-height: fit-content;
+        }
+
+        .settings-panel {
+            flex: 0 0 450px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         h1 {
             color: #667eea;
-            margin-bottom: 30px;
-            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-size: 2em;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .input-section {
-            margin-bottom: 30px;
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .section-title:hover {
+            color: #764ba2;
+        }
+
+        .section-content {
+            display: block;
+        }
+
+        .section-content.collapsed {
+            display: none;
         }
 
         .input-group {
@@ -63,8 +111,7 @@
             margin-bottom: 15px;
         }
 
-        input[type="text"] {
-            flex: 1;
+        input[type="text"], input[type="color"] {
             padding: 12px 15px;
             border: 2px solid #ddd;
             border-radius: 10px;
@@ -72,9 +119,20 @@
             transition: border-color 0.3s;
         }
 
+        input[type="text"] {
+            flex: 1;
+        }
+
         input[type="text"]:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 45px;
+            cursor: pointer;
+            border: 2px solid #ddd;
         }
 
         button {
@@ -105,9 +163,10 @@
         }
 
         .options-list {
-            margin-top: 20px;
             max-height: 200px;
             overflow-y: auto;
+            margin-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .option-item {
@@ -138,11 +197,113 @@
             font-size: 14px;
         }
 
+        .empty-message {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Tab System */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-button:hover {
+            color: #764ba2;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .shuffle-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .sort-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* Results List */
+        .results-list {
+            max-height: 400px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .result-item .result-text {
+            font-size: 18px;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .result-item .result-time {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-left: 10px;
+        }
+
+        .clear-results-btn {
+            width: 100%;
+            margin-top: 15px;
+            background: #ff4757;
+        }
+
         .spinner-container {
             position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 30px auto;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1;
         }
 
         .spinner-wheel {
@@ -153,34 +314,29 @@
             overflow: hidden;
             border: 8px solid #fff;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transition: transform 7s cubic-bezier(0.17, 0.67, 0.12, 0.99);
         }
 
         .spinner-segment {
             position: absolute;
-            width: 50%;
-            height: 50%;
-            transform-origin: 100% 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 100%;
+            height: 100%;
+            transform-origin: center;
             color: white;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 16px;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
             overflow: hidden;
         }
 
         .spinner-segment span {
             position: absolute;
-            left: 10px;
-            top: 10px;
-            transform: rotate(-45deg);
-            transform-origin: 0 0;
+            z-index: 2;
             white-space: nowrap;
             max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
+            pointer-events: none;
         }
 
         .spinner-pointer {
@@ -199,73 +355,158 @@
 
         .spin-button {
             margin-top: 30px;
-            padding: 15px 40px;
-            font-size: 18px;
+            padding: 15px 50px;
+            font-size: 20px;
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
-        .result {
-            margin-top: 20px;
+        /* Popup Modal */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .popup-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.8);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .popup-overlay.show .popup-content {
+            transform: scale(1);
+        }
+
+        .popup-title {
+            font-size: 28px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .popup-result {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin: 20px 0;
             padding: 20px;
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             border-radius: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            min-height: 60px;
+        }
+
+        .popup-close {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Advanced Options */
+        .color-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .color-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transform: scale(0.8);
-            transition: opacity 0.5s, transform 0.5s;
+            gap: 10px;
         }
 
-        .result.show {
-            opacity: 1;
-            transform: scale(1);
-            animation: bounce 0.5s ease-out;
+        .color-item label {
+            flex: 1;
+            font-size: 14px;
         }
 
-        @keyframes bounce {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
+        .color-item input[type="color"] {
+            width: 50px;
+            height: 40px;
         }
 
-        .empty-message {
-            color: #999;
-            font-style: italic;
+        .color-item button {
+            padding: 8px 15px;
+            background: #ff4757;
+            font-size: 14px;
+        }
+
+        .add-color-btn {
+            width: 100%;
             margin-top: 10px;
+            padding: 10px;
+            background: #52BE80;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .wheel-panel {
+                order: 1;
+                position: relative;
+                align-self: center;
+                width: 100%;
+                margin-bottom: 20px;
+                top: auto;
+            }
+
+            .settings-panel {
+                order: 2;
+                flex: 1;
+                max-width: 100%;
+                max-height: none;
+                overflow-y: visible;
+            }
+
+            .spinner-container {
+                max-width: 500px;
+            }
         }
 
         @media (max-width: 768px) {
-            .spinner-container {
-                width: 300px;
-                height: 300px;
+            .main-container {
+                padding: 15px;
+                gap: 20px;
             }
 
             h1 {
-                font-size: 2em;
+                font-size: 1.8em;
+                margin-bottom: 15px;
             }
 
-            .container {
-                padding: 20px;
+            .spinner-container {
+                max-width: 100%;
+                max-width: min(400px, 90vw);
             }
 
             .spinner-segment span {
                 font-size: 12px;
                 max-width: 100px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .spinner-container {
-                width: 250px;
-                height: 250px;
             }
 
             .input-group {
@@ -275,36 +516,203 @@
             button {
                 width: 100%;
             }
+
+            .settings-panel {
+                flex: 0 0 auto;
+                width: 100%;
+            }
+
+            .tabs {
+                gap: 5px;
+            }
+
+            .tab-button {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .section {
+                margin-bottom: 20px;
+            }
+
+            .options-list {
+                max-height: 150px;
+            }
+
+            .results-list {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 10px;
+                border-radius: 15px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 10px;
+            }
+
+            .spinner-container {
+                max-width: min(300px, 85vw);
+            }
+
+            .spinner-segment span {
+                font-size: 11px;
+                max-width: 80px;
+            }
+
+            .spin-button {
+                padding: 12px 30px;
+                font-size: 16px;
+                margin-top: 20px;
+            }
+
+            .settings-panel {
+                padding: 0;
+            }
+
+            .tabs {
+                margin-bottom: 15px;
+            }
+
+            .tab-button {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            input[type="text"] {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .options-list {
+                max-height: 120px;
+            }
+
+            .results-list {
+                max-height: 250px;
+            }
+
+            .result-item {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .result-item .result-text {
+                font-size: 16px;
+            }
+
+            .color-item {
+                flex-wrap: wrap;
+            }
+
+            .color-item label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            h1 {
+                font-size: 1.3em;
+            }
+
+            .spinner-container {
+                max-width: min(250px, 80vw);
+            }
+
+            .spinner-segment span {
+                font-size: 10px;
+                max-width: 70px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎯 Decision Spinner</h1>
-        
-        <div class="input-section">
-            <div class="input-group">
-                <input type="text" id="optionInput" placeholder="Enter an option...">
-                <button id="addButton">Add</button>
+    <div class="main-container">
+        <div class="wheel-panel">
+            <h1>🎯 Spinner</h1>
+            <div class="spinner-container">
+                <div class="spinner-pointer"></div>
+                <div class="spinner-wheel" id="spinnerWheel"></div>
             </div>
-            <div class="options-list" id="optionsList">
-                <div class="empty-message">No options added yet. Add some options to get started!</div>
-            </div>
+            <button class="spin-button" id="spinButton" disabled>Spin!</button>
         </div>
 
-        <div class="spinner-container">
-            <div class="spinner-pointer"></div>
-            <div class="spinner-wheel" id="spinnerWheel"></div>
+        <div class="settings-panel">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="entries">Entries</button>
+                <button class="tab-button" data-tab="results">Results</button>
+            </div>
+
+            <!-- Entries Tab -->
+            <div class="tab-content active" id="entriesTab">
+                <div class="section">
+                    <div class="input-group">
+                        <input type="text" id="optionInput" placeholder="Enter an option...">
+                        <button id="addButton">Add</button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="shuffle-btn" id="shuffleButton" disabled>🔀 Shuffle</button>
+                        <button class="sort-btn" id="sortButton" disabled>🔤 Sort</button>
+                    </div>
+                    <div class="options-list" id="optionsList">
+                        <div class="empty-message">No options added yet. Add some options to get started!</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title" id="advancedToggle">
+                        <span>⚙️ Advanced Options</span>
+                        <span id="advancedToggleIcon">▼</span>
+                    </div>
+                    <div class="section-content collapsed" id="advancedContent">
+                        <div class="color-list" id="colorList"></div>
+                        <button class="add-color-btn" id="addColorButton">+ Add Color</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Tab -->
+            <div class="tab-content" id="resultsTab">
+                <div class="results-list" id="resultsList">
+                    <div class="empty-message">No results yet. Spin the wheel to see results here!</div>
+                </div>
+                <button class="clear-results-btn" id="clearResultsButton">Clear Results</button>
+            </div>
         </div>
-
-        <button class="spin-button" id="spinButton" disabled>Spin!</button>
-
-        <div class="result" id="result"></div>
     </div>
 
+    <!-- Popup Modal -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-content">
+            <div class="popup-title">🎉 Result 🎉</div>
+            <div class="popup-result" id="popupResult"></div>
+            <button class="popup-close" id="popupClose">Close</button>
+        </div>
+    </div>
+
+    <!-- Audio element for result sound -->
+    <audio id="resultSound" preload="auto">
+        <source src="spinner.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Audio element for segment crossing sound -->
+    <audio id="segmentSound" preload="auto">
+        <source src="spinnerding.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
-        const options = [];
-        const colors = [
+        let options = [];
+        let colors = [
             '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
             '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',
             '#EC7063', '#5DADE2', '#F4D03F', '#AF7AC5', '#76D7C4',
@@ -316,9 +724,121 @@
         const optionsList = document.getElementById('optionsList');
         const spinnerWheel = document.getElementById('spinnerWheel');
         const spinButton = document.getElementById('spinButton');
-        const result = document.getElementById('result');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupResult = document.getElementById('popupResult');
+        const popupClose = document.getElementById('popupClose');
+        const advancedToggle = document.getElementById('advancedToggle');
+        const advancedContent = document.getElementById('advancedContent');
+        const advancedToggleIcon = document.getElementById('advancedToggleIcon');
+        const colorList = document.getElementById('colorList');
+        const addColorButton = document.getElementById('addColorButton');
+        const resultSound = document.getElementById('resultSound');
+        const segmentSound = document.getElementById('segmentSound');
+        const shuffleButton = document.getElementById('shuffleButton');
+        const sortButton = document.getElementById('sortButton');
+        const resultsList = document.getElementById('resultsList');
+        const clearResultsButton = document.getElementById('clearResultsButton');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
 
         let isSpinning = false;
+        let resultsHistory = [];
+        let currentSegment = -1;
+        let startRotation = 0;
+        let targetRotation = 0;
+        let animationStartTime = 0;
+
+        // LocalStorage functions
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('spinnerOptions', JSON.stringify(options));
+                localStorage.setItem('spinnerResults', JSON.stringify(resultsHistory));
+                localStorage.setItem('spinnerColors', JSON.stringify(colors));
+            } catch (error) {
+                console.log('Error saving to localStorage:', error);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                // Load options
+                const savedOptions = localStorage.getItem('spinnerOptions');
+                if (savedOptions) {
+                    const parsed = JSON.parse(savedOptions);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        options = parsed;
+                    }
+                }
+
+                // Load results
+                const savedResults = localStorage.getItem('spinnerResults');
+                if (savedResults) {
+                    const parsed = JSON.parse(savedResults);
+                    if (Array.isArray(parsed)) {
+                        // Convert timestamp strings back to Date objects
+                        resultsHistory = parsed.map(result => ({
+                            ...result,
+                            timestamp: new Date(result.timestamp)
+                        }));
+                    }
+                }
+
+                // Load colors
+                const savedColors = localStorage.getItem('spinnerColors');
+                if (savedColors) {
+                    const parsed = JSON.parse(savedColors);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        colors = parsed;
+                    }
+                }
+            } catch (error) {
+                console.log('Error loading from localStorage:', error);
+            }
+        }
+
+        // Toggle advanced options
+        advancedToggle.addEventListener('click', () => {
+            advancedContent.classList.toggle('collapsed');
+            advancedToggleIcon.textContent = advancedContent.classList.contains('collapsed') ? '▼' : '▲';
+        });
+
+        // Initialize color list
+        function updateColorList() {
+            colorList.innerHTML = colors.map((color, index) => `
+                <div class="color-item">
+                    <label>Color ${index + 1}</label>
+                    <input type="color" value="${color}" onchange="updateColor(${index}, this.value)">
+                    <button onclick="removeColor(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Update color
+        window.updateColor = function(index, newColor) {
+            colors[index] = newColor;
+            updateSpinner();
+            saveToLocalStorage();
+        };
+
+        // Remove color
+        window.removeColor = function(index) {
+            if (colors.length > 1) {
+                colors.splice(index, 1);
+                updateColorList();
+                updateSpinner();
+                saveToLocalStorage();
+            } else {
+                alert('You need at least one color!');
+            }
+        };
+
+        // Add color
+        addColorButton.addEventListener('click', () => {
+            const newColor = '#FF6B6B';
+            colors.push(newColor);
+            updateColorList();
+            saveToLocalStorage();
+        });
 
         // Add option
         function addOption() {
@@ -329,6 +849,7 @@
                 updateOptionsList();
                 updateSpinner();
                 updateSpinButton();
+                saveToLocalStorage();
             }
         }
 
@@ -339,6 +860,7 @@
                 updateOptionsList();
                 updateSpinner();
                 updateSpinButton();
+                saveToLocalStorage();
             }
         }
 
@@ -360,20 +882,41 @@
         function updateSpinner() {
             if (options.length === 0) {
                 spinnerWheel.innerHTML = '';
+                spinnerWheel.style.background = '';
                 return;
             }
 
             const segmentAngle = 360 / options.length;
+            
+            // Create conic-gradient for perfect pie segments with no gaps
+            const gradientStops = options.map((option, index) => {
+                const color = colors[index % colors.length];
+                const startPercent = (index * segmentAngle / 360) * 100;
+                const endPercent = ((index + 1) * segmentAngle / 360) * 100;
+                return `${color} ${startPercent}% ${endPercent}%`;
+            }).join(', ');
+            
+            spinnerWheel.style.background = `conic-gradient(${gradientStops})`;
             spinnerWheel.innerHTML = '';
 
+            // Add text labels for each segment
             options.forEach((option, index) => {
                 const segment = document.createElement('div');
                 segment.className = 'spinner-segment';
-                segment.style.backgroundColor = colors[index % colors.length];
-                segment.style.transform = `rotate(${index * segmentAngle}deg)`;
+                
+                // Calculate the angle for the middle of this segment
+                const middleAngle = (index * segmentAngle + segmentAngle / 2) * Math.PI / 180;
+                const textRadius = 35; // Distance from center (as percentage)
+                
+                // Position text in the middle of the segment
+                const textX = 50 + textRadius * Math.cos(middleAngle - Math.PI / 2);
+                const textY = 50 + textRadius * Math.sin(middleAngle - Math.PI / 2);
                 
                 const span = document.createElement('span');
                 span.textContent = option;
+                span.style.left = `${textX}%`;
+                span.style.top = `${textY}%`;
+                span.style.transform = `translate(-50%, -50%) rotate(${index * segmentAngle + segmentAngle / 2}deg)`;
                 segment.appendChild(span);
                 
                 spinnerWheel.appendChild(segment);
@@ -383,6 +926,154 @@
         // Update spin button state
         function updateSpinButton() {
             spinButton.disabled = options.length < 2 || isSpinning;
+            shuffleButton.disabled = options.length < 2 || isSpinning;
+            sortButton.disabled = options.length < 2 || isSpinning;
+        }
+
+        // Tab switching
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Update active tab
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active content
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`${targetTab}Tab`).classList.add('active');
+            });
+        });
+
+        // Shuffle options
+        shuffleButton.addEventListener('click', () => {
+            if (options.length < 2 || isSpinning) return;
+            
+            // Fisher-Yates shuffle algorithm
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            
+            updateOptionsList();
+            updateSpinner();
+            saveToLocalStorage();
+        });
+
+        // Sort options
+        sortButton.addEventListener('click', () => {
+            if (options.length < 2 || isSpinning) return;
+            
+            options.sort((a, b) => a.localeCompare(b));
+            updateOptionsList();
+            updateSpinner();
+            saveToLocalStorage();
+        });
+
+        // Add result to history
+        function addResultToHistory(resultText) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            resultsHistory.unshift({
+                text: resultText,
+                time: timeString,
+                timestamp: now
+            });
+            updateResultsList();
+            saveToLocalStorage();
+        }
+
+        // Update results list display
+        function updateResultsList() {
+            if (resultsHistory.length === 0) {
+                resultsList.innerHTML = '<div class="empty-message">No results yet. Spin the wheel to see results here!</div>';
+            } else {
+                resultsList.innerHTML = resultsHistory.map(result => `
+                    <div class="result-item">
+                        <div class="result-text">🎉 ${result.text} 🎉</div>
+                        <div class="result-time">${result.time}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Clear results
+        clearResultsButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all results?')) {
+                resultsHistory = [];
+                updateResultsList();
+                saveToLocalStorage();
+            }
+        });
+
+        // Show popup
+        function showPopup(resultText) {
+            popupResult.textContent = resultText;
+            popupOverlay.classList.add('show');
+            
+            // Play sound when result is shown
+            if (resultSound) {
+                resultSound.currentTime = 0; // Reset to start
+                resultSound.play().catch(error => {
+                    // Handle autoplay restrictions
+                    console.log('Audio play failed:', error);
+                });
+            }
+        }
+
+        // Hide popup
+        function hidePopup() {
+            popupOverlay.classList.remove('show');
+        }
+
+        // Get current rotation from transform
+        function getCurrentRotation() {
+            const transform = spinnerWheel.style.transform;
+            if (!transform || transform === 'none') return 0;
+            const match = transform.match(/rotate\(([^)]+)deg\)/);
+            return match ? parseFloat(match[1]) : 0;
+        }
+
+        // Calculate which segment the pointer is currently over
+        function getCurrentSegmentIndex(rotation) {
+            if (options.length === 0) return -1;
+            const segmentAngle = 360 / options.length;
+            // Pointer is at top (0 degrees), so we need to invert the rotation
+            const normalizedAngle = (360 - (rotation % 360)) % 360;
+            return Math.floor(normalizedAngle / segmentAngle);
+        }
+
+        // Check segment and play sound if changed
+        function checkSegment() {
+            if (!isSpinning) return;
+
+            // Get current rotation by interpolating between start and target
+            const elapsed = Date.now() - animationStartTime;
+            const duration = 7000; // 7 seconds
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function (cubic-bezier approximation)
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            
+            const currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
+            const segmentIndex = getCurrentSegmentIndex(currentRotation);
+
+            // If segment changed, play sound
+            if (segmentIndex !== currentSegment && segmentIndex >= 0) {
+                currentSegment = segmentIndex;
+                if (segmentSound) {
+                    segmentSound.currentTime = 0;
+                    segmentSound.play().catch(error => {
+                        // Handle autoplay restrictions
+                        console.log('Segment sound play failed:', error);
+                    });
+                }
+            }
+
+            // Continue checking if still spinning
+            if (progress < 1) {
+                requestAnimationFrame(checkSegment);
+            }
         }
 
         // Spin the wheel
@@ -391,31 +1082,40 @@
 
             isSpinning = true;
             spinButton.disabled = true;
-            result.classList.remove('show');
-            result.textContent = '';
+            hidePopup();
 
+            // Get current rotation
+            startRotation = getCurrentRotation();
+            
             // Random rotation (multiple full spins + random angle)
-            const spins = 5 + Math.random() * 5; // 5-10 full spins
+            const spins = 8 + Math.random() * 7; // 8-15 full spins (more dramatic!)
             const randomAngle = Math.random() * 360;
-            const totalRotation = spins * 360 + randomAngle;
+            targetRotation = startRotation + spins * 360 + randomAngle;
 
-            spinnerWheel.style.transform = `rotate(${totalRotation}deg)`;
+            spinnerWheel.style.transform = `rotate(${targetRotation}deg)`;
+
+            // Reset segment tracking
+            currentSegment = -1;
+            animationStartTime = Date.now();
+
+            // Start checking segments
+            requestAnimationFrame(checkSegment);
 
             // Calculate which option was selected
             const segmentAngle = 360 / options.length;
             // Account for the pointer being at the top (0 degrees)
             // We need to adjust for the rotation
-            const normalizedAngle = (360 - (totalRotation % 360)) % 360;
+            const normalizedAngle = (360 - (targetRotation % 360)) % 360;
             const selectedIndex = Math.floor(normalizedAngle / segmentAngle);
 
             // Show result after animation
             setTimeout(() => {
                 const selectedOption = options[selectedIndex];
-                result.textContent = `🎉 ${selectedOption} 🎉`;
-                result.classList.add('show');
+                showPopup(selectedOption);
+                addResultToHistory(selectedOption);
                 isSpinning = false;
                 updateSpinButton();
-            }, 4000);
+            }, 7000);
         }
 
         // Event listeners
@@ -426,9 +1126,29 @@
             }
         });
         spinButton.addEventListener('click', spin);
+        popupClose.addEventListener('click', hidePopup);
+        popupOverlay.addEventListener('click', (e) => {
+            if (e.target === popupOverlay) {
+                hidePopup();
+            }
+        });
 
-        // Make removeOption available globally
+        // Make functions available globally
         window.removeOption = removeOption;
+
+        // Initialize - Load from localStorage first
+        loadFromLocalStorage();
+        
+        // Update UI with loaded data
+        if (options.length > 0) {
+            updateOptionsList();
+            updateSpinner();
+        }
+        if (resultsHistory.length > 0) {
+            updateResultsList();
+        }
+        updateColorList();
+        updateSpinButton();
     </script>
 </body>
 </html>
