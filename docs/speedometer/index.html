@@ -745,7 +745,7 @@
         const hudToggle = document.getElementById('hudToggle');
         const container = document.getElementById('container');
 
-        let simpleMode = false;
+        let simpleMode = true; // Default to simple mode
         let hudFlipMode = false;
         let debugMode = false;
         let currentTheme = 'default';
@@ -1198,6 +1198,13 @@
                 simpleToggle.textContent = 'Simple Mode';
             }
         });
+
+        // Initialize simple mode by default
+        if (simpleMode) {
+            container.classList.add('simple-mode');
+            simpleToggle.classList.add('active');
+            simpleToggle.textContent = 'Normal Mode';
+        }
 
         // HUD flip mode toggle
         hudToggle.addEventListener('click', () => {
