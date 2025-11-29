@@ -217,6 +217,95 @@
             color: #667eea;
         }
 
+        .speed-limit-sign {
+            display: inline-flex;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 6px solid #dc143c;
+            background: white;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #dc143c;
+            margin: 10px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .speed-limit-sign.over-limit {
+            background: #ffebee;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .speed-limit-sign.flashing {
+            animation: flash 0.3s ease-in-out 5;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 8px rgba(220, 20, 60, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 16px rgba(220, 20, 60, 0.6);
+            }
+        }
+
+        @keyframes flash {
+            0%, 100% {
+                background: white;
+                border-color: #dc143c;
+            }
+            50% {
+                background: #ff4444;
+                border-color: #ff0000;
+                transform: scale(1.1);
+            }
+        }
+
+        .hud-speed-limit-sign {
+            display: inline-flex;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid #dc143c;
+            background: white;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #dc143c;
+            margin: 5px auto;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .hud-speed-limit-sign.over-limit {
+            background: #ffebee;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .hud-speed-limit-sign.flashing {
+            animation: flash 0.3s ease-in-out 5;
+        }
+
+        @media (max-width: 768px) {
+            .speed-limit-sign {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8em;
+                border-width: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .speed-limit-sign {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5em;
+                border-width: 4px;
+            }
+        }
+
         .simple-toggle,
         .hud-toggle {
             position: fixed;
@@ -607,6 +696,91 @@
             display: none !important;
         }
 
+        .consent-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .consent-overlay.hidden {
+            display: none;
+        }
+
+        .consent-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .consent-box h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .consent-box p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .consent-box .highlight {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .consent-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .consent-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .consent-button:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .consent-box {
+                padding: 30px 20px;
+                max-width: 90%;
+            }
+
+            .consent-box h2 {
+                font-size: 1.5em;
+            }
+
+            .consent-box p {
+                font-size: 1em;
+            }
+        }
+
         .debug-toggle:hover {
             background: #ff6b6b;
             color: white;
@@ -668,6 +842,20 @@
     </style>
 </head>
 <body>
+    <!-- Consent Overlay -->
+    <div class="consent-overlay" id="consentOverlay">
+        <div class="consent-box">
+            <h2>📍 Location Access Required</h2>
+            <p>This speedometer app requires <span class="highlight">location access</span> to provide accurate speed readings and road speed limit information.</p>
+            <p><strong>Your data is safe:</strong></p>
+            <p>• Location data is processed locally on your device</p>
+            <p>• No location data is stored or transmitted to external servers</p>
+            <p>• Speed limit queries use public OpenStreetMap data only</p>
+            <p>• All processing happens in your browser</p>
+            <button class="consent-button" id="consentButton">I Understand & Continue</button>
+        </div>
+    </div>
+
     <button class="theme-toggle" id="themeToggle">Theme</button>
     <div class="theme-menu" id="themeMenu">
         <div class="theme-option active" data-theme="default">Default</div>
@@ -697,6 +885,19 @@
             <div class="debug-button" onclick="simulateAcceleration()">Simulate Acceleration</div>
             <div class="debug-button" onclick="simulateDeceleration()">Simulate Deceleration</div>
             <div class="debug-button" onclick="resetStats()">Reset Stats</div>
+            <div class="debug-label" style="margin-top: 15px;">Speed Limit Debug</div>
+            <div class="debug-input-group">
+                <input type="number" class="debug-input" id="customSpeedLimit" placeholder="Speed Limit" min="0" max="200">
+                <button class="debug-button" onclick="setCustomSpeedLimit()">Set Limit</button>
+            </div>
+            <div class="debug-label" style="margin-top: 10px;">Test Speed Limit by Location</div>
+            <div class="debug-input-group">
+                <input type="number" step="any" class="debug-input" id="testLat" placeholder="Latitude" style="width: 48%;">
+                <input type="number" step="any" class="debug-input" id="testLon" placeholder="Longitude" style="width: 48%;">
+            </div>
+            <button class="debug-button" onclick="testSpeedLimitByLocation()">Test Location</button>
+            <div class="debug-button" onclick="testSpeedLimitSound()">Test Sound</div>
+            <div class="debug-button" onclick="clearSpeedLimit()">Clear Limit</div>
         </div>
     </div>
     <div class="container" id="container">
@@ -723,6 +924,10 @@
                 <div class="stat-label">Distance</div>
                 <div class="stat-value" id="distance">0</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-label">Speed Limit</div>
+                <div class="speed-limit-sign" id="speedLimit">--</div>
+            </div>
         </div>
         <!-- HUD Mode Display -->
         <div class="hud-display">
@@ -741,6 +946,10 @@
                     <div class="hud-stat-label">Distance</div>
                     <div class="hud-stat-value" id="hudDistance">0</div>
                 </div>
+                <div class="hud-stat">
+                    <div class="hud-stat-label">Limit</div>
+                    <div class="hud-speed-limit-sign" id="hudSpeedLimit">--</div>
+                </div>
             </div>
         </div>
     </div>
@@ -754,6 +963,8 @@
         const maxSpeedEl = document.getElementById('maxSpeed');
         const avgSpeedEl = document.getElementById('avgSpeed');
         const distanceEl = document.getElementById('distance');
+        const speedLimitEl = document.getElementById('speedLimit');
+        const hudSpeedLimitEl = document.getElementById('hudSpeedLimit');
         const simpleToggle = document.getElementById('simpleToggle');
         const hudToggle = document.getElementById('hudToggle');
         const container = document.getElementById('container');
@@ -775,6 +986,35 @@
         let gpsReadingsCount = 0; // Track number of GPS readings to filter initial spikes
         const MAX_REALISTIC_SPEED = 150; // Maximum realistic speed in km/h (filter anything above)
         const MIN_GPS_READINGS = 3; // Minimum readings before accepting high speeds
+        
+        // Speed limit system
+        let currentSpeedLimit = null;
+        let speedLimitSound = null;
+        let speedLimitReturnSound = null;
+        let lastSpeedLimitCheck = null;
+        let isOverSpeedLimit = false;
+        let wasOverSpeedLimit = false; // Track previous state
+        let flashAnimationActive = false; // Track if flash animation is active
+        let speedLimitDebugMode = false; // Debug mode for speed limit
+        const SPEED_LIMIT_CHECK_INTERVAL = 5000; // Check every 5 seconds
+        const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
+        
+        // Load speed limit sounds from folder
+        try {
+            speedLimitSound = new Audio('speedlimit-alert.mp3');
+            speedLimitSound.volume = 0.7;
+            speedLimitSound.preload = 'auto';
+        } catch (error) {
+            console.warn('Speed limit alert sound file not found. Please add speedlimit-alert.mp3 to the folder.');
+        }
+        
+        try {
+            speedLimitReturnSound = new Audio('speedlimit-return.mp3');
+            speedLimitReturnSound.volume = 0.7;
+            speedLimitReturnSound.preload = 'auto';
+        } catch (error) {
+            console.warn('Speed limit return sound file not found. Please add speedlimit-return.mp3 to the folder.');
+        }
 
         // Responsive canvas sizing
         function resizeCanvas() {
@@ -995,6 +1235,10 @@
                 if (hudAvgSpeed) hudAvgSpeed.textContent = Math.round(avg);
                 if (hudDistance) hudDistance.textContent = distanceKm;
             }
+            
+            // Check if over speed limit and update display
+            checkSpeedLimitExceeded();
+            updateSpeedLimitDisplay();
         }
 
         function updateSpeed(speed, isKmh = false) {
@@ -1106,6 +1350,289 @@
 
             lastPosition = position;
             // Note: lastUpdateTime is updated in the animate loop for distance calculation
+            
+            // Check speed limit periodically
+            const currentTime = Date.now();
+            if (!lastSpeedLimitCheck || (currentTime - lastSpeedLimitCheck) > SPEED_LIMIT_CHECK_INTERVAL) {
+                checkSpeedLimit(position.coords.latitude, position.coords.longitude);
+                lastSpeedLimitCheck = currentTime;
+            }
+        }
+        
+        // Query Overpass API for speed limit
+        async function checkSpeedLimit(lat, lon, skipDebugCheck = false) {
+            // Skip API query if in debug mode (unless explicitly testing)
+            if (speedLimitDebugMode && !skipDebugCheck) {
+                return;
+            }
+            
+            try {
+                // Create a bounding box around the current location (about 100m radius)
+                const bboxSize = 0.001; // ~100 meters
+                const south = lat - bboxSize;
+                const west = lon - bboxSize;
+                const north = lat + bboxSize;
+                const east = lon + bboxSize;
+                
+                // Overpass QL query to find ways with maxspeed tags
+                const query = `[out:json][timeout:10];
+(
+  way["highway"]["maxspeed"](${south},${west},${north},${east});
+);
+out body;
+>;
+out skel qt;`;
+                
+                const response = await fetch(OVERPASS_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `data=${encodeURIComponent(query)}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.elements && data.elements.length > 0) {
+                    // Find the closest way with a maxspeed tag
+                    let closestWay = null;
+                    let minDistance = Infinity;
+                    
+                    // First, collect all nodes
+                    const nodes = {};
+                    for (const element of data.elements) {
+                        if (element.type === 'node') {
+                            nodes[element.id] = element;
+                        }
+                    }
+                    
+                    for (const element of data.elements) {
+                        if (element.type === 'way' && element.tags && element.tags.maxspeed) {
+                            // Calculate distance to way using its nodes
+                            if (element.nodes && element.nodes.length > 0) {
+                                for (const nodeId of element.nodes) {
+                                    const node = nodes[nodeId];
+                                    if (node && node.lat && node.lon) {
+                                        const dist = calculateDistance(lat, lon, node.lat, node.lon);
+                                        if (dist < minDistance) {
+                                            minDistance = dist;
+                                            closestWay = element;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (closestWay && closestWay.tags.maxspeed) {
+                        const maxspeed = closestWay.tags.maxspeed;
+                        // Parse speed limit (handle formats like "50", "50 km/h", "50 mph", etc.)
+                        const speedMatch = maxspeed.match(/(\d+)/);
+                        if (speedMatch) {
+                            let limit = parseInt(speedMatch[1]);
+                            
+                            // Convert mph to km/h if needed
+                            if (maxspeed.toLowerCase().includes('mph')) {
+                                limit = Math.round(limit * 1.60934);
+                            }
+                            
+                            currentSpeedLimit = limit;
+                            updateSpeedLimitDisplay();
+                            checkSpeedLimitExceeded();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching speed limit:', error);
+                // Don't update display on error, keep last known limit
+            }
+        }
+        
+        // Check if current speed exceeds limit and play sound
+        function checkSpeedLimitExceeded() {
+            const nowOverLimit = currentSpeedLimit && currentSpeed > currentSpeedLimit;
+            
+            // Just went over the limit
+            if (nowOverLimit && !wasOverSpeedLimit) {
+                isOverSpeedLimit = true;
+                wasOverSpeedLimit = true;
+                triggerFlashAnimation();
+                playSpeedLimitSound();
+                vibrateSpeedLimitAlert();
+            }
+            // Just went back under the limit
+            else if (!nowOverLimit && wasOverSpeedLimit) {
+                isOverSpeedLimit = false;
+                wasOverSpeedLimit = false;
+                stopFlashAnimation();
+                playSpeedLimitReturnSound();
+            }
+            // Still over the limit
+            else if (nowOverLimit) {
+                isOverSpeedLimit = true;
+            }
+            // Still under the limit
+            else {
+                isOverSpeedLimit = false;
+            }
+        }
+        
+        // Trigger flash animation (5 flashes)
+        function triggerFlashAnimation() {
+            if (flashAnimationActive) return; // Don't trigger if already flashing
+            
+            flashAnimationActive = true;
+            speedLimitEl.classList.add('flashing');
+            hudSpeedLimitEl.classList.add('flashing');
+            
+            // Remove flash class after animation completes (5 flashes * 0.3s = 1.5s)
+            setTimeout(() => {
+                speedLimitEl.classList.remove('flashing');
+                hudSpeedLimitEl.classList.remove('flashing');
+                flashAnimationActive = false;
+            }, 1500);
+        }
+        
+        // Stop flash animation
+        function stopFlashAnimation() {
+            speedLimitEl.classList.remove('flashing');
+            hudSpeedLimitEl.classList.remove('flashing');
+            flashAnimationActive = false;
+        }
+        
+        // Play speed limit alert sound
+        function playSpeedLimitSound() {
+            if (speedLimitSound) {
+                speedLimitSound.currentTime = 0; // Reset to start
+                speedLimitSound.play().catch(err => {
+                    console.error('Error playing speed limit sound:', err);
+                });
+            }
+        }
+        
+        // Play sound when returning to normal speed
+        function playSpeedLimitReturnSound() {
+            if (speedLimitReturnSound) {
+                speedLimitReturnSound.currentTime = 0; // Reset to start
+                speedLimitReturnSound.play().catch(err => {
+                    console.error('Error playing speed limit return sound:', err);
+                });
+            }
+        }
+        
+        // Vibrate when speed limit is exceeded
+        function vibrateSpeedLimitAlert() {
+            if (userConsentGiven && 'vibrate' in navigator) {
+                // Vibrate pattern: 5 short vibrations matching the 5 flashes
+                // [vibrate, pause, vibrate, pause, ...] - each flash is 300ms, so vibrate 100ms, pause 200ms
+                navigator.vibrate([100, 200, 100, 200, 100, 200, 100, 200, 100]);
+            }
+        }
+        
+        // Update speed limit display
+        function updateSpeedLimitDisplay() {
+            if (currentSpeedLimit) {
+                speedLimitEl.textContent = currentSpeedLimit;
+                hudSpeedLimitEl.textContent = currentSpeedLimit;
+                
+                // Add over-limit class if over speed limit
+                if (currentSpeed > currentSpeedLimit) {
+                    speedLimitEl.classList.add('over-limit');
+                    hudSpeedLimitEl.classList.add('over-limit');
+                } else {
+                    speedLimitEl.classList.remove('over-limit');
+                    hudSpeedLimitEl.classList.remove('over-limit');
+                }
+            } else {
+                speedLimitEl.textContent = '--';
+                hudSpeedLimitEl.textContent = '--';
+                speedLimitEl.classList.remove('over-limit');
+                hudSpeedLimitEl.classList.remove('over-limit');
+            }
+        }
+        
+        // Debug functions for speed limit
+        function setCustomSpeedLimit() {
+            const input = document.getElementById('customSpeedLimit');
+            const limit = parseInt(input.value);
+            if (!isNaN(limit) && limit > 0) {
+                currentSpeedLimit = limit;
+                speedLimitDebugMode = true; // Enable debug mode
+                updateSpeedLimitDisplay();
+                checkSpeedLimitExceeded();
+                console.log(`Speed limit set to ${limit} km/h (Debug Mode)`);
+            }
+        }
+        
+        function testSpeedLimitSound() {
+            if (speedLimitSound) {
+                speedLimitSound.currentTime = 0;
+                speedLimitSound.play().catch(err => {
+                    console.error('Error playing speed limit sound:', err);
+                    alert('Sound file not found. Please add speedlimit-alert.mp3 to the speedometer folder.');
+                });
+            } else {
+                alert('Sound file not found. Please add speedlimit-alert.mp3 to the speedometer folder.');
+            }
+        }
+        
+        function clearSpeedLimit() {
+            currentSpeedLimit = null;
+            speedLimitDebugMode = false;
+            updateSpeedLimitDisplay();
+            console.log('Speed limit cleared');
+        }
+        
+        // Test speed limit by entering coordinates
+        async function testSpeedLimitByLocation() {
+            const latInput = document.getElementById('testLat');
+            const lonInput = document.getElementById('testLon');
+            const lat = parseFloat(latInput.value);
+            const lon = parseFloat(lonInput.value);
+            
+            if (isNaN(lat) || isNaN(lon)) {
+                alert('Please enter valid latitude and longitude coordinates');
+                return;
+            }
+            
+            if (lat < -90 || lat > 90) {
+                alert('Latitude must be between -90 and 90');
+                return;
+            }
+            
+            if (lon < -180 || lon > 180) {
+                alert('Longitude must be between -180 and 180');
+                return;
+            }
+            
+            console.log(`Testing speed limit at coordinates: ${lat}, ${lon}`);
+            status.className = 'status active';
+            status.textContent = `Testing speed limit at ${lat.toFixed(6)}, ${lon.toFixed(6)}...`;
+            info.textContent = 'Querying Overpass API...';
+            
+            try {
+                await checkSpeedLimit(lat, lon, true); // Skip debug check for manual testing
+                if (currentSpeedLimit) {
+                    status.className = 'status active';
+                    status.textContent = `Speed limit found: ${currentSpeedLimit} km/h`;
+                    info.textContent = `Location: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                    console.log(`Speed limit at ${lat}, ${lon}: ${currentSpeedLimit} km/h`);
+                } else {
+                    status.className = 'status waiting';
+                    status.textContent = 'No speed limit found at this location';
+                    info.textContent = `Location: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+                    console.log(`No speed limit data found at ${lat}, ${lon}`);
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = 'Error querying speed limit';
+                info.textContent = error.message;
+                console.error('Error testing speed limit:', error);
+            }
         }
 
         function handleError(error) {
@@ -1130,24 +1657,26 @@
             }
         }
 
-        // Start geolocation tracking with high frequency updates
-        if (navigator.geolocation) {
-            const options = {
-                enableHighAccuracy: true,
-                maximumAge: 0, // Always get fresh data
-                timeout: 5000
-            };
+        // Start geolocation tracking with high frequency updates (only after consent)
+        function startGeolocation() {
+            if (navigator.geolocation) {
+                const options = {
+                    enableHighAccuracy: true,
+                    maximumAge: 0, // Always get fresh data
+                    timeout: 5000
+                };
 
-            // Use watchPosition for continuous updates
-            watchId = navigator.geolocation.watchPosition(
-                handlePosition,
-                handleError,
-                options
-            );
-        } else {
-            status.className = 'status error';
-            status.textContent = 'Geolocation not supported';
-            info.textContent = 'Your browser does not support geolocation';
+                // Use watchPosition for continuous updates
+                watchId = navigator.geolocation.watchPosition(
+                    handlePosition,
+                    handleError,
+                    options
+                );
+            } else {
+                status.className = 'status error';
+                status.textContent = 'Geolocation not supported';
+                info.textContent = 'Your browser does not support geolocation';
+            }
         }
 
         // Theme toggle
@@ -1387,8 +1916,8 @@
                 themeMenu.classList.remove('hidden');
             }
             
-            // Vibrate when buttons reappear
-            if ('vibrate' in navigator) {
+            // Vibrate when buttons reappear (only after user consent)
+            if (userConsentGiven && 'vibrate' in navigator) {
                 navigator.vibrate(50); // Short vibration (50ms)
             }
         }
@@ -1438,38 +1967,51 @@
             }
         }
 
-        // Enable wake lock when page becomes visible
+        // Consent handling
+        let userConsentGiven = false;
+        
+        // Enable wake lock when page becomes visible (only after consent)
         document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
+            if (document.visibilityState === "visible" && userConsentGiven) {
                 enableWakeLock();
+                
+                // Also replay video if it exists
+                const stayAwakeVideo = document.getElementById('stayAwakeVideo');
+                if (stayAwakeVideo) {
+                    stayAwakeVideo.play().catch(() => {});
+                }
             }
         });
+        const consentOverlay = document.getElementById('consentOverlay');
+        const consentButton = document.getElementById('consentButton');
 
-        // Enable wake lock on page load
-        enableWakeLock();
+        function initializeFeatures() {
+            // Start geolocation tracking
+            startGeolocation();
+            
+            // Enable wake lock
+            enableWakeLock();
 
-        // Video workaround for iOS and devices without wake lock support
-        const stayAwakeVideo = document.getElementById('stayAwakeVideo');
-        if (stayAwakeVideo) {
-            // Play video on first user interaction
-            document.addEventListener("click", () => {
+            // Video workaround for iOS and devices without wake lock support
+            const stayAwakeVideo = document.getElementById('stayAwakeVideo');
+            if (stayAwakeVideo) {
+                // Play video immediately after user interaction
                 stayAwakeVideo.play().catch(err => {
                     console.log("Video play prevented:", err);
                 });
-            }, { once: true });
 
-            // Keep video playing in loop
-            stayAwakeVideo.addEventListener('ended', () => {
-                stayAwakeVideo.play().catch(() => {});
-            });
-
-            // Replay when page becomes visible
-            document.addEventListener("visibilitychange", () => {
-                if (document.visibilityState === "visible") {
+                // Keep video playing in loop
+                stayAwakeVideo.addEventListener('ended', () => {
                     stayAwakeVideo.play().catch(() => {});
-                }
-            });
+                });
+            }
         }
+
+        consentButton.addEventListener('click', () => {
+            userConsentGiven = true;
+            consentOverlay.classList.add('hidden');
+            initializeFeatures();
+        });
     </script>
     
     <!-- Video workaround for iOS wake lock -->
