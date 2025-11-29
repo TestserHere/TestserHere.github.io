@@ -696,91 +696,6 @@
             display: none !important;
         }
 
-        .consent-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            padding: 20px;
-        }
-
-        .consent-overlay.hidden {
-            display: none;
-        }
-
-        .consent-box {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .consent-box h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-
-        .consent-box p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-
-        .consent-box .highlight {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .consent-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 15px 40px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .consent-button:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-
-        .consent-button:active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 768px) {
-            .consent-box {
-                padding: 30px 20px;
-                max-width: 90%;
-            }
-
-            .consent-box h2 {
-                font-size: 1.5em;
-            }
-
-            .consent-box p {
-                font-size: 1em;
-            }
-        }
-
         .debug-toggle:hover {
             background: #ff6b6b;
             color: white;
@@ -842,20 +757,6 @@
     </style>
 </head>
 <body>
-    <!-- Consent Overlay -->
-    <div class="consent-overlay" id="consentOverlay">
-        <div class="consent-box">
-            <h2>📍 Location Access Required</h2>
-            <p>This speedometer app requires <span class="highlight">location access</span> to provide accurate speed readings and road speed limit information.</p>
-            <p><strong>Your data is safe:</strong></p>
-            <p>• Location data is processed locally on your device</p>
-            <p>• No location data is stored or transmitted to external servers</p>
-            <p>• Speed limit queries use public OpenStreetMap data only</p>
-            <p>• All processing happens in your browser</p>
-            <button class="consent-button" id="consentButton">I Understand & Continue</button>
-        </div>
-    </div>
-
     <button class="theme-toggle" id="themeToggle">Theme</button>
     <div class="theme-menu" id="themeMenu">
         <div class="theme-option active" data-theme="default">Default</div>
@@ -1526,7 +1427,7 @@ out skel qt;`;
         
         // Vibrate when speed limit is exceeded
         function vibrateSpeedLimitAlert() {
-            if (userConsentGiven && 'vibrate' in navigator) {
+            if ('vibrate' in navigator) {
                 // Vibrate pattern: 5 short vibrations matching the 5 flashes
                 // [vibrate, pause, vibrate, pause, ...] - each flash is 300ms, so vibrate 100ms, pause 200ms
                 navigator.vibrate([100, 200, 100, 200, 100, 200, 100, 200, 100]);
@@ -1657,26 +1558,24 @@ out skel qt;`;
             }
         }
 
-        // Start geolocation tracking with high frequency updates (only after consent)
-        function startGeolocation() {
-            if (navigator.geolocation) {
-                const options = {
-                    enableHighAccuracy: true,
-                    maximumAge: 0, // Always get fresh data
-                    timeout: 5000
-                };
+        // Start geolocation tracking with high frequency updates
+        if (navigator.geolocation) {
+            const options = {
+                enableHighAccuracy: true,
+                maximumAge: 0, // Always get fresh data
+                timeout: 5000
+            };
 
-                // Use watchPosition for continuous updates
-                watchId = navigator.geolocation.watchPosition(
-                    handlePosition,
-                    handleError,
-                    options
-                );
-            } else {
-                status.className = 'status error';
-                status.textContent = 'Geolocation not supported';
-                info.textContent = 'Your browser does not support geolocation';
-            }
+            // Use watchPosition for continuous updates
+            watchId = navigator.geolocation.watchPosition(
+                handlePosition,
+                handleError,
+                options
+            );
+        } else {
+            status.className = 'status error';
+            status.textContent = 'Geolocation not supported';
+            info.textContent = 'Your browser does not support geolocation';
         }
 
         // Theme toggle
@@ -1916,8 +1815,8 @@ out skel qt;`;
                 themeMenu.classList.remove('hidden');
             }
             
-            // Vibrate when buttons reappear (only after user consent)
-            if (userConsentGiven && 'vibrate' in navigator) {
+            // Vibrate when buttons reappear
+            if ('vibrate' in navigator) {
                 navigator.vibrate(50); // Short vibration (50ms)
             }
         }
@@ -1967,51 +1866,38 @@ out skel qt;`;
             }
         }
 
-        // Consent handling
-        let userConsentGiven = false;
-        
-        // Enable wake lock when page becomes visible (only after consent)
+        // Enable wake lock when page becomes visible
         document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible" && userConsentGiven) {
+            if (document.visibilityState === "visible") {
                 enableWakeLock();
-                
-                // Also replay video if it exists
-                const stayAwakeVideo = document.getElementById('stayAwakeVideo');
-                if (stayAwakeVideo) {
-                    stayAwakeVideo.play().catch(() => {});
-                }
             }
         });
-        const consentOverlay = document.getElementById('consentOverlay');
-        const consentButton = document.getElementById('consentButton');
 
-        function initializeFeatures() {
-            // Start geolocation tracking
-            startGeolocation();
-            
-            // Enable wake lock
-            enableWakeLock();
+        // Enable wake lock on page load
+        enableWakeLock();
 
-            // Video workaround for iOS and devices without wake lock support
-            const stayAwakeVideo = document.getElementById('stayAwakeVideo');
-            if (stayAwakeVideo) {
-                // Play video immediately after user interaction
+        // Video workaround for iOS and devices without wake lock support
+        const stayAwakeVideo = document.getElementById('stayAwakeVideo');
+        if (stayAwakeVideo) {
+            // Play video on first user interaction
+            document.addEventListener("click", () => {
                 stayAwakeVideo.play().catch(err => {
                     console.log("Video play prevented:", err);
                 });
+            }, { once: true });
 
-                // Keep video playing in loop
-                stayAwakeVideo.addEventListener('ended', () => {
+            // Keep video playing in loop
+            stayAwakeVideo.addEventListener('ended', () => {
+                stayAwakeVideo.play().catch(() => {});
+            });
+
+            // Replay when page becomes visible
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
                     stayAwakeVideo.play().catch(() => {});
-                });
-            }
+                }
+            });
         }
-
-        consentButton.addEventListener('click', () => {
-            userConsentGiven = true;
-            consentOverlay.classList.add('hidden');
-            initializeFeatures();
-        });
     </script>
     
     <!-- Video workaround for iOS wake lock -->
