@@ -800,6 +800,28 @@
             margin-bottom: 5px;
             font-size: 0.9em;
         }
+
+        /* Red screen flash overlay for overspeed */
+        .overspeed-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.5);
+            z-index: 10000;
+            pointer-events: none;
+            animation: redFlash 1s ease-in-out infinite;
+        }
+
+        @keyframes redFlash {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
     </style>
 </head>
 <body>
@@ -844,7 +866,7 @@
                 <input type="number" step="any" class="debug-input" id="testLon" placeholder="Longitude" style="width: 48%;">
             </div>
             <button class="debug-button" onclick="testSpeedLimitByLocation()">Test Location</button>
-            <div class="debug-button" onclick="testSpeedLimitSound()">Test Sound</div>
+            <div class="debug-button" onclick="testRedScreenFlash()">Test Red Flash</div>
             <div class="debug-button" onclick="clearSpeedLimit()">Clear Limit</div>
         </div>
     </div>
@@ -937,46 +959,17 @@
         
         // Speed limit system
         let currentSpeedLimit = null;
-        let speedLimitSound = null;
-        let speedLimitReturnSound = null;
         let lastSpeedLimitCheck = null;
         let isOverSpeedLimit = false;
         let wasOverSpeedLimit = false; // Track previous state
         let flashAnimationActive = false; // Track if flash animation is active
+        let redScreenFlashTimeout = null; // Track red screen flash timeout
         let speedLimitDebugMode = false; // Debug mode for speed limit
+        let previousRoadWayId = null; // Track the previous road way ID
+        let previousRoadLocation = null; // Track previous location when road was detected
         const SPEED_LIMIT_CHECK_INTERVAL = 5000; // Check every 5 seconds
+        const ROAD_CHANGE_DISTANCE_THRESHOLD = 25; // Minimum distance (meters) to consider road change
         const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
-        
-        // iOS Audio Context - Required for audio to play on iOS
-        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function resumeAudio() {
-            if (audioCtx.state === "suspended") {
-                audioCtx.resume();
-            }
-        }
-
-        // Resume audio context on user interaction (required for iOS)
-        ["touchstart", "touchend", "mousedown", "keydown"].forEach(evt => {
-            window.addEventListener(evt, resumeAudio, { passive: true });
-        });
-
-        // Load speed limit sounds from folder
-        try {
-            speedLimitSound = new Audio('speedlimit-alert.wav');
-            speedLimitSound.volume = 0.7;
-            speedLimitSound.preload = 'auto';
-        } catch (error) {
-            console.warn('Speed limit alert sound file not found. Please add speedlimit-alert.wav to the folder.');
-        }
-        
-        try {
-            speedLimitReturnSound = new Audio('speedlimit-return.wav');
-            speedLimitReturnSound.volume = 0.7;
-            speedLimitReturnSound.preload = 'auto';
-        } catch (error) {
-            console.warn('Speed limit return sound file not found. Please add speedlimit-return.wav to the folder.');
-        }
 
         // Responsive canvas sizing
         function resizeCanvas() {
@@ -1360,10 +1353,6 @@ out skel qt;`;
                 const data = await response.json();
                 
                 if (data.elements && data.elements.length > 0) {
-                    // Find the closest way with a maxspeed tag
-                    let closestWay = null;
-                    let minDistance = Infinity;
-                    
                     // First, collect all nodes
                     const nodes = {};
                     for (const element of data.elements) {
@@ -1372,40 +1361,146 @@ out skel qt;`;
                         }
                     }
                     
+                    // Collect all ways with speed limits and their distances
+                    const roadsWithLimits = [];
+                    
                     for (const element of data.elements) {
                         if (element.type === 'way' && element.tags && element.tags.maxspeed) {
+                            let minDistToWay = Infinity;
+                            
                             // Calculate distance to way using its nodes
                             if (element.nodes && element.nodes.length > 0) {
                                 for (const nodeId of element.nodes) {
                                     const node = nodes[nodeId];
                                     if (node && node.lat && node.lon) {
                                         const dist = calculateDistance(lat, lon, node.lat, node.lon);
-                                        if (dist < minDistance) {
-                                            minDistance = dist;
-                                            closestWay = element;
+                                        if (dist < minDistToWay) {
+                                            minDistToWay = dist;
                                         }
                                     }
                                 }
                             }
+                            
+                            if (minDistToWay < Infinity) {
+                                roadsWithLimits.push({
+                                    way: element,
+                                    distance: minDistToWay,
+                                    wayId: element.id
+                                });
+                            }
                         }
                     }
                     
-                    if (closestWay && closestWay.tags.maxspeed) {
-                        const maxspeed = closestWay.tags.maxspeed;
-                        // Parse speed limit (handle formats like "50", "50 km/h", "50 mph", etc.)
-                        const speedMatch = maxspeed.match(/(\d+)/);
-                        if (speedMatch) {
-                            let limit = parseInt(speedMatch[1]);
+                    if (roadsWithLimits.length > 0) {
+                        // Sort by distance
+                        roadsWithLimits.sort((a, b) => a.distance - b.distance);
+                        
+                        let selectedWay = null;
+                        let selectedDistance = Infinity;
+                        
+                        // Check if we have a previous road and if it's still in the list
+                        if (previousRoadWayId !== null) {
+                            const previousRoad = roadsWithLimits.find(r => r.wayId === previousRoadWayId);
                             
-                            // Convert mph to km/h if needed
-                            if (maxspeed.toLowerCase().includes('mph')) {
-                                limit = Math.round(limit * 1.60934);
+                            if (previousRoad) {
+                                // Check if we've moved significantly from previous location
+                                let distanceFromPreviousLocation = Infinity;
+                                if (previousRoadLocation) {
+                                    distanceFromPreviousLocation = calculateDistance(
+                                        previousRoadLocation.lat,
+                                        previousRoadLocation.lon,
+                                        lat,
+                                        lon
+                                    );
+                                }
+                                
+                                // If we're still close to previous location (< threshold), prefer previous road
+                                if (distanceFromPreviousLocation < ROAD_CHANGE_DISTANCE_THRESHOLD) {
+                                    selectedWay = previousRoad.way;
+                                    selectedDistance = previousRoad.distance;
+                                    console.log('%c🔄 Staying on previous road (at intersection)', 'color: #ffaa00; font-size: 12px;');
+                                } else {
+                                    // We've moved significantly, check if we're closer to a different road
+                                    const closestRoad = roadsWithLimits[0];
+                                    if (closestRoad.wayId !== previousRoadWayId && 
+                                        closestRoad.distance < previousRoad.distance) {
+                                        // We've moved to a different road
+                                        selectedWay = closestRoad.way;
+                                        selectedDistance = closestRoad.distance;
+                                        previousRoadWayId = closestRoad.wayId;
+                                        previousRoadLocation = { lat, lon };
+                                        console.log('%c🛣️ Changed to different road', 'color: #00aa00; font-size: 12px;');
+                                    } else {
+                                        // Still on previous road
+                                        selectedWay = previousRoad.way;
+                                        selectedDistance = previousRoad.distance;
+                                    }
+                                }
+                            } else {
+                                // Previous road not found, use closest
+                                selectedWay = roadsWithLimits[0].way;
+                                selectedDistance = roadsWithLimits[0].distance;
+                                previousRoadWayId = roadsWithLimits[0].wayId;
+                                previousRoadLocation = { lat, lon };
                             }
-                            
-                            currentSpeedLimit = limit;
-                            updateSpeedLimitDisplay();
-                            checkSpeedLimitExceeded();
+                        } else {
+                            // No previous road, use closest
+                            selectedWay = roadsWithLimits[0].way;
+                            selectedDistance = roadsWithLimits[0].distance;
+                            previousRoadWayId = roadsWithLimits[0].wayId;
+                            previousRoadLocation = { lat, lon };
                         }
+                        
+                        if (selectedWay && selectedWay.tags.maxspeed) {
+                            const maxspeed = selectedWay.tags.maxspeed;
+                            // Parse speed limit (handle formats like "50", "50 km/h", "50 mph", etc.)
+                            const speedMatch = maxspeed.match(/(\d+)/);
+                            if (speedMatch) {
+                                let limit = parseInt(speedMatch[1]);
+                                
+                                // Convert mph to km/h if needed
+                                if (maxspeed.toLowerCase().includes('mph')) {
+                                    limit = Math.round(limit * 1.60934);
+                                }
+                                
+                                // Only update if speed limit changed
+                                if (currentSpeedLimit !== limit) {
+                                    // Log road information to console
+                                    const roadInfo = {
+                                        highway: selectedWay.tags.highway || 'unknown',
+                                        name: selectedWay.tags.name || selectedWay.tags.ref || 'Unnamed Road',
+                                        maxspeed: maxspeed,
+                                        speedLimit: limit + ' km/h',
+                                        location: `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`,
+                                        distance: `${selectedDistance.toFixed(0)}m`,
+                                        wayId: selectedWay.id,
+                                        tags: selectedWay.tags
+                                    };
+                                    
+                                    console.log('%c🚗 Road Detected', 'color: #667eea; font-size: 14px; font-weight: bold;');
+                                    console.log('Road Name:', roadInfo.name);
+                                    console.log('Highway Type:', roadInfo.highway);
+                                    console.log('Speed Limit:', roadInfo.speedLimit);
+                                    console.log('Location:', roadInfo.location);
+                                    console.log('Distance:', roadInfo.distance);
+                                    console.log('Way ID:', roadInfo.wayId);
+                                    console.log('Full Road Data:', roadInfo);
+                                    
+                                    currentSpeedLimit = limit;
+                                    updateSpeedLimitDisplay();
+                                    checkSpeedLimitExceeded();
+                                }
+                            }
+                        }
+                    } else if (data.elements && data.elements.length > 0) {
+                        // Log when roads are found but no speed limit
+                        console.log('%c⚠️ Roads found but no speed limit data', 'color: #ffaa00; font-size: 12px;');
+                        console.log('Location:', `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
+                        console.log('Found', data.elements.filter(e => e.type === 'way').length, 'road segments');
+                    } else {
+                        // Log when no roads found
+                        console.log('%c📍 No roads found in area', 'color: #999; font-size: 12px;');
+                        console.log('Location:', `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
                     }
                 }
             } catch (error) {
@@ -1414,7 +1509,7 @@ out skel qt;`;
             }
         }
         
-        // Check if current speed exceeds limit and play sound
+        // Check if current speed exceeds limit and trigger red screen flash
         function checkSpeedLimitExceeded() {
             const nowOverLimit = currentSpeedLimit && currentSpeed > currentSpeedLimit;
             
@@ -1423,7 +1518,7 @@ out skel qt;`;
                 isOverSpeedLimit = true;
                 wasOverSpeedLimit = true;
                 triggerFlashAnimation();
-                playSpeedLimitSound();
+                triggerRedScreenFlash();
                 vibrateSpeedLimitAlert();
             }
             // Just went back under the limit
@@ -1431,15 +1526,42 @@ out skel qt;`;
                 isOverSpeedLimit = false;
                 wasOverSpeedLimit = false;
                 stopFlashAnimation();
-                playSpeedLimitReturnSound();
+                stopRedScreenFlash(); // Stop red screen flash immediately
             }
             // Still over the limit
             else if (nowOverLimit) {
                 isOverSpeedLimit = true;
+                // Ensure flash is active while still over limit
+                const existingFlash = document.querySelector('.overspeed-flash');
+                if (!existingFlash) {
+                    triggerRedScreenFlash();
+                }
             }
             // Still under the limit
             else {
                 isOverSpeedLimit = false;
+            }
+        }
+        
+        // Trigger red screen flash for 5 seconds
+        function triggerRedScreenFlash() {
+            // Check if flash already exists, if so don't create another
+            const existingFlash = document.querySelector('.overspeed-flash');
+            if (existingFlash) {
+                return; // Flash already active
+            }
+            
+            // Create new flash overlay
+            const flashOverlay = document.createElement('div');
+            flashOverlay.className = 'overspeed-flash';
+            document.body.appendChild(flashOverlay);
+        }
+        
+        function stopRedScreenFlash() {
+            // Remove any existing flash overlay
+            const existingFlash = document.querySelector('.overspeed-flash');
+            if (existingFlash) {
+                existingFlash.remove();
             }
         }
         
@@ -1467,25 +1589,6 @@ out skel qt;`;
         }
         
         // Play speed limit alert sound
-        function playSpeedLimitSound() {
-            if (speedLimitSound) {
-                speedLimitSound.currentTime = 0; // Reset to start
-                speedLimitSound.play().catch(err => {
-                    console.error('Error playing speed limit sound:', err);
-                });
-            }
-        }
-        
-        // Play sound when returning to normal speed
-        function playSpeedLimitReturnSound() {
-            if (speedLimitReturnSound) {
-                speedLimitReturnSound.currentTime = 0; // Reset to start
-                speedLimitReturnSound.play().catch(err => {
-                    console.error('Error playing speed limit return sound:', err);
-                });
-            }
-        }
-        
         // Vibrate when speed limit is exceeded
         function vibrateSpeedLimitAlert() {
             if ('vibrate' in navigator) {
@@ -1530,16 +1633,8 @@ out skel qt;`;
             }
         }
         
-        function testSpeedLimitSound() {
-            if (speedLimitSound) {
-                speedLimitSound.currentTime = 0;
-                speedLimitSound.play().catch(err => {
-                    console.error('Error playing speed limit sound:', err);
-                    alert('Sound file not found. Please add speedlimit-alert.mp3 to the speedometer folder.');
-                });
-            } else {
-                alert('Sound file not found. Please add speedlimit-alert.mp3 to the speedometer folder.');
-            }
+        function testRedScreenFlash() {
+            triggerRedScreenFlash();
         }
         
         function clearSpeedLimit() {
