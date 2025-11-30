@@ -947,13 +947,27 @@
         const SPEED_LIMIT_CHECK_INTERVAL = 5000; // Check every 5 seconds
         const OVERPASS_API_URL = 'https://overpass-api.de/api/interpreter';
         
+        // iOS Audio Context - Required for audio to play on iOS
+        let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function resumeAudio() {
+            if (audioCtx.state === "suspended") {
+                audioCtx.resume();
+            }
+        }
+
+        // Resume audio context on user interaction (required for iOS)
+        ["touchstart", "touchend", "mousedown", "keydown"].forEach(evt => {
+            window.addEventListener(evt, resumeAudio, { passive: true });
+        });
+
         // Load speed limit sounds from folder
         try {
             speedLimitSound = new Audio('speedlimit-alert.wav');
             speedLimitSound.volume = 0.7;
             speedLimitSound.preload = 'auto';
         } catch (error) {
-            console.warn('Speed limit alert sound file not found. Please add speedlimit-alert.mp3 to the folder.');
+            console.warn('Speed limit alert sound file not found. Please add speedlimit-alert.wav to the folder.');
         }
         
         try {
@@ -961,7 +975,7 @@
             speedLimitReturnSound.volume = 0.7;
             speedLimitReturnSound.preload = 'auto';
         } catch (error) {
-            console.warn('Speed limit return sound file not found. Please add speedlimit-return.mp3 to the folder.');
+            console.warn('Speed limit return sound file not found. Please add speedlimit-return.wav to the folder.');
         }
 
         // Responsive canvas sizing
