@@ -326,7 +326,8 @@
         .simple-toggle.hidden,
         .hud-toggle.hidden,
         .theme-toggle.hidden,
-        .debug-toggle.hidden {
+        .debug-toggle.hidden,
+        .fullscreen-toggle.hidden {
             opacity: 0;
             pointer-events: none;
             transform: scale(0.8);
@@ -338,6 +339,46 @@
 
         .hud-toggle {
             right: 180px;
+        }
+
+        .fullscreen-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .fullscreen-toggle:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .fullscreen-toggle.active {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .hud-toggle {
+                right: 20px;
+                top: 70px;
+            }
+            
+            .fullscreen-toggle {
+                bottom: 20px;
+                right: 20px;
+            }
         }
 
         .theme-toggle {
@@ -771,6 +812,7 @@
     </div>
     <button class="simple-toggle" id="simpleToggle">Simple Mode</button>
     <button class="hud-toggle" id="hudToggle">HUD Mode</button>
+    <button class="fullscreen-toggle" id="fullscreenToggle">⛶ Fullscreen</button>
     <button class="debug-toggle" id="debugToggle">Debug Mode</button>
     <div class="debug-panel" id="debugPanel">
         <div class="debug-label">Debug Controls</div>
@@ -1666,6 +1708,69 @@ out skel qt;`;
             }
         });
 
+        // Fullscreen functionality
+        const fullscreenToggle = document.getElementById('fullscreenToggle');
+        fullscreenToggle.addEventListener('click', async () => {
+            try {
+                if (!document.fullscreenElement && 
+                    !document.webkitFullscreenElement && 
+                    !document.msFullscreenElement && 
+                    !document.mozFullScreenElement) {
+                    // Enter fullscreen
+                    if (document.documentElement.requestFullscreen) {
+                        await document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        // Safari
+                        await document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        // IE/Edge
+                        await document.documentElement.msRequestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        // Firefox
+                        await document.documentElement.mozRequestFullScreen();
+                    }
+                } else {
+                    // Exit fullscreen
+                    if (document.exitFullscreen) {
+                        await document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        // Safari
+                        await document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        // IE/Edge
+                        await document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        // Firefox
+                        await document.mozCancelFullScreen();
+                    }
+                }
+            } catch (error) {
+                console.error('Fullscreen error:', error);
+            }
+        });
+
+        // Update fullscreen button state
+        function updateFullscreenButton() {
+            const isFullscreen = !!(document.fullscreenElement || 
+                                   document.webkitFullscreenElement || 
+                                   document.msFullscreenElement || 
+                                   document.mozFullScreenElement);
+            
+            if (isFullscreen) {
+                fullscreenToggle.classList.add('active');
+                fullscreenToggle.textContent = '⛶ Exit Fullscreen';
+            } else {
+                fullscreenToggle.classList.remove('active');
+                fullscreenToggle.textContent = '⛶ Fullscreen';
+            }
+        }
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+
         // Debug mode toggle
         const debugToggle = document.getElementById('debugToggle');
         const debugPanel = document.getElementById('debugPanel');
@@ -1810,7 +1915,7 @@ out skel qt;`;
         const INACTIVITY_TIME = 10000; // 10 seconds
         
         // Get all buttons (they're already defined above)
-        const buttons = [themeToggle, simpleToggle, hudToggle, debugToggle].filter(btn => btn !== null);
+        const buttons = [themeToggle, simpleToggle, hudToggle, fullscreenToggle, debugToggle].filter(btn => btn !== null);
 
         function showButtons() {
             buttons.forEach(btn => {
