@@ -724,12 +724,17 @@
             bottom: 20px;
             right: 20px;
             z-index: 1001;
-            width: 50px;
-            height: 50px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
+            display: none; /* Hidden by default */
+        }
+
+        .speed-limit-indicator.visible {
+            display: block;
         }
 
         .speed-limit-indicator.green {
@@ -760,8 +765,8 @@
 
         @media (max-width: 768px) {
             .speed-limit-indicator {
-                width: 45px;
-                height: 45px;
+                width: 30px;
+                height: 30px;
                 bottom: 20px;
                 right: 20px;
             }
@@ -874,6 +879,11 @@
                 <input type="number" class="debug-input" id="customSpeedLimit" placeholder="Speed Limit" min="0" max="200">
                 <button class="debug-button" onclick="setCustomSpeedLimit()">Set Limit</button>
             </div>
+            <div class="debug-label" style="margin-top: 10px;">Speed Limit Indicator</div>
+            <div class="debug-input-group" style="align-items: center; gap: 10px;">
+                <label style="flex: 1; font-size: 0.9em;">Show Indicator:</label>
+                <input type="checkbox" id="indicatorToggle" style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleSpeedLimitIndicator()">
+            </div>
             <div class="debug-label" style="margin-top: 10px;">Test Speed Limit by Location</div>
             <div class="debug-input-group">
                 <input type="number" step="any" class="debug-input" id="testLat" placeholder="Latitude" style="width: 48%;">
@@ -979,6 +989,7 @@
         let flashAnimationActive = false; // Track if flash animation is active
         let redScreenFlashTimeout = null; // Track red screen flash timeout
         let speedLimitDebugMode = false; // Debug mode for speed limit
+        let speedLimitIndicatorEnabled = false; // Indicator visibility (default: off)
         let previousRoadWayId = null; // Track the previous road way ID
         let previousRoadLocation = null; // Track previous location when road was detected
         const SPEED_LIMIT_CHECK_INTERVAL = 5000; // Check every 5 seconds
@@ -1642,7 +1653,7 @@ out skel qt;`;
         // Update speed limit indicator color
         function updateSpeedLimitIndicator() {
             const indicator = document.getElementById('speedLimitIndicator');
-            if (!indicator) return;
+            if (!indicator || !speedLimitIndicatorEnabled) return;
             
             // Remove all color classes
             indicator.classList.remove('green', 'yellow', 'red', 'gray');
@@ -1664,6 +1675,47 @@ out skel qt;`;
                     // Under speed limit - green
                     indicator.classList.add('green');
                 }
+            }
+        }
+        
+        // Toggle speed limit indicator visibility
+        function toggleSpeedLimitIndicator() {
+            const toggle = document.getElementById('indicatorToggle');
+            const indicator = document.getElementById('speedLimitIndicator');
+            
+            if (!toggle || !indicator) return;
+            
+            speedLimitIndicatorEnabled = toggle.checked;
+            
+            // Save preference to localStorage
+            localStorage.setItem('speedLimitIndicatorEnabled', speedLimitIndicatorEnabled);
+            
+            // Show/hide indicator
+            if (speedLimitIndicatorEnabled) {
+                indicator.classList.add('visible');
+                updateSpeedLimitIndicator(); // Update color immediately
+            } else {
+                indicator.classList.remove('visible');
+            }
+        }
+        
+        // Load indicator preference from localStorage on page load
+        function loadIndicatorPreference() {
+            const saved = localStorage.getItem('speedLimitIndicatorEnabled');
+            if (saved !== null) {
+                speedLimitIndicatorEnabled = saved === 'true';
+            }
+            
+            const toggle = document.getElementById('indicatorToggle');
+            const indicator = document.getElementById('speedLimitIndicator');
+            
+            if (toggle) {
+                toggle.checked = speedLimitIndicatorEnabled;
+            }
+            
+            if (indicator && speedLimitIndicatorEnabled) {
+                indicator.classList.add('visible');
+                updateSpeedLimitIndicator();
             }
         }
         
@@ -2002,6 +2054,9 @@ out skel qt;`;
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
+        
+        // Load indicator preference on page load
+        loadIndicatorPreference();
 
         // Auto-hide buttons after inactivity
         let inactivityTimer = null;
