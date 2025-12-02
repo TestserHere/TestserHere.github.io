@@ -1424,6 +1424,21 @@ out skel qt;`;
                         let selectedWay = null;
                         let selectedDistance = Infinity;
                         
+                        // Detect intersection scenario (multiple roads detected)
+                        const isIntersection = roadsWithLimits.length > 1;
+                        
+                        if (isIntersection) {
+                            // Log all roads at intersection
+                            console.log('%c🚦 Intersection Detected', 'color: #ff6b6b; font-size: 14px; font-weight: bold;');
+                            console.log(`Found ${roadsWithLimits.length} roads with speed limits:`);
+                            roadsWithLimits.forEach((road, index) => {
+                                const roadName = road.way.tags.name || road.way.tags.ref || 'Unnamed Road';
+                                const highwayType = road.way.tags.highway || 'unknown';
+                                const maxspeed = road.way.tags.maxspeed || 'N/A';
+                                console.log(`  ${index + 1}. ${roadName} (${highwayType}) - ${maxspeed} - ${road.distance.toFixed(0)}m away`);
+                            });
+                        }
+                        
                         // Check if we have a previous road and if it's still in the list
                         if (previousRoadWayId !== null) {
                             const previousRoad = roadsWithLimits.find(r => r.wayId === previousRoadWayId);
@@ -1440,34 +1455,60 @@ out skel qt;`;
                                     );
                                 }
                                 
-                                // If we're still close to previous location (< threshold), prefer previous road
-                                if (distanceFromPreviousLocation < ROAD_CHANGE_DISTANCE_THRESHOLD) {
+                                // If at intersection and still close to previous location, prioritize previous road
+                                if (isIntersection && distanceFromPreviousLocation < ROAD_CHANGE_DISTANCE_THRESHOLD) {
                                     selectedWay = previousRoad.way;
                                     selectedDistance = previousRoad.distance;
+                                    const prevRoadName = previousRoad.way.tags.name || previousRoad.way.tags.ref || 'Unnamed Road';
                                     console.log('%c🔄 Staying on previous road (at intersection)', 'color: #ffaa00; font-size: 12px;');
-                                } else {
+                                    console.log(`Previous road: ${prevRoadName} (Way ID: ${previousRoadWayId})`);
+                                    console.log(`Distance from previous location: ${distanceFromPreviousLocation.toFixed(0)}m`);
+                                } else if (distanceFromPreviousLocation >= ROAD_CHANGE_DISTANCE_THRESHOLD) {
                                     // We've moved significantly, check if we're closer to a different road
                                     const closestRoad = roadsWithLimits[0];
-                                    if (closestRoad.wayId !== previousRoadWayId && 
-                                        closestRoad.distance < previousRoad.distance) {
-                                        // We've moved to a different road
-                                        selectedWay = closestRoad.way;
-                                        selectedDistance = closestRoad.distance;
-                                        previousRoadWayId = closestRoad.wayId;
-                                        previousRoadLocation = { lat, lon };
-                                        console.log('%c🛣️ Changed to different road', 'color: #00aa00; font-size: 12px;');
+                                    
+                                    // Only switch if:
+                                    // 1. It's a different road
+                                    // 2. We're significantly closer to it than the previous road
+                                    // 3. We've moved enough distance to indicate we're on the new road
+                                    if (closestRoad.wayId !== previousRoadWayId) {
+                                        const distanceDifference = previousRoad.distance - closestRoad.distance;
+                                        
+                                        // Switch if new road is significantly closer (at least 10m closer) and we've moved
+                                        if (distanceDifference > 10 && distanceFromPreviousLocation >= ROAD_CHANGE_DISTANCE_THRESHOLD) {
+                                            selectedWay = closestRoad.way;
+                                            selectedDistance = closestRoad.distance;
+                                            previousRoadWayId = closestRoad.wayId;
+                                            previousRoadLocation = { lat, lon };
+                                            
+                                            const newRoadName = closestRoad.way.tags.name || closestRoad.way.tags.ref || 'Unnamed Road';
+                                            const prevRoadName = previousRoad.way.tags.name || previousRoad.way.tags.ref || 'Unnamed Road';
+                                            console.log('%c🛣️ Switched to new road', 'color: #00aa00; font-size: 12px;');
+                                            console.log(`From: ${prevRoadName} (${previousRoad.distance.toFixed(0)}m away)`);
+                                            console.log(`To: ${newRoadName} (${closestRoad.distance.toFixed(0)}m away)`);
+                                            console.log(`Moved: ${distanceFromPreviousLocation.toFixed(0)}m from previous location`);
+                                        } else {
+                                            // Still on previous road
+                                            selectedWay = previousRoad.way;
+                                            selectedDistance = previousRoad.distance;
+                                        }
                                     } else {
                                         // Still on previous road
                                         selectedWay = previousRoad.way;
                                         selectedDistance = previousRoad.distance;
                                     }
+                                } else {
+                                    // Still close to previous location, stay on previous road
+                                    selectedWay = previousRoad.way;
+                                    selectedDistance = previousRoad.distance;
                                 }
                             } else {
-                                // Previous road not found, use closest
+                                // Previous road not found in current results, use closest
                                 selectedWay = roadsWithLimits[0].way;
                                 selectedDistance = roadsWithLimits[0].distance;
                                 previousRoadWayId = roadsWithLimits[0].wayId;
                                 previousRoadLocation = { lat, lon };
+                                console.log('%c📍 Previous road not found, using closest road', 'color: #ffaa00; font-size: 12px;');
                             }
                         } else {
                             // No previous road, use closest
