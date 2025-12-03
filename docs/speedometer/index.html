@@ -452,8 +452,8 @@
         }
 
         .container.hud-flip {
-            transform: scale(-1, -1); /* Flip both horizontally and vertically for HUD display */
-            -webkit-transform: scale(-1, -1); /* Safari support */
+            transform: scaleX(-1) scaleY(-1) !important; /* Flip both horizontally and vertically for HUD display */
+            -webkit-transform: scaleX(-1) scaleY(-1) !important; /* Safari support */
         }
 
         /* Theme: Night (Black/White/Green) */
