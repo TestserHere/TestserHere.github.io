@@ -884,6 +884,11 @@
                 <label style="flex: 1; font-size: 0.9em;">Show Indicator:</label>
                 <input type="checkbox" id="indicatorToggle" style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleSpeedLimitIndicator()">
             </div>
+            <div class="debug-label" style="margin-top: 10px;">Default Speed Limit</div>
+            <div class="debug-input-group" style="align-items: center; gap: 10px;">
+                <label style="flex: 1; font-size: 0.9em;">Use 50 km/h when no data:</label>
+                <input type="checkbox" id="defaultSpeedLimitToggle" style="width: 20px; height: 20px; cursor: pointer;" onchange="toggleDefaultSpeedLimit()">
+            </div>
             <div class="debug-label" style="margin-top: 10px;">Test Speed Limit by Location</div>
             <div class="debug-input-group">
                 <input type="text" class="debug-input" id="testCoordinates" placeholder="Latitude, Longitude (e.g., 50.5348, 5.6283)" style="width: 100%;">
@@ -989,6 +994,7 @@
         let redScreenFlashTimeout = null; // Track red screen flash timeout
         let speedLimitDebugMode = false; // Debug mode for speed limit
         let speedLimitIndicatorEnabled = false; // Indicator visibility (default: off)
+        let useDefaultSpeedLimit = false; // Use 50 km/h default when no data (default: off)
         let previousRoadWayId = null; // Track the previous road way ID
         let previousRoadLocation = null; // Track previous location when road was detected
         const SPEED_LIMIT_CHECK_INTERVAL = 5000; // Check every 5 seconds
@@ -1558,6 +1564,33 @@ out skel qt;`;
                                     updateSpeedLimitDisplay();
                                     checkSpeedLimitExceeded();
                                 }
+                            } else {
+                                // Road found but speed limit couldn't be parsed - clear it
+                                if (currentSpeedLimit !== null) {
+                                    currentSpeedLimit = null;
+                                    updateSpeedLimitDisplay();
+                                    console.log('%c⚠️ Road found but speed limit unknown', 'color: #ffaa00; font-size: 12px;');
+                                }
+                            }
+                        } else if (selectedWay) {
+                            // Road found but no speed limit tag
+                            const roadName = selectedWay.tags.name || selectedWay.tags.ref || 'Unnamed Road';
+                            if (useDefaultSpeedLimit) {
+                                // Use default 50 km/h when option is enabled
+                                if (currentSpeedLimit !== 50) {
+                                    currentSpeedLimit = 50;
+                                    updateSpeedLimitDisplay();
+                                    console.log('%c⚠️ Road found but no speed limit data - using default 50 km/h', 'color: #ffaa00; font-size: 12px;');
+                                    console.log(`Road: ${roadName} - Using default speed limit`);
+                                }
+                            } else {
+                                // Clear it if default option is not enabled
+                                if (currentSpeedLimit !== null) {
+                                    currentSpeedLimit = null;
+                                    updateSpeedLimitDisplay();
+                                    console.log('%c⚠️ Road found but no speed limit data', 'color: #ffaa00; font-size: 12px;');
+                                    console.log(`Road: ${roadName} - Speed limit unknown`);
+                                }
                             }
                         }
                     } else if (data.elements && data.elements.length > 0) {
@@ -1565,10 +1598,38 @@ out skel qt;`;
                         console.log('%c⚠️ Roads found but no speed limit data', 'color: #ffaa00; font-size: 12px;');
                         console.log('Location:', `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
                         console.log('Found', data.elements.filter(e => e.type === 'way').length, 'road segments');
+                        // Handle based on default speed limit option
+                        if (useDefaultSpeedLimit) {
+                            if (currentSpeedLimit !== 50) {
+                                currentSpeedLimit = 50;
+                                updateSpeedLimitDisplay();
+                                console.log('Using default 50 km/h speed limit');
+                            }
+                        } else {
+                            // Clear speed limit when no speed limit data found
+                            if (currentSpeedLimit !== null) {
+                                currentSpeedLimit = null;
+                                updateSpeedLimitDisplay();
+                            }
+                        }
                     } else {
                         // Log when no roads found
                         console.log('%c📍 No roads found in area', 'color: #999; font-size: 12px;');
                         console.log('Location:', `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`);
+                        // Handle based on default speed limit option
+                        if (useDefaultSpeedLimit) {
+                            if (currentSpeedLimit !== 50) {
+                                currentSpeedLimit = 50;
+                                updateSpeedLimitDisplay();
+                                console.log('Using default 50 km/h speed limit');
+                            }
+                        } else {
+                            // Clear speed limit when no roads found
+                            if (currentSpeedLimit !== null) {
+                                currentSpeedLimit = null;
+                                updateSpeedLimitDisplay();
+                            }
+                        }
                     }
                 }
             } catch (error) {
@@ -1758,6 +1819,33 @@ out skel qt;`;
             if (indicator && speedLimitIndicatorEnabled) {
                 indicator.classList.add('visible');
                 updateSpeedLimitIndicator();
+            }
+        }
+        
+        // Toggle default speed limit option
+        function toggleDefaultSpeedLimit() {
+            const toggle = document.getElementById('defaultSpeedLimitToggle');
+            
+            if (!toggle) return;
+            
+            useDefaultSpeedLimit = toggle.checked;
+            
+            // Save preference to localStorage
+            localStorage.setItem('useDefaultSpeedLimit', useDefaultSpeedLimit);
+            
+            console.log(`Default speed limit option: ${useDefaultSpeedLimit ? 'Enabled (50 km/h)' : 'Disabled'}`);
+        }
+        
+        // Load default speed limit preference from localStorage on page load
+        function loadDefaultSpeedLimitPreference() {
+            const saved = localStorage.getItem('useDefaultSpeedLimit');
+            if (saved !== null) {
+                useDefaultSpeedLimit = saved === 'true';
+            }
+            
+            const toggle = document.getElementById('defaultSpeedLimitToggle');
+            if (toggle) {
+                toggle.checked = useDefaultSpeedLimit;
             }
         }
         
@@ -2113,8 +2201,12 @@ out skel qt;`;
             navigator.serviceWorker.register('sw.js');
         }
         
-        // Load indicator preference on page load
+        // Load preferences on page load
         loadIndicatorPreference();
+        loadDefaultSpeedLimitPreference();
+        
+        // Load default speed limit preference on page load
+        loadDefaultSpeedLimitPreference();
 
         // Auto-hide buttons after inactivity
         let inactivityTimer = null;
