@@ -1363,7 +1363,8 @@
                 const east = lon + bboxSize;
                 
                 // Overpass QL query to find ways with maxspeed tags
-                const query = `[out:json][timeout:10];
+                // Reduced timeout to 5 seconds to avoid long waits
+                const query = `[out:json][timeout:5];
 (
   way["highway"]["maxspeed"](${south},${west},${north},${east});
 );
@@ -1371,15 +1372,33 @@ out body;
 >;
 out skel qt;`;
                 
-                const response = await fetch(OVERPASS_API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `data=${encodeURIComponent(query)}`
-                });
+                // Create AbortController for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second fetch timeout
+                
+                let response;
+                try {
+                    response = await fetch(OVERPASS_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `data=${encodeURIComponent(query)}`,
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    if (fetchError.name === 'AbortError') {
+                        throw new Error('Request timeout - Overpass API is taking too long to respond');
+                    }
+                    throw fetchError;
+                }
                 
                 if (!response.ok) {
+                    if (response.status === 504 || response.status === 503) {
+                        throw new Error('Overpass API timeout - server is busy. Please try again in a moment.');
+                    }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
@@ -1634,7 +1653,21 @@ out skel qt;`;
                 }
             } catch (error) {
                 console.error('Error fetching speed limit:', error);
-                // Don't update display on error, keep last known limit
+                
+                // Handle timeout and server errors gracefully
+                if (error.message && (error.message.includes('timeout') || error.message.includes('504') || error.message.includes('503'))) {
+                    console.warn('Overpass API timeout - will retry on next check');
+                    // Don't clear speed limit on timeout, keep last known value
+                    // The next check will try again
+                } else {
+                    // For other errors, optionally use default if enabled
+                    if (useDefaultSpeedLimit && currentSpeedLimit === null) {
+                        currentSpeedLimit = 50;
+                        updateSpeedLimitDisplay();
+                        console.log('Using default 50 km/h due to API error');
+                    }
+                }
+                // Don't update display on error, keep last known limit (or use default if enabled)
             }
         }
         
