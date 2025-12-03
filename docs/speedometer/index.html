@@ -886,8 +886,7 @@
             </div>
             <div class="debug-label" style="margin-top: 10px;">Test Speed Limit by Location</div>
             <div class="debug-input-group">
-                <input type="number" step="any" class="debug-input" id="testLat" placeholder="Latitude" style="width: 48%;">
-                <input type="number" step="any" class="debug-input" id="testLon" placeholder="Longitude" style="width: 48%;">
+                <input type="text" class="debug-input" id="testCoordinates" placeholder="Latitude, Longitude (e.g., 50.5348, 5.6283)" style="width: 100%;">
             </div>
             <button class="debug-button" onclick="testSpeedLimitByLocation()">Test Location</button>
             <div class="debug-button" onclick="testRedScreenFlash()">Test Red Flash</div>
@@ -1342,8 +1341,10 @@
         
         // Query Overpass API for speed limit
         async function checkSpeedLimit(lat, lon, skipDebugCheck = false) {
-            // Skip API query if in debug mode (unless explicitly testing)
-            if (speedLimitDebugMode && !skipDebugCheck) {
+            // Skip API query if in debug mode with manual speed limit set (unless explicitly testing coordinates)
+            // When testing coordinates manually, always use the full intersection logic
+            if (speedLimitDebugMode && !skipDebugCheck && currentSpeedLimit !== null) {
+                // If we have a manually set speed limit and not testing coordinates, skip API query
                 return;
             }
             
@@ -1786,13 +1787,27 @@ out skel qt;`;
         
         // Test speed limit by entering coordinates
         async function testSpeedLimitByLocation() {
-            const latInput = document.getElementById('testLat');
-            const lonInput = document.getElementById('testLon');
-            const lat = parseFloat(latInput.value);
-            const lon = parseFloat(lonInput.value);
+            const coordInput = document.getElementById('testCoordinates');
+            const coordString = coordInput.value.trim();
+            
+            if (!coordString) {
+                alert('Please enter coordinates in format: Latitude, Longitude (e.g., 50.5348, 5.6283)');
+                return;
+            }
+            
+            // Parse coordinates (handle comma or space separated)
+            const coords = coordString.split(/[,\s]+/).map(s => s.trim()).filter(s => s);
+            
+            if (coords.length !== 2) {
+                alert('Please enter coordinates in format: Latitude, Longitude (e.g., 50.5348, 5.6283)');
+                return;
+            }
+            
+            const lat = parseFloat(coords[0]);
+            const lon = parseFloat(coords[1]);
             
             if (isNaN(lat) || isNaN(lon)) {
-                alert('Please enter valid latitude and longitude coordinates');
+                alert('Please enter valid numeric coordinates');
                 return;
             }
             
@@ -1812,7 +1827,9 @@ out skel qt;`;
             info.textContent = 'Querying Overpass API...';
             
             try {
-                await checkSpeedLimit(lat, lon, true); // Skip debug check for manual testing
+                // Use the same checkSpeedLimit function with intersection logic
+                // Pass true to skip debug check and use full intersection/road selection logic
+                await checkSpeedLimit(lat, lon, true);
                 if (currentSpeedLimit) {
                     status.className = 'status active';
                     status.textContent = `Speed limit found: ${currentSpeedLimit} km/h`;

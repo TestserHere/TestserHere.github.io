@@ -804,13 +804,46 @@
                 return;
             }
 
-            // OSRM Match API requires coordinates in [lng, lat] format
-            const coordinates = routePoints.map(p => [p.lng, p.lat]);
+            // Filter out duplicate or too-close points (minimum 5 meters apart)
+            const MIN_DISTANCE_METERS = 5;
+            const filteredPoints = [routePoints[0]]; // Always include first point
             
-            // Build timestamps array (required for matching)
-            const timestamps = routePoints.map((p, i) => {
-                if (i === 0) return routePoints[0].timestamp;
-                return p.timestamp;
+            for (let i = 1; i < routePoints.length; i++) {
+                const lastPoint = filteredPoints[filteredPoints.length - 1];
+                const currentPoint = routePoints[i];
+                const distance = calculateDistance(
+                    lastPoint.lat, lastPoint.lng,
+                    currentPoint.lat, currentPoint.lng
+                );
+                
+                // Only add point if it's far enough from the last point
+                if (distance >= MIN_DISTANCE_METERS) {
+                    filteredPoints.push(currentPoint);
+                }
+            }
+            
+            // Always include the last point
+            if (filteredPoints.length > 0 && 
+                filteredPoints[filteredPoints.length - 1] !== routePoints[routePoints.length - 1]) {
+                filteredPoints.push(routePoints[routePoints.length - 1]);
+            }
+
+            // Need at least 2 distinct points
+            if (filteredPoints.length < 2) {
+                console.warn('Not enough distinct points for road snapping. Using original route.');
+                snappedRoutePoints = routePoints;
+                return;
+            }
+
+            // OSRM Match API requires coordinates in [lng, lat] format
+            const coordinates = filteredPoints.map(p => [p.lng, p.lat]);
+            
+            // Build timestamps array - OSRM expects Unix timestamps in seconds
+            // Convert milliseconds to seconds
+            const timestamps = filteredPoints.map((p, i) => {
+                const timestamp = p.timestamp || Date.now();
+                // Convert to seconds (Unix timestamp)
+                return Math.floor(timestamp / 1000);
             });
 
             // Build the URL for OSRM Match service
@@ -822,7 +855,8 @@
                 batches.push({
                     startIdx: i,
                     coords: coordinates.slice(i, Math.min(i + maxPointsPerRequest, coordinates.length)),
-                    timestamps: timestamps.slice(i, Math.min(i + maxPointsPerRequest, timestamps.length))
+                    timestamps: timestamps.slice(i, Math.min(i + maxPointsPerRequest, timestamps.length)),
+                    originalIndices: Array.from({length: Math.min(maxPointsPerRequest, coordinates.length - i)}, (_, j) => i + j)
                 });
             }
 
@@ -830,49 +864,86 @@
 
             for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
                 const batch = batches[batchIdx];
-                const coordsString = batch.coords.map(c => `${c[0]},${c[1]}`).join(';');
-                const timestampsString = batch.timestamps.join(';');
+                
+                // Skip batches with duplicate coordinates
+                const uniqueCoords = [];
+                const uniqueTimestamps = [];
+                const seen = new Set();
+                
+                for (let i = 0; i < batch.coords.length; i++) {
+                    const coordKey = `${batch.coords[i][0]},${batch.coords[i][1]}`;
+                    if (!seen.has(coordKey)) {
+                        seen.add(coordKey);
+                        uniqueCoords.push(batch.coords[i]);
+                        uniqueTimestamps.push(batch.timestamps[i]);
+                    }
+                }
+                
+                // Need at least 2 unique points
+                if (uniqueCoords.length < 2) {
+                    console.warn('Batch has duplicate coordinates, using original points');
+                    const startIdx = batch.startIdx;
+                    const endIdx = Math.min(startIdx + maxPointsPerRequest, filteredPoints.length);
+                    snappedRoutePoints = snappedRoutePoints.concat(filteredPoints.slice(startIdx, endIdx));
+                    continue;
+                }
+                
+                const coordsString = uniqueCoords.map(c => `${c[0]},${c[1]}`).join(';');
+                const timestampsString = uniqueTimestamps.join(';');
                 
                 const url = `https://router.project-osrm.org/match/v1/driving/${coordsString}?timestamps=${timestampsString}&overview=full&geometries=geojson`;
 
                 try {
                     const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const data = await response.json();
 
                     if (data.code === 'Ok' && data.matchings && data.matchings.length > 0) {
                         const geometry = data.matchings[0].geometry;
                         
                         // Convert GeoJSON coordinates [lng, lat] to [lat, lng] for Leaflet
-                        if (geometry.type === 'LineString' && geometry.coordinates) {
-                            const snappedCoords = geometry.coordinates.map(coord => ({
-                                lat: coord[1],
-                                lng: coord[0],
-                                timestamp: Date.now() // Approximate timestamp
-                            }));
+                        if (geometry.type === 'LineString' && geometry.coordinates && geometry.coordinates.length > 0) {
+                            const snappedCoords = geometry.coordinates.map((coord, idx) => {
+                                // Try to preserve original timestamp if possible
+                                const originalIdx = Math.floor((idx / geometry.coordinates.length) * uniqueTimestamps.length);
+                                const timestamp = uniqueTimestamps[originalIdx] ? uniqueTimestamps[originalIdx] * 1000 : Date.now();
+                                
+                                return {
+                                    lat: coord[1],
+                                    lng: coord[0],
+                                    timestamp: timestamp
+                                };
+                            });
                             snappedRoutePoints = snappedRoutePoints.concat(snappedCoords);
                         } else {
                             // Fallback: use original points
                             const startIdx = batch.startIdx;
-                            const endIdx = Math.min(startIdx + maxPointsPerRequest, routePoints.length);
-                            snappedRoutePoints = snappedRoutePoints.concat(routePoints.slice(startIdx, endIdx));
+                            const endIdx = Math.min(startIdx + maxPointsPerRequest, filteredPoints.length);
+                            snappedRoutePoints = snappedRoutePoints.concat(filteredPoints.slice(startIdx, endIdx));
                         }
                     } else {
+                        console.warn('OSRM matching failed:', data.code, data.message || 'Unknown error');
                         // Fallback: use original points for this batch
                         const startIdx = batch.startIdx;
-                        const endIdx = Math.min(startIdx + maxPointsPerRequest, routePoints.length);
-                        snappedRoutePoints = snappedRoutePoints.concat(routePoints.slice(startIdx, endIdx));
+                        const endIdx = Math.min(startIdx + maxPointsPerRequest, filteredPoints.length);
+                        snappedRoutePoints = snappedRoutePoints.concat(filteredPoints.slice(startIdx, endIdx));
                     }
                 } catch (error) {
                     console.error('Error in batch snapping:', error);
                     // Fallback: use original points for this batch
                     const startIdx = batch.startIdx;
-                    const endIdx = Math.min(startIdx + maxPointsPerRequest, routePoints.length);
-                    snappedRoutePoints = snappedRoutePoints.concat(routePoints.slice(startIdx, endIdx));
+                    const endIdx = Math.min(startIdx + maxPointsPerRequest, filteredPoints.length);
+                    snappedRoutePoints = snappedRoutePoints.concat(filteredPoints.slice(startIdx, endIdx));
                 }
             }
 
             // Ensure we have at least the start and end points
             if (snappedRoutePoints.length === 0) {
+                console.warn('No snapped points generated, using original route');
                 snappedRoutePoints = routePoints;
             } else {
                 // Ensure first and last points match original
