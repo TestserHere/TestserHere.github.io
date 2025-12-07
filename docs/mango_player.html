@@ -769,7 +769,7 @@
                         <h3>📺 YouTube / YouTube Music</h3>
                         <div class="input-group">
                             <label for="youtube-url">Playlist URL or Video URL</label>
-                            <input type="text" id="youtube-url" placeholder="YouTube URL or Invidious URL...">
+                            <input type="text" id="youtube-url" placeholder="YouTube URL...">
                         </div>
                         <button class="btn" onclick="importYouTube()">Import YouTube Playlist</button>
                     </div>
@@ -823,7 +823,7 @@
         </div>
     </div>
 
-    <!-- Custom Invidious Search Implementation (No API Key Required, Ad-Free) -->
+    <!-- Custom YouTube Search Implementation (No API Key Required) -->
     <script type="module">
         // ============================================
         // AD BLOCKER SYSTEM (Audio Playback Only)
@@ -938,15 +938,13 @@
                 if (!url) return false;
                 const urlLower = url.toLowerCase();
                 
-                // Don't block YouTube API, Invidious (for search), or legitimate video services
+                // Don't block YouTube API or legitimate video services
                 if (urlLower.includes('youtube.com/iframe_api') ||
                     urlLower.includes('youtube.com/embed') ||
                     urlLower.includes('youtube.com/api') ||
                     urlLower.includes('youtube.com/watch') ||
-                    urlLower.includes('invidious.io') || 
-                    urlLower.includes('yewtu.be') || 
-                    urlLower.includes('inv.riverside.rocks') ||
-                    urlLower.includes('/api/v1/')) {
+                    urlLower.includes('youtube.com/results') ||
+                    urlLower.includes('youtube.com/search')) {
                     return false;
                 }
                 
@@ -1090,10 +1088,7 @@
             }, 3000);
         })();
         
-        // Invidious instance configuration (ad-free YouTube alternative for search only)
-        const INVIDIOUS_INSTANCE = 'https://invidious.io'; // Can be changed to: https://yewtu.be, https://inv.riverside.rocks, etc.
-        
-        // Custom Invidious Search using multiple methods
+        // Custom YouTube Search using multiple methods
         const YouTube = {
             // CORS proxy options (use public proxies - more reliable ones)
             // Note: cors-anywhere.herokuapp.com requires authentication now, so it's removed
@@ -1117,7 +1112,7 @@
                 this.currentProxyIndex = (this.currentProxyIndex + 1) % this.corsProxies.length;
             },
 
-            // Search videos using Invidious API (ad-free)
+            // Search YouTube videos
             search: async function(query, options = {}) {
                 const limit = options.limit || 20;
                 
@@ -1133,53 +1128,33 @@
                     throw new Error('Search query is empty');
                 }
                 
-                // Use Invidious API for search (ad-free, no CORS issues)
+                // Try method 1: Use YouTube's search suggestions API (no CORS needed for some endpoints)
                 try {
-                    const searchUrl = `${INVIDIOUS_INSTANCE}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-                    const response = await fetch(searchUrl);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Invidious API error: ${response.status}`);
+                    const results = await this.searchViaSuggestions(query, limit);
+                    if (results && results.length > 0) {
+                        return results;
                     }
+                } catch (error) {
+                    console.log('Suggestions API failed, trying proxy method:', error);
+                }
+                
+                // Try method 2: Use proxy to fetch YouTube search page
+                const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
+                
+                try {
+                    const html = await this.fetchWithProxy(searchUrl);
+                    const results = this.parseSearchResults(html, limit);
                     
-                    const data = await response.json();
-                    const results = [];
-                    
-                    for (let i = 0; i < Math.min(data.length, limit); i++) {
-                        const video = data[i];
-                        if (video && video.videoId) {
-                            // Parse duration
-                            const durationSeconds = video.lengthSeconds || 0;
-                            const durationFormatted = this.formatDuration(durationSeconds);
-                            
-                            results.push({
-                                id: video.videoId, // Add 'id' for compatibility with existing code
-                                title: video.title || 'Unknown',
-                                channel: { name: video.author || 'Unknown Artist' },
-                                thumbnail: { url: video.videoThumbnails && video.videoThumbnails.length > 0 
-                                    ? video.videoThumbnails[0].url 
-                                    : `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` },
-                                durationFormatted: durationFormatted,
-                                duration: durationSeconds * 1000, // Convert to milliseconds
-                                url: `${INVIDIOUS_INSTANCE}/watch?v=${video.videoId}`,
-                                videoId: video.videoId
-                            });
-                        }
+                    // If no results, try alternative method
+                    if (results.length === 0) {
+                        return await this.searchAlternative(query, limit);
                     }
                     
                     return results;
                 } catch (error) {
-                    console.error('Invidious search error:', error);
-                    // Fallback to proxy method if Invidious API fails
-                    try {
-                        const searchUrl = `${INVIDIOUS_INSTANCE}/search?q=${encodeURIComponent(query)}`;
-                        const html = await this.fetchWithProxy(searchUrl);
-                        const results = this.parseSearchResults(html, limit);
-                        return results.length > 0 ? results : [];
-                    } catch (fallbackError) {
-                        console.error('Fallback search also failed:', fallbackError);
-                        return [];
-                    }
+                    console.error('Proxy search error:', error);
+                    // Try alternative method using YouTube's data API endpoint
+                    return await this.searchAlternative(query, limit);
                 }
             },
             
@@ -1230,7 +1205,7 @@
                     iframe.style.display = 'none';
                     iframe.style.width = '1px';
                     iframe.style.height = '1px';
-                    iframe.src = `${INVIDIOUS_INSTANCE}/search?q=${encodeURIComponent(query)}`;
+                    iframe.src = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
                     
                     // This method is limited - we can't easily extract data from cross-origin iframe
                     // So we'll return empty and let other methods handle it
@@ -1405,7 +1380,7 @@
                                     thumbnail: { url: thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` },
                                     durationFormatted: lengthText,
                                     duration: this.parseDuration(lengthText),
-                                    url: `${INVIDIOUS_INSTANCE}/watch?v=${videoId}`
+                                    url: `https://www.youtube.com/watch?v=${videoId}`
                                 });
                             }
                         }
@@ -1471,7 +1446,7 @@
                                 thumbnail: { url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` },
                                 durationFormatted: '0:00',
                                 duration: 0,
-                                url: `${INVIDIOUS_INSTANCE}/watch?v=${videoId}`
+                                url: `https://www.youtube.com/watch?v=${videoId}`
                             });
                         }
                     }
@@ -1499,16 +1474,7 @@
                     // Sanitize query
                     query = query.trim().replace(/[\x00-\x1F\x7F-\x9F]/g, '').substring(0, 200);
                     
-                    // Try direct fetch first (might work in some browsers with extensions)
-                    try {
-                        const searchUrl = `${INVIDIOUS_INSTANCE}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-                        const response = await fetch(searchUrl, { mode: 'no-cors' });
-                        // no-cors doesn't allow reading, so this won't work
-                    } catch (e) {
-                        // Expected
-                    }
-                    
-                    // Use proxy method
+                    // Use proxy method to fetch YouTube search
                     const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
                     const html = await this.fetchWithProxy(searchUrl);
                     
@@ -1532,7 +1498,7 @@
             // Get video details
             getVideoDetails: async function(videoId) {
                 try {
-                    const url = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}`;
+                    const url = `https://www.youtube.com/watch?v=${videoId}`;
                     const html = await this.fetchWithProxy(url);
                     
                     // Extract title
@@ -1554,7 +1520,7 @@
 
             // Get playlist
             getPlaylist: async function(playlistId, options = {}) {
-                const url = `${INVIDIOUS_INSTANCE}/playlist?list=${playlistId}`;
+                const url = `https://www.youtube.com/playlist?list=${playlistId}`;
                 try {
                     const html = await this.fetchWithProxy(url);
                     return this.parsePlaylist(html, playlistId, options);
@@ -1583,7 +1549,7 @@
                                     thumbnail: { url: video.thumbnail?.thumbnails?.[0]?.url || '' },
                                     durationFormatted: video.lengthText?.simpleText || '0:00',
                                     duration: this.parseDuration(video.lengthText?.simpleText || '0:00'),
-                                    url: `${INVIDIOUS_INSTANCE}/watch?v=${video.videoId}`
+                                    url: `https://www.youtube.com/watch?v=${video.videoId}`
                                 });
                             }
                         }
@@ -1610,21 +1576,21 @@
             getVideo: async function(urlOrId) {
                 let videoId = '';
                 
-                // Handle different YouTube/Invidious URL formats
+                // Handle different YouTube URL formats
                 if (urlOrId.includes('youtu.be/')) {
                     // Short URL: https://youtu.be/VIDEO_ID
                     videoId = urlOrId.split('youtu.be/')[1].split('?')[0].split('&')[0];
                 } else if (urlOrId.includes('watch?v=')) {
-                    // Standard URL: https://www.youtube.com/watch?v=VIDEO_ID or https://invidious.io/watch?v=VIDEO_ID
+                    // Standard URL: https://www.youtube.com/watch?v=VIDEO_ID
                     videoId = urlOrId.split('watch?v=')[1].split('&')[0].split('#')[0];
                 } else if (urlOrId.includes('embed/')) {
-                    // Embed URL: https://www.youtube.com/embed/VIDEO_ID or https://invidious.io/embed/VIDEO_ID
+                    // Embed URL: https://www.youtube.com/embed/VIDEO_ID
                     videoId = urlOrId.split('embed/')[1].split('?')[0].split('&')[0];
                 } else if (urlOrId.match(/^[a-zA-Z0-9_-]{11}$/)) {
                     // Just the video ID
                     videoId = urlOrId;
                 } else {
-                    throw new Error('Invalid YouTube/Invidious URL or video ID');
+                    throw new Error('Invalid YouTube URL or video ID');
                 }
                 
                 // Validate video ID format
@@ -2271,7 +2237,7 @@
                                 let video;
                                 if (track.url) {
                                     // Validate URL
-                                    if (typeof track.url === 'string' && (track.url.includes('youtube.com') || track.url.includes('invidious.io') || track.url.includes('yewtu.be'))) {
+                                    if (typeof track.url === 'string' && track.url.includes('youtube.com')) {
                                         video = await YouTube.getVideo(track.url);
                                     }
                                 } else {
@@ -3195,7 +3161,7 @@
             const clickX = event.clientX - rect.left;
             const percentage = clickX / rect.width;
 
-            // Try Invidious player first
+            // Try YouTube API player first
             if (youtubePlayer && isPlayerReady) {
                 try {
                     if (typeof youtubePlayer.getDuration === 'function' && typeof youtubePlayer.seekTo === 'function') {
