@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Permissions-Policy" content="autoplay=*, encrypted-media=*, accelerometer=*, gyroscope=*, picture-in-picture=*, clipboard-write=*, web-share=*">
-    <title>Advanced Music Player</title>
+    <title>Mango Player</title>
     <style>
         * {
             margin: 0;
@@ -855,6 +855,8 @@
                             const durationFormatted = this.formatDuration(durationSeconds);
                             
                             results.push({
+                                id: video.videoId, // Add id for compatibility
+                                videoId: video.videoId,
                                 title: video.title || 'Unknown',
                                 channel: { name: video.author || 'Unknown Artist' },
                                 thumbnail: { url: video.videoThumbnails && video.videoThumbnails.length > 0 
@@ -862,8 +864,7 @@
                                     : `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` },
                                 durationFormatted: durationFormatted,
                                 duration: durationSeconds * 1000, // Convert to milliseconds
-                                url: `${INVIDIOUS_INSTANCE}/watch?v=${video.videoId}`,
-                                videoId: video.videoId
+                                url: `${INVIDIOUS_INSTANCE}/watch?v=${video.videoId}`
                             });
                         }
                     }
@@ -963,9 +964,10 @@
             },
 
             // Fetch with CORS proxy
-            fetchWithProxy: async function(url) {
+            fetchWithProxy: async function(url, options = {}) {
                 let lastError;
                 const maxRetries = this.corsProxies.length;
+                const isJson = options.json || false;
                 
                 for (let i = 0; i < maxRetries; i++) {
                     try {
@@ -987,21 +989,37 @@
                             proxyUrl = proxy + encodeURIComponent(url);
                         }
                         
+                        const headers = {
+                            'Accept-Language': 'en-US,en;q=0.5'
+                        };
+                        
+                        if (isJson) {
+                            headers['Accept'] = 'application/json';
+                        } else {
+                            headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
+                        }
+                        
                         const response = await fetch(proxyUrl, {
                             method: 'GET',
                             mode: 'cors',
-                            headers: {
-                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                                'Accept-Language': 'en-US,en;q=0.5'
-                            }
+                            headers: headers
                         });
                         
                         if (response.ok) {
-                            const text = await response.text();
-                            if (text && text.length > 100) { // Basic validation
-                                return text;
+                            if (isJson) {
+                                const text = await response.text();
+                                try {
+                                    return JSON.parse(text);
+                                } catch (e) {
+                                    throw new Error('Invalid JSON response');
+                                }
+                            } else {
+                                const text = await response.text();
+                                if (text && text.length > 100) { // Basic validation
+                                    return text;
+                                }
+                                throw new Error('Empty or invalid response');
                             }
-                            throw new Error('Empty or invalid response');
                         }
                         
                         // If 403 Forbidden, skip this proxy permanently for this session
@@ -2155,9 +2173,24 @@
                 loadVideoById: function(videoIdObj) {
                     const videoId = typeof videoIdObj === 'object' ? videoIdObj.videoId : videoIdObj;
                     if (invidiousIframe) {
-                        invidiousIframe.src = `${INVIDIOUS_INSTANCE}/embed/${videoId}?autoplay=1&controls=0&loop=0&mute=0`;
+                        // Invidious embed format - use watch page with autoplay for better compatibility
+                        invidiousIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
                         // Fetch video info from Invidious API
                         fetchVideoInfoFromInvidious(videoId);
+                        // Set playing state and initialize playback tracking
+                        isPlaying = true;
+                        updatePlayPauseButton();
+                        // Initialize playback start time for time tracking
+                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                            trackDuration = playlist[currentTrackIndex].duration / 1000; // Convert ms to seconds
+                            playbackStartTime = Date.now();
+                        }
+                        // Start time tracking after a short delay to allow video to load
+                        setTimeout(() => {
+                            if (isPlaying) {
+                                startTimeUpdate();
+                            }
+                        }, 500);
                     }
                 },
                 playVideo: function() {
@@ -2169,6 +2202,10 @@
                             console.log('Could not send play command:', e);
                         }
                     }
+                    // Set playing state and start time tracking
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    startTimeUpdate();
                 },
                 pauseVideo: function() {
                     if (invidiousIframe && invidiousIframe.contentWindow) {
@@ -2178,6 +2215,10 @@
                             console.log('Could not send pause command:', e);
                         }
                     }
+                    // Set paused state and stop time tracking
+                    isPlaying = false;
+                    updatePlayPauseButton();
+                    stopTimeUpdate();
                 },
                 seekTo: function(seconds, allowSeekAhead) {
                     if (invidiousIframe && invidiousIframe.contentWindow) {
@@ -2186,6 +2227,12 @@
                         } catch (e) {
                             console.log('Could not send seek command:', e);
                         }
+                    }
+                    // Update playback tracking for seek
+                    invidiousCurrentTime = seconds;
+                    if (trackDuration > 0) {
+                        playbackStartTime = Date.now() - (seconds * 1000);
+                        updateTimeDisplay(seconds, trackDuration);
                     }
                 },
                 getCurrentTime: function() {
@@ -2223,21 +2270,79 @@
             checkPlayerReady();
         }
 
-        // Fetch video info from Invidious API
+        // Fetch video info from Invidious API (using proxy to avoid CORS)
         async function fetchVideoInfoFromInvidious(videoId) {
             try {
-                const response = await fetch(`${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    invidiousDuration = data.lengthSeconds || 0;
-                    // Update track duration if available
-                    if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
-                        playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
-                        playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                const apiUrl = `${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`;
+                
+                // Try direct fetch first (some Invidious instances allow CORS)
+                try {
+                    const response = await fetch(apiUrl);
+                    if (response.ok) {
+                        const data = await response.json();
+                        invidiousDuration = data.lengthSeconds || 0;
+                        // Update track duration if available
+                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                            playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
+                            playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                        }
+                        return;
+                    }
+                } catch (directError) {
+                    // CORS error, use proxy - this is expected for most Invidious instances
+                    console.log('Direct fetch blocked by CORS, using proxy');
+                }
+                
+                // Use allorigins.win for JSON (it has better JSON support)
+                try {
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        const proxyData = await response.json();
+                        if (proxyData.contents) {
+                            const data = JSON.parse(proxyData.contents);
+                            invidiousDuration = data.lengthSeconds || 0;
+                            // Update track duration if available
+                            if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                                playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
+                                playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                            }
+                            return;
+                        }
+                    }
+                } catch (alloriginsError) {
+                    console.log('AllOrigins proxy failed, trying other proxies');
+                }
+                
+                // Fallback: Use proxy for CORS issues (request JSON)
+                if (YouTube && typeof YouTube.fetchWithProxy === 'function') {
+                    try {
+                        const data = await YouTube.fetchWithProxy(apiUrl, { json: true });
+                        invidiousDuration = data.lengthSeconds || 0;
+                        // Update track duration if available
+                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                            playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
+                            playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                        }
+                    } catch (proxyError) {
+                        console.error('All proxy methods failed:', proxyError);
+                        // Fallback: use track duration if available
+                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
+                            invidiousDuration = playlist[currentTrackIndex].duration / 1000;
+                        }
+                    }
+                } else {
+                    // Fallback: use track duration if available
+                    if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
+                        invidiousDuration = playlist[currentTrackIndex].duration / 1000;
                     }
                 }
             } catch (error) {
                 console.error('Error fetching video info from Invidious:', error);
+                // Fallback: use track duration if available
+                if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
+                    invidiousDuration = playlist[currentTrackIndex].duration / 1000;
+                }
             }
         }
 
@@ -2351,7 +2456,7 @@
             audioIframe.width = '100';
             audioIframe.height = '100';
             audioIframe.allow = 'autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture';
-            audioIframe.src = `${INVIDIOUS_INSTANCE}/embed/${videoId}?autoplay=1&controls=0&loop=0&mute=0`;
+            audioIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
             
             iframeDiv.appendChild(audioIframe);
             container.appendChild(iframeDiv);
