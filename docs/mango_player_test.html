@@ -941,10 +941,19 @@
                 '#google_ads_iframe'
             ];
             
-            // Check if URL is an ad
+            // Check if URL is an ad (exclude Invidious and legitimate video APIs)
             function isAdUrl(url) {
                 if (!url) return false;
                 const urlLower = url.toLowerCase();
+                
+                // Don't block Invidious URLs
+                if (urlLower.includes('invidious.io') || 
+                    urlLower.includes('yewtu.be') || 
+                    urlLower.includes('inv.riverside.rocks') ||
+                    urlLower.includes('/api/v1/')) {
+                    return false;
+                }
+                
                 return adDomains.some(domain => urlLower.includes(domain)) ||
                        adKeywords.some(keyword => urlLower.includes(keyword));
             }
@@ -2517,10 +2526,14 @@
                         checkPlayerReady();
                     }
 
-        // Fetch video info from Invidious API
+        // Fetch video info from Invidious API (using proxy to avoid CORS)
         async function fetchVideoInfoFromInvidious(videoId) {
             try {
-                const response = await fetch(`${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`);
+                // Use proxy to avoid CORS issues
+                const apiUrl = `${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`;
+                const proxyUrl = YouTube.getProxyUrl(apiUrl);
+                
+                const response = await fetch(proxyUrl);
                 if (response.ok) {
                     const data = await response.json();
                     invidiousDuration = data.lengthSeconds || 0;
@@ -2532,6 +2545,10 @@
                 }
             } catch (error) {
                 console.error('Error fetching video info from Invidious:', error);
+                // Try alternative: use the track's existing duration if available
+                if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
+                    invidiousDuration = playlist[currentTrackIndex].duration / 1000;
+                }
             }
         }
 
@@ -2720,6 +2737,10 @@
                             });
                             youtubePlayer.playVideo();
                             pendingVideoId = null;
+                            // Ensure time tracking starts
+                            isPlaying = true;
+                            updatePlayPauseButton();
+                            startTimeUpdate();
                         } catch (e) {
                             console.error('Error loading video:', e);
                         }
@@ -2775,6 +2796,10 @@
                             // Play video (user interaction allows autoplay)
                             youtubePlayer.playVideo();
                             console.log('playVideo() called');
+                            // Ensure time tracking starts
+                            isPlaying = true;
+                            updatePlayPauseButton();
+                            startTimeUpdate();
                         } else {
                             console.warn('playVideo method not available, trying direct iframe fallback');
                             // Fallback: create direct iframe
@@ -2828,6 +2853,10 @@
                                     // Play
                                     youtubePlayer.playVideo();
                                     console.log('Playing video after initialization');
+                                    // Ensure time tracking starts
+                                    isPlaying = true;
+                                    updatePlayPauseButton();
+                                    startTimeUpdate();
                                 }
                             }, 1500);
                             pendingVideoId = null;
@@ -2865,7 +2894,20 @@
                 trackDuration = track.duration / 1000;
                 playbackStartTime = Date.now();
                 updateTimeDisplay(0, trackDuration);
-                // Don't start time update until actually playing
+                // Start time update - will update when isPlaying becomes true
+                // Set isPlaying to true and start tracking after a short delay
+                setTimeout(() => {
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    startTimeUpdate();
+                }, 1000);
+            } else {
+                // If no duration, still start tracking (will get duration from player)
+                setTimeout(() => {
+                    isPlaying = true;
+                    updatePlayPauseButton();
+                    startTimeUpdate();
+                }, 1000);
             }
 
             console.log('Track queued:', track.title);
@@ -2881,13 +2923,23 @@
 
             // Get track duration
             if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
-                trackDuration = playlist[currentTrackIndex].duration / 1000; // Convert ms to seconds
-                playbackStartTime = Date.now();
+                const track = playlist[currentTrackIndex];
+                if (track.duration) {
+                    trackDuration = track.duration / 1000; // Convert ms to seconds
+                }
+                if (!playbackStartTime) {
+                    playbackStartTime = Date.now();
+                }
             }
 
             currentTimeUpdateInterval = setInterval(() => {
+                // Only update if actually playing
+                if (!isPlaying) {
+                    return;
+                }
+
                 // Try Invidious player first (if available)
-                if (youtubePlayer && isPlaying && isPlayerReady) {
+                if (youtubePlayer && isPlayerReady) {
                     try {
                         if (typeof youtubePlayer.getCurrentTime === 'function' && typeof youtubePlayer.getDuration === 'function') {
                             const currentTime = youtubePlayer.getCurrentTime();
@@ -2898,6 +2950,7 @@
                                 trackDuration = duration;
                                 invidiousDuration = duration;
                                 invidiousCurrentTime = currentTime;
+                                playbackStartTime = Date.now() - (currentTime * 1000);
                                 
                                 // Check if ended
                                 if (currentTime >= duration - 0.5) {
@@ -2908,11 +2961,12 @@
                         }
                     } catch (error) {
                         // Fall through to duration-based tracking
+                        console.log('Player time methods not available, using duration-based tracking');
                     }
                 }
                 
                 // Fallback: Use duration-based tracking (works well with Invidious)
-                if (isPlaying && playbackStartTime && trackDuration > 0) {
+                if (playbackStartTime && trackDuration > 0) {
                     const elapsed = (Date.now() - playbackStartTime) / 1000;
                     invidiousCurrentTime = elapsed;
                     
@@ -2921,6 +2975,14 @@
                         nextTrack();
                     } else {
                         updateTimeDisplay(elapsed, trackDuration);
+                    }
+                } else if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                    // If we don't have duration yet, try to get it from track
+                    const track = playlist[currentTrackIndex];
+                    if (track.duration) {
+                        trackDuration = track.duration / 1000;
+                        playbackStartTime = Date.now();
+                        updateTimeDisplay(0, trackDuration);
                     }
                 }
             }, 100);
@@ -2983,9 +3045,13 @@
                 try {
                     if (typeof youtubePlayer.getPlayerState === 'function') {
                         const state = youtubePlayer.getPlayerState();
-                        if (state === YT.PlayerState.PLAYING) {
+                        // State 1 = playing, 2 = paused
+                        if (state === 1 || state === YT?.PlayerState?.PLAYING) {
                             if (typeof youtubePlayer.pauseVideo === 'function') {
                                 youtubePlayer.pauseVideo();
+                                isPlaying = false;
+                                stopTimeUpdate();
+                                updatePlayPauseButton();
                             }
                         } else {
                             if (typeof youtubePlayer.playVideo === 'function') {
@@ -2996,19 +3062,38 @@
                                     }
                                 } catch (e) {}
                                 youtubePlayer.playVideo();
+                                isPlaying = true;
+                                updatePlayPauseButton();
+                                startTimeUpdate();
                             } else {
                                 // Player not ready, load track
                                 playTrack(currentTrackIndex);
                             }
                         }
                     } else {
-                        // Methods not available, load track
-                        playTrack(currentTrackIndex);
+                        // Methods not available, toggle manually
+                        if (isPlaying) {
+                            isPlaying = false;
+                            stopTimeUpdate();
+                            updatePlayPauseButton();
+                        } else {
+                            isPlaying = true;
+                            updatePlayPauseButton();
+                            startTimeUpdate();
+                        }
                     }
                 } catch (error) {
                     console.error('Error toggling play/pause:', error);
-                    // Fallback: reload track
-                    playTrack(currentTrackIndex);
+                    // Toggle manually
+                    if (isPlaying) {
+                        isPlaying = false;
+                        stopTimeUpdate();
+                        updatePlayPauseButton();
+                    } else {
+                        isPlaying = true;
+                        updatePlayPauseButton();
+                        startTimeUpdate();
+                    }
                 }
             } else {
                 // Player not ready, load track
