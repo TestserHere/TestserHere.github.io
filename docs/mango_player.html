@@ -473,13 +473,16 @@
             margin-bottom: 30px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             overflow: hidden;
+            display: block !important;
+            visibility: visible !important;
         }
 
         .tabs-header {
-            display: flex;
+            display: flex !important;
             background: rgba(255, 255, 255, 0.05);
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             overflow-x: auto;
+            visibility: visible !important;
         }
 
         .tab-button {
@@ -510,10 +513,12 @@
         .tab-content {
             display: none;
             padding: 25px;
+            visibility: visible !important;
         }
 
         .tab-content.active {
-            display: block;
+            display: block !important;
+            visibility: visible !important;
         }
 
         /* Search Results */
@@ -1025,7 +1030,106 @@
                         // Ignore errors for invalid selectors
                     }
                 });
+                
+                // Remove YouTube-specific ad overlays
+                const ytAdSelectors = [
+                    '[class*="ytp-ad"]',
+                    '[id*="ytp-ad"]',
+                    '[class*="ad-showing"]',
+                    '[class*="ad-interrupting"]',
+                    '.ytp-ad-module',
+                    '.ytp-ad-overlay',
+                    '.ytp-ad-text',
+                    '.ytp-skip-ad-button-container'
+                ];
+                
+                ytAdSelectors.forEach(selector => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach(element => {
+                            adBlockStats.elements++;
+                            adsBlocked++;
+                            element.remove();
+                            console.log('[Ad Blocker] Removed YouTube ad overlay');
+                        });
+                    } catch (e) {
+                        // Ignore
+                    }
+                });
             }
+            
+            // Intercept postMessage to block ad-related messages (but allow YouTube player commands)
+            const originalPostMessage = window.postMessage;
+            window.postMessage = function(message, targetOrigin, transfer) {
+                // Block ad-related postMessages, but allow YouTube player commands
+                if (typeof message === 'string') {
+                    // Allow YouTube player commands (playVideo, pauseVideo, seekTo, etc.)
+                    if (message.includes('"event":"command"') && 
+                        (message.includes('playVideo') || message.includes('pauseVideo') || 
+                         message.includes('seekTo') || message.includes('setVolume') ||
+                         message.includes('unMute') || message.includes('mute'))) {
+                        return originalPostMessage.apply(this, arguments);
+                    }
+                    
+                    try {
+                        const msg = JSON.parse(message);
+                        // Allow YouTube player commands
+                        if (msg.event === 'command' && 
+                            (msg.func === 'playVideo' || msg.func === 'pauseVideo' || 
+                             msg.func === 'seekTo' || msg.func === 'setVolume' ||
+                             msg.func === 'unMute' || msg.func === 'mute')) {
+                            return originalPostMessage.apply(this, arguments);
+                        }
+                        // Block ad-related messages
+                        if (msg.event === 'ad' || msg.type === 'ad' || 
+                            (msg.func && (msg.func.includes('ad') || msg.func === 'skipAd'))) {
+                            adBlockStats.requests++;
+                            adsBlocked++;
+                            console.log('[Ad Blocker] Blocked ad postMessage');
+                            return;
+                        }
+                    } catch (e) {
+                        // Not JSON, check if it contains ad keywords (but not player commands)
+                        const msgLower = message.toLowerCase();
+                        if ((msgLower.includes('"ad"') || msgLower.includes('advertisement') || 
+                             msgLower.includes('advertising')) && 
+                            !msgLower.includes('playvideo') && !msgLower.includes('pausevideo')) {
+                            adBlockStats.requests++;
+                            adsBlocked++;
+                            console.log('[Ad Blocker] Blocked ad postMessage');
+                            return;
+                        }
+                    }
+                }
+                return originalPostMessage.apply(this, arguments);
+            };
+            
+            // Try to skip YouTube ads via postMessage
+            function trySkipYouTubeAds() {
+                const iframes = document.querySelectorAll('iframe[src*="youtube.com"]');
+                iframes.forEach(iframe => {
+                    try {
+                        if (iframe.contentWindow) {
+                            // Try to send skip ad command (may not work due to CORS)
+                            try {
+                                iframe.contentWindow.postMessage('{"event":"command","func":"skipAd","args":""}', '*');
+                                // Also try to seek forward if ad is detected
+                                iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[999999,true]}', '*');
+                            } catch (e) {
+                                // CORS restriction - expected
+                            }
+                        }
+                    } catch (e) {
+                        // CORS restrictions prevent direct access
+                    }
+                });
+            }
+            
+            // Monitor for YouTube ads periodically and try to skip them
+            setInterval(() => {
+                removeAdElements();
+                trySkipYouTubeAds();
+            }, 500);
             
             // Monitor DOM for new ad elements
             const domObserver = new MutationObserver((mutations) => {
@@ -1063,10 +1167,34 @@
                     attributeFilter: ['src', 'href', 'class', 'id']
                 });
                 
-                // Periodic cleanup
-                setInterval(removeAdElements, 2000);
+                // Periodic cleanup and ad skipping
+                setInterval(() => {
+                    removeAdElements();
+                    trySkipYouTubeAds();
+                }, 500);
                 
                 console.log('[Ad Blocker] Initialized - Ads will be blocked during playback');
+            }
+            
+            // Try to skip YouTube ads via postMessage
+            function trySkipYouTubeAds() {
+                const iframes = document.querySelectorAll('iframe[src*="youtube.com"]');
+                iframes.forEach(iframe => {
+                    try {
+                        if (iframe.contentWindow) {
+                            // Try to send skip ad command (may not work due to CORS)
+                            try {
+                                iframe.contentWindow.postMessage('{"event":"command","func":"skipAd","args":""}', '*');
+                                // Also try to seek forward if ad is detected
+                                iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[999999,true]}', '*');
+                            } catch (e) {
+                                // CORS restriction - expected
+                            }
+                        }
+                    } catch (e) {
+                        // CORS restrictions prevent direct access
+                    }
+                });
             }
             
             // Initialize when DOM is ready
@@ -1685,6 +1813,7 @@
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
+                tab.style.display = 'none';
             });
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
@@ -1694,6 +1823,7 @@
             const tabContent = document.getElementById(`tab-${tabName}`);
             if (tabContent) {
                 tabContent.classList.add('active');
+                tabContent.style.display = 'block';
             }
             
             // Activate the clicked button
@@ -1708,6 +1838,26 @@
                 }
             }
         };
+        
+        // Ensure tabs are visible on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabsContainer = document.querySelector('.tabs-container');
+            if (tabsContainer) {
+                tabsContainer.style.display = 'block';
+                tabsContainer.style.visibility = 'visible';
+            }
+            const tabsHeader = document.querySelector('.tabs-header');
+            if (tabsHeader) {
+                tabsHeader.style.display = 'flex';
+                tabsHeader.style.visibility = 'visible';
+            }
+            // Show player tab by default
+            const playerTab = document.getElementById('tab-player');
+            if (playerTab) {
+                playerTab.style.display = 'block';
+                playerTab.classList.add('active');
+            }
+        });
 
         // YouTube Search
         window.searchYouTube = async function() {
@@ -2444,12 +2594,13 @@
                         'modestbranding': 1,
                         'enablejsapi': 1,
                         'playsinline': 1,
-                        'iv_load_policy': 3,
+                        'iv_load_policy': 3,  // Hide annotations
                         'origin': window.location.origin,
                         'fs': 0,  // Disable fullscreen
                         'cc_load_policy': 0,  // No captions
                         'disablekb': 1,  // Disable keyboard controls
-                        'mute': 0  // Don't mute (important for audio)
+                        'mute': 0,  // Don't mute (important for audio)
+                        'adtest': 0  // Disable ad testing
                     },
                     events: {
                         'onReady': onPlayerReady,
@@ -2594,7 +2745,40 @@
 
         function onPlayerStateChange(event) {
             console.log('Player state changed:', event.data);
-            if (event.data === YT.PlayerState.PLAYING) {
+            
+            // Detect and skip ads (YouTube PlayerState.AD_STATE = 3)
+            if (event.data === 3 || event.data === YT?.PlayerState?.AD_STATE) {
+                console.log('[Ad Blocker] Ad detected, attempting to skip...');
+                // Try to skip the ad
+                if (youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
+                    try {
+                        // Try to seek to end of video to skip ad
+                        const duration = youtubePlayer.getDuration();
+                        if (duration) {
+                            youtubePlayer.seekTo(duration, true);
+                        }
+                        // Also try to play next track
+                        setTimeout(() => {
+                            if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
+                                youtubePlayer.playVideo();
+                            }
+                        }, 100);
+                    } catch (e) {
+                        console.log('Could not skip ad:', e);
+                    }
+                }
+                // Update ad blocker stats
+                if (window.adBlockStats) {
+                    window.adBlockStats.requests++;
+                }
+                if (window.getAdsBlocked) {
+                    const current = window.getAdsBlocked();
+                    window.getAdsBlocked = () => current + 1;
+                }
+                return;
+            }
+            
+            if (event.data === YT.PlayerState.PLAYING || event.data === 1) {
                 isPlaying = true;
                 updatePlayPauseButton();
                 startTimeUpdate();
@@ -2609,18 +2793,18 @@
                 } catch (e) {
                     console.log('Could not unmute on play:', e);
                 }
-            } else if (event.data === YT.PlayerState.PAUSED) {
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === 2) {
                 isPlaying = false;
                 updatePlayPauseButton();
                 stopTimeUpdate();
-            } else if (event.data === YT.PlayerState.ENDED) {
+            } else if (event.data === YT.PlayerState.ENDED || event.data === 0) {
                 isPlaying = false;
                 updatePlayPauseButton();
                 stopTimeUpdate();
                 // Auto-play next track
                 console.log('Track ended, playing next');
                 nextTrack();
-            } else if (event.data === YT.PlayerState.CUED) {
+            } else if (event.data === YT.PlayerState.CUED || event.data === 5) {
                 // Video is cued, try to play it
                 console.log('Video cued, attempting to play');
                 setTimeout(() => {
