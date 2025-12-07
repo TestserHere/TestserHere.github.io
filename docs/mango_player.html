@@ -36,31 +36,6 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .ad-block-indicator {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .ad-block-indicator .icon {
-            font-size: 1.2em;
-        }
-
-        .ad-block-stats {
-            font-size: 0.75em;
-            opacity: 0.9;
-        }
 
         .import-section {
             background: rgba(255, 255, 255, 0.1);
@@ -473,16 +448,13 @@
             margin-bottom: 30px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             overflow: hidden;
-            display: block !important;
-            visibility: visible !important;
         }
 
         .tabs-header {
-            display: flex !important;
+            display: flex;
             background: rgba(255, 255, 255, 0.05);
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             overflow-x: auto;
-            visibility: visible !important;
         }
 
         .tab-button {
@@ -513,12 +485,10 @@
         .tab-content {
             display: none;
             padding: 25px;
-            visibility: visible !important;
         }
 
         .tab-content.active {
-            display: block !important;
-            visibility: visible !important;
+            display: block;
         }
 
         /* Search Results */
@@ -683,13 +653,6 @@
     </style>
 </head>
 <body>
-    <!-- Ad Blocker Indicator -->
-    <div class="ad-block-indicator" id="ad-block-indicator">
-        <span class="icon">🛡️</span>
-        <span>Ad Blocker Active</span>
-        <span class="ad-block-stats" id="ad-block-count">0 blocked</span>
-    </div>
-
     <!-- Hidden YouTube player container -->
     <div id="youtube-player-container">
         <div id="youtube-player"></div>
@@ -830,392 +793,6 @@
 
     <!-- Custom YouTube Search Implementation (No API Key Required) -->
     <script type="module">
-        // ============================================
-        // AD BLOCKER SYSTEM (Audio Playback Only)
-        // ============================================
-        (function() {
-            'use strict';
-            
-            // Ad blocking statistics
-            let adsBlocked = 0;
-            const adBlockStats = {
-                requests: 0,
-                elements: 0,
-                iframes: 0
-            };
-            
-            // Common ad domains and patterns
-            const adDomains = [
-                'doubleclick.net',
-                'googleadservices.com',
-                'googlesyndication.com',
-                'google-analytics.com',
-                'googletagmanager.com',
-                'adservice.google',
-                'ads.youtube.com',
-                'advertising.com',
-                'adserver.com',
-                'adtech.com',
-                'adnxs.com',
-                'adsafeprotected.com',
-                'adsystem.com',
-                'adform.net',
-                'adroll.com',
-                'adsrvr.org',
-                'adtechus.com',
-                'amazon-adsystem.com',
-                'criteo.com',
-                'facebook.com/tr',
-                'scorecardresearch.com',
-                'quantserve.com',
-                'outbrain.com',
-                'taboola.com',
-                'media.net',
-                'pubmatic.com',
-                'rubiconproject.com',
-                'openx.net',
-                'advertising.yahoo.com',
-                'ads.yahoo.com',
-                'yieldmo.com',
-                'moatads.com'
-            ];
-            
-            const adKeywords = [
-                '/ads/',
-                '/advertisement',
-                '/advertising',
-                '/adserver',
-                '/adserv',
-                '/banner',
-                '/popup',
-                '/sponsor',
-                'doubleclick',
-                'googlesyndication',
-                'advertising',
-                'adserver',
-                'adtech',
-                'adform',
-                'adroll',
-                'adsrvr',
-                'adtechus',
-                'amazon-adsystem',
-                'criteo',
-                'scorecardresearch',
-                'quantserve',
-                'outbrain',
-                'taboola',
-                'media.net',
-                'pubmatic',
-                'rubiconproject',
-                'openx',
-                'yieldmo',
-                'moatads'
-            ];
-            
-            // Ad element selectors
-            const adSelectors = [
-                '[class*="ad"]',
-                '[id*="ad"]',
-                '[class*="advertisement"]',
-                '[id*="advertisement"]',
-                '[class*="banner"]',
-                '[id*="banner"]',
-                '[class*="sponsor"]',
-                '[id*="sponsor"]',
-                'iframe[src*="doubleclick"]',
-                'iframe[src*="googlesyndication"]',
-                'iframe[src*="ad"]',
-                'div[data-ad]',
-                'div[data-ads]',
-                'ins.adsbygoogle',
-                '.ad-container',
-                '.ad-wrapper',
-                '.ad-banner',
-                '.advertisement',
-                '.advert',
-                '.advertising',
-                '#google_ads',
-                '#google_ads_iframe'
-            ];
-            
-            // Check if URL is an ad (exclude YouTube API and legitimate video services)
-            function isAdUrl(url) {
-                if (!url) return false;
-                const urlLower = url.toLowerCase();
-                
-                // Don't block YouTube API or legitimate video services
-                if (urlLower.includes('youtube.com/iframe_api') ||
-                    urlLower.includes('youtube.com/embed') ||
-                    urlLower.includes('youtube.com/api') ||
-                    urlLower.includes('youtube.com/watch') ||
-                    urlLower.includes('youtube.com/results') ||
-                    urlLower.includes('youtube.com/search')) {
-                    return false;
-                }
-                
-                return adDomains.some(domain => urlLower.includes(domain)) ||
-                       adKeywords.some(keyword => urlLower.includes(keyword));
-            }
-            
-            // Block fetch requests
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-                const url = args[0];
-                if (typeof url === 'string' && isAdUrl(url)) {
-                    adBlockStats.requests++;
-                    adsBlocked++;
-                    console.log('[Ad Blocker] Blocked fetch request:', url);
-                    return Promise.reject(new Error('Ad blocked'));
-                }
-                return originalFetch.apply(this, args);
-            };
-            
-            // Block XMLHttpRequest
-            const originalXHROpen = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-                if (isAdUrl(url)) {
-                    adBlockStats.requests++;
-                    adsBlocked++;
-                    console.log('[Ad Blocker] Blocked XHR request:', url);
-                    return;
-                }
-                return originalXHROpen.apply(this, [method, url, ...rest]);
-            };
-            
-            // Block ad iframes
-            const originalCreateElement = document.createElement;
-            document.createElement = function(tagName, ...rest) {
-                const element = originalCreateElement.apply(this, [tagName, ...rest]);
-                if (tagName.toLowerCase() === 'iframe') {
-                    const observer = new MutationObserver((mutations) => {
-                        mutations.forEach((mutation) => {
-                            if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
-                                const src = element.getAttribute('src');
-                                if (src && isAdUrl(src)) {
-                                    adBlockStats.iframes++;
-                                    adsBlocked++;
-                                    element.remove();
-                                    console.log('[Ad Blocker] Blocked ad iframe:', src);
-                                }
-                            }
-                        });
-                    });
-                    observer.observe(element, { attributes: true, attributeFilter: ['src'] });
-                }
-                return element;
-            };
-            
-            // Remove ad elements from DOM
-            function removeAdElements() {
-                adSelectors.forEach(selector => {
-                    try {
-                        const elements = document.querySelectorAll(selector);
-                        elements.forEach(element => {
-                            const src = element.src || element.href || '';
-                            const className = element.className || '';
-                            const id = element.id || '';
-                            const text = element.textContent || '';
-                            
-                            if (isAdUrl(src) || 
-                                (typeof className === 'string' && className.toLowerCase().includes('ad')) ||
-                                (typeof id === 'string' && id.toLowerCase().includes('ad')) ||
-                                (typeof text === 'string' && text.toLowerCase().includes('advertisement'))) {
-                                adBlockStats.elements++;
-                                adsBlocked++;
-                                element.remove();
-                                console.log('[Ad Blocker] Removed ad element:', selector);
-                            }
-                        });
-                    } catch (e) {
-                        // Ignore errors for invalid selectors
-                    }
-                });
-                
-                // Remove YouTube-specific ad overlays
-                const ytAdSelectors = [
-                    '[class*="ytp-ad"]',
-                    '[id*="ytp-ad"]',
-                    '[class*="ad-showing"]',
-                    '[class*="ad-interrupting"]',
-                    '.ytp-ad-module',
-                    '.ytp-ad-overlay',
-                    '.ytp-ad-text',
-                    '.ytp-skip-ad-button-container'
-                ];
-                
-                ytAdSelectors.forEach(selector => {
-                    try {
-                        const elements = document.querySelectorAll(selector);
-                        elements.forEach(element => {
-                            adBlockStats.elements++;
-                            adsBlocked++;
-                            element.remove();
-                            console.log('[Ad Blocker] Removed YouTube ad overlay');
-                        });
-                    } catch (e) {
-                        // Ignore
-                    }
-                });
-            }
-            
-            // Intercept postMessage to block ad-related messages (but allow YouTube player commands)
-            const originalPostMessage = window.postMessage;
-            window.postMessage = function(message, targetOrigin, transfer) {
-                // Block ad-related postMessages, but allow YouTube player commands
-                if (typeof message === 'string') {
-                    // Allow YouTube player commands (playVideo, pauseVideo, seekTo, etc.)
-                    if (message.includes('"event":"command"') && 
-                        (message.includes('playVideo') || message.includes('pauseVideo') || 
-                         message.includes('seekTo') || message.includes('setVolume') ||
-                         message.includes('unMute') || message.includes('mute'))) {
-                        return originalPostMessage.apply(this, arguments);
-                    }
-                    
-                    try {
-                        const msg = JSON.parse(message);
-                        // Allow YouTube player commands
-                        if (msg.event === 'command' && 
-                            (msg.func === 'playVideo' || msg.func === 'pauseVideo' || 
-                             msg.func === 'seekTo' || msg.func === 'setVolume' ||
-                             msg.func === 'unMute' || msg.func === 'mute')) {
-                            return originalPostMessage.apply(this, arguments);
-                        }
-                        // Block ad-related messages
-                        if (msg.event === 'ad' || msg.type === 'ad' || 
-                            (msg.func && (msg.func.includes('ad') || msg.func === 'skipAd'))) {
-                            adBlockStats.requests++;
-                            adsBlocked++;
-                            console.log('[Ad Blocker] Blocked ad postMessage');
-                            return;
-                        }
-                    } catch (e) {
-                        // Not JSON, check if it contains ad keywords (but not player commands)
-                        const msgLower = message.toLowerCase();
-                        if ((msgLower.includes('"ad"') || msgLower.includes('advertisement') || 
-                             msgLower.includes('advertising')) && 
-                            !msgLower.includes('playvideo') && !msgLower.includes('pausevideo')) {
-                            adBlockStats.requests++;
-                            adsBlocked++;
-                            console.log('[Ad Blocker] Blocked ad postMessage');
-                            return;
-                        }
-                    }
-                }
-                return originalPostMessage.apply(this, arguments);
-            };
-            
-            // Try to skip YouTube ads via postMessage
-            function trySkipYouTubeAds() {
-                const iframes = document.querySelectorAll('iframe[src*="youtube.com"]');
-                iframes.forEach(iframe => {
-                    try {
-                        if (iframe.contentWindow) {
-                            // Try to send skip ad command (may not work due to CORS)
-                            try {
-                                iframe.contentWindow.postMessage('{"event":"command","func":"skipAd","args":""}', '*');
-                                // Also try to seek forward if ad is detected
-                                iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[999999,true]}', '*');
-                            } catch (e) {
-                                // CORS restriction - expected
-                            }
-                        }
-                    } catch (e) {
-                        // CORS restrictions prevent direct access
-                    }
-                });
-            }
-            
-            // Monitor for YouTube ads periodically and try to skip them
-            setInterval(() => {
-                removeAdElements();
-                trySkipYouTubeAds();
-            }, 500);
-            
-            // Monitor DOM for new ad elements
-            const domObserver = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === 1) { // Element node
-                            const src = node.src || node.href || '';
-                            const className = node.className || '';
-                            const id = node.id || '';
-                            
-                            if (isAdUrl(src) || 
-                                (typeof className === 'string' && className.toLowerCase().includes('ad')) ||
-                                (typeof id === 'string' && id.toLowerCase().includes('ad'))) {
-                                adBlockStats.elements++;
-                                adsBlocked++;
-                                node.remove();
-                                console.log('[Ad Blocker] Removed new ad element');
-                            }
-                        }
-                    });
-                });
-                removeAdElements();
-            });
-            
-            // Start ad blocking
-            function initAdBlocker() {
-                // Remove existing ads
-                removeAdElements();
-                
-                // Monitor DOM changes
-                domObserver.observe(document.body || document.documentElement, {
-                    childList: true,
-                    subtree: true,
-                    attributes: true,
-                    attributeFilter: ['src', 'href', 'class', 'id']
-                });
-                
-                // Periodic cleanup and ad skipping
-                setInterval(() => {
-                    removeAdElements();
-                    trySkipYouTubeAds();
-                }, 500);
-                
-                console.log('[Ad Blocker] Initialized - Ads will be blocked during playback');
-            }
-            
-            // Try to skip YouTube ads via postMessage
-            function trySkipYouTubeAds() {
-                const iframes = document.querySelectorAll('iframe[src*="youtube.com"]');
-                iframes.forEach(iframe => {
-                    try {
-                        if (iframe.contentWindow) {
-                            // Try to send skip ad command (may not work due to CORS)
-                            try {
-                                iframe.contentWindow.postMessage('{"event":"command","func":"skipAd","args":""}', '*');
-                                // Also try to seek forward if ad is detected
-                                iframe.contentWindow.postMessage('{"event":"command","func":"seekTo","args":[999999,true]}', '*');
-                            } catch (e) {
-                                // CORS restriction - expected
-                            }
-                        }
-                    } catch (e) {
-                        // CORS restrictions prevent direct access
-                    }
-                });
-            }
-            
-            // Initialize when DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initAdBlocker);
-            } else {
-                initAdBlocker();
-            }
-            
-            // Expose stats globally
-            window.adBlockStats = adBlockStats;
-            window.getAdsBlocked = () => adsBlocked;
-            
-            // Show notification
-            setTimeout(() => {
-                if (adsBlocked > 0) {
-                    console.log(`[Ad Blocker] Blocked ${adsBlocked} ads so far`);
-                }
-            }, 3000);
-        })();
-        
         // Custom YouTube Search using multiple methods
         const YouTube = {
             // CORS proxy options (use public proxies - more reliable ones)
@@ -1813,7 +1390,6 @@
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
-                tab.style.display = 'none';
             });
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.classList.remove('active');
@@ -1823,7 +1399,6 @@
             const tabContent = document.getElementById(`tab-${tabName}`);
             if (tabContent) {
                 tabContent.classList.add('active');
-                tabContent.style.display = 'block';
             }
             
             // Activate the clicked button
@@ -1838,26 +1413,6 @@
                 }
             }
         };
-        
-        // Ensure tabs are visible on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabsContainer = document.querySelector('.tabs-container');
-            if (tabsContainer) {
-                tabsContainer.style.display = 'block';
-                tabsContainer.style.visibility = 'visible';
-            }
-            const tabsHeader = document.querySelector('.tabs-header');
-            if (tabsHeader) {
-                tabsHeader.style.display = 'flex';
-                tabsHeader.style.visibility = 'visible';
-            }
-            // Show player tab by default
-            const playerTab = document.getElementById('tab-player');
-            if (playerTab) {
-                playerTab.style.display = 'block';
-                playerTab.classList.add('active');
-            }
-        });
 
         // YouTube Search
         window.searchYouTube = async function() {
@@ -2594,13 +2149,12 @@
                         'modestbranding': 1,
                         'enablejsapi': 1,
                         'playsinline': 1,
-                        'iv_load_policy': 3,  // Hide annotations
+                        'iv_load_policy': 3,
                         'origin': window.location.origin,
                         'fs': 0,  // Disable fullscreen
                         'cc_load_policy': 0,  // No captions
                         'disablekb': 1,  // Disable keyboard controls
-                        'mute': 0,  // Don't mute (important for audio)
-                        'adtest': 0  // Disable ad testing
+                        'mute': 0  // Don't mute (important for audio)
                     },
                     events: {
                         'onReady': onPlayerReady,
@@ -2745,40 +2299,7 @@
 
         function onPlayerStateChange(event) {
             console.log('Player state changed:', event.data);
-            
-            // Detect and skip ads (YouTube PlayerState.AD_STATE = 3)
-            if (event.data === 3 || event.data === YT?.PlayerState?.AD_STATE) {
-                console.log('[Ad Blocker] Ad detected, attempting to skip...');
-                // Try to skip the ad
-                if (youtubePlayer && typeof youtubePlayer.seekTo === 'function') {
-                    try {
-                        // Try to seek to end of video to skip ad
-                        const duration = youtubePlayer.getDuration();
-                        if (duration) {
-                            youtubePlayer.seekTo(duration, true);
-                        }
-                        // Also try to play next track
-                        setTimeout(() => {
-                            if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
-                                youtubePlayer.playVideo();
-                            }
-                        }, 100);
-                    } catch (e) {
-                        console.log('Could not skip ad:', e);
-                    }
-                }
-                // Update ad blocker stats
-                if (window.adBlockStats) {
-                    window.adBlockStats.requests++;
-                }
-                if (window.getAdsBlocked) {
-                    const current = window.getAdsBlocked();
-                    window.getAdsBlocked = () => current + 1;
-                }
-                return;
-            }
-            
-            if (event.data === YT.PlayerState.PLAYING || event.data === 1) {
+            if (event.data === YT.PlayerState.PLAYING) {
                 isPlaying = true;
                 updatePlayPauseButton();
                 startTimeUpdate();
@@ -2793,18 +2314,18 @@
                 } catch (e) {
                     console.log('Could not unmute on play:', e);
                 }
-            } else if (event.data === YT.PlayerState.PAUSED || event.data === 2) {
+            } else if (event.data === YT.PlayerState.PAUSED) {
                 isPlaying = false;
                 updatePlayPauseButton();
                 stopTimeUpdate();
-            } else if (event.data === YT.PlayerState.ENDED || event.data === 0) {
+            } else if (event.data === YT.PlayerState.ENDED) {
                 isPlaying = false;
                 updatePlayPauseButton();
                 stopTimeUpdate();
                 // Auto-play next track
                 console.log('Track ended, playing next');
                 nextTrack();
-            } else if (event.data === YT.PlayerState.CUED || event.data === 5) {
+            } else if (event.data === YT.PlayerState.CUED) {
                 // Video is cued, try to play it
                 console.log('Video cued, attempting to play');
                 setTimeout(() => {
@@ -3462,23 +2983,6 @@
         // Make functions available globally
         window.removeTrack = removeTrack;
         window.playTrack = playTrack;
-        
-        // Update ad blocker indicator
-        function updateAdBlockIndicator() {
-            const indicator = document.getElementById('ad-block-indicator');
-            const countElement = document.getElementById('ad-block-count');
-            if (indicator && countElement && window.getAdsBlocked) {
-                const blocked = window.getAdsBlocked();
-                countElement.textContent = `${blocked} blocked`;
-                if (blocked > 0) {
-                    indicator.style.background = 'rgba(76, 175, 80, 0.95)';
-                }
-            }
-        }
-        
-        // Update indicator periodically
-        setInterval(updateAdBlockIndicator, 1000);
-        updateAdBlockIndicator();
     </script>
 </body>
 </html>
