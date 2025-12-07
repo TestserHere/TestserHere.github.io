@@ -792,10 +792,11 @@
 
     <!-- Custom Invidious Search Implementation (No API Key Required, Ad-Free) -->
     <script type="module">
-        // Invidious instance configuration (ad-free YouTube alternative)
-        // Try multiple instances for better reliability
+        // Invidious instance configuration (ad-free YouTube alternative for playback only)
+        // Use inv.nadeko.net as primary instance
         const INVIDIOUS_INSTANCES = [
-            'https://yewtu.be',  // Put more reliable instances first
+            'https://inv.nadeko.net',  // Primary instance
+            'https://yewtu.be',
             'https://inv.riverside.rocks',
             'https://invidious.flokinet.to',
             'https://invidious.io',
@@ -857,7 +858,8 @@
                 this.currentProxyIndex = (this.currentProxyIndex + 1) % this.corsProxies.length;
             },
 
-            // Search videos using Invidious API (ad-free)
+            // Search videos using YouTube (original method via proxy)
+            // Note: Invidious is only used for playback, not search
             search: async function(query, options = {}) {
                 const limit = options.limit || 20;
                 
@@ -873,53 +875,23 @@
                     throw new Error('Search query is empty');
                 }
                 
-                // Use Invidious API for search (ad-free, no CORS issues)
+                // Use YouTube search via proxy (original method)
                 try {
-                    const searchUrl = `${INVIDIOUS_INSTANCE}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-                    const response = await fetch(searchUrl);
+                    // Try method 1: Use YouTube's search page with proxy
+                    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
+                    const html = await this.fetchWithProxy(searchUrl);
+                    const results = this.parseSearchResults(html, limit);
                     
-                    if (!response.ok) {
-                        throw new Error(`Invidious API error: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    const results = [];
-                    
-                    for (let i = 0; i < Math.min(data.length, limit); i++) {
-                        const video = data[i];
-                        if (video && video.videoId) {
-                            // Parse duration
-                            const durationSeconds = video.lengthSeconds || 0;
-                            const durationFormatted = this.formatDuration(durationSeconds);
-                            
-                            results.push({
-                                id: video.videoId, // Add id for compatibility
-                                videoId: video.videoId,
-                                title: video.title || 'Unknown',
-                                channel: { name: video.author || 'Unknown Artist' },
-                                thumbnail: { url: video.videoThumbnails && video.videoThumbnails.length > 0 
-                                    ? video.videoThumbnails[0].url 
-                                    : `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg` },
-                                durationFormatted: durationFormatted,
-                                duration: durationSeconds * 1000, // Convert to milliseconds
-                                url: `${INVIDIOUS_INSTANCE}/watch?v=${video.videoId}`
-                            });
-                        }
+                    // If no results, try alternative method
+                    if (results.length === 0) {
+                        return await this.searchAlternative(query, limit);
                     }
                     
                     return results;
                 } catch (error) {
-                    console.error('Invidious search error:', error);
-                    // Fallback to proxy method if Invidious API fails
-                    try {
-                        const searchUrl = `${INVIDIOUS_INSTANCE}/search?q=${encodeURIComponent(query)}`;
-                        const html = await this.fetchWithProxy(searchUrl);
-                        const results = this.parseSearchResults(html, limit);
-                        return results.length > 0 ? results : [];
-                    } catch (fallbackError) {
-                        console.error('Fallback search also failed:', fallbackError);
-                        return [];
-                    }
+                    console.error('YouTube search error:', error);
+                    // Try alternative method using YouTube's data API endpoint
+                    return await this.searchAlternative(query, limit);
                 }
             },
             
@@ -970,7 +942,7 @@
                     iframe.style.display = 'none';
                     iframe.style.width = '1px';
                     iframe.style.height = '1px';
-                    iframe.src = `${INVIDIOUS_INSTANCE}/search?q=${encodeURIComponent(query)}`;
+                    iframe.src = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
                     
                     // This method is limited - we can't easily extract data from cross-origin iframe
                     // So we'll return empty and let other methods handle it
@@ -1256,17 +1228,8 @@
                     // Sanitize query
                     query = query.trim().replace(/[\x00-\x1F\x7F-\x9F]/g, '').substring(0, 200);
                     
-                    // Try direct fetch first (might work in some browsers with extensions)
-                    try {
-                        const searchUrl = `${INVIDIOUS_INSTANCE}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-                        const response = await fetch(searchUrl, { mode: 'no-cors' });
-                        // no-cors doesn't allow reading, so this won't work
-                    } catch (e) {
-                        // Expected
-                    }
-                    
-                    // Use proxy method
-                    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                    // Use proxy method with YouTube search (not Invidious)
+                    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
                     const html = await this.fetchWithProxy(searchUrl);
                     
                     // Use the regex extraction method
