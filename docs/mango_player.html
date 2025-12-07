@@ -793,7 +793,22 @@
     <!-- Custom Invidious Search Implementation (No API Key Required, Ad-Free) -->
     <script type="module">
         // Invidious instance configuration (ad-free YouTube alternative)
-        const INVIDIOUS_INSTANCE = 'https://invidious.io'; // Can be changed to: https://yewtu.be, https://inv.riverside.rocks, etc.
+        // Try multiple instances for better reliability
+        const INVIDIOUS_INSTANCES = [
+            'https://invidious.io',
+            'https://yewtu.be',
+            'https://inv.riverside.rocks',
+            'https://invidious.flokinet.to'
+        ];
+        let INVIDIOUS_INSTANCE = INVIDIOUS_INSTANCES[0]; // Start with first instance
+        let currentInstanceIndex = 0;
+        
+        // Function to try next Invidious instance if current one fails
+        function tryNextInvidiousInstance() {
+            currentInstanceIndex = (currentInstanceIndex + 1) % INVIDIOUS_INSTANCES.length;
+            INVIDIOUS_INSTANCE = INVIDIOUS_INSTANCES[currentInstanceIndex];
+            console.log('Switching to Invidious instance:', INVIDIOUS_INSTANCE);
+        }
         
         // Custom Invidious Search using multiple methods
         const YouTube = {
@@ -1414,7 +1429,7 @@
             loadYouTubeAPI();
             // Also try to initialize player after a short delay
             setTimeout(() => {
-                if (!youtubePlayer && window.YT && window.YT.Player) {
+                if (!youtubePlayer) {
                     initYouTubePlayer();
                 }
             }, 1000);
@@ -1422,7 +1437,7 @@
             const initCheck = setInterval(() => {
                 if (youtubePlayer && isPlayerReady) {
                     clearInterval(initCheck);
-                } else if (window.YT && window.YT.Player && !youtubePlayer) {
+                } else if (!youtubePlayer) {
                     initYouTubePlayer();
                 } else if (youtubePlayer && !isPlayerReady) {
                     // Player exists but not ready, check it
@@ -2174,8 +2189,16 @@
                     const videoId = typeof videoIdObj === 'object' ? videoIdObj.videoId : videoIdObj;
                     if (invidiousIframe) {
                         // Invidious embed format - use watch page with autoplay for better compatibility
-                        invidiousIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
-                        // Fetch video info from Invidious API
+                        const watchUrl = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+                        invidiousIframe.src = watchUrl;
+                        // Add error handler to try next instance if this one fails
+                        invidiousIframe.onerror = function() {
+                            console.log('Invidious iframe failed, trying next instance');
+                            tryNextInvidiousInstance();
+                            // Retry with new instance
+                            invidiousIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+                        };
+                        // Fetch video info from Invidious API (non-blocking)
                         fetchVideoInfoFromInvidious(videoId);
                         // Set playing state and initialize playback tracking
                         isPlaying = true;
@@ -2271,39 +2294,55 @@
         }
 
         // Fetch video info from Invidious API (using proxy to avoid CORS)
+        // This is non-blocking - playback will continue even if this fails
         async function fetchVideoInfoFromInvidious(videoId) {
+            // Don't block playback if this fails - use track duration as fallback
+            const fallbackToTrackDuration = () => {
+                if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
+                    invidiousDuration = playlist[currentTrackIndex].duration / 1000;
+                    console.log('Using track duration as fallback:', invidiousDuration);
+                }
+            };
+            
             try {
                 const apiUrl = `${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`;
                 
                 // Try direct fetch first (some Invidious instances allow CORS)
                 try {
-                    const response = await fetch(apiUrl);
+                    const response = await fetch(apiUrl, { 
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    });
                     if (response.ok) {
                         const data = await response.json();
                         invidiousDuration = data.lengthSeconds || 0;
                         // Update track duration if available
-                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && invidiousDuration > 0) {
                             playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
                             playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
                         }
                         return;
                     }
                 } catch (directError) {
-                    // CORS error, use proxy - this is expected for most Invidious instances
-                    console.log('Direct fetch blocked by CORS, using proxy');
+                    // CORS error is expected - silently continue to proxy methods
                 }
                 
                 // Use allorigins.win for JSON (it has better JSON support)
                 try {
                     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
-                    const response = await fetch(proxyUrl);
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    });
                     if (response.ok) {
                         const proxyData = await response.json();
                         if (proxyData.contents) {
                             const data = JSON.parse(proxyData.contents);
                             invidiousDuration = data.lengthSeconds || 0;
                             // Update track duration if available
-                            if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                            if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && invidiousDuration > 0) {
                                 playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
                                 playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
                             }
@@ -2311,38 +2350,37 @@
                         }
                     }
                 } catch (alloriginsError) {
-                    console.log('AllOrigins proxy failed, trying other proxies');
+                    // Silently continue to next method
                 }
                 
                 // Fallback: Use proxy for CORS issues (request JSON)
                 if (YouTube && typeof YouTube.fetchWithProxy === 'function') {
                     try {
                         const data = await YouTube.fetchWithProxy(apiUrl, { json: true });
-                        invidiousDuration = data.lengthSeconds || 0;
-                        // Update track duration if available
-                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
-                            playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
-                            playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                        if (data && data.lengthSeconds) {
+                            invidiousDuration = data.lengthSeconds || 0;
+                            // Update track duration if available
+                            if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && invidiousDuration > 0) {
+                                playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
+                                playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                            }
+                            return;
                         }
                     } catch (proxyError) {
-                        console.error('All proxy methods failed:', proxyError);
-                        // Fallback: use track duration if available
-                        if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
-                            invidiousDuration = playlist[currentTrackIndex].duration / 1000;
-                        }
-                    }
-                } else {
-                    // Fallback: use track duration if available
-                    if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
-                        invidiousDuration = playlist[currentTrackIndex].duration / 1000;
+                        // All proxies failed - use fallback
+                        console.log('Video info fetch failed, using track duration');
                     }
                 }
+                
+                // Final fallback: use track duration
+                fallbackToTrackDuration();
             } catch (error) {
-                console.error('Error fetching video info from Invidious:', error);
-                // Fallback: use track duration if available
-                if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].duration) {
-                    invidiousDuration = playlist[currentTrackIndex].duration / 1000;
+                // If we get a 404, try next Invidious instance
+                if (error.message && error.message.includes('404')) {
+                    tryNextInvidiousInstance();
                 }
+                // Don't log errors - just use fallback duration
+                fallbackToTrackDuration();
             }
         }
 
@@ -2456,8 +2494,17 @@
             audioIframe.width = '100';
             audioIframe.height = '100';
             audioIframe.allow = 'autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture';
-            audioIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+            const watchUrl = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+            audioIframe.src = watchUrl;
             
+            // Add error handler to try next instance if this one fails
+            audioIframe.onerror = function() {
+                console.log('Invidious iframe failed, trying next instance');
+                tryNextInvidiousInstance();
+                // Retry with new instance
+                audioIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+            };
+
             iframeDiv.appendChild(audioIframe);
             container.appendChild(iframeDiv);
             
@@ -2789,12 +2836,13 @@
                 return;
             }
 
-            // Use YouTube API player
+            // Use Invidious player
             if (youtubePlayer && isPlayerReady) {
                 try {
                     if (typeof youtubePlayer.getPlayerState === 'function') {
                         const state = youtubePlayer.getPlayerState();
-                        if (state === YT.PlayerState.PLAYING) {
+                        // State 1 = PLAYING, 2 = PAUSED (matching YouTube API constants)
+                        if (state === 1) { // PLAYING
                             if (typeof youtubePlayer.pauseVideo === 'function') {
                                 youtubePlayer.pauseVideo();
                             }
