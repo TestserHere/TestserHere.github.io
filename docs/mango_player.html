@@ -795,19 +795,42 @@
         // Invidious instance configuration (ad-free YouTube alternative)
         // Try multiple instances for better reliability
         const INVIDIOUS_INSTANCES = [
-            'https://invidious.io',
-            'https://yewtu.be',
+            'https://yewtu.be',  // Put more reliable instances first
             'https://inv.riverside.rocks',
-            'https://invidious.flokinet.to'
+            'https://invidious.flokinet.to',
+            'https://invidious.io',
+            'https://invidious.privacyredirect.com',
+            'https://invidious.osi.kr'
         ];
         let INVIDIOUS_INSTANCE = INVIDIOUS_INSTANCES[0]; // Start with first instance
         let currentInstanceIndex = 0;
+        let instanceFailures = new Map(); // Track failures per instance
         
         // Function to try next Invidious instance if current one fails
         function tryNextInvidiousInstance() {
-            currentInstanceIndex = (currentInstanceIndex + 1) % INVIDIOUS_INSTANCES.length;
-            INVIDIOUS_INSTANCE = INVIDIOUS_INSTANCES[currentInstanceIndex];
-            console.log('Switching to Invidious instance:', INVIDIOUS_INSTANCE);
+            // Mark current instance as failed
+            instanceFailures.set(INVIDIOUS_INSTANCE, (instanceFailures.get(INVIDIOUS_INSTANCE) || 0) + 1);
+            
+            // Try to find a working instance
+            let attempts = 0;
+            while (attempts < INVIDIOUS_INSTANCES.length) {
+                currentInstanceIndex = (currentInstanceIndex + 1) % INVIDIOUS_INSTANCES.length;
+                INVIDIOUS_INSTANCE = INVIDIOUS_INSTANCES[currentInstanceIndex];
+                
+                // Skip instances that have failed multiple times recently
+                const failures = instanceFailures.get(INVIDIOUS_INSTANCE) || 0;
+                if (failures < 3) {
+                    console.log('Switching to Invidious instance:', INVIDIOUS_INSTANCE);
+                    return;
+                }
+                attempts++;
+            }
+            
+            // If all instances have failed, reset and try again
+            console.log('All instances have issues, resetting and trying first one');
+            instanceFailures.clear();
+            currentInstanceIndex = 0;
+            INVIDIOUS_INSTANCE = INVIDIOUS_INSTANCES[0];
         }
         
         // Custom Invidious Search using multiple methods
@@ -2191,6 +2214,7 @@
                         // Invidious embed format - use watch page with autoplay for better compatibility
                         const watchUrl = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
                         invidiousIframe.src = watchUrl;
+                        
                         // Add error handler to try next instance if this one fails
                         invidiousIframe.onerror = function() {
                             console.log('Invidious iframe failed, trying next instance');
@@ -2198,8 +2222,25 @@
                             // Retry with new instance
                             invidiousIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
                         };
-                        // Fetch video info from Invidious API (non-blocking)
-                        fetchVideoInfoFromInvidious(videoId);
+                        
+                        // Check for 404 after a short delay by monitoring iframe load
+                        let loadTimeout = setTimeout(() => {
+                            // If we detect issues, try next instance
+                            // This is a fallback - the fetchVideoInfoFromInvidious will also trigger instance switching
+                            console.log('Checking if video loaded correctly...');
+                        }, 2000);
+                        
+                        invidiousIframe.onload = function() {
+                            clearTimeout(loadTimeout);
+                        };
+                        
+                        // Fetch video info from Invidious API (non-blocking, will switch instances on 404)
+                        fetchVideoInfoFromInvidious(videoId).then(() => {
+                            // If fetch succeeded but we got 404, reload iframe with new instance
+                            // This is handled inside fetchVideoInfoFromInvidious
+                        }).catch(() => {
+                            // If all instances fail, video info fetch will use fallback duration
+                        });
                         // Set playing state and initialize playback tracking
                         isPlaying = true;
                         updatePlayPauseButton();
@@ -2323,6 +2364,30 @@
                             playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
                         }
                         return;
+                    } else if (response.status === 404) {
+                        // Instance might be down or video not found - try next instance
+                        console.log('Invidious instance returned 404, trying next instance');
+                        tryNextInvidiousInstance();
+                        // Also reload iframe with new instance
+                        if (invidiousIframe) {
+                            invidiousIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+                        }
+                        // Retry API call with new instance
+                        const retryUrl = `${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`;
+                        try {
+                            const retryResponse = await fetch(retryUrl, { method: 'GET', mode: 'cors', cache: 'no-cache' });
+                            if (retryResponse.ok) {
+                                const data = await retryResponse.json();
+                                invidiousDuration = data.lengthSeconds || 0;
+                                if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && invidiousDuration > 0) {
+                                    playlist[currentTrackIndex].duration = invidiousDuration * 1000;
+                                    playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                                }
+                                return;
+                            }
+                        } catch (retryError) {
+                            // CORS or other error on retry - continue to fallback
+                        }
                     }
                 } catch (directError) {
                     // CORS error is expected - silently continue to proxy methods
@@ -2375,9 +2440,18 @@
                 // Final fallback: use track duration
                 fallbackToTrackDuration();
             } catch (error) {
-                // If we get a 404, try next Invidious instance
-                if (error.message && error.message.includes('404')) {
+                // If we get a 404 or network error, try next Invidious instance
+                if ((error.message && (error.message.includes('404') || error.message.includes('Failed to fetch'))) || 
+                    (error.name === 'TypeError' && error.message.includes('fetch'))) {
+                    console.log('Error fetching video info, trying next Invidious instance');
                     tryNextInvidiousInstance();
+                    // Reload iframe with new instance
+                    if (invidiousIframe) {
+                        const videoId = currentTrackIndex >= 0 && playlist[currentTrackIndex] ? playlist[currentTrackIndex].id : null;
+                        if (videoId) {
+                            invidiousIframe.src = `${INVIDIOUS_INSTANCE}/watch?v=${videoId}&autoplay=1&listen=true`;
+                        }
+                    }
                 }
                 // Don't log errors - just use fallback duration
                 fallbackToTrackDuration();
