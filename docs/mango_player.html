@@ -2095,150 +2095,130 @@
             `).join('');
         }
 
-        // Invidious IFrame Player (Ad-Free Alternative)
-        let youtubePlayer = null; // Keep name for compatibility
-        let isYouTubeAPIReady = false; // Keep name for compatibility
+        // YouTube IFrame API
+        let youtubePlayer = null;
+        let isYouTubeAPIReady = false;
         let isPlayerReady = false;
         let pendingVideoId = null;
         let userInteracted = false; // Track if user has interacted (required for autoplay)
-        let invidiousIframe = null;
-        let invidiousCurrentTime = 0;
-        let invidiousDuration = 0;
 
         function loadYouTubeAPI() {
-            // Invidious doesn't need API loading, just mark as ready
+            if (window.YT && window.YT.Player) {
                 isYouTubeAPIReady = true;
                 if (!youtubePlayer) {
                     initYouTubePlayer();
                 }
-        }
-
-        function initYouTubePlayer() {
-            // Initialize Invidious iframe player
-            const playerContainer = document.getElementById('youtube-player-container');
-            if (!playerContainer) {
-                console.error('Player container not found');
                 return;
             }
 
-            // Create iframe for Invidious
-            if (invidiousIframe) {
+            // Check if script is already loading
+            if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+                // Script is loading, wait for it
+                return;
+            }
+
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            tag.async = true;
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+            // Set up the callback (might already exist)
+            if (!window.onYouTubeIframeAPIReady) {
+                window.onYouTubeIframeAPIReady = function() {
+                    console.log('YouTube API loaded');
+                    isYouTubeAPIReady = true;
+                    if (!youtubePlayer) {
+                        initYouTubePlayer();
+                    }
+                };
+            }
+        }
+
+        function initYouTubePlayer() {
+            if (youtubePlayer) {
+                // Check if player is actually valid
                 try {
-                    if (invidiousIframe.parentNode) {
-                        invidiousIframe.parentNode.removeChild(invidiousIframe);
+                    if (typeof youtubePlayer.getPlayerState === 'function') {
+                        return; // Player is valid
                     }
-                } catch (e) {}
-            }
-
-            const iframeDiv = document.createElement('div');
-            iframeDiv.id = 'invidious-player-container';
-            iframeDiv.style.width = '100px';
-            iframeDiv.style.height = '100px';
-            iframeDiv.style.position = 'fixed';
-            iframeDiv.style.left = '0';
-            iframeDiv.style.top = '0';
-            iframeDiv.style.opacity = '0.01';
-            iframeDiv.style.pointerEvents = 'none';
-            iframeDiv.style.zIndex = '-9999';
-
-            invidiousIframe = document.createElement('iframe');
-            invidiousIframe.id = 'invidious-player';
-            invidiousIframe.width = '100';
-            invidiousIframe.height = '100';
-            invidiousIframe.allow = 'autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture';
-            invidiousIframe.style.border = 'none';
-
-            iframeDiv.appendChild(invidiousIframe);
-            playerContainer.appendChild(iframeDiv);
-
-            // Create a mock player object for compatibility
-            youtubePlayer = {
-                loadVideoById: function(videoIdObj) {
-                    const videoId = typeof videoIdObj === 'object' ? videoIdObj.videoId : videoIdObj;
-                    if (invidiousIframe) {
-                        invidiousIframe.src = `${INVIDIOUS_INSTANCE}/embed/${videoId}?autoplay=1&controls=0&loop=0&mute=0`;
-                        // Fetch video info from Invidious API
-                        fetchVideoInfoFromInvidious(videoId);
-                    }
-                },
-                playVideo: function() {
-                    // Invidious iframe autoplays, but we can try to trigger play
-                    if (invidiousIframe && invidiousIframe.contentWindow) {
-                        try {
-                            invidiousIframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
                 } catch (e) {
-                            console.log('Could not send play command:', e);
+                    // Player exists but might be invalid, reset it
+                    youtubePlayer = null;
                 }
             }
-                },
-                pauseVideo: function() {
-                    if (invidiousIframe && invidiousIframe.contentWindow) {
-                        try {
-                            invidiousIframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                        } catch (e) {
-                            console.log('Could not send pause command:', e);
-                        }
-                    }
-                },
-                seekTo: function(seconds, allowSeekAhead) {
-                    if (invidiousIframe && invidiousIframe.contentWindow) {
-                        try {
-                            invidiousIframe.contentWindow.postMessage(`{"event":"command","func":"seekTo","args":[${seconds},${allowSeekAhead}]}`, '*');
-                        } catch (e) {
-                            console.log('Could not send seek command:', e);
-                        }
-                    }
-                },
-                getCurrentTime: function() {
-                    return invidiousCurrentTime;
-                },
-                getDuration: function() {
-                    return invidiousDuration;
-                },
-                getPlayerState: function() {
-                    return isPlaying ? 1 : 2; // 1 = playing, 2 = paused
-                },
-                setVolume: function(volume) {
-                    // Volume control via postMessage if supported
-                    if (invidiousIframe && invidiousIframe.contentWindow) {
-                        try {
-                            invidiousIframe.contentWindow.postMessage(`{"event":"command","func":"setVolume","args":[${volume}]}`, '*');
-                        } catch (e) {
-                            console.log('Could not set volume:', e);
-                        }
-                    }
-                },
-                unMute: function() {
-                    if (invidiousIframe && invidiousIframe.contentWindow) {
-                        try {
-                            invidiousIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                        } catch (e) {
-                            console.log('Could not unmute:', e);
-                        }
-                    }
-                }
-            };
 
-            console.log('Invidious player initialized');
-            isPlayerReady = true;
+            // Check if YT API is available
+            if (!window.YT || !window.YT.Player) {
+                console.log('YouTube API not ready, waiting...');
+                setTimeout(() => {
+                    if (window.YT && window.YT.Player && !youtubePlayer) {
+                        initYouTubePlayer();
+                    }
+                }, 500);
+                return;
+            }
+
+            // Use the existing container
+            const playerContainer = document.getElementById('youtube-player-container');
+            if (!playerContainer) {
+                console.error('YouTube player container not found');
+                return;
+            }
+
+            try {
+                console.log('Initializing YouTube player...');
+                youtubePlayer = new YT.Player('youtube-player', {
+                    height: '100',
+                    width: '100',
+                    videoId: '',
+                    playerVars: {
+                        'autoplay': 0,
+                        'controls': 0,
+                        'rel': 0,
+                        'showinfo': 0,
+                        'modestbranding': 1,
+                        'enablejsapi': 1,
+                        'playsinline': 1,
+                        'iv_load_policy': 3,
+                        'origin': window.location.origin,
+                        'fs': 0,  // Disable fullscreen
+                        'cc_load_policy': 0,  // No captions
+                        'disablekb': 1,  // Disable keyboard controls
+                        'mute': 0  // Don't mute (important for audio)
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
+                    }
+                });
+                console.log('YouTube player created, waiting for ready event...');
+                
+                // Fallback: Check if player is ready even if onReady doesn't fire
+                setTimeout(() => {
+                    if (youtubePlayer && !isPlayerReady) {
+                        console.log('onReady event not fired, checking player directly...');
                         checkPlayerReady();
                     }
-
-        // Fetch video info from Invidious API
-        async function fetchVideoInfoFromInvidious(videoId) {
-            try {
-                const response = await fetch(`${INVIDIOUS_INSTANCE}/api/v1/videos/${videoId}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    invidiousDuration = data.lengthSeconds || 0;
-                    // Update track duration if available
-                    if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
-                        playlist[currentTrackIndex].duration = invidiousDuration * 1000; // Convert to ms
-                        playlist[currentTrackIndex].durationFormatted = formatTime(invidiousDuration);
+                }, 2000);
+                
+                // Another check after 5 seconds
+                setTimeout(() => {
+                    if (youtubePlayer && !isPlayerReady) {
+                        console.log('Still waiting for onReady, checking again...');
+                        checkPlayerReady();
                     }
-                }
+                }, 5000);
             } catch (error) {
-                console.error('Error fetching video info from Invidious:', error);
+                console.error('Error initializing YouTube player:', error);
+                // Reset and try again after a delay
+                youtubePlayer = null;
+                setTimeout(() => {
+                    if (!youtubePlayer && window.YT && window.YT.Player) {
+                        initYouTubePlayer();
+                    }
+                }, 2000);
             }
         }
 
@@ -2246,7 +2226,7 @@
         function checkPlayerReady() {
             if (youtubePlayer && typeof youtubePlayer.loadVideoById === 'function') {
                 isPlayerReady = true;
-                console.log('Invidious player is ready and methods are available');
+                console.log('YouTube player is ready and methods are available');
                 
                 // Set pending volume if any
                 if (window.pendingVolume !== undefined) {
@@ -2297,18 +2277,107 @@
         }
 
         function onPlayerReady(event) {
-            // Invidious doesn't have the same event system, but we can simulate it
-            console.log('Invidious player ready');
-            checkPlayerReady();
+            console.log('YouTube player ready event fired');
+            
+            // Wait a bit to ensure all methods are available
+            setTimeout(() => {
+                if (!checkPlayerReady()) {
+                    console.warn('Player ready but methods not available yet, checking again...');
+                    // Check again after a short delay
+                    setTimeout(() => {
+                        if (!checkPlayerReady()) {
+                            console.error('Player methods still not available after delay');
+                            isPlayerReady = false;
+                        } else {
+                            // Set pending volume after player is confirmed ready
+                            if (window.pendingVolume !== undefined) {
+                                try {
+                                    if (youtubePlayer && typeof youtubePlayer.setVolume === 'function') {
+                                        youtubePlayer.setVolume(window.pendingVolume);
+                                        window.pendingVolume = undefined;
+                                    }
+                                } catch (error) {
+                                    console.error('Error setting volume in onReady:', error);
+                                }
+                            }
+                        }
+                    }, 500);
+                } else {
+                    // Ensure player is unmuted
+                    try {
+                        if (youtubePlayer && typeof youtubePlayer.unMute === 'function') {
+                            youtubePlayer.unMute();
+                            console.log('Player unmuted in onReady');
+                        }
+                    } catch (e) {
+                        console.log('Could not unmute in onReady:', e);
+                    }
+                    
+                    // Set pending volume if player is ready
+                    if (window.pendingVolume !== undefined) {
+                        try {
+                            if (youtubePlayer && typeof youtubePlayer.setVolume === 'function') {
+                                youtubePlayer.setVolume(window.pendingVolume);
+                                window.pendingVolume = undefined;
+                            }
+                        } catch (error) {
+                            console.error('Error setting volume in onReady:', error);
+                        }
+                    }
+                }
+            }, 100);
         }
 
         function onPlayerStateChange(event) {
-            // Invidious doesn't send state change events, so we track state manually
-            // This is handled by the time update interval
+            console.log('Player state changed:', event.data);
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                updatePlayPauseButton();
+                startTimeUpdate();
+                console.log('Audio is now playing');
+                
+                // Ensure unmuted when playing starts (critical for audio!)
+                try {
+                    if (youtubePlayer && typeof youtubePlayer.unMute === 'function') {
+                        youtubePlayer.unMute();
+                        console.log('Unmuted player on play state');
+                    }
+                } catch (e) {
+                    console.log('Could not unmute on play:', e);
+                }
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                isPlaying = false;
+                updatePlayPauseButton();
+                stopTimeUpdate();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+                updatePlayPauseButton();
+                stopTimeUpdate();
+                // Auto-play next track
+                console.log('Track ended, playing next');
+                nextTrack();
+            } else if (event.data === YT.PlayerState.CUED) {
+                // Video is cued, try to play it
+                console.log('Video cued, attempting to play');
+                setTimeout(() => {
+                    if (youtubePlayer && typeof youtubePlayer.playVideo === 'function') {
+                        try {
+                            // Unmute first
+                            if (typeof youtubePlayer.unMute === 'function') {
+                                youtubePlayer.unMute();
+                            }
+                            // Play
+                            youtubePlayer.playVideo();
+                        } catch (e) {
+                            console.error('Error playing cued video:', e);
+                        }
+                    }
+                }, 1000);
+            }
         }
 
         function onPlayerError(event) {
-            console.error('Invidious player error');
+            console.error('YouTube player error:', event.data);
             showMessage('Error playing track. Skipping to next...', 'error');
             setTimeout(() => nextTrack(), 2000);
         }
@@ -2352,7 +2421,7 @@
             audioIframe.width = '100';
             audioIframe.height = '100';
             audioIframe.allow = 'autoplay; encrypted-media; accelerometer; gyroscope; picture-in-picture';
-            audioIframe.src = `${INVIDIOUS_INSTANCE}/embed/${videoId}?autoplay=1&controls=0&loop=0&mute=0`;
+            audioIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&modestbranding=1&rel=0&enablejsapi=1&loop=0&mute=0&playsinline=1`;
             
             iframeDiv.appendChild(audioIframe);
             container.appendChild(iframeDiv);
@@ -2628,7 +2697,7 @@
                     return;
                 }
 
-                // Try Invidious player first (if available)
+                // Try YouTube API player first (if available)
                 if (youtubePlayer && isPlayerReady) {
                     try {
                         if (typeof youtubePlayer.getCurrentTime === 'function' && typeof youtubePlayer.getDuration === 'function') {
@@ -2638,8 +2707,6 @@
                                 updateTimeDisplay(currentTime, duration);
                                 // Update our tracking
                                 trackDuration = duration;
-                                invidiousDuration = duration;
-                                invidiousCurrentTime = currentTime;
                                 playbackStartTime = Date.now() - (currentTime * 1000);
                                 
                                 // Check if ended
@@ -2655,10 +2722,9 @@
                     }
                 }
                 
-                // Fallback: Use duration-based tracking (works well with Invidious)
+                // Fallback: Use duration-based tracking
                 if (playbackStartTime && trackDuration > 0) {
                     const elapsed = (Date.now() - playbackStartTime) / 1000;
-                    invidiousCurrentTime = elapsed;
                     
                     if (elapsed >= trackDuration) {
                         stopTimeUpdate();
@@ -2841,16 +2907,14 @@
                             youtubePlayer.seekTo(seekTime, true);
                             // Update playback start time for progress tracking
                             trackDuration = duration;
-                            invidiousDuration = duration;
-                            invidiousCurrentTime = seekTime;
-                                playbackStartTime = Date.now() - (seekTime * 1000);
+                            playbackStartTime = Date.now() - (seekTime * 1000);
                             // Immediately update the progress bar and time display
                             updateTimeDisplay(seekTime, duration);
                             return;
                         }
                     }
                 } catch (error) {
-                    console.error('Error seeking with Invidious player:', error);
+                    console.error('Error seeking with YouTube player:', error);
                 }
             }
 
