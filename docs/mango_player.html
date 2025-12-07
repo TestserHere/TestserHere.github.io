@@ -36,6 +36,32 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+        .ad-block-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .ad-block-indicator .icon {
+            font-size: 1.2em;
+        }
+
+        .ad-block-stats {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
         .import-section {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -652,6 +678,13 @@
     </style>
 </head>
 <body>
+    <!-- Ad Blocker Indicator -->
+    <div class="ad-block-indicator" id="ad-block-indicator">
+        <span class="icon">🛡️</span>
+        <span>Ad Blocker Active</span>
+        <span class="ad-block-stats" id="ad-block-count">0 blocked</span>
+    </div>
+
     <!-- Hidden YouTube player container -->
     <div id="youtube-player-container">
         <div id="youtube-player"></div>
@@ -792,7 +825,272 @@
 
     <!-- Custom Invidious Search Implementation (No API Key Required, Ad-Free) -->
     <script type="module">
-        // Invidious instance configuration (ad-free YouTube alternative)
+        // ============================================
+        // AD BLOCKER SYSTEM (Audio Playback Only)
+        // ============================================
+        (function() {
+            'use strict';
+            
+            // Ad blocking statistics
+            let adsBlocked = 0;
+            const adBlockStats = {
+                requests: 0,
+                elements: 0,
+                iframes: 0
+            };
+            
+            // Common ad domains and patterns
+            const adDomains = [
+                'doubleclick.net',
+                'googleadservices.com',
+                'googlesyndication.com',
+                'google-analytics.com',
+                'googletagmanager.com',
+                'adservice.google',
+                'ads.youtube.com',
+                'advertising.com',
+                'adserver.com',
+                'adtech.com',
+                'adnxs.com',
+                'adsafeprotected.com',
+                'adsystem.com',
+                'adform.net',
+                'adroll.com',
+                'adsrvr.org',
+                'adtechus.com',
+                'amazon-adsystem.com',
+                'criteo.com',
+                'facebook.com/tr',
+                'scorecardresearch.com',
+                'quantserve.com',
+                'outbrain.com',
+                'taboola.com',
+                'media.net',
+                'pubmatic.com',
+                'rubiconproject.com',
+                'openx.net',
+                'advertising.yahoo.com',
+                'ads.yahoo.com',
+                'yieldmo.com',
+                'moatads.com'
+            ];
+            
+            const adKeywords = [
+                '/ads/',
+                '/advertisement',
+                '/advertising',
+                '/adserver',
+                '/adserv',
+                '/banner',
+                '/popup',
+                '/sponsor',
+                'doubleclick',
+                'googlesyndication',
+                'advertising',
+                'adserver',
+                'adtech',
+                'adform',
+                'adroll',
+                'adsrvr',
+                'adtechus',
+                'amazon-adsystem',
+                'criteo',
+                'scorecardresearch',
+                'quantserve',
+                'outbrain',
+                'taboola',
+                'media.net',
+                'pubmatic',
+                'rubiconproject',
+                'openx',
+                'yieldmo',
+                'moatads'
+            ];
+            
+            // Ad element selectors
+            const adSelectors = [
+                '[class*="ad"]',
+                '[id*="ad"]',
+                '[class*="advertisement"]',
+                '[id*="advertisement"]',
+                '[class*="banner"]',
+                '[id*="banner"]',
+                '[class*="sponsor"]',
+                '[id*="sponsor"]',
+                'iframe[src*="doubleclick"]',
+                'iframe[src*="googlesyndication"]',
+                'iframe[src*="ad"]',
+                'div[data-ad]',
+                'div[data-ads]',
+                'ins.adsbygoogle',
+                '.ad-container',
+                '.ad-wrapper',
+                '.ad-banner',
+                '.advertisement',
+                '.advert',
+                '.advertising',
+                '#google_ads',
+                '#google_ads_iframe'
+            ];
+            
+            // Check if URL is an ad (exclude YouTube API and legitimate video services)
+            function isAdUrl(url) {
+                if (!url) return false;
+                const urlLower = url.toLowerCase();
+                
+                // Don't block YouTube API, Invidious (for search), or legitimate video services
+                if (urlLower.includes('youtube.com/iframe_api') ||
+                    urlLower.includes('youtube.com/embed') ||
+                    urlLower.includes('youtube.com/api') ||
+                    urlLower.includes('youtube.com/watch') ||
+                    urlLower.includes('invidious.io') || 
+                    urlLower.includes('yewtu.be') || 
+                    urlLower.includes('inv.riverside.rocks') ||
+                    urlLower.includes('/api/v1/')) {
+                    return false;
+                }
+                
+                return adDomains.some(domain => urlLower.includes(domain)) ||
+                       adKeywords.some(keyword => urlLower.includes(keyword));
+            }
+            
+            // Block fetch requests
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                const url = args[0];
+                if (typeof url === 'string' && isAdUrl(url)) {
+                    adBlockStats.requests++;
+                    adsBlocked++;
+                    console.log('[Ad Blocker] Blocked fetch request:', url);
+                    return Promise.reject(new Error('Ad blocked'));
+                }
+                return originalFetch.apply(this, args);
+            };
+            
+            // Block XMLHttpRequest
+            const originalXHROpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                if (isAdUrl(url)) {
+                    adBlockStats.requests++;
+                    adsBlocked++;
+                    console.log('[Ad Blocker] Blocked XHR request:', url);
+                    return;
+                }
+                return originalXHROpen.apply(this, [method, url, ...rest]);
+            };
+            
+            // Block ad iframes
+            const originalCreateElement = document.createElement;
+            document.createElement = function(tagName, ...rest) {
+                const element = originalCreateElement.apply(this, [tagName, ...rest]);
+                if (tagName.toLowerCase() === 'iframe') {
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'src') {
+                                const src = element.getAttribute('src');
+                                if (src && isAdUrl(src)) {
+                                    adBlockStats.iframes++;
+                                    adsBlocked++;
+                                    element.remove();
+                                    console.log('[Ad Blocker] Blocked ad iframe:', src);
+                                }
+                            }
+                        });
+                    });
+                    observer.observe(element, { attributes: true, attributeFilter: ['src'] });
+                }
+                return element;
+            };
+            
+            // Remove ad elements from DOM
+            function removeAdElements() {
+                adSelectors.forEach(selector => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach(element => {
+                            const src = element.src || element.href || '';
+                            const className = element.className || '';
+                            const id = element.id || '';
+                            const text = element.textContent || '';
+                            
+                            if (isAdUrl(src) || 
+                                (typeof className === 'string' && className.toLowerCase().includes('ad')) ||
+                                (typeof id === 'string' && id.toLowerCase().includes('ad')) ||
+                                (typeof text === 'string' && text.toLowerCase().includes('advertisement'))) {
+                                adBlockStats.elements++;
+                                adsBlocked++;
+                                element.remove();
+                                console.log('[Ad Blocker] Removed ad element:', selector);
+                            }
+                        });
+                    } catch (e) {
+                        // Ignore errors for invalid selectors
+                    }
+                });
+            }
+            
+            // Monitor DOM for new ad elements
+            const domObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // Element node
+                            const src = node.src || node.href || '';
+                            const className = node.className || '';
+                            const id = node.id || '';
+                            
+                            if (isAdUrl(src) || 
+                                (typeof className === 'string' && className.toLowerCase().includes('ad')) ||
+                                (typeof id === 'string' && id.toLowerCase().includes('ad'))) {
+                                adBlockStats.elements++;
+                                adsBlocked++;
+                                node.remove();
+                                console.log('[Ad Blocker] Removed new ad element');
+                            }
+                        }
+                    });
+                });
+                removeAdElements();
+            });
+            
+            // Start ad blocking
+            function initAdBlocker() {
+                // Remove existing ads
+                removeAdElements();
+                
+                // Monitor DOM changes
+                domObserver.observe(document.body || document.documentElement, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['src', 'href', 'class', 'id']
+                });
+                
+                // Periodic cleanup
+                setInterval(removeAdElements, 2000);
+                
+                console.log('[Ad Blocker] Initialized - Ads will be blocked during playback');
+            }
+            
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAdBlocker);
+            } else {
+                initAdBlocker();
+            }
+            
+            // Expose stats globally
+            window.adBlockStats = adBlockStats;
+            window.getAdsBlocked = () => adsBlocked;
+            
+            // Show notification
+            setTimeout(() => {
+                if (adsBlocked > 0) {
+                    console.log(`[Ad Blocker] Blocked ${adsBlocked} ads so far`);
+                }
+            }, 3000);
+        })();
+        
+        // Invidious instance configuration (ad-free YouTube alternative for search only)
         const INVIDIOUS_INSTANCE = 'https://invidious.io'; // Can be changed to: https://yewtu.be, https://inv.riverside.rocks, etc.
         
         // Custom Invidious Search using multiple methods
@@ -3014,6 +3312,23 @@
         // Make functions available globally
         window.removeTrack = removeTrack;
         window.playTrack = playTrack;
+        
+        // Update ad blocker indicator
+        function updateAdBlockIndicator() {
+            const indicator = document.getElementById('ad-block-indicator');
+            const countElement = document.getElementById('ad-block-count');
+            if (indicator && countElement && window.getAdsBlocked) {
+                const blocked = window.getAdsBlocked();
+                countElement.textContent = `${blocked} blocked`;
+                if (blocked > 0) {
+                    indicator.style.background = 'rgba(76, 175, 80, 0.95)';
+                }
+            }
+        }
+        
+        // Update indicator periodically
+        setInterval(updateAdBlockIndicator, 1000);
+        updateAdBlockIndicator();
     </script>
 </body>
 </html>
