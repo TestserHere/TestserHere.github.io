@@ -333,6 +333,12 @@
             </div>
 
             <div class="section">
+                <h3>Transform Mode</h3>
+                <button class="btn btn-primary" id="translateBtn" onclick="setTransformMode('translate')">Translate</button>
+                <button class="btn" id="rotateBtn" onclick="setTransformMode('rotate')">Rotate</button>
+            </div>
+
+            <div class="section">
                 <h3>View Controls</h3>
                 <button class="btn" onclick="resetCamera()">Reset Camera</button>
                 <button class="btn" onclick="toggleGrid()">Toggle Grid</button>
@@ -345,10 +351,13 @@
             <div class="info-panel">
                 <h4>Controls</h4>
                 <p>Left Click: Select object</p>
+                <p>Drag Arrows: Move object</p>
+                <p>Drag Rings: Rotate object</p>
                 <p>Right Click + Drag: Rotate camera</p>
                 <p>Middle Click + Drag: Pan camera</p>
                 <p>Scroll: Zoom in/out</p>
                 <p>Selected: <span id="selectedInfo">None</span></p>
+                <p>Mode: <span id="transformMode">Translate</span></p>
             </div>
         </div>
     </div>
@@ -365,6 +374,14 @@
         let showGrid = true;
         let showAxes = true;
         let gridHelper, axesHelper;
+        let transformControls = null;
+        let transformMode = 'translate'; // 'translate' or 'rotate'
+        let isDraggingGizmo = false;
+        let activeAxis = null;
+        let dragPlane = new THREE.Plane();
+        let dragStartPoint = new THREE.Vector3();
+        let dragStartObjectPosition = new THREE.Vector3();
+        let dragStartObjectQuaternion = new THREE.Quaternion();
 
         // Initialize
         function init() {
@@ -410,56 +427,13 @@
             // Event listeners
             canvas.addEventListener('mousedown', onMouseDown, false);
             canvas.addEventListener('mousemove', onMouseMove, false);
+            canvas.addEventListener('mouseup', onMouseUp, false);
             canvas.addEventListener('wheel', onMouseWheel, false);
             window.addEventListener('resize', onWindowResize, false);
 
             // Simple camera controls
-            let isDragging = false;
+            let isDraggingCamera = false;
             let previousMousePosition = { x: 0, y: 0 };
-
-            canvas.addEventListener('mousedown', (e) => {
-                if (e.button === 2) { // Right click
-                    isDragging = true;
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
-                } else if (e.button === 1) { // Middle click
-                    isDragging = true;
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
-                }
-            });
-
-            canvas.addEventListener('mousemove', (e) => {
-                if (isDragging) {
-                    const deltaX = e.clientX - previousMousePosition.x;
-                    const deltaY = e.clientY - previousMousePosition.y;
-
-                    if (e.button === 2 || e.which === 3) { // Right click - rotate
-                        const spherical = new THREE.Spherical();
-                        spherical.setFromVector3(camera.position);
-                        spherical.theta -= deltaX * 0.01;
-                        spherical.phi += deltaY * 0.01;
-                        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
-                        camera.position.setFromSpherical(spherical);
-                        camera.lookAt(0, 0, 0);
-                    } else if (e.button === 1 || e.which === 2) { // Middle click - pan
-                        const panSpeed = 0.01;
-                        const right = new THREE.Vector3();
-                        const up = new THREE.Vector3();
-                        camera.getWorldDirection(new THREE.Vector3());
-                        right.setFromMatrixColumn(camera.matrix, 0);
-                        up.setFromMatrixColumn(camera.matrix, 1);
-                        right.multiplyScalar(-deltaX * panSpeed);
-                        up.multiplyScalar(deltaY * panSpeed);
-                        camera.position.add(right);
-                        camera.position.add(up);
-                        camera.lookAt(camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3())));
-                    }
-                    previousMousePosition = { x: e.clientX, y: e.clientY };
-                }
-            });
-
-            canvas.addEventListener('mouseup', () => {
-                isDragging = false;
-            });
 
             canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -477,18 +451,160 @@
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
+            // Check if clicking on transform gizmo
+            if (transformControls && selectedObject) {
+                raycaster.setFromCamera(mouse, camera);
+                const gizmoObjects = transformControls.children.filter(child => child.userData.isGizmo);
+                const intersects = raycaster.intersectObjects(gizmoObjects, true);
+                
+                if (intersects.length > 0) {
+                    const intersected = intersects[0].object;
+                    activeAxis = intersected.userData.axis;
+                    isDraggingGizmo = true;
+                    
+                    // Store initial state
+                    dragStartPoint.copy(intersects[0].point);
+                    dragStartObjectPosition.copy(selectedObject.position);
+                    dragStartObjectQuaternion.copy(selectedObject.quaternion);
+                    
+                    // Calculate drag plane
+                    const cameraDirection = new THREE.Vector3();
+                    camera.getWorldDirection(cameraDirection);
+                    
+                    if (transformMode === 'translate') {
+                        const axis = new THREE.Vector3();
+                        if (activeAxis === 'x') axis.set(1, 0, 0);
+                        else if (activeAxis === 'y') axis.set(0, 1, 0);
+                        else if (activeAxis === 'z') axis.set(0, 0, 1);
+                        
+                        axis.applyQuaternion(selectedObject.quaternion);
+                        const planeNormal = new THREE.Vector3().crossVectors(axis, cameraDirection).normalize();
+                        dragPlane.setFromNormalAndCoplanarPoint(planeNormal, selectedObject.position);
+                    } else {
+                        dragPlane.setFromNormalAndCoplanarPoint(cameraDirection, selectedObject.position);
+                    }
+                    
+                    return;
+                }
+            }
+
+            // Check for camera controls
+            if (event.button === 2) { // Right click
+                isDraggingCamera = true;
+                previousMousePosition = { x: event.clientX, y: event.clientY };
+                return;
+            } else if (event.button === 1) { // Middle click
+                isDraggingCamera = true;
+                previousMousePosition = { x: event.clientX, y: event.clientY };
+                return;
+            }
+
+            // Object selection
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(objects, true);
+            const allObjects = [...objects];
+            if (transformControls) {
+                allObjects.push(...transformControls.children.filter(child => child.userData.isGizmo));
+            }
+            const intersects = raycaster.intersectObjects(allObjects, true);
 
             if (intersects.length > 0) {
-                selectObject(intersects[0].object);
+                const intersected = intersects[0].object;
+                // Skip gizmo objects for selection
+                if (!intersected.userData.isGizmo) {
+                    selectObject(intersected);
+                }
             } else {
                 deselectObject();
             }
         }
 
         function onMouseMove(event) {
-            // Could add hover effects here
+            const rect = event.target.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Handle gizmo dragging
+            if (isDraggingGizmo && selectedObject && activeAxis) {
+                raycaster.setFromCamera(mouse, camera);
+                const intersection = new THREE.Vector3();
+                raycaster.ray.intersectPlane(dragPlane, intersection);
+                
+                if (transformMode === 'translate') {
+                    const delta = new THREE.Vector3().subVectors(intersection, dragStartPoint);
+                    const axis = new THREE.Vector3();
+                    if (activeAxis === 'x') axis.set(1, 0, 0);
+                    else if (activeAxis === 'y') axis.set(0, 1, 0);
+                    else if (activeAxis === 'z') axis.set(0, 0, 1);
+                    
+                    axis.applyQuaternion(selectedObject.quaternion);
+                    const projection = delta.dot(axis);
+                    const newPosition = dragStartObjectPosition.clone();
+                    newPosition.add(axis.multiplyScalar(projection));
+                    selectedObject.position.copy(newPosition);
+                    updatePropertiesPanel();
+                } else if (transformMode === 'rotate') {
+                    const objectPos = selectedObject.position;
+                    const startDir = new THREE.Vector3().subVectors(dragStartPoint, objectPos).normalize();
+                    const currentDir = new THREE.Vector3().subVectors(intersection, objectPos).normalize();
+                    
+                    let angle = Math.acos(Math.max(-1, Math.min(1, startDir.dot(currentDir))));
+                    const cross = new THREE.Vector3().crossVectors(startDir, currentDir);
+                    
+                    // Get the rotation axis in local space
+                    const rotationAxis = new THREE.Vector3();
+                    if (activeAxis === 'x') rotationAxis.set(1, 0, 0);
+                    else if (activeAxis === 'y') rotationAxis.set(0, 1, 0);
+                    else if (activeAxis === 'z') rotationAxis.set(0, 0, 1);
+                    
+                    // Transform axis to world space using initial quaternion
+                    rotationAxis.applyQuaternion(dragStartObjectQuaternion);
+                    
+                    // Determine rotation direction
+                    if (cross.dot(rotationAxis) < 0) angle = -angle;
+                    
+                    // Create delta rotation and apply to initial quaternion
+                    const deltaQuaternion = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
+                    selectedObject.quaternion.multiplyQuaternions(deltaQuaternion, dragStartObjectQuaternion);
+                    selectedObject.rotation.setFromQuaternion(selectedObject.quaternion);
+                    updatePropertiesPanel();
+                }
+                return;
+            }
+
+            // Handle camera dragging
+            if (isDraggingCamera) {
+                const deltaX = event.clientX - previousMousePosition.x;
+                const deltaY = event.clientY - previousMousePosition.y;
+
+                if (event.button === 2 || event.which === 3) { // Right click - rotate
+                    const spherical = new THREE.Spherical();
+                    spherical.setFromVector3(camera.position);
+                    spherical.theta -= deltaX * 0.01;
+                    spherical.phi += deltaY * 0.01;
+                    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+                    camera.position.setFromSpherical(spherical);
+                    camera.lookAt(0, 0, 0);
+                } else if (event.button === 1 || event.which === 2) { // Middle click - pan
+                    const panSpeed = 0.01;
+                    const right = new THREE.Vector3();
+                    const up = new THREE.Vector3();
+                    camera.getWorldDirection(new THREE.Vector3());
+                    right.setFromMatrixColumn(camera.matrix, 0);
+                    up.setFromMatrixColumn(camera.matrix, 1);
+                    right.multiplyScalar(-deltaX * panSpeed);
+                    up.multiplyScalar(deltaY * panSpeed);
+                    camera.position.add(right);
+                    camera.position.add(up);
+                    camera.lookAt(camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3())));
+                }
+                previousMousePosition = { x: event.clientX, y: event.clientY };
+            }
+        }
+
+        function onMouseUp(event) {
+            isDraggingGizmo = false;
+            isDraggingCamera = false;
+            activeAxis = null;
         }
 
         function onMouseWheel(event) {
@@ -560,10 +676,136 @@
             showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} added`);
         }
 
+        function createTransformControls() {
+            if (transformControls) {
+                scene.remove(transformControls);
+                transformControls.children.forEach(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                });
+            }
+
+            transformControls = new THREE.Group();
+            transformControls.userData.isTransformControl = true;
+
+            if (transformMode === 'translate') {
+                // Create translation arrows
+                const arrowLength = 1.5;
+                const arrowHeadLength = 0.3;
+                const arrowHeadWidth = 0.15;
+                const shaftRadius = 0.03;
+
+                // X axis (red)
+                const xArrow = new THREE.ArrowHelper(
+                    new THREE.Vector3(1, 0, 0),
+                    new THREE.Vector3(0, 0, 0),
+                    arrowLength,
+                    0xff0000,
+                    arrowHeadLength,
+                    arrowHeadWidth
+                );
+                xArrow.userData.isGizmo = true;
+                xArrow.userData.axis = 'x';
+                xArrow.line.material.linewidth = 3;
+                transformControls.add(xArrow);
+
+                // Y axis (green)
+                const yArrow = new THREE.ArrowHelper(
+                    new THREE.Vector3(0, 1, 0),
+                    new THREE.Vector3(0, 0, 0),
+                    arrowLength,
+                    0x00ff00,
+                    arrowHeadLength,
+                    arrowHeadWidth
+                );
+                yArrow.userData.isGizmo = true;
+                yArrow.userData.axis = 'y';
+                yArrow.line.material.linewidth = 3;
+                transformControls.add(yArrow);
+
+                // Z axis (blue)
+                const zArrow = new THREE.ArrowHelper(
+                    new THREE.Vector3(0, 0, 1),
+                    new THREE.Vector3(0, 0, 0),
+                    arrowLength,
+                    0x0000ff,
+                    arrowHeadLength,
+                    arrowHeadWidth
+                );
+                zArrow.userData.isGizmo = true;
+                zArrow.userData.axis = 'z';
+                zArrow.line.material.linewidth = 3;
+                transformControls.add(zArrow);
+            } else if (transformMode === 'rotate') {
+                // Create rotation rings
+                const ringRadius = 1.2;
+                const ringThickness = 0.05;
+                const segments = 64;
+
+                // X axis ring (red)
+                const xRingGeometry = new THREE.TorusGeometry(ringRadius, ringThickness, 8, segments);
+                xRingGeometry.rotateY(Math.PI / 2);
+                const xRing = new THREE.Mesh(
+                    xRingGeometry,
+                    new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide })
+                );
+                xRing.userData.isGizmo = true;
+                xRing.userData.axis = 'x';
+                transformControls.add(xRing);
+
+                // Y axis ring (green)
+                const yRingGeometry = new THREE.TorusGeometry(ringRadius, ringThickness, 8, segments);
+                yRingGeometry.rotateX(Math.PI / 2);
+                const yRing = new THREE.Mesh(
+                    yRingGeometry,
+                    new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide })
+                );
+                yRing.userData.isGizmo = true;
+                yRing.userData.axis = 'y';
+                transformControls.add(yRing);
+
+                // Z axis ring (blue)
+                const zRingGeometry = new THREE.TorusGeometry(ringRadius, ringThickness, 8, segments);
+                const zRing = new THREE.Mesh(
+                    zRingGeometry,
+                    new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide })
+                );
+                zRing.userData.isGizmo = true;
+                zRing.userData.axis = 'z';
+                transformControls.add(zRing);
+            }
+
+            scene.add(transformControls);
+        }
+
+        function updateTransformControls() {
+            if (transformControls && selectedObject) {
+                transformControls.position.copy(selectedObject.position);
+                transformControls.rotation.copy(selectedObject.rotation);
+                transformControls.visible = true;
+            } else if (transformControls) {
+                transformControls.visible = false;
+            }
+        }
+
+        function setTransformMode(mode) {
+            transformMode = mode;
+            document.getElementById('transformMode').textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+            
+            // Update button styles
+            document.getElementById('translateBtn').className = mode === 'translate' ? 'btn btn-primary' : 'btn';
+            document.getElementById('rotateBtn').className = mode === 'rotate' ? 'btn btn-primary' : 'btn';
+            
+            if (selectedObject) {
+                createTransformControls();
+                updateTransformControls();
+            }
+        }
+
         function selectObject(obj) {
             // Find the root mesh if clicking on a child
             let rootObj = obj;
-            while (rootObj.parent && rootObj.parent !== scene) {
+            while (rootObj.parent && rootObj.parent !== scene && !rootObj.userData.isTransformControl) {
                 rootObj = rootObj.parent;
             }
 
@@ -579,6 +821,10 @@
             rootObj.add(line);
             rootObj.userData.outline = line;
 
+            // Create and show transform controls
+            createTransformControls();
+            updateTransformControls();
+
             updatePropertiesPanel();
             updateObjectList();
         }
@@ -589,6 +835,12 @@
                 selectedObject.userData.outline = null;
             }
             selectedObject = null;
+            
+            // Hide transform controls
+            if (transformControls) {
+                transformControls.visible = false;
+            }
+            
             updatePropertiesPanel();
             updateObjectList();
         }
@@ -649,6 +901,8 @@
                 rotZ * Math.PI / 180
             );
             selectedObject.scale.set(scaleX, scaleY, scaleZ);
+            
+            updateTransformControls();
         }
 
         function updateSelectedColor() {
@@ -821,6 +1075,14 @@
                 obj.material.dispose();
             });
             objects = [];
+            if (transformControls) {
+                scene.remove(transformControls);
+                transformControls.children.forEach(child => {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                });
+                transformControls = null;
+            }
             deselectObject();
             updateObjectList();
             showNotification('Scene cleared');
@@ -857,6 +1119,7 @@
 
         function animate() {
             requestAnimationFrame(animate);
+            updateTransformControls();
             renderer.render(scene, camera);
         }
 
