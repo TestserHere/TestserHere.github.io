@@ -1154,8 +1154,9 @@
                 showPopup(selectedOption);
                 addResultToHistory(selectedOption);
                 
-                // Remove option if setting is enabled
-                if (removeAfterSelect && options.length > 1) {
+                // Remove option if setting is enabled (check checkbox state directly)
+                const shouldRemove = removeAfterSelectCheckbox && removeAfterSelectCheckbox.checked;
+                if (shouldRemove && options.length > 1) {
                     options.splice(selectedIndex, 1);
                     updateOptionsList();
                     updateSpinner();
@@ -1195,6 +1196,11 @@
 
         // Initialize - Load from localStorage first
         loadFromLocalStorage();
+        
+        // Sync checkbox state with variable after loading
+        if (removeAfterSelectCheckbox) {
+            removeAfterSelect = removeAfterSelectCheckbox.checked;
+        }
         
         // Update UI with loaded data
         if (options.length > 0) {
