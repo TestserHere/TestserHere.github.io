@@ -185,6 +185,11 @@
             font-size: 0.9em;
         }
 
+        .control-btn.active {
+            background: rgba(102, 126, 234, 0.5);
+            color: #fff;
+        }
+
         .player-controls {
             display: flex;
             justify-content: center;
@@ -680,9 +685,11 @@
                         <p id="now-playing-artist">Select a track from the playlist</p>
                     </div>
                     <div class="player-controls">
+                        <button class="control-btn" id="shuffle-btn" onclick="toggleShuffle()" title="Shuffle">🔀</button>
                         <button class="control-btn" onclick="previousTrack()" title="Previous">⏮</button>
                         <button class="control-btn play-pause" onclick="togglePlayPause()" id="play-pause-btn" title="Play/Pause">▶</button>
                         <button class="control-btn" onclick="nextTrack()" title="Next">⏭</button>
+                        <button class="control-btn" id="repeat-btn" onclick="toggleRepeat()" title="Repeat">🔁</button>
                     </div>
                     <div class="progress-container">
                         <div class="progress-bar" id="progress-bar" onclick="seek(event)">
@@ -1355,6 +1362,11 @@
         let playlists = {}; // Store multiple playlists
         let currentPlaylistName = 'default';
         let searchResultsCache = []; // Cache search results for track access
+        let isShuffleMode = false;
+        let isRepeatPlaylistMode = false;
+        let isRepeatOneMode = false;
+        let shuffledPlaylist = []; // Shuffled version of playlist
+        let shuffleHistory = []; // Track played songs in shuffle mode
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -2322,9 +2334,14 @@
                 isPlaying = false;
                 updatePlayPauseButton();
                 stopTimeUpdate();
-                // Auto-play next track
+                // Auto-play next track based on repeat mode
                 console.log('Track ended, playing next');
-                nextTrack();
+                if (isRepeatOneMode) {
+                    // Repeat current song
+                    playTrack(currentTrackIndex);
+                } else {
+                    nextTrack();
+                }
             } else if (event.data === YT.PlayerState.CUED) {
                 // Video is cued, try to play it
                 console.log('Video cued, attempting to play');
@@ -2828,15 +2845,147 @@
 
         window.nextTrack = function() {
             if (playlist.length === 0) return;
-            const nextIndex = (currentTrackIndex + 1) % playlist.length;
-            playTrack(nextIndex);
+            
+            if (isRepeatOneMode) {
+                // Repeat current song
+                playTrack(currentTrackIndex);
+                return;
+            }
+            
+            if (isShuffleMode) {
+                // Shuffle mode
+                if (shuffledPlaylist.length === 0 || shuffleHistory.length >= shuffledPlaylist.length) {
+                    // Regenerate shuffle if we've played all songs
+                    generateShuffledPlaylist();
+                    shuffleHistory = [];
+                }
+                
+                // Find next unplayed song in shuffled playlist
+                let nextIndex = -1;
+                for (let i = 0; i < shuffledPlaylist.length; i++) {
+                    if (!shuffleHistory.includes(shuffledPlaylist[i])) {
+                        nextIndex = shuffledPlaylist[i];
+                        shuffleHistory.push(nextIndex);
+                        break;
+                    }
+                }
+                
+                if (nextIndex === -1) {
+                    // All songs played, restart shuffle
+                    generateShuffledPlaylist();
+                    shuffleHistory = [];
+                    nextIndex = shuffledPlaylist[0];
+                    shuffleHistory.push(nextIndex);
+                }
+                
+                playTrack(nextIndex);
+            } else {
+                // Normal mode
+                let nextIndex;
+                if (isRepeatPlaylistMode) {
+                    // Repeat playlist - loop back to start
+                    nextIndex = (currentTrackIndex + 1) % playlist.length;
+                } else {
+                    // Normal - stop at end
+                    nextIndex = currentTrackIndex + 1;
+                    if (nextIndex >= playlist.length) {
+                        // Reached end, stop playback
+                        stopAudio();
+                        return;
+                    }
+                }
+                playTrack(nextIndex);
+            }
         };
 
         window.previousTrack = function() {
             if (playlist.length === 0) return;
-            const prevIndex = currentTrackIndex <= 0 ? playlist.length - 1 : currentTrackIndex - 1;
-            playTrack(prevIndex);
+            
+            if (isShuffleMode) {
+                // In shuffle mode, go to previous in history
+                if (shuffleHistory.length > 1) {
+                    shuffleHistory.pop(); // Remove current
+                    const prevIndex = shuffleHistory[shuffleHistory.length - 1];
+                    playTrack(prevIndex);
+                } else {
+                    // No history, just go to first in shuffled list
+                    generateShuffledPlaylist();
+                    shuffleHistory = [shuffledPlaylist[0]];
+                    playTrack(shuffledPlaylist[0]);
+                }
+            } else {
+                // Normal or repeat playlist mode
+                const prevIndex = currentTrackIndex <= 0 
+                    ? (isRepeatPlaylistMode ? playlist.length - 1 : 0)
+                    : currentTrackIndex - 1;
+                if (prevIndex >= 0) {
+                    playTrack(prevIndex);
+                }
+            }
         };
+        
+        // Toggle shuffle mode
+        window.toggleShuffle = function() {
+            isShuffleMode = !isShuffleMode;
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            if (shuffleBtn) {
+                if (isShuffleMode) {
+                    shuffleBtn.classList.add('active');
+                    shuffleBtn.style.opacity = '1';
+                    generateShuffledPlaylist();
+                    shuffleHistory = [];
+                    if (currentTrackIndex >= 0) {
+                        shuffleHistory.push(currentTrackIndex);
+                    }
+                } else {
+                    shuffleBtn.classList.remove('active');
+                    shuffleBtn.style.opacity = '0.7';
+                    shuffledPlaylist = [];
+                    shuffleHistory = [];
+                }
+            }
+        };
+        
+        // Toggle repeat mode (cycles: off -> repeat playlist -> repeat one -> off)
+        window.toggleRepeat = function() {
+            const repeatBtn = document.getElementById('repeat-btn');
+            if (!repeatBtn) return;
+            
+            if (!isRepeatPlaylistMode && !isRepeatOneMode) {
+                // Off -> Repeat Playlist
+                isRepeatPlaylistMode = true;
+                isRepeatOneMode = false;
+                repeatBtn.classList.add('active');
+                repeatBtn.textContent = '🔁';
+                repeatBtn.title = 'Repeat Playlist';
+            } else if (isRepeatPlaylistMode && !isRepeatOneMode) {
+                // Repeat Playlist -> Repeat One
+                isRepeatPlaylistMode = false;
+                isRepeatOneMode = true;
+                repeatBtn.textContent = '🔂';
+                repeatBtn.title = 'Repeat One';
+            } else {
+                // Repeat One -> Off
+                isRepeatPlaylistMode = false;
+                isRepeatOneMode = false;
+                repeatBtn.classList.remove('active');
+                repeatBtn.textContent = '🔁';
+                repeatBtn.title = 'Repeat';
+            }
+        };
+        
+        // Generate shuffled playlist
+        function generateShuffledPlaylist() {
+            shuffledPlaylist = [];
+            for (let i = 0; i < playlist.length; i++) {
+                shuffledPlaylist.push(i);
+            }
+            // Fisher-Yates shuffle algorithm
+            for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
+            }
+        }
 
         window.setVolume = function(value) {
             document.getElementById('volume-value').textContent = value + '%';
