@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Modeler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            color: #4fc3f7;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section h3 {
+            font-size: 1em;
+            margin-bottom: 15px;
+            color: #81c784;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef5350 0%, #e53935 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffb74d 0%, #ffa726 100%);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #b0bec5;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .input-group input[type="color"] {
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: #1a1a1a;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        .info-panel h4 {
+            margin-bottom: 10px;
+            color: #4fc3f7;
+        }
+
+        .info-panel p {
+            margin: 5px 0;
+            color: #b0bec5;
+        }
+
+        .object-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .object-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .object-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .object-item.selected {
+            background: rgba(79, 195, 247, 0.3);
+            border: 1px solid #4fc3f7;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #ab47bc 0%, #8e24aa 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(171, 71, 188, 0.4);
+        }
+
+        .transform-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px;
+        }
+
+        .transform-controls input {
+            width: 100%;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: slideIn 0.3s;
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        .color-preview {
+            width: 100%;
+            height: 30px;
+            border-radius: 5px;
+            margin-top: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>3D Modeler</h2>
+
+            <div class="section">
+                <h3>Add Shapes</h3>
+                <button class="btn btn-primary" onclick="addShape('box')">Add Cube</button>
+                <button class="btn btn-primary" onclick="addShape('sphere')">Add Sphere</button>
+                <button class="btn btn-primary" onclick="addShape('cylinder')">Add Cylinder</button>
+                <button class="btn btn-primary" onclick="addShape('cone')">Add Cone</button>
+                <button class="btn btn-primary" onclick="addShape('torus')">Add Torus</button>
+            </div>
+
+            <div class="section">
+                <h3>Properties</h3>
+                <div class="input-group">
+                    <label>Color</label>
+                    <input type="color" id="colorPicker" value="#4fc3f7" onchange="updateSelectedColor()">
+                    <div class="color-preview" id="colorPreview" style="background: #4fc3f7;"></div>
+                </div>
+                <div class="input-group">
+                    <label>Material</label>
+                    <select id="materialType" onchange="updateSelectedMaterial()">
+                        <option value="standard">Standard</option>
+                        <option value="phong">Phong</option>
+                        <option value="lambert">Lambert</option>
+                        <option value="basic">Basic</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Transform</h3>
+                <div class="input-group">
+                    <label>Position</label>
+                    <div class="transform-controls">
+                        <input type="number" id="posX" placeholder="X" step="0.1" onchange="updateTransform()">
+                        <input type="number" id="posY" placeholder="Y" step="0.1" onchange="updateTransform()">
+                        <input type="number" id="posZ" placeholder="Z" step="0.1" onchange="updateTransform()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Rotation (degrees)</label>
+                    <div class="transform-controls">
+                        <input type="number" id="rotX" placeholder="X" step="1" onchange="updateTransform()">
+                        <input type="number" id="rotY" placeholder="Y" step="1" onchange="updateTransform()">
+                        <input type="number" id="rotZ" placeholder="Z" step="1" onchange="updateTransform()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Scale</label>
+                    <div class="transform-controls">
+                        <input type="number" id="scaleX" placeholder="X" step="0.1" value="1" onchange="updateTransform()">
+                        <input type="number" id="scaleY" placeholder="Y" step="0.1" value="1" onchange="updateTransform()">
+                        <input type="number" id="scaleZ" placeholder="Z" step="0.1" value="1" onchange="updateTransform()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Objects</h3>
+                <div class="object-list" id="objectList"></div>
+                <button class="btn btn-danger" onclick="deleteSelected()" style="margin-top: 10px;">Delete Selected</button>
+            </div>
+
+            <div class="section">
+                <h3>File Operations</h3>
+                <button class="btn btn-success" onclick="saveModel()">Save Model</button>
+                <label for="loadFile" class="file-label">Load Model</label>
+                <input type="file" id="loadFile" class="file-input" accept=".json" onchange="loadModel(event)">
+                <button class="btn btn-warning" onclick="clearScene()">Clear Scene</button>
+            </div>
+
+            <div class="section">
+                <h3>View Controls</h3>
+                <button class="btn" onclick="resetCamera()">Reset Camera</button>
+                <button class="btn" onclick="toggleGrid()">Toggle Grid</button>
+                <button class="btn" onclick="toggleAxes()">Toggle Axes</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <div class="info-panel">
+                <h4>Controls</h4>
+                <p>Left Click: Select object</p>
+                <p>Right Click + Drag: Rotate camera</p>
+                <p>Middle Click + Drag: Pan camera</p>
+                <p>Scroll: Zoom in/out</p>
+                <p>Selected: <span id="selectedInfo">None</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        let scene, camera, renderer, controls;
+        let objects = [];
+        let selectedObject = null;
+        let raycaster, mouse;
+        let showGrid = true;
+        let showAxes = true;
+        let gridHelper, axesHelper;
+
+        // Initialize
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            const canvas = document.getElementById('canvas');
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(canvas.parentElement.clientWidth, canvas.parentElement.clientHeight);
+            renderer.shadowMap.enabled = true;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x4fc3f7, 0.5);
+            pointLight.position.set(-10, 10, -10);
+            scene.add(pointLight);
+
+            // Helpers
+            gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+
+            // Raycaster for object selection
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Event listeners
+            canvas.addEventListener('mousedown', onMouseDown, false);
+            canvas.addEventListener('mousemove', onMouseMove, false);
+            canvas.addEventListener('wheel', onMouseWheel, false);
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Simple camera controls
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.button === 2) { // Right click
+                    isDragging = true;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                } else if (e.button === 1) { // Middle click
+                    isDragging = true;
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - previousMousePosition.x;
+                    const deltaY = e.clientY - previousMousePosition.y;
+
+                    if (e.button === 2 || e.which === 3) { // Right click - rotate
+                        const spherical = new THREE.Spherical();
+                        spherical.setFromVector3(camera.position);
+                        spherical.theta -= deltaX * 0.01;
+                        spherical.phi += deltaY * 0.01;
+                        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+                        camera.position.setFromSpherical(spherical);
+                        camera.lookAt(0, 0, 0);
+                    } else if (e.button === 1 || e.which === 2) { // Middle click - pan
+                        const panSpeed = 0.01;
+                        const right = new THREE.Vector3();
+                        const up = new THREE.Vector3();
+                        camera.getWorldDirection(new THREE.Vector3());
+                        right.setFromMatrixColumn(camera.matrix, 0);
+                        up.setFromMatrixColumn(camera.matrix, 1);
+                        right.multiplyScalar(-deltaX * panSpeed);
+                        up.multiplyScalar(deltaY * panSpeed);
+                        camera.position.add(right);
+                        camera.position.add(up);
+                        camera.lookAt(camera.position.clone().add(camera.getWorldDirection(new THREE.Vector3())));
+                    }
+                    previousMousePosition = { x: e.clientX, y: e.clientY };
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Prevent default middle click behavior
+            canvas.addEventListener('auxclick', (e) => {
+                if (e.button === 1) e.preventDefault();
+            });
+
+            animate();
+        }
+
+        function onMouseDown(event) {
+            event.preventDefault();
+            const rect = event.target.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(objects, true);
+
+            if (intersects.length > 0) {
+                selectObject(intersects[0].object);
+            } else {
+                deselectObject();
+            }
+        }
+
+        function onMouseMove(event) {
+            // Could add hover effects here
+        }
+
+        function onMouseWheel(event) {
+            event.preventDefault();
+            const zoomSpeed = 0.1;
+            const direction = event.deltaY > 0 ? 1 : -1;
+            const distance = camera.position.length();
+            camera.position.normalize();
+            camera.position.multiplyScalar(distance + direction * zoomSpeed);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function onWindowResize() {
+            const canvas = document.getElementById('canvas');
+            camera.aspect = canvas.parentElement.clientWidth / canvas.parentElement.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.parentElement.clientWidth, canvas.parentElement.clientHeight);
+        }
+
+        function addShape(type) {
+            let geometry, material, mesh;
+            const color = document.getElementById('colorPicker').value;
+            const materialType = document.getElementById('materialType').value;
+
+            switch (type) {
+                case 'box':
+                    geometry = new THREE.BoxGeometry(1, 1, 1);
+                    break;
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                    break;
+                case 'cylinder':
+                    geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(0.5, 1, 32);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
+                    break;
+            }
+
+            switch (materialType) {
+                case 'standard':
+                    material = new THREE.MeshStandardMaterial({ color: color });
+                    break;
+                case 'phong':
+                    material = new THREE.MeshPhongMaterial({ color: color });
+                    break;
+                case 'lambert':
+                    material = new THREE.MeshLambertMaterial({ color: color });
+                    break;
+                case 'basic':
+                    material = new THREE.MeshBasicMaterial({ color: color });
+                    break;
+            }
+
+            mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData.type = type;
+            mesh.userData.id = Date.now();
+            mesh.userData.name = `${type}_${objects.length + 1}`;
+
+            scene.add(mesh);
+            objects.push(mesh);
+            selectObject(mesh);
+            updateObjectList();
+            showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} added`);
+        }
+
+        function selectObject(obj) {
+            // Find the root mesh if clicking on a child
+            let rootObj = obj;
+            while (rootObj.parent && rootObj.parent !== scene) {
+                rootObj = rootObj.parent;
+            }
+
+            deselectObject();
+            selectedObject = rootObj;
+            
+            // Highlight selected object
+            const edges = new THREE.EdgesGeometry(rootObj.geometry);
+            const line = new THREE.LineSegments(
+                edges,
+                new THREE.LineBasicMaterial({ color: 0x4fc3f7, linewidth: 2 })
+            );
+            rootObj.add(line);
+            rootObj.userData.outline = line;
+
+            updatePropertiesPanel();
+            updateObjectList();
+        }
+
+        function deselectObject() {
+            if (selectedObject && selectedObject.userData.outline) {
+                selectedObject.remove(selectedObject.userData.outline);
+                selectedObject.userData.outline = null;
+            }
+            selectedObject = null;
+            updatePropertiesPanel();
+            updateObjectList();
+        }
+
+        function updatePropertiesPanel() {
+            if (selectedObject) {
+                document.getElementById('posX').value = selectedObject.position.x.toFixed(2);
+                document.getElementById('posY').value = selectedObject.position.y.toFixed(2);
+                document.getElementById('posZ').value = selectedObject.position.z.toFixed(2);
+                
+                document.getElementById('rotX').value = (selectedObject.rotation.x * 180 / Math.PI).toFixed(0);
+                document.getElementById('rotY').value = (selectedObject.rotation.y * 180 / Math.PI).toFixed(0);
+                document.getElementById('rotZ').value = (selectedObject.rotation.z * 180 / Math.PI).toFixed(0);
+                
+                document.getElementById('scaleX').value = selectedObject.scale.x.toFixed(2);
+                document.getElementById('scaleY').value = selectedObject.scale.y.toFixed(2);
+                document.getElementById('scaleZ').value = selectedObject.scale.z.toFixed(2);
+
+                if (selectedObject.material.color) {
+                    document.getElementById('colorPicker').value = '#' + selectedObject.material.color.getHexString();
+                    document.getElementById('colorPreview').style.background = '#' + selectedObject.material.color.getHexString();
+                }
+
+                document.getElementById('selectedInfo').textContent = selectedObject.userData.name || 'Unknown';
+            } else {
+                document.getElementById('posX').value = '';
+                document.getElementById('posY').value = '';
+                document.getElementById('posZ').value = '';
+                document.getElementById('rotX').value = '';
+                document.getElementById('rotY').value = '';
+                document.getElementById('rotZ').value = '';
+                document.getElementById('scaleX').value = '1';
+                document.getElementById('scaleY').value = '1';
+                document.getElementById('scaleZ').value = '1';
+                document.getElementById('selectedInfo').textContent = 'None';
+            }
+        }
+
+        function updateTransform() {
+            if (!selectedObject) return;
+
+            const posX = parseFloat(document.getElementById('posX').value) || 0;
+            const posY = parseFloat(document.getElementById('posY').value) || 0;
+            const posZ = parseFloat(document.getElementById('posZ').value) || 0;
+
+            const rotX = parseFloat(document.getElementById('rotX').value) || 0;
+            const rotY = parseFloat(document.getElementById('rotY').value) || 0;
+            const rotZ = parseFloat(document.getElementById('rotZ').value) || 0;
+
+            const scaleX = parseFloat(document.getElementById('scaleX').value) || 1;
+            const scaleY = parseFloat(document.getElementById('scaleY').value) || 1;
+            const scaleZ = parseFloat(document.getElementById('scaleZ').value) || 1;
+
+            selectedObject.position.set(posX, posY, posZ);
+            selectedObject.rotation.set(
+                rotX * Math.PI / 180,
+                rotY * Math.PI / 180,
+                rotZ * Math.PI / 180
+            );
+            selectedObject.scale.set(scaleX, scaleY, scaleZ);
+        }
+
+        function updateSelectedColor() {
+            if (!selectedObject) return;
+            const color = document.getElementById('colorPicker').value;
+            selectedObject.material.color.set(color);
+            document.getElementById('colorPreview').style.background = color;
+        }
+
+        function updateSelectedMaterial() {
+            if (!selectedObject) return;
+            const materialType = document.getElementById('materialType').value;
+            const color = selectedObject.material.color.getHex();
+
+            let newMaterial;
+            switch (materialType) {
+                case 'standard':
+                    newMaterial = new THREE.MeshStandardMaterial({ color: color });
+                    break;
+                case 'phong':
+                    newMaterial = new THREE.MeshPhongMaterial({ color: color });
+                    break;
+                case 'lambert':
+                    newMaterial = new THREE.MeshLambertMaterial({ color: color });
+                    break;
+                case 'basic':
+                    newMaterial = new THREE.MeshBasicMaterial({ color: color });
+                    break;
+            }
+
+            selectedObject.material.dispose();
+            selectedObject.material = newMaterial;
+        }
+
+        function updateObjectList() {
+            const list = document.getElementById('objectList');
+            list.innerHTML = '';
+
+            objects.forEach((obj, index) => {
+                const item = document.createElement('div');
+                item.className = 'object-item' + (obj === selectedObject ? ' selected' : '');
+                item.textContent = obj.userData.name || `Object ${index + 1}`;
+                item.onclick = () => selectObject(obj);
+                list.appendChild(item);
+            });
+        }
+
+        function deleteSelected() {
+            if (!selectedObject) {
+                showNotification('No object selected', 'error');
+                return;
+            }
+
+            scene.remove(selectedObject);
+            const index = objects.indexOf(selectedObject);
+            if (index > -1) {
+                objects.splice(index, 1);
+            }
+            selectedObject.geometry.dispose();
+            selectedObject.material.dispose();
+            deselectObject();
+            updateObjectList();
+            showNotification('Object deleted');
+        }
+
+        function saveModel() {
+            const modelData = {
+                version: '1.0',
+                objects: objects.map(obj => ({
+                    type: obj.userData.type,
+                    position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
+                    rotation: { x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z },
+                    scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },
+                    color: '#' + obj.material.color.getHexString(),
+                    material: obj.material.type.replace('Mesh', '').replace('Material', '').toLowerCase()
+                }))
+            };
+
+            const json = JSON.stringify(modelData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `3d_model_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('Model saved successfully');
+        }
+
+        function loadModel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const modelData = JSON.parse(e.target.result);
+                    
+                    // Clear existing objects
+                    clearScene();
+
+                    // Load objects
+                    modelData.objects.forEach(objData => {
+                        let geometry;
+                        switch (objData.type) {
+                            case 'box':
+                                geometry = new THREE.BoxGeometry(1, 1, 1);
+                                break;
+                            case 'sphere':
+                                geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                                break;
+                            case 'cylinder':
+                                geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+                                break;
+                            case 'cone':
+                                geometry = new THREE.ConeGeometry(0.5, 1, 32);
+                                break;
+                            case 'torus':
+                                geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100);
+                                break;
+                        }
+
+                        let material;
+                        const matType = objData.material || 'standard';
+                        switch (matType) {
+                            case 'standard':
+                                material = new THREE.MeshStandardMaterial({ color: objData.color });
+                                break;
+                            case 'phong':
+                                material = new THREE.MeshPhongMaterial({ color: objData.color });
+                                break;
+                            case 'lambert':
+                                material = new THREE.MeshLambertMaterial({ color: objData.color });
+                                break;
+                            case 'basic':
+                                material = new THREE.MeshBasicMaterial({ color: objData.color });
+                                break;
+                        }
+
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.set(objData.position.x, objData.position.y, objData.position.z);
+                        mesh.rotation.set(objData.rotation.x, objData.rotation.y, objData.rotation.z);
+                        mesh.scale.set(objData.scale.x, objData.scale.y, objData.scale.z);
+                        mesh.castShadow = true;
+                        mesh.receiveShadow = true;
+                        mesh.userData.type = objData.type;
+                        mesh.userData.id = Date.now() + Math.random();
+                        mesh.userData.name = `${objData.type}_${objects.length + 1}`;
+
+                        scene.add(mesh);
+                        objects.push(mesh);
+                    });
+
+                    updateObjectList();
+                    showNotification('Model loaded successfully');
+                } catch (error) {
+                    showNotification('Error loading model: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        function clearScene() {
+            objects.forEach(obj => {
+                scene.remove(obj);
+                obj.geometry.dispose();
+                obj.material.dispose();
+            });
+            objects = [];
+            deselectObject();
+            updateObjectList();
+            showNotification('Scene cleared');
+        }
+
+        function resetCamera() {
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+        }
+
+        function toggleGrid() {
+            showGrid = !showGrid;
+            gridHelper.visible = showGrid;
+        }
+
+        function toggleAxes() {
+            showAxes = !showAxes;
+            axesHelper.visible = showAxes;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification show';
+            if (type === 'error') {
+                notification.style.background = 'rgba(239, 83, 80, 0.9)';
+            } else {
+                notification.style.background = 'rgba(76, 175, 80, 0.9)';
+            }
+            setTimeout(() => {
+                notification.className = 'notification';
+            }, 3000);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
