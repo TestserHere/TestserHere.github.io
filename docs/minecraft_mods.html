@@ -488,6 +488,59 @@
             color: #fff;
         }
 
+        .btn-curseforge {
+            background: #f16436;
+            color: #fff;
+            border-right: 2px solid #1a1f3a;
+        }
+
+        .btn-curseforge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-curseforge:hover::before {
+            left: 100%;
+        }
+
+        .btn-curseforge:hover {
+            background: #ff7a4d;
+            color: #fff;
+        }
+
+        .btn-mcpedl {
+            background: #ffce54;
+            color: #0a0e27;
+            border-right: 2px solid #1a1f3a;
+            font-weight: 700;
+        }
+
+        .btn-mcpedl::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-mcpedl:hover::before {
+            left: 100%;
+        }
+
+        .btn-mcpedl:hover {
+            background: #ffd875;
+            color: #0a0e27;
+        }
+
         .no-results {
             text-align: center;
             padding: 80px 40px;
@@ -1130,7 +1183,13 @@
                         </div>
                         <div class="mod-actions">
                             <button onclick="viewModDetails(${JSON.stringify(mod).replace(/"/g, '&quot;')})" class="btn btn-primary">View Details</button>
-                            <a href="${mod.url}" target="_blank" class="btn btn-secondary">External Link</a>
+                            ${mod.platform === 'curseforge' ? `
+                                <a href="${mod.url}" target="_blank" class="btn btn-curseforge" title="View on CurseForge">CurseForge</a>
+                            ` : mod.platform === 'mcpedl' ? `
+                                <a href="${mod.url}" target="_blank" class="btn btn-mcpedl" title="View on MCPEDL">MCPEDL</a>
+                            ` : `
+                                <a href="${mod.url}" target="_blank" class="btn btn-secondary">External Link</a>
+                            `}
                         </div>
                     </div>
                 `;
@@ -1267,7 +1326,27 @@
                 html += `
                     <div class="api-note">
                         <strong>Note:</strong> Version selection is currently only available for Modrinth mods. 
-                        For CurseForge mods, please visit the external link.
+                        ${mod.platform === 'curseforge' ? 'Please visit CurseForge for version downloads.' : mod.platform === 'mcpedl' ? 'Please visit MCPEDL for version downloads.' : 'Please visit the external link for version downloads.'}
+                    </div>
+                `;
+            }
+
+            // Add platform-specific action buttons
+            if (mod.platform === 'curseforge' || mod.platform === 'mcpedl') {
+                html += `
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #2a2f4a;">
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            ${mod.platform === 'curseforge' ? `
+                                <a href="${mod.url}" target="_blank" class="btn" style="flex: 1; min-width: 200px; background: #f16436; color: #fff; text-align: center; padding: 15px 25px;">
+                                    View on CurseForge
+                                </a>
+                            ` : ''}
+                            ${mod.platform === 'mcpedl' ? `
+                                <a href="${mod.url}" target="_blank" class="btn" style="flex: 1; min-width: 200px; background: #ffce54; color: #0a0e27; text-align: center; padding: 15px 25px; font-weight: 700;">
+                                    View on MCPEDL
+                                </a>
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             }
