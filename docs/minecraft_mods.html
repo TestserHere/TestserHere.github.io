@@ -631,6 +631,80 @@
             font-size: 1.05em;
             line-height: 1.8;
             margin-bottom: 30px;
+            word-wrap: break-word;
+        }
+
+        .modal-description img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border: 2px solid #2a2f4a;
+        }
+
+        .modal-description iframe {
+            max-width: 100%;
+            margin: 20px 0;
+            border: 2px solid #2a2f4a;
+            display: block;
+        }
+
+        .iframe-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            margin: 20px 0;
+        }
+
+        .iframe-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #2a2f4a;
+        }
+
+        .modal-description a {
+            color: #ff6b9d;
+            text-decoration: underline;
+            transition: color 0.3s ease;
+        }
+
+        .modal-description a:hover {
+            color: #ff8bb3;
+        }
+
+        .modal-description p {
+            margin: 15px 0;
+        }
+
+        .modal-description h1,
+        .modal-description h2,
+        .modal-description h3,
+        .modal-description h4,
+        .modal-description h5,
+        .modal-description h6 {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            margin: 20px 0 10px 0;
+            text-transform: uppercase;
+        }
+
+        .modal-description strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .modal-description ul,
+        .modal-description ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        .modal-description li {
+            margin: 8px 0;
         }
 
         .version-selector {
@@ -1130,13 +1204,8 @@
             const fullDescription = details.body || details.description || mod.description || 'No description available';
             const modIcon = details.icon_url || mod.icon || 'https://via.placeholder.com/100';
             
-            // Convert markdown-like description to plain text for display
-            const cleanDescription = fullDescription
-                .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove markdown links
-                .replace(/\*\*([^\*]+)\*\*/g, '$1') // Remove bold
-                .replace(/\*([^\*]+)\*/g, '$1') // Remove italic
-                .replace(/#{1,6}\s+/g, '') // Remove headers
-                .replace(/`([^`]+)`/g, '$1'); // Remove code blocks
+            // Sanitize HTML but allow safe elements
+            const sanitizedDescription = sanitizeHtml(fullDescription);
 
             let html = `
                 <div class="modal-header">
@@ -1150,7 +1219,7 @@
                     </div>
                 </div>
                 <div class="modal-body">
-                    <div class="modal-description">${escapeHtml(cleanDescription)}</div>
+                    <div class="modal-description">${sanitizedDescription}</div>
             `;
 
             if (mod.platform === 'modrinth' && versions.length > 0) {
@@ -1295,6 +1364,145 @@
         function closeModal() {
             document.getElementById('modModal').classList.remove('active');
             window.currentModData = null;
+        }
+
+        // Sanitize HTML to allow safe elements
+        function sanitizeHtml(html) {
+            if (!html) return '';
+            
+            // Create a temporary div to parse HTML
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            
+            // List of allowed tags
+            const allowedTags = ['p', 'br', 'strong', 'em', 'u', 'b', 'i', 'a', 'img', 'iframe', 
+                                'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span'];
+            
+            // List of allowed attributes
+            const allowedAttributes = {
+                'a': ['href', 'target'],
+                'img': ['src', 'alt', 'width', 'height'],
+                'iframe': ['src', 'width', 'height', 'allowfullscreen', 'frameborder']
+            };
+            
+            // Recursively sanitize elements
+            function sanitizeElement(element) {
+                if (element.nodeType === Node.TEXT_NODE) {
+                    return element.textContent;
+                }
+                
+                if (element.nodeType === Node.ELEMENT_NODE) {
+                    const tagName = element.tagName.toLowerCase();
+                    
+                    // Remove script and other dangerous tags
+                    if (tagName === 'script' || tagName === 'style' || tagName === 'object' || tagName === 'embed') {
+                        return '';
+                    }
+                    
+                    // Special handling for iframes - only allow YouTube (check before general tag check)
+                    if (tagName === 'iframe') {
+                        const src = element.getAttribute('src');
+                        if (src && (src.includes('youtube.com') || src.includes('youtu.be'))) {
+                            // Wrap iframe in responsive container
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'iframe-wrapper';
+                            
+                            const iframe = document.createElement('iframe');
+                            iframe.setAttribute('src', src);
+                            iframe.setAttribute('allowfullscreen', 'allowfullscreen');
+                            iframe.setAttribute('frameborder', '0');
+                            
+                            wrapper.appendChild(iframe);
+                            return wrapper;
+                        } else {
+                            return ''; // Block non-YouTube iframes
+                        }
+                    }
+                    
+                    // If tag is not allowed, return its text content
+                    if (!allowedTags.includes(tagName)) {
+                        return element.textContent || '';
+                    }
+                    
+                    // Create new element
+                    const newElement = document.createElement(tagName);
+                    
+                    // Copy allowed attributes
+                    if (allowedAttributes[tagName]) {
+                        allowedAttributes[tagName].forEach(attr => {
+                            const value = element.getAttribute(attr);
+                            if (value) {
+                                // Sanitize URLs
+                                if (attr === 'href' || attr === 'src') {
+                                    const sanitized = sanitizeUrl(value);
+                                    if (sanitized) {
+                                        newElement.setAttribute(attr, sanitized);
+                                    }
+                                } else {
+                                    newElement.setAttribute(attr, value);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Recursively sanitize children
+                    Array.from(element.childNodes).forEach(child => {
+                        const sanitized = sanitizeElement(child);
+                        if (typeof sanitized === 'string') {
+                            newElement.appendChild(document.createTextNode(sanitized));
+                        } else if (sanitized) {
+                            newElement.appendChild(sanitized);
+                        }
+                    });
+                    
+                    return newElement;
+                }
+                
+                return '';
+            }
+            
+            // Sanitize all elements
+            const sanitized = document.createDocumentFragment();
+            Array.from(temp.childNodes).forEach(child => {
+                const sanitizedChild = sanitizeElement(child);
+                if (typeof sanitizedChild === 'string') {
+                    sanitized.appendChild(document.createTextNode(sanitizedChild));
+                } else if (sanitizedChild) {
+                    sanitized.appendChild(sanitizedChild);
+                }
+            });
+            
+            // Convert back to HTML string
+            const result = document.createElement('div');
+            result.appendChild(sanitized);
+            return result.innerHTML;
+        }
+        
+        // Sanitize URLs to prevent XSS
+        function sanitizeUrl(url) {
+            if (!url) return '';
+            
+            // Remove javascript: and data: URLs
+            if (url.toLowerCase().startsWith('javascript:') || 
+                url.toLowerCase().startsWith('data:') ||
+                url.toLowerCase().startsWith('vbscript:')) {
+                return '#';
+            }
+            
+            // Allow http, https, and relative URLs
+            if (url.startsWith('http://') || 
+                url.startsWith('https://') || 
+                url.startsWith('/') ||
+                url.startsWith('#')) {
+                return url;
+            }
+            
+            // For relative URLs without leading slash, add #
+            if (!url.includes('://')) {
+                return url.startsWith('#') ? url : '#' + url;
+            }
+            
+            return '#';
         }
 
         // Utility functions
