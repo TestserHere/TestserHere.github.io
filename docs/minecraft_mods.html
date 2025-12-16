@@ -707,6 +707,21 @@
             margin: 8px 0;
         }
 
+        .modal-description code {
+            background: #0f1427;
+            padding: 2px 6px;
+            border: 1px solid #2a2f4a;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #ff6b9d;
+        }
+
+        .modal-description ul,
+        .modal-description ol {
+            margin: 15px 0 15px 20px;
+        }
+
         .version-selector {
             margin-bottom: 30px;
         }
@@ -1204,8 +1219,9 @@
             const fullDescription = details.body || details.description || mod.description || 'No description available';
             const modIcon = details.icon_url || mod.icon || 'https://via.placeholder.com/100';
             
-            // Sanitize HTML but allow safe elements
-            const sanitizedDescription = sanitizeHtml(fullDescription);
+            // Convert Markdown to HTML, then sanitize
+            const htmlFromMarkdown = markdownToHtml(fullDescription);
+            const sanitizedDescription = sanitizeHtml(htmlFromMarkdown);
 
             let html = `
                 <div class="modal-header">
@@ -1366,6 +1382,161 @@
             window.currentModData = null;
         }
 
+        // Convert Markdown to HTML
+        function markdownToHtml(markdown) {
+            if (!markdown) return '';
+            
+            let html = markdown;
+            
+            // Split into lines for better processing
+            const lines = html.split('\n');
+            const processedLines = [];
+            let inList = false;
+            let listType = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                
+                // Skip empty lines (they'll be converted to breaks later)
+                if (!line) {
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                        listType = null;
+                    }
+                    processedLines.push('');
+                    continue;
+                }
+                
+                // Headers
+                if (line.startsWith('### ')) {
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                        listType = null;
+                    }
+                    processedLines.push(`<h3>${line.substring(4)}</h3>`);
+                    continue;
+                }
+                if (line.startsWith('## ')) {
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                        listType = null;
+                    }
+                    processedLines.push(`<h2>${line.substring(3)}</h2>`);
+                    continue;
+                }
+                if (line.startsWith('# ')) {
+                    if (inList) {
+                        processedLines.push(`</${listType}>`);
+                        inList = false;
+                        listType = null;
+                    }
+                    processedLines.push(`<h1>${line.substring(2)}</h1>`);
+                    continue;
+                }
+                
+                // Lists
+                if (line.match(/^[\*\-] /)) {
+                    if (!inList || listType !== 'ul') {
+                        if (inList) {
+                            processedLines.push(`</${listType}>`);
+                        }
+                        processedLines.push('<ul>');
+                        inList = true;
+                        listType = 'ul';
+                    }
+                    let listContent = line.substring(2);
+                    // Process inline formatting in list items
+                    listContent = processInlineMarkdown(listContent);
+                    processedLines.push(`<li>${listContent}</li>`);
+                    continue;
+                }
+                
+                if (line.match(/^\d+\. /)) {
+                    if (!inList || listType !== 'ol') {
+                        if (inList) {
+                            processedLines.push(`</${listType}>`);
+                        }
+                        processedLines.push('<ol>');
+                        inList = true;
+                        listType = 'ol';
+                    }
+                    let listContent = line.replace(/^\d+\. /, '');
+                    listContent = processInlineMarkdown(listContent);
+                    processedLines.push(`<li>${listContent}</li>`);
+                    continue;
+                }
+                
+                // Regular line
+                if (inList) {
+                    processedLines.push(`</${listType}>`);
+                    inList = false;
+                    listType = null;
+                }
+                
+                // Process inline markdown
+                line = processInlineMarkdown(line);
+                processedLines.push(line);
+            }
+            
+            // Close any open list
+            if (inList) {
+                processedLines.push(`</${listType}>`);
+            }
+            
+            // Join lines and handle paragraphs
+            html = processedLines.join('\n');
+            
+            // Convert double newlines to paragraph breaks
+            html = html.split('\n\n').map(block => {
+                block = block.trim();
+                if (!block) return '';
+                // Don't wrap headers, lists, or already wrapped content
+                if (block.startsWith('<h') || block.startsWith('<ul') || block.startsWith('<ol') || block.startsWith('<p')) {
+                    return block;
+                }
+                return `<p>${block}</p>`;
+            }).join('\n');
+            
+            // Convert single newlines to <br> within paragraphs
+            html = html.replace(/<p>([^<]+)<\/p>/g, function(match, content) {
+                return '<p>' + content.replace(/\n/g, '<br>') + '</p>';
+            });
+            
+            // Clean up
+            html = html.replace(/<p>\s*<\/p>/g, '');
+            html = html.replace(/<p><br><\/p>/g, '');
+            
+            return html;
+        }
+        
+        // Process inline Markdown (bold, italic, links, images, code)
+        function processInlineMarkdown(text) {
+            if (!text) return '';
+            
+            // Images first (before links, as images contain link syntax)
+            text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+            
+            // Links
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
+            // Bold (**text** or __text__) - must come before italic
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+            
+            // Italic (*text* or _text_) - only match single asterisks/underscores not part of bold
+            // Match *text* but not **text** by checking for single asterisks
+            text = text.replace(/([^*]|^)\*([^*\n]+?)\*([^*]|$)/g, '$1<em>$2</em>$3');
+            text = text.replace(/([^_]|^)_([^_\n]+?)_([^_]|$)/g, '$1<em>$2</em>$3');
+            
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            return text;
+        }
+
         // Sanitize HTML to allow safe elements
         function sanitizeHtml(html) {
             if (!html) return '';
@@ -1376,7 +1547,7 @@
             
             // List of allowed tags
             const allowedTags = ['p', 'br', 'strong', 'em', 'u', 'b', 'i', 'a', 'img', 'iframe', 
-                                'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span'];
+                                'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'code'];
             
             // List of allowed attributes
             const allowedAttributes = {
