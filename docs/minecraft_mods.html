@@ -914,6 +914,85 @@
             color: #888;
         }
 
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 40px 0;
+            padding: 20px;
+            background: #1a1f3a;
+            border: 2px solid #2a2f4a;
+            border-radius: 0;
+            flex-wrap: wrap;
+        }
+
+        .pagination-info {
+            color: #b8b8b8;
+            font-size: 0.95em;
+            margin: 0 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .pagination-btn {
+            padding: 12px 20px;
+            background: #0f1427;
+            border: 2px solid #2a2f4a;
+            border-radius: 0;
+            color: #b8b8b8;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 12px;
+            min-width: 100px;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #151a2f;
+            border-color: #ff6b9d;
+            color: #fff;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-page {
+            padding: 12px 18px;
+            background: #0f1427;
+            border: 2px solid #2a2f4a;
+            border-radius: 0;
+            color: #b8b8b8;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .pagination-page:hover {
+            background: #151a2f;
+            border-color: #ff6b9d;
+            color: #fff;
+        }
+
+        .pagination-page.active {
+            background: #ff6b9d;
+            border-color: #ff6b9d;
+            color: #fff;
+        }
+
+        .pagination-ellipsis {
+            padding: 12px 8px;
+            color: #888;
+            font-family: 'Orbitron', sans-serif;
+        }
+
         @media (max-width: 768px) {
             .selector-group {
                 grid-template-columns: 1fr;
@@ -997,40 +1076,67 @@
     <script>
         let currentPlatform = 'all';
         let currentQuery = '';
+        let currentPage = 1;
+        let resultsPerPage = 20;
+        let allResults = [];
+        let totalResults = 0;
+        let hasMorePages = false;
 
         // Set active platform filter
         function setPlatform(platform) {
             currentPlatform = platform;
+            currentPage = 1;
+            allResults = [];
+            totalResults = 0;
+            hasMorePages = false;
             document.querySelectorAll('.platform-filter').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-platform="${platform}"]`).classList.add('active');
             
             if (currentQuery) {
-                searchMods();
+                searchMods(1);
             }
         }
 
         // Main search function
-        async function searchMods() {
+        async function searchMods(page = 1) {
             const query = document.getElementById('searchInput').value.trim();
             if (!query) {
                 alert('Please enter a search query');
                 return;
             }
 
-            currentQuery = query;
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Searching for mods...</div>';
+            // Reset pagination if it's a new search
+            if (query !== currentQuery) {
+                currentPage = 1;
+                allResults = [];
+                totalResults = 0;
+                hasMorePages = false;
+                window.fetchedPages = new Set();
+            }
 
-            const results = [];
+            currentQuery = query;
+            currentPage = page;
+            const resultsDiv = document.getElementById('results');
+            
+            // Only show loading if we're fetching a new page
+            if (!window.fetchedPages || !window.fetchedPages.has(page)) {
+                resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Searching for mods...</div>';
+            }
 
             try {
+                const newResults = [];
+                let platformTotalResults = 0;
+                let platformHasMore = false;
+
                 // Search Modrinth
                 if (currentPlatform === 'all' || currentPlatform === 'modrinth') {
                     try {
-                        const modrinthResults = await searchModrinth(query);
-                        results.push(...modrinthResults);
+                        const modrinthData = await searchModrinth(query, page);
+                        newResults.push(...modrinthData.results);
+                        platformTotalResults = modrinthData.totalHits || 0;
+                        platformHasMore = modrinthData.hasMore || false;
                     } catch (error) {
                         console.error('Modrinth search error:', error);
                     }
@@ -1039,24 +1145,46 @@
                 // Search CurseForge
                 if (currentPlatform === 'all' || currentPlatform === 'curseforge' || currentPlatform === 'mcpedl') {
                     try {
-                        const curseforgeResults = await searchCurseForge(query);
-                        results.push(...curseforgeResults);
+                        const curseforgeData = await searchCurseForge(query, page);
+                        newResults.push(...curseforgeData.results);
+                        if (currentPlatform !== 'all') {
+                            platformTotalResults = curseforgeData.totalCount || 0;
+                            platformHasMore = curseforgeData.hasMore || false;
+                        }
                     } catch (error) {
                         console.error('CurseForge search error:', error);
                     }
                 }
 
-                displayResults(results);
+                // Store results for this page
+                if (page === 1) {
+                    allResults = newResults;
+                    totalResults = platformTotalResults || newResults.length;
+                } else {
+                    // For subsequent pages, append to existing results
+                    allResults = [...allResults, ...newResults];
+                }
+                
+                hasMorePages = platformHasMore || (newResults.length === resultsPerPage);
+                
+                // Mark this page as fetched
+                if (!window.fetchedPages) {
+                    window.fetchedPages = new Set();
+                }
+                window.fetchedPages.add(page);
+
+                displayResults(allResults, page);
             } catch (error) {
                 resultsDiv.innerHTML = `<div class="error">Error searching for mods: ${error.message}</div>`;
             }
         }
 
         // Search Modrinth API
-        async function searchModrinth(query) {
+        async function searchModrinth(query, page = 1) {
             try {
+                const offset = (page - 1) * resultsPerPage;
                 const response = await fetch(
-                    `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=20&facets=[["project_type:mod"]]`,
+                    `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=${resultsPerPage}&offset=${offset}&facets=[["project_type:mod"]]`,
                     {
                         headers: {
                             'User-Agent': 'MinecraftModBrowser/1.0'
@@ -1069,7 +1197,7 @@
                 }
 
                 const data = await response.json();
-                return data.hits.map(hit => ({
+                const results = data.hits.map(hit => ({
                     id: hit.project_id,
                     name: hit.title,
                     author: hit.author,
@@ -1082,21 +1210,28 @@
                     slug: hit.slug,
                     projectId: hit.project_id
                 }));
+                
+                return {
+                    results: results,
+                    totalHits: data.total_hits || 0,
+                    hasMore: (offset + resultsPerPage) < (data.total_hits || 0)
+                };
             } catch (error) {
                 console.error('Modrinth search failed:', error);
-                return [];
+                return { results: [], totalHits: 0, hasMore: false };
             }
         }
 
         // Search CurseForge API
-        async function searchCurseForge(query) {
+        async function searchCurseForge(query, page = 1) {
             try {
                 // Note: CurseForge API requires an API key for production use
                 // This is a basic implementation that may have CORS issues
                 // For production, you'd need a backend proxy or API key
                 
+                const index = (page - 1) * resultsPerPage;
                 const response = await fetch(
-                    `https://api.curseforge.com/v1/mods/search?gameId=432&searchFilter=${encodeURIComponent(query)}&pageSize=20`,
+                    `https://api.curseforge.com/v1/mods/search?gameId=432&searchFilter=${encodeURIComponent(query)}&pageSize=${resultsPerPage}&index=${index}`,
                     {
                         headers: {
                             'Accept': 'application/json',
@@ -1115,10 +1250,10 @@
 
                 const data = await response.json();
                 if (!data.data) {
-                    return [];
+                    return { results: [], totalCount: 0, hasMore: false };
                 }
 
-                return data.data.map(mod => ({
+                const results = data.data.map(mod => ({
                     id: mod.id,
                     name: mod.name,
                     author: mod.authors && mod.authors.length > 0 ? mod.authors[0].name : 'Unknown',
@@ -1131,18 +1266,30 @@
                     platform: currentPlatform === 'mcpedl' ? 'mcpedl' : 'curseforge',
                     slug: mod.slug
                 }));
+                
+                return {
+                    results: results,
+                    totalCount: data.pagination?.totalCount || results.length,
+                    hasMore: data.pagination ? (index + resultsPerPage) < data.pagination.totalCount : false
+                };
             } catch (error) {
                 console.error('CurseForge search failed:', error);
-                // Return empty array but don't break the UI
-                return [];
+                // Return empty but don't break the UI
+                return { results: [], totalCount: 0, hasMore: false };
             }
         }
 
-        // Display search results
-        function displayResults(results) {
+        // Display search results with pagination
+        function displayResults(results, page = 1) {
             const resultsDiv = document.getElementById('results');
+            
+            // Calculate pagination
+            const startIndex = (page - 1) * resultsPerPage;
+            const endIndex = startIndex + resultsPerPage;
+            const paginatedResults = results.slice(startIndex, endIndex);
+            const totalPages = Math.ceil(results.length / resultsPerPage);
 
-            if (results.length === 0) {
+            if (paginatedResults.length === 0 && results.length === 0) {
                 resultsDiv.innerHTML = `
                     <div class="no-results">
                         <h2>No mods found</h2>
@@ -1158,7 +1305,7 @@
 
             let html = '<div class="mods-grid">';
             
-            results.forEach(mod => {
+            paginatedResults.forEach(mod => {
                 const platformClass = `platform-${mod.platform}`;
                 const platformName = mod.platform === 'modrinth' ? 'Modrinth' : 
                                    mod.platform === 'curseforge' ? 'CurseForge' : 'MCPEDL';
@@ -1197,6 +1344,11 @@
 
             html += '</div>';
 
+            // Add pagination controls
+            if (totalPages > 1) {
+                html += renderPagination(page, totalPages, results.length);
+            }
+
             // Add API note if CurseForge results are missing
             if (currentPlatform === 'all' || currentPlatform === 'curseforge' || currentPlatform === 'mcpedl') {
                 const hasCurseForge = results.some(r => r.platform === 'curseforge' || r.platform === 'mcpedl');
@@ -1216,6 +1368,76 @@
             }
 
             resultsDiv.innerHTML = html;
+        }
+
+        // Render pagination controls
+        function renderPagination(currentPage, totalPages, totalResults) {
+            if (totalPages <= 1) return '';
+            
+            let html = '<div class="pagination">';
+            
+            // Previous button
+            html += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`;
+            
+            // Page numbers
+            const maxVisiblePages = 7;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // First page
+            if (startPage > 1) {
+                html += `<button class="pagination-page" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+            }
+            
+            // Page range
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="pagination-page ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                }
+                html += `<button class="pagination-page" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            html += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+            
+            // Results info
+            const startResult = (currentPage - 1) * resultsPerPage + 1;
+            const endResult = Math.min(currentPage * resultsPerPage, totalResults);
+            html += `<span class="pagination-info">Showing ${startResult}-${endResult} of ${totalResults}</span>`;
+            
+            html += '</div>';
+            return html;
+        }
+
+        // Navigate to specific page
+        async function goToPage(page) {
+            if (page < 1) return;
+            
+            const totalPages = Math.ceil(allResults.length / resultsPerPage);
+            
+            // If we need more data, fetch it
+            if (page > totalPages && hasMorePages) {
+                await searchMods(page);
+            } else if (page <= totalPages) {
+                // Just display the page (data already loaded)
+                displayResults(allResults, page);
+                currentPage = page;
+                
+                // Scroll to top of results
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
         // View mod details in modal
