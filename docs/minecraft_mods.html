@@ -993,6 +993,79 @@
             font-family: 'Orbitron', sans-serif;
         }
 
+        /* Filter and Sort Styles */
+        .filters-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #2a2f4a;
+        }
+
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            color: #b8b8b8;
+            font-size: 0.9em;
+            font-weight: 600;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            background: #0f1427;
+            border: 2px solid #2a2f4a;
+            border-radius: 0;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #ff6b9d;
+            background: #151a2f;
+        }
+
+        .filter-select option {
+            background: #1a1f3a;
+            color: #fff;
+        }
+
+        .clear-filters {
+            padding: 10px 20px;
+            background: #0f1427;
+            border: 2px solid #2a2f4a;
+            border-radius: 0;
+            color: #b8b8b8;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .clear-filters:hover {
+            background: #151a2f;
+            border-color: #ff6b9d;
+            color: #fff;
+        }
+
         @media (max-width: 768px) {
             .selector-group {
                 grid-template-columns: 1fr;
@@ -1055,6 +1128,62 @@
                 <button class="platform-filter" data-platform="curseforge" onclick="setPlatform('curseforge')">CurseForge</button>
                 <button class="platform-filter" data-platform="mcpedl" onclick="setPlatform('mcpedl')">MCPEDL</button>
             </div>
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Minecraft Version</label>
+                        <select id="versionFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Versions</option>
+                            <option value="1.21.1">1.21.1</option>
+                            <option value="1.21">1.21</option>
+                            <option value="1.20.6">1.20.6</option>
+                            <option value="1.20.5">1.20.5</option>
+                            <option value="1.20.4">1.20.4</option>
+                            <option value="1.20.3">1.20.3</option>
+                            <option value="1.20.2">1.20.2</option>
+                            <option value="1.20.1">1.20.1</option>
+                            <option value="1.20">1.20</option>
+                            <option value="1.19.4">1.19.4</option>
+                            <option value="1.19.3">1.19.3</option>
+                            <option value="1.19.2">1.19.2</option>
+                            <option value="1.19.1">1.19.1</option>
+                            <option value="1.19">1.19</option>
+                            <option value="1.18.2">1.18.2</option>
+                            <option value="1.18.1">1.18.1</option>
+                            <option value="1.18">1.18</option>
+                            <option value="1.17.1">1.17.1</option>
+                            <option value="1.17">1.17</option>
+                            <option value="1.16.5">1.16.5</option>
+                            <option value="1.16.4">1.16.4</option>
+                            <option value="1.16.3">1.16.3</option>
+                            <option value="1.16.2">1.16.2</option>
+                            <option value="1.16.1">1.16.1</option>
+                            <option value="1.16">1.16</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Mod Loader</label>
+                        <select id="loaderFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Loaders</option>
+                            <option value="fabric">Fabric</option>
+                            <option value="forge">Forge</option>
+                            <option value="neoforge">NeoForge</option>
+                            <option value="quilt">Quilt</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Sort By</label>
+                        <select id="sortFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="relevance">Relevance</option>
+                            <option value="downloads">Most Downloaded</option>
+                            <option value="follows">Most Followed</option>
+                            <option value="updated">Recently Updated</option>
+                            <option value="newest">Newest</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="clear-filters" onclick="clearFilters()">Clear Filters</button>
+            </div>
         </div>
 
         <div id="results"></div>
@@ -1081,6 +1210,11 @@
         let allResults = [];
         let totalResults = 0;
         let hasMorePages = false;
+        let currentFilters = {
+            version: '',
+            loader: '',
+            sort: 'relevance'
+        };
 
         // Set active platform filter
         function setPlatform(platform) {
@@ -1089,10 +1223,53 @@
             allResults = [];
             totalResults = 0;
             hasMorePages = false;
+            window.fetchedPages = new Set();
             document.querySelectorAll('.platform-filter').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-platform="${platform}"]`).classList.add('active');
+            
+            if (currentQuery) {
+                searchMods(1);
+            }
+        }
+
+        // Apply filters and re-search
+        function applyFilters() {
+            currentFilters.version = document.getElementById('versionFilter').value;
+            currentFilters.loader = document.getElementById('loaderFilter').value;
+            currentFilters.sort = document.getElementById('sortFilter').value;
+            
+            // Reset pagination
+            currentPage = 1;
+            allResults = [];
+            totalResults = 0;
+            hasMorePages = false;
+            window.fetchedPages = new Set();
+            
+            if (currentQuery) {
+                searchMods(1);
+            }
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('versionFilter').value = '';
+            document.getElementById('loaderFilter').value = '';
+            document.getElementById('sortFilter').value = 'relevance';
+            
+            currentFilters = {
+                version: '',
+                loader: '',
+                sort: 'relevance'
+            };
+            
+            // Reset pagination
+            currentPage = 1;
+            allResults = [];
+            totalResults = 0;
+            hasMorePages = false;
+            window.fetchedPages = new Set();
             
             if (currentQuery) {
                 searchMods(1);
@@ -1107,7 +1284,7 @@
                 return;
             }
 
-            // Reset pagination if it's a new search
+            // Reset pagination if it's a new search or filters changed
             if (query !== currentQuery) {
                 currentPage = 1;
                 allResults = [];
@@ -1115,6 +1292,11 @@
                 hasMorePages = false;
                 window.fetchedPages = new Set();
             }
+            
+            // Update filters from UI
+            currentFilters.version = document.getElementById('versionFilter').value;
+            currentFilters.loader = document.getElementById('loaderFilter').value;
+            currentFilters.sort = document.getElementById('sortFilter').value;
 
             currentQuery = query;
             currentPage = page;
@@ -1183,8 +1365,49 @@
         async function searchModrinth(query, page = 1) {
             try {
                 const offset = (page - 1) * resultsPerPage;
+                
+                // Build facets for filtering
+                const facets = [['project_type:mod']];
+                
+                if (currentFilters.version) {
+                    facets.push([`versions:${currentFilters.version}`]);
+                }
+                
+                if (currentFilters.loader) {
+                    // Modrinth uses specific loader names in facets
+                    const loaderMap = {
+                        'fabric': 'fabric',
+                        'forge': 'forge',
+                        'neoforge': 'neoforge',
+                        'quilt': 'quilt'
+                    };
+                    if (loaderMap[currentFilters.loader]) {
+                        facets.push([`categories:${loaderMap[currentFilters.loader]}`]);
+                    }
+                }
+                
+                // Build sort parameter
+                let sortBy = 'relevance';
+                switch(currentFilters.sort) {
+                    case 'downloads':
+                        sortBy = 'downloads';
+                        break;
+                    case 'follows':
+                        sortBy = 'follows';
+                        break;
+                    case 'updated':
+                        sortBy = 'updated';
+                        break;
+                    case 'newest':
+                        sortBy = 'newest';
+                        break;
+                    default:
+                        sortBy = 'relevance';
+                }
+                
+                const facetsStr = JSON.stringify(facets);
                 const response = await fetch(
-                    `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=${resultsPerPage}&offset=${offset}&facets=[["project_type:mod"]]`,
+                    `https://api.modrinth.com/v2/search?query=${encodeURIComponent(query)}&limit=${resultsPerPage}&offset=${offset}&facets=${encodeURIComponent(facetsStr)}&index=${sortBy}`,
                     {
                         headers: {
                             'User-Agent': 'MinecraftModBrowser/1.0'
@@ -1230,8 +1453,45 @@
                 // For production, you'd need a backend proxy or API key
                 
                 const index = (page - 1) * resultsPerPage;
+                
+                // Build sort parameter for CurseForge
+                let sortField = 1; // 1 = Featured, 2 = Popularity, 3 = LastUpdated, 4 = Name, 6 = TotalDownloads
+                switch(currentFilters.sort) {
+                    case 'downloads':
+                        sortField = 6;
+                        break;
+                    case 'updated':
+                        sortField = 3;
+                        break;
+                    case 'newest':
+                        sortField = 3;
+                        break;
+                    default:
+                        sortField = 2; // Popularity as default
+                }
+                
+                // Build game version filter
+                let gameVersion = '';
+                if (currentFilters.version) {
+                    gameVersion = `&gameVersion=${encodeURIComponent(currentFilters.version)}`;
+                }
+                
+                // Build mod loader filter (CurseForge uses category IDs)
+                let categoryId = '';
+                if (currentFilters.loader) {
+                    const loaderMap = {
+                        'fabric': 4780,
+                        'forge': 4781,
+                        'neoforge': 4994,
+                        'quilt': 4782
+                    };
+                    if (loaderMap[currentFilters.loader]) {
+                        categoryId = `&categoryId=${loaderMap[currentFilters.loader]}`;
+                    }
+                }
+                
                 const response = await fetch(
-                    `https://api.curseforge.com/v1/mods/search?gameId=432&searchFilter=${encodeURIComponent(query)}&pageSize=${resultsPerPage}&index=${index}`,
+                    `https://api.curseforge.com/v1/mods/search?gameId=432&searchFilter=${encodeURIComponent(query)}&pageSize=${resultsPerPage}&index=${index}&sortField=${sortField}${gameVersion}${categoryId}`,
                     {
                         headers: {
                             'Accept': 'application/json',
