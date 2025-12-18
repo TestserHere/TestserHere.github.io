@@ -1108,7 +1108,7 @@
     <div class="container">
         <header>
             <h1>🎮 Minecraft Mod Browser</h1>
-            <p class="subtitle">Browse and download mods from CurseForge, Modrinth, and MCPEDL</p>
+            <p class="subtitle">Browse and download mods from Modrinth</p>
         </header>
 
         <div class="search-section">
@@ -1125,8 +1125,8 @@
             <div class="platform-filters">
                 <button class="platform-filter active" data-platform="all" onclick="setPlatform('all')">All Platforms</button>
                 <button class="platform-filter" data-platform="modrinth" onclick="setPlatform('modrinth')">Modrinth</button>
-                <button class="platform-filter" data-platform="curseforge" onclick="setPlatform('curseforge')">CurseForge</button>
-                <button class="platform-filter" data-platform="mcpedl" onclick="setPlatform('mcpedl')">MCPEDL</button>
+                <button class="platform-filter" data-platform="curseforge" onclick="setPlatform('curseforge')" disabled style="opacity: 0.5; cursor: not-allowed;">CurseForge</button>
+                <button class="platform-filter" data-platform="mcpedl" onclick="setPlatform('mcpedl')" disabled style="opacity: 0.5; cursor: not-allowed;">MCPEDL</button>
             </div>
             <div class="filters-section">
                 <div class="filters-row">
@@ -1218,6 +1218,11 @@
 
         // Set active platform filter
         function setPlatform(platform) {
+            // Prevent switching to disabled platforms
+            if (platform === 'curseforge' || platform === 'mcpedl') {
+                return;
+            }
+            
             currentPlatform = platform;
             currentPage = 1;
             allResults = [];
@@ -1324,19 +1329,8 @@
                     }
                 }
 
-                // Search CurseForge
-                if (currentPlatform === 'all' || currentPlatform === 'curseforge' || currentPlatform === 'mcpedl') {
-                    try {
-                        const curseforgeData = await searchCurseForge(query, page);
-                        newResults.push(...curseforgeData.results);
-                        if (currentPlatform !== 'all') {
-                            platformTotalResults = curseforgeData.totalCount || 0;
-                            platformHasMore = curseforgeData.hasMore || false;
-                        }
-                    } catch (error) {
-                        console.error('CurseForge search error:', error);
-                    }
-                }
+                // Search CurseForge (disabled - only search if explicitly selected, but buttons are disabled)
+                // CurseForge and MCPEDL search is disabled
 
                 // Store results for this page
                 if (page === 1) {
@@ -1554,10 +1548,6 @@
                     <div class="no-results">
                         <h2>No mods found</h2>
                         <p>Try a different search term or check your internet connection.</p>
-                        <div class="api-note">
-                            <strong>Note:</strong> CurseForge API may require an API key or a proxy server due to CORS restrictions. 
-                            Modrinth should work without any setup.
-                        </div>
                     </div>
                 `;
                 return;
@@ -1607,24 +1597,6 @@
             // Add pagination controls
             if (totalPages > 1) {
                 html += renderPagination(page, totalPages, results.length);
-            }
-
-            // Add API note if CurseForge results are missing
-            if (currentPlatform === 'all' || currentPlatform === 'curseforge' || currentPlatform === 'mcpedl') {
-                const hasCurseForge = results.some(r => r.platform === 'curseforge' || r.platform === 'mcpedl');
-                if (!hasCurseForge && results.length > 0) {
-                    html += `
-                        <div class="api-note">
-                            <strong>Note:</strong> CurseForge/MCPEDL results may not be available due to API restrictions. 
-                            To enable CurseForge search, you'll need to:
-                            <ul style="margin-top: 10px; margin-left: 20px;">
-                                <li>Get a CurseForge API key from <a href="https://console.curseforge.com/" target="_blank" style="color: #ffce54;">CurseForge Console</a></li>
-                                <li>Add it to the code, or</li>
-                                <li>Set up a backend proxy to handle API requests</li>
-                            </ul>
-                        </div>
-                    `;
-                }
             }
 
             resultsDiv.innerHTML = html;
@@ -2259,13 +2231,8 @@
             document.getElementById('results').innerHTML = `
                 <div class="no-results">
                     <h2>Welcome to Minecraft Mod Browser</h2>
-                    <p>Search for mods from Modrinth, CurseForge, and MCPEDL</p>
+                    <p>Search for mods from Modrinth</p>
                     <p style="margin-top: 20px; color: #888;">Try searching for popular mods like "OptiFine", "JEI", "Create", or "Biomes O' Plenty"</p>
-                    <div class="api-note" style="margin-top: 30px;">
-                        <strong>Platform Status:</strong><br>
-                        ✅ Modrinth - Fully functional<br>
-                        ⚠️ CurseForge/MCPEDL - May require API key or proxy server due to CORS restrictions
-                    </div>
                 </div>
             `;
         });
