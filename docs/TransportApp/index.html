@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTV Transport – Live Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bus: #FF8200;
+      --tram: #00A651;
+      --train: #1E88E5;
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .logo {
+      font-weight: 700;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo span.bus { color: var(--bus); }
+    .logo span.tram { color: var(--tram); }
+    .logo span.train { color: var(--train); }
+    .legend {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+    #map {
+      flex: 1;
+      min-width: 0;
+    }
+    .sidebar {
+      width: 320px;
+      max-width: 100%;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .search-wrap { position: relative; margin-bottom: 12px; }
+    .search-row { display: flex; gap: 8px; align-items: center; }
+    .search-row .search-input { flex: 1; }
+    .search-cancel-btn { flex-shrink: 0; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .search-cancel-btn:hover { background: var(--bg); border-color: var(--muted); }
+    .search-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 0.9rem; box-sizing: border-box; }
+    .search-input:focus { outline: none; border-color: var(--tram); }
+    .search-results { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; max-height: 280px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 1000; }
+    .search-results .search-result-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .search-results .search-result-item:last-child { border-bottom: none; }
+    .search-results .search-result-item:hover { background: var(--bg); }
+    .search-results .search-result-item .result-type { font-size: 0.7rem; text-transform: uppercase; color: var(--muted); }
+    .search-results .search-result-item .result-label { font-weight: 600; }
+    .search-results .search-result-item .result-meta { font-size: 0.8rem; color: var(--muted); }
+    .location-row { margin-bottom: 12px; }
+    .location-btn { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+    .location-btn:hover { background: var(--bg); border-color: var(--tram); }
+    .location-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .near-you-section { margin-bottom: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+    .near-you-header { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: var(--text); }
+    .near-you-list { max-height: 240px; overflow-y: auto; }
+    .near-you-item { padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .near-you-item:last-child { border-bottom: none; }
+    .near-you-item:hover { background: var(--bg); margin: 0 -8px; padding: 8px; }
+    .near-you-item .near-you-name { font-weight: 500; }
+    .near-you-item .near-you-meta { font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .near-you-item .near-you-mode { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; color: #fff; }
+    .near-you-item .near-you-dist { font-weight: 600; color: var(--text); }
+    .near-you-error { font-size: 0.85rem; color: #f85149; margin-top: 6px; }
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .sidebar-empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 20px;
+      text-align: center;
+    }
+    .stop-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .stop-card h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .stop-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .stop-type.bus { background: var(--bus); color: #fff; }
+    .stop-type.tram { background: var(--tram); color: #fff; }
+    .stop-type.train { background: var(--train); color: #fff; }
+    .route-select-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 12px 0 6px;
+      display: block;
+    }
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--train);
+    }
+    .vehicles-section {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .vehicles-section h4 {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .vehicle-count {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .api-key-row {
+      margin-top: 12px;
+    }
+    .api-key-row label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .api-key-row input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .error-msg {
+      background: rgba(248, 81, 73, 0.15);
+      border: 1px solid #f85149;
+      color: #f85149;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
+    .vehicle-rect-wrap { background: none !important; border: none !important; }
+    .vehicle-rect {
+      width: 36px; min-height: 28px; padding: 2px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff; border: 2px solid #fff; border-radius: 2px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .service-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; overflow-x: hidden; }
+    .service-table th { text-align: left; padding: 8px 6px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+    .service-table td { padding: 10px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .service-table tr.service-row { cursor: pointer; }
+    .service-table tr.service-row:hover { background: var(--bg); }
+    .service-table tr.service-row.highlight-route { background: rgba(30, 136, 229, 0.15); }
+    .service-table tr.service-row { transition: transform 0.25s ease-out, opacity 0.25s ease-out; }
+    .service-table tr.service-row.departing { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+    .service-table tr.service-row.arriving { transform: translateY(12px); opacity: 0; }
+    .service-route { display: inline-block; background: #30363d; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 700; min-width: 36px; text-align: center; }
+    .service-to { color: var(--text); }
+    .service-mins { background: #000; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: 700; min-width: 32px; text-align: center; }
+    .vehicle-rect .vehicle-ago { font-size: 8px; font-weight: 400; display: block; line-height: 1.1; }
+    .debug-box {
+      margin-top: 8px;
+      padding: 8px 10px;
+      max-height: 320px;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .loading {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
+    .leaflet-popup-content-wrapper {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .leaflet-popup-tip { background: var(--surface); }
+    .leaflet-popup-content { margin: 12px 16px; }
+    .popup-title { font-weight: 600; margin-bottom: 4px; }
+    .popup-type { font-size: 0.8rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">PTV <span class="bus">Bus</span> · <span class="tram">Tram</span> · <span class="train">Train</span></div>
+      <div class="legend">
+        <span class="legend-item"><i class="legend-dot" style="background:var(--bus)"></i> Bus</span>
+        <span class="legend-item"><i class="legend-dot" style="background:var(--tram)"></i> Tram</span>
+        <span class="legend-item"><i class="legend-dot" style="background:var(--train)"></i> Train</span>
+      </div>
+    </header>
+    <div class="main">
+      <div id="map"></div>
+      <aside class="sidebar">
+        <div class="sidebar-header">Stop & route</div>
+        <div class="sidebar-body">
+          <div class="search-wrap">
+            <div class="search-row">
+              <input type="text" id="searchInput" class="search-input" placeholder="Search stops or routes..." autocomplete="off" />
+              <button type="button" id="searchCancelBtn" class="search-cancel-btn">Cancel</button>
+            </div>
+            <div id="searchResults" class="search-results" style="display:none;"></div>
+          </div>
+          <div class="location-row">
+            <button type="button" id="locationBtn" class="location-btn">📍 My location</button>
+          </div>
+          <div id="nearYouSection" class="near-you-section" style="display:none;">
+            <div class="near-you-header">Stops near you</div>
+            <div id="nearYouList" class="near-you-list"></div>
+            <div id="nearYouError" class="near-you-error" style="display:none;"></div>
+          </div>
+          <div class="sidebar-empty" id="sidebarPlaceholder">Click a stop on the map to see routes and live vehicles.</div>
+          <div id="sidebarContent" style="display:none;"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/protobufjs@6.11.4/dist/protobuf.min.js"></script>
+  <script type="text/plain" id="gtfs-realtime-proto">syntax = "proto2";
+package transit_realtime;
+message FeedMessage { required FeedHeader header = 1; repeated FeedEntity entity = 2; }
+message FeedHeader { required string gtfs_realtime_version = 1; optional uint64 timestamp = 3; }
+message FeedEntity { required string id = 1; optional bool is_deleted = 2; optional TripUpdate trip_update = 3; optional VehiclePosition vehicle = 4; optional Alert alert = 5; }
+message TripUpdate { required TripDescriptor trip = 1; optional VehicleDescriptor vehicle = 3; repeated StopTimeUpdate stop_time_update = 2; optional uint64 timestamp = 4; }
+message TripDescriptor { optional string trip_id = 1; optional string start_time = 2; optional string start_date = 3; optional int32 direction_id = 4; optional string route_id = 5; }
+message VehicleDescriptor { optional string id = 1; optional string label = 2; optional string license_plate = 3; }
+message StopTimeUpdate { optional uint32 stop_sequence = 1; optional string stop_id = 4; optional StopTimeEvent arrival = 2; optional StopTimeEvent departure = 3; }
+message StopTimeEvent { optional int32 delay = 1; optional int64 time = 2; optional int32 uncertainty = 3; }
+message VehiclePosition { optional TripDescriptor trip = 1; optional VehicleDescriptor vehicle = 8; optional Position position = 2; optional uint32 current_stop_sequence = 3; optional string stop_id = 7; optional VehicleStopStatus current_status = 4; optional uint64 timestamp = 5; }
+enum VehicleStopStatus { INCOMING_AT = 0; STOPPED_AT = 1; IN_TRANSIT_TO = 2; }
+message Position { optional float latitude = 1; optional float longitude = 2; optional float bearing = 3; optional double speed = 4; }
+message Alert { }</script>
+  <script>
+    (function () {
+      const MODES = { bus: { color: '#FF8200', label: 'Bus' }, tram: { color: '#00A651', label: 'Tram' }, train: { color: '#1E88E5', label: 'Train' } };
+      const BASE = 'https://api.opendata.transport.vic.gov.au/opendata/public-transport/gtfs/realtime/v1';
+      const DEFAULT_API_KEY = '94033096-c9ab-47dd-96aa-4da658c40e13';
+      const FEED_URLS = {
+        bus: [BASE + '/bus/vehicle-positions'],
+        tram: [BASE + '/tram/vehicle-positions'],
+        train: [BASE + '/train/vehicle-positions', BASE + '/metro/vehicle-positions']
+      };
+      // CORS proxy: PTV API does not send Access-Control-Allow-Origin, so use a proxy when direct fetch fails
+      const CORS_PROXIES = [
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url='
+      ];
+
+      let map;
+      let stopLayers = { bus: null, tram: null, train: null };
+      let routeLinesLayer = null;
+      let userLocationMarker = null;
+      let vehicleMarkers = [];
+      let vehicleUpdatedAt = {};
+      const POLL_INTERVAL_MS = 20000;
+      let agoTimer = null;
+      let timetableTimer = null;
+      let highlightedRouteId = null;
+      let protoRoot = null;
+      let FeedMessage = null;
+
+      function parseRow(line) {
+        const out = [];
+        let cur = '', q = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') q = !q;
+          else if (!q && c === ',') {
+            out.push(cur.replace(/^"|"$/g, '').replace(/""/g, '"'));
+            cur = '';
+          } else cur += c;
+        }
+        out.push(cur.replace(/^"|"$/g, '').replace(/""/g, '"'));
+        return out;
+      }
+
+      function parseCSV(text) {
+        const lines = text.trim().split(/\r?\n/);
+        if (!lines.length) return [];
+        const header = parseRow(lines[0]).map(h => h.trim());
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseRow(lines[i]);
+          const row = {};
+          header.forEach((h, idx) => { row[h] = (values[idx] ?? '').trim(); });
+          rows.push(row);
+        }
+        return rows;
+      }
+
+      async function loadStops(mode) {
+        const res = await fetch(`stops/${mode}.json`);
+        if (!res.ok) return [];
+        const rows = await res.json();
+        return (Array.isArray(rows) ? rows : []).map(r => ({
+          id: r[0],
+          name: r[1] || r[0],
+          lat: Number(r[2]),
+          lon: Number(r[3]),
+          mode
+        })).filter(s => s.lat != null && !isNaN(s.lat) && s.lon != null && !isNaN(s.lon));
+      }
+
+      async function loadRoutes(mode) {
+        const res = await fetch(`routes/${mode}.json`);
+        if (!res.ok) return [];
+        const rows = await res.json();
+        const defaultColor = MODES[mode].color;
+        return (Array.isArray(rows) ? rows : []).map(r => ({
+          id: r[0],
+          shortName: r[1] || '',
+          longName: r[2] || '',
+          color: (r[3] && r[3].trim()) ? r[3].trim() : defaultColor,
+          mode
+        })).filter(r => r.id);
+      }
+
+      function routeNumberFromTripId(tripId, prefix) {
+        const s = String(tripId || '').replace(/^"|"$/g, '').trim();
+        if (!s.startsWith(prefix + '-')) return null;
+        const after = s.slice(prefix.length + 1);
+        const num = after.split('-')[0];
+        return num || null;
+      }
+
+      async function loadStopTimes(mode) {
+        if (mode === 'train') return { byStop: {}, routeToOrderedStops: {} };
+        const file = `route_stops/${mode}.json`;
+        const res = await fetch(file);
+        const data = await res.json();
+        const byStop = {};
+        const routeToOrderedStops = {};
+        const b = data && data.b;
+        const r = data && data.r;
+        if (b) {
+          Object.keys(b).forEach(stopId => {
+            const routes = b[stopId];
+            byStop[String(stopId).trim()] = new Set(Array.isArray(routes) ? routes.map(x => String(x).trim()) : []);
+          });
+        }
+        if (r) {
+          Object.keys(r).forEach(routeNum => {
+            const stopIds = r[routeNum];
+            routeToOrderedStops[String(routeNum).trim()] = Array.isArray(stopIds) ? stopIds.map(sid => String(sid).trim()).filter(Boolean) : [];
+          });
+        }
+        return { byStop, routeToOrderedStops };
+      }
+
+      function initMap() {
+        map = L.map('map', { zoomControl: true }).setView([-37.8136, 144.9631], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap, &copy; CARTO'
+        }).addTo(map);
+        routeLinesLayer = L.layerGroup().addTo(map);
+        map.zoomControl.setPosition('bottomright');
+      }
+
+      function addStopsLayer(mode, stops) {
+        if (stopLayers[mode]) map.removeLayer(stopLayers[mode]);
+        const color = MODES[mode].color;
+        const layer = L.layerGroup();
+        stops.forEach(s => {
+          const marker = L.circleMarker([s.lat, s.lon], {
+            radius: 6,
+            fillColor: color,
+            color: '#fff',
+            weight: 1.5,
+            fillOpacity: 0.9
+          });
+          marker._stopData = s;
+          marker.on('click', () => onStopClick(s));
+          marker.bindPopup(`
+            <div class="popup-title">${escapeHtml(s.name)}</div>
+            <div class="popup-type">${MODES[mode].label}</div>
+          `);
+          layer.addLayer(marker);
+        });
+        layer.addTo(map);
+        stopLayers[mode] = layer;
+      }
+
+      function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+
+      function routesAtStopFromFeed(rawEntities) {
+        const byStop = {};
+        (rawEntities || []).forEach(e => {
+          const v = e.vehicle;
+          if (!v || !v.trip) return;
+          const routeId = v.trip.route_id || v.trip.routeId;
+          const stopId = v.stop_id || v.stopId;
+          if (!routeId || !stopId) return;
+          const sid = String(stopId).trim();
+          if (!byStop[sid]) byStop[sid] = new Set();
+          byStop[sid].add(String(routeId).trim().replace(/:+$/, ''));
+        });
+        return byStop;
+      }
+
+      function predictedArrivalsByTrip(rawEntities) {
+        const byTrip = {};
+        (rawEntities || []).forEach(e => {
+          const tu = e.trip_update;
+          if (!tu || !tu.trip || !tu.stop_time_update) return;
+          const tripId = (tu.trip.trip_id || tu.trip.tripId || '').trim();
+          if (!tripId) return;
+          if (!byTrip[tripId]) byTrip[tripId] = {};
+          (tu.stop_time_update || []).forEach(stu => {
+            const stopId = (stu.stop_id || stu.stopId || '').trim();
+            if (!stopId) return;
+            const arr = stu.arrival || stu.departure;
+            if (!arr || arr.time == null) return;
+            const t = typeof arr.time === 'string' ? parseInt(arr.time, 10) : arr.time;
+            byTrip[tripId][stopId] = t >= 1e12 ? t : t * 1000;
+          });
+        });
+        return byTrip;
+      }
+
+      function distMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function agoText(updatedAtMs) {
+        const s = Math.floor((Date.now() - updatedAtMs) / 1000);
+        if (s < 5) return 'Live';
+        if (s < 60) return s + 's ago';
+        const m = Math.floor(s / 60);
+        return m + 'm ago';
+      }
+
+      function etaText(etaMs) {
+        if (etaMs == null || etaMs < 0 || !isFinite(etaMs)) return '—';
+        const sec = Math.round((etaMs - Date.now()) / 1000);
+        if (sec <= 0) return 'Due';
+        if (sec > MAX_ETA_MS / 1000) return '—';
+        if (sec <= 30) return sec + 's';
+        if (sec < 60) return sec + 's';
+        const min = Math.round(sec / 60);
+        return min + ' min';
+      }
+
+      const ETA_SPEED_MS = { tram: 4.17, bus: 5.5, train: 11.1 };
+      const MAX_ETA_MS = 2 * 60 * 60 * 1000;
+      const MAX_DISTANCE_M = 50000;
+
+      function updateTimetableTick() {
+        const tbody = document.getElementById('serviceTableBody');
+        if (!tbody || !window.__selectedStop || !tbody.querySelector('.service-row')) return;
+        const buf = window.__timetableBuffer;
+        const routeList = window.__timetableRouteList || [];
+        const norm = window.__timetableNorm || (s => (s || '').trim().replace(/:+$/, ''));
+        tbody.querySelectorAll('.service-row').forEach(tr => {
+          const etaMs = tr.dataset.etaMs ? parseFloat(tr.dataset.etaMs) : NaN;
+          const span = tr.querySelector('.service-mins');
+          if (span) span.textContent = etaText(etaMs);
+          if (etaMs != null && isFinite(etaMs) && Date.now() > etaMs && !tr._departing) {
+            tr._departing = true;
+            tr.classList.add('departing');
+            tr.addEventListener('transitionend', function onEnd() {
+              tr.removeEventListener('transitionend', onEnd);
+              const routeNorm = tr.dataset.routeNorm;
+              const dir = tr.dataset.direction;
+              tr.remove();
+              const key = routeNorm + '\n' + dir;
+              const next = buf && buf[key] && buf[key].length && buf[key].shift();
+              if (next && next.etaMs != null && isFinite(next.etaMs)) {
+                const routeMeta = routeList.find(r => norm(r.id) === routeNorm);
+                const shortName = (routeMeta && routeMeta.shortName) ? routeMeta.shortName.trim() : routeNorm;
+                const newTr = document.createElement('tr');
+                newTr.className = 'service-row arriving';
+                newTr.dataset.routeNorm = routeNorm;
+                newTr.dataset.direction = dir;
+                newTr.dataset.etaMs = String(next.etaMs);
+                newTr.setAttribute('role', 'button');
+                newTr.innerHTML = '<td><span class="service-route">' + escapeHtml(shortName) + '</span></td><td class="service-to">' + escapeHtml(next.destinationName || '—') + '</td><td><span class="service-mins">' + escapeHtml(etaText(next.etaMs)) + '</span></td>';
+                newTr.addEventListener('mouseenter', () => setHighlight(routeNorm));
+                newTr.addEventListener('mouseleave', () => setHighlight(null));
+                const rows = tbody.querySelectorAll('.service-row');
+                let insertAfter = null;
+                for (let i = 0; i < rows.length; i++) {
+                  if (rows[i].dataset.routeNorm === routeNorm && rows[i].dataset.direction === dir) insertAfter = rows[i];
+                }
+                if (insertAfter) {
+                  insertAfter.after(newTr);
+                } else {
+                  const rNorm = routeNorm;
+                  const dNum = parseInt(dir, 10);
+                  for (let i = 0; i < rows.length; i++) {
+                    const r = rows[i].dataset.routeNorm;
+                    const d = parseInt(rows[i].dataset.direction, 10);
+                    if (r > rNorm || (r === rNorm && d > dNum)) {
+                      rows[i].before(newTr);
+                      break;
+                    }
+                  }
+                  if (!newTr.parentNode) tbody.appendChild(newTr);
+                }
+                requestAnimationFrame(() => { newTr.classList.remove('arriving'); });
+              }
+            }, { once: true });
+          }
+        });
+      }
+
+      function updateVehicleAgoIcons() {
+        vehicleMarkers.forEach(m => {
+          const vid = m._vehicleId;
+          const color = m._color;
+          const subtitle = (m._etaMs != null && isFinite(m._etaMs)) ? etaText(m._etaMs) : '—';
+          m.setIcon(L.divIcon({
+            className: 'vehicle-rect-wrap',
+            html: '<div class="vehicle-rect" style="background:' + color + '">' + escapeHtml(vid) + '<span class="vehicle-ago">' + escapeHtml(subtitle) + '</span></div>',
+            iconSize: [36, 32],
+            iconAnchor: [18, 16]
+          }));
+          const tip = m.getTooltip && m.getTooltip();
+          if (tip && tip.setTooltipContent) tip.setTooltipContent(vid + ' · ' + subtitle);
+        });
+      }
+
+      let pollTimer = null;
+      function stopRouteTracking() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = null;
+        if (agoTimer) clearInterval(agoTimer);
+        agoTimer = null;
+        if (timetableTimer) clearInterval(timetableTimer);
+        timetableTimer = null;
+        vehicleMarkers.forEach(m => map.removeLayer(m));
+        vehicleMarkers = [];
+        vehicleUpdatedAt = {};
+        highlightedRouteId = null;
+        if (routeLinesLayer) routeLinesLayer.clearLayers();
+        if (userLocationMarker && map) map.removeLayer(userLocationMarker);
+        userLocationMarker = null;
+        ['bus', 'tram', 'train'].forEach(mode => {
+          if (stopLayers[mode]) stopLayers[mode].eachLayer(m => {
+            if (m.setStyle) m.setStyle({ opacity: 1, fillOpacity: 0.9 });
+          });
+        });
+      }
+
+      function applyStopFilter(stop) {
+        if (!routeLinesLayer) return;
+        routeLinesLayer.clearLayers();
+        const stopsByMode = window.__stopsByMode || {};
+        const routeToStops = window.__routeToOrderedStops || {};
+        const staticByStop = window.__routesAtStopStatic && window.__routesAtStopStatic[stop.mode];
+        const stopIds = [stop.id, String(stop.id).trim()].filter(Boolean);
+        const allowedShortNames = new Set();
+        if (staticByStop) {
+          stopIds.forEach(sid => {
+            const names = staticByStop[sid];
+            if (names) names.forEach(sn => allowedShortNames.add(sn));
+          });
+        }
+        const stopsOnRoutes = new Set();
+        const orderedStopsByRoute = routeToStops[stop.mode] || {};
+        if (stop.mode === 'train') {
+          (stopsByMode.train || []).forEach(s => stopsOnRoutes.add(String(s.id).trim()));
+        } else {
+          allowedShortNames.forEach(sn => {
+            const list = orderedStopsByRoute[sn];
+            if (list) list.forEach(sid => stopsOnRoutes.add(String(sid).trim()));
+          });
+          stopIds.forEach(sid => stopsOnRoutes.add(String(sid).trim()));
+        }
+        ['bus', 'tram', 'train'].forEach(mode => {
+          if (!stopLayers[mode]) return;
+          const isSelectedMode = mode === stop.mode;
+          stopLayers[mode].eachLayer(m => {
+            if (!m.setStyle) return;
+            if (isSelectedMode) {
+              const id = m._stopData && m._stopData.id;
+              const onRoute = stopsOnRoutes.has(String(id).trim());
+              m.setStyle(onRoute ? { opacity: 1, fillOpacity: 0.9 } : { opacity: 0, fillOpacity: 0 });
+              if (m._icon) m._icon.style.pointerEvents = onRoute ? 'auto' : 'none';
+            } else {
+              m.setStyle({ opacity: 0, fillOpacity: 0 });
+              if (m._icon) m._icon.style.pointerEvents = 'none';
+            }
+          });
+        });
+        if (stop.mode !== 'train' && allowedShortNames.size > 0) {
+          const modeStops = stopsByMode[stop.mode] || [];
+          const stopCoords = {};
+          modeStops.forEach(s => { stopCoords[String(s.id).trim()] = [s.lat, s.lon]; });
+          const color = MODES[stop.mode].color;
+          allowedShortNames.forEach(sn => {
+            const orderedIds = orderedStopsByRoute[sn];
+            if (!orderedIds || !orderedIds.length) return;
+            const pts = orderedIds.map(sid => stopCoords[String(sid).trim()]).filter(Boolean);
+            if (pts.length < 2) return;
+            L.polyline(pts, { color, weight: 4, opacity: 0.8 }).addTo(routeLinesLayer);
+          });
+        }
+      }
+
+      function applyRouteFilter(route) {
+        if (!routeLinesLayer || !route) return;
+        routeLinesLayer.clearLayers();
+        const stopsByMode = window.__stopsByMode || {};
+        const routeToStops = window.__routeToOrderedStops && window.__routeToOrderedStops[route.mode] || {};
+        const shortName = (route.shortName || '').trim();
+        const orderedIds = routeToStops[shortName] || [];
+        const hasOrderedStops = orderedIds.length > 0;
+        const stopsOnRoute = hasOrderedStops ? new Set(orderedIds.map(sid => String(sid).trim())) : null;
+        ['bus', 'tram', 'train'].forEach(mode => {
+          if (!stopLayers[mode]) return;
+          const isRouteMode = mode === route.mode;
+          stopLayers[mode].eachLayer(m => {
+            if (!m.setStyle) return;
+            if (isRouteMode) {
+              const onRoute = stopsOnRoute ? stopsOnRoute.has(String((m._stopData && m._stopData.id) || '').trim()) : true;
+              m.setStyle(onRoute ? { opacity: 1, fillOpacity: 0.9 } : { opacity: 0, fillOpacity: 0 });
+              if (m._icon) m._icon.style.pointerEvents = onRoute ? 'auto' : 'none';
+            } else {
+              m.setStyle({ opacity: 0, fillOpacity: 0 });
+              if (m._icon) m._icon.style.pointerEvents = 'none';
+            }
+          });
+        });
+        if (orderedIds.length >= 2) {
+          const modeStops = stopsByMode[route.mode] || [];
+          const stopCoords = {};
+          modeStops.forEach(s => { stopCoords[String(s.id).trim()] = [s.lat, s.lon]; });
+          const pts = orderedIds.map(sid => stopCoords[String(sid).trim()]).filter(Boolean);
+          if (pts.length >= 2) {
+            const color = MODES[route.mode].color;
+            L.polyline(pts, { color, weight: 4, opacity: 0.8 }).addTo(routeLinesLayer);
+          }
+        }
+      }
+
+      function setHighlight(routeNorm) {
+        highlightedRouteId = routeNorm;
+        vehicleMarkers.forEach(m => {
+          m.setOpacity(!routeNorm || m._routeNorm === routeNorm ? 1 : 0.35);
+          if (m._icon) m._icon.style.zIndex = m._routeNorm === routeNorm ? 1000 : 500;
+        });
+        document.querySelectorAll('.service-row').forEach(row => {
+          row.classList.toggle('highlight-route', row.dataset.routeNorm === routeNorm);
+        });
+      }
+
+      async function onStopClick(stop) {
+        stopRouteTracking();
+        document.getElementById('sidebarPlaceholder').style.display = 'none';
+        const content = document.getElementById('sidebarContent');
+        content.style.display = 'block';
+        const norm = s => (s || '').trim().replace(/:+$/, '');
+        const allRoutes = (window.__routesByMode && window.__routesByMode[stop.mode]) || [];
+        content.innerHTML = `
+          <div class="stop-card">
+            <span class="stop-type ${stop.mode}">${MODES[stop.mode].label}</span>
+            <div class="stop-header">
+              <div class="vehicle-count" style="color:var(--muted);font-size:0.8rem;">Stop ID: ${escapeHtml(String(stop.id))}</div>
+              <h3>${escapeHtml(stop.name)}</h3>
+            </div>
+            <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;" />
+            <table class="service-table">
+              <thead><tr><th>Route</th><th>To</th><th>Arrives</th></tr></thead>
+              <tbody id="serviceTableBody"><tr><td colspan="3" style="color:var(--muted);">Loading…</td></tr></tbody>
+            </table>
+            <div id="vehicleError" class="error-msg" style="display:none;"></div>
+          </div>
+        `;
+        const tbody = content.querySelector('#serviceTableBody');
+        const errEl = content.querySelector('#vehicleError');
+        const apiKey = DEFAULT_API_KEY;
+
+        async function refresh() {
+          try {
+            if (timetableTimer) clearInterval(timetableTimer);
+            timetableTimer = null;
+            const { vehicles, rawEntities } = await fetchVehiclePositions(stop.mode, apiKey);
+            const stopIds = [stop.id, String(stop.id).trim(), norm(stop.id)].filter(Boolean);
+            const allowed = new Set();
+            const routeList = (window.__routesByMode && window.__routesByMode[stop.mode]) || [];
+            if ((stop.mode === 'tram' || stop.mode === 'bus') && window.__routesAtStopStatic && window.__routesAtStopStatic[stop.mode]) {
+              const staticByStop = window.__routesAtStopStatic[stop.mode];
+              stopIds.forEach(sid => {
+                const shortNames = staticByStop[sid];
+                if (shortNames) {
+                  shortNames.forEach(sn => {
+                    const route = routeList.find(r => (r.shortName || '').trim() === String(sn).trim());
+                    if (route && route.id) allowed.add(norm(route.id));
+                  });
+                }
+              });
+            }
+            if (allowed.size === 0) {
+              const routeIdsAtStop = routesAtStopFromFeed(rawEntities);
+              stopIds.forEach(sid => {
+                (routeIdsAtStop[sid] || []).forEach(rid => allowed.add(rid));
+              });
+            }
+            if (allowed.size === 0 && stop.lat != null && stop.lon != null) {
+              const NEAR_M = 280;
+              (vehicles || []).forEach(v => {
+                if (v.lat != null && v.lon != null && distMeters(stop.lat, stop.lon, v.lat, v.lon) <= NEAR_M) {
+                  allowed.add(norm(v.route_id));
+                }
+              });
+            }
+            const onRoute = (vehicles || []).filter(v => allowed.has(norm(v.route_id)));
+            const predictedByTrip = predictedArrivalsByTrip(rawEntities);
+            const routeToStops = (window.__routeToOrderedStops && window.__routeToOrderedStops[stop.mode]) || {};
+            const stopsByMode = window.__stopsByMode || {};
+            const selectedStopId = String(stop.id).trim();
+            const speedMs = ETA_SPEED_MS[stop.mode] != null ? ETA_SPEED_MS[stop.mode] : 5;
+            if (!window.__vehicleLastPosition) window.__vehicleLastPosition = {};
+
+            function nearestStopIndex(lat, lon, orderedIds, stopCoords) {
+              let idx = 0;
+              let best = Infinity;
+              orderedIds.forEach((sid, i) => {
+                const c = stopCoords[String(sid).trim()];
+                if (c) {
+                  const d = distMeters(lat, lon, c.lat, c.lon);
+                  if (d < best) { best = d; idx = i; }
+                }
+              });
+              return idx;
+            }
+
+            onRoute.forEach(v => {
+              const rn = norm(v.route_id);
+              const routeMeta = routeList.find(r => norm(r.id) === rn);
+              const shortName = (routeMeta && routeMeta.shortName) ? routeMeta.shortName.trim() : '';
+              const orderedIds = routeToStops[shortName] || [];
+              let etaMs = null;
+              const tripId = (v.trip_id || '').trim();
+              if (tripId && predictedByTrip[tripId]) {
+                etaMs = predictedByTrip[tripId][selectedStopId] != null ? predictedByTrip[tripId][selectedStopId] : predictedByTrip[tripId][stop.id];
+              }
+              if (etaMs == null && v.lat != null && v.lon != null && stop.lat != null && stop.lon != null) {
+                const dist = distMeters(stop.lat, stop.lon, v.lat, v.lon);
+                if (dist <= MAX_DISTANCE_M) etaMs = Date.now() + (dist / speedMs) * 1000;
+              }
+              if (etaMs != null && (etaMs - Date.now()) > MAX_ETA_MS) etaMs = null;
+              v._etaMs = etaMs;
+              const vid = String(v.id || v.label || '');
+              const modeStops = stopsByMode[stop.mode] || [];
+              const stopCoords = {};
+              modeStops.forEach(s => { stopCoords[String(s.id).trim()] = { lat: s.lat, lon: s.lon }; });
+              const currentIdx = (orderedIds.length > 0 && v.lat != null && v.lon != null)
+                ? nearestStopIndex(v.lat, v.lon, orderedIds, stopCoords) : 0;
+              const prev = window.__vehicleLastPosition[vid];
+              let dir = null;
+              if (prev && prev.routeNorm === rn && orderedIds.length > 0 && prev.lat != null && prev.lon != null) {
+                const prevIdx = nearestStopIndex(prev.lat, prev.lon, orderedIds, stopCoords);
+                if (currentIdx !== prevIdx) {
+                  dir = currentIdx > prevIdx ? 1 : 0;
+                } else if (prev.direction != null) {
+                  dir = prev.direction;
+                }
+              }
+              if (dir == null && v.direction_id != null) dir = parseInt(v.direction_id, 10);
+              if (dir == null && orderedIds.length > 0) {
+                const selectedIdx = orderedIds.map(s => String(s).trim()).indexOf(selectedStopId);
+                dir = selectedIdx >= 0 && currentIdx < selectedIdx ? 1 : 0;
+              }
+              if (dir == null) dir = 0;
+              v._direction = dir;
+              window.__vehicleLastPosition[vid] = { lat: v.lat, lon: v.lon, routeNorm: rn, nearestIdx: currentIdx, direction: dir };
+              const firstId = orderedIds[0];
+              const lastId = orderedIds[orderedIds.length - 1];
+              const firstStop = (stopsByMode[stop.mode] || []).find(s => String(s.id).trim() === String(firstId).trim());
+              const lastStop = (stopsByMode[stop.mode] || []).find(s => String(s.id).trim() === String(lastId).trim());
+              v._destinationName = dir === 0 ? (firstStop && firstStop.name) || '—' : (lastStop && lastStop.name) || '—';
+              if (v._destinationName === '—' && routeMeta && routeMeta.longName) v._destinationName = routeMeta.longName.trim();
+            });
+
+            const byRouteDir = {};
+            allowed.forEach(rn => {
+              const routeMeta = routeList.find(r => norm(r.id) === rn);
+              const shortName = (routeMeta && routeMeta.shortName) ? routeMeta.shortName.trim() : '';
+              const orderedIds = routeToStops[shortName] || [];
+              const firstId = orderedIds[0];
+              const lastId = orderedIds[orderedIds.length - 1];
+              const firstStop = (stopsByMode[stop.mode] || []).find(s => String(s.id).trim() === String(firstId).trim());
+              const lastStop = (stopsByMode[stop.mode] || []).find(s => String(s.id).trim() === String(lastId).trim());
+              const dest0 = (firstStop && firstStop.name) || (routeMeta && routeMeta.longName) || '—';
+              const dest1 = (lastStop && lastStop.name) || (routeMeta && routeMeta.longName) || '—';
+              byRouteDir[rn + '\n0'] = { routeNorm: rn, direction: 0, destinationName: dest0, vehicles: [] };
+              byRouteDir[rn + '\n1'] = { routeNorm: rn, direction: 1, destinationName: dest1, vehicles: [] };
+            });
+            onRoute.forEach(v => {
+              const rn = norm(v.route_id);
+              const key = rn + '\n' + v._direction;
+              if (byRouteDir[key]) byRouteDir[key].vehicles.push(v);
+            });
+            const MAX_PER_DIRECTION = 3;
+            const tableRows = [];
+            const timetableBuffer = {};
+            const routeOrder = Array.from(allowed).sort();
+            [0, 1].forEach(dir => {
+              routeOrder.forEach(rn => {
+                const key = rn + '\n' + dir;
+                const info = byRouteDir[key];
+                if (!info) return;
+                const sorted = info.vehicles.slice().sort((a, b) => {
+                  const ea = a._etaMs != null && isFinite(a._etaMs) ? a._etaMs : Infinity;
+                  const eb = b._etaMs != null && isFinite(b._etaMs) ? b._etaMs : Infinity;
+                  return ea - eb;
+                });
+                const top = sorted.slice(0, MAX_PER_DIRECTION);
+                timetableBuffer[key] = sorted.slice(MAX_PER_DIRECTION).map(v => ({ etaMs: v._etaMs, destinationName: info.destinationName }));
+                top.forEach(v => tableRows.push({ routeNorm: info.routeNorm, direction: dir, destinationName: info.destinationName, etaMs: v._etaMs }));
+                if (top.length === 0) {
+                  tableRows.push({ routeNorm: info.routeNorm, direction: dir, destinationName: info.destinationName, etaMs: null });
+                }
+              });
+            });
+            if (tableRows.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);">No live services at this stop</td></tr>';
+            } else {
+              tbody.innerHTML = tableRows.map(row => {
+                const routeMeta = routeList.find(r => norm(r.id) === row.routeNorm);
+                const shortName = (routeMeta && routeMeta.shortName) ? routeMeta.shortName.trim() : row.routeNorm;
+                const arrives = etaText(row.etaMs);
+                const etaAttr = row.etaMs != null && isFinite(row.etaMs) ? String(row.etaMs) : '';
+                return '<tr class="service-row" data-route-norm="' + escapeHtml(row.routeNorm) + '" data-direction="' + row.direction + '" data-eta-ms="' + escapeHtml(etaAttr) + '" role="button">' +
+                  '<td><span class="service-route">' + escapeHtml(shortName) + '</span></td>' +
+                  '<td class="service-to">' + escapeHtml(row.destinationName || '—') + '</td>' +
+                  '<td><span class="service-mins">' + escapeHtml(arrives) + '</span></td></tr>';
+              }).join('');
+            }
+            window.__timetableBuffer = timetableBuffer;
+            window.__timetableRouteList = routeList;
+            window.__timetableNorm = norm;
+            if (timetableTimer) clearInterval(timetableTimer);
+            timetableTimer = setInterval(updateTimetableTick, 1000);
+            errEl.style.display = 'none';
+            vehicleUpdatedAt = {};
+            onRoute.forEach(v => {
+              vehicleUpdatedAt[String(v.id)] = v.updatedAt != null ? v.updatedAt : Date.now();
+            });
+
+            tbody.querySelectorAll('.service-row').forEach(row => {
+              row.addEventListener('mouseenter', () => setHighlight(row.dataset.routeNorm));
+              row.addEventListener('mouseleave', () => setHighlight(null));
+            });
+
+            vehicleMarkers.forEach(m => map.removeLayer(m));
+            vehicleMarkers = [];
+            const color = MODES[stop.mode].color;
+            onRoute.forEach(v => {
+              if (v.lat == null || v.lon == null) return;
+              const vid = String(v.id || v.label || '');
+              const rn = norm(v.route_id);
+              const subtitle = (v._etaMs != null && isFinite(v._etaMs)) ? etaText(v._etaMs) : '—';
+              const icon = L.divIcon({
+                className: 'vehicle-rect-wrap',
+                html: '<div class="vehicle-rect" style="background:' + color + '">' + escapeHtml(vid) + '<span class="vehicle-ago">' + escapeHtml(subtitle) + '</span></div>',
+                iconSize: [36, 32],
+                iconAnchor: [18, 16]
+              });
+              const m = L.marker([v.lat, v.lon], { icon });
+              m._vehicleId = vid;
+              m._color = color;
+              m._routeNorm = rn;
+              m._etaMs = v._etaMs;
+              m.bindTooltip(vid + ' · ' + subtitle, { permanent: false });
+              m.addTo(map);
+              vehicleMarkers.push(m);
+            });
+            if (!agoTimer) agoTimer = setInterval(updateVehicleAgoIcons, 1000);
+            setHighlight(highlightedRouteId);
+          } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="3" style="color:#f85149;">Update failed</td></tr>';
+            errEl.textContent = e.message || 'Could not load vehicle positions.';
+            errEl.style.display = 'block';
+          }
+        }
+
+        applyStopFilter(stop);
+        await refresh();
+        pollTimer = setInterval(refresh, POLL_INTERVAL_MS);
+        window.__selectedStop = stop;
+      }
+
+      function decodeGtfsRealtime(buffer) {
+        if (!protoRoot) {
+          const el = document.getElementById('gtfs-realtime-proto');
+          if (!el || !el.textContent) throw new Error('GTFS-R decoder not found.');
+          try {
+            const pb = typeof protobuf !== 'undefined' ? protobuf : window.protobuf;
+            if (!pb) throw new Error('protobuf library not loaded');
+            protoRoot = pb.parse(el.textContent).root;
+            FeedMessage = protoRoot.lookupType('transit_realtime.FeedMessage');
+          } catch (e) {
+            throw new Error('Could not parse GTFS-R decoder: ' + (e.message || e));
+          }
+        }
+        const uint8 = new Uint8Array(buffer);
+        const msg = FeedMessage.decode(uint8);
+        return FeedMessage.toObject(msg, { longs: String });
+      }
+
+      async function fetchVehiclePositions(mode, apiKey) {
+        const urls = FEED_URLS[mode];
+        const headers = {};
+        if (apiKey) headers['KeyID'] = apiKey;
+        let res;
+        for (const url of urls) {
+          try {
+            res = await fetch(url, { headers });
+            if (res.ok) break;
+          } catch (e) {
+            if (e.name !== 'TypeError') throw e;
+            for (const proxy of CORS_PROXIES) {
+              try {
+                res = await fetch(proxy + encodeURIComponent(url));
+                if (res.ok) break;
+              } catch (_) { res = null; continue; }
+            }
+            if (!res || !res.ok) throw new Error('CORS blocked. Tried proxy fallback but still failed.');
+          }
+          if (res && res.ok) break;
+        }
+        if (!res || !res.ok) throw new Error(`Feed ${res ? res.status : ''}: ${res ? res.statusText : 'Unavailable'}. Try adding an API key (Data Exchange).`);
+        const contentType = res.headers.get('content-type') || '';
+        const blob = await res.blob();
+        const buffer = await blob.arrayBuffer();
+
+        function toVehicle(e) {
+          const trip = e.vehicle && e.vehicle.trip;
+          const pos = e.vehicle && e.vehicle.position;
+          const vh = e.vehicle && e.vehicle.vehicle;
+          const ts = e.vehicle && (e.vehicle.timestamp != null ? e.vehicle.timestamp : undefined);
+          const updatedAt = (typeof ts === 'string' || typeof ts === 'number') ? (parseInt(ts, 10) * 1000) : Date.now();
+          const dirId = trip && (trip.direction_id != null ? trip.direction_id : trip.directionId);
+          return {
+            id: (vh && (vh.id || vh.label)) || e.id,
+            route_id: trip && (trip.route_id || trip.routeId),
+            trip_id: trip && (trip.trip_id || trip.tripId),
+            direction_id: dirId != null ? parseInt(dirId, 10) : null,
+            current_stop_sequence: e.vehicle && (e.vehicle.current_stop_sequence != null ? e.vehicle.current_stop_sequence : e.vehicle.currentStopSequence),
+            stop_id: e.vehicle && (e.vehicle.stop_id || e.vehicle.stopId),
+            lat: pos && pos.latitude,
+            lon: pos && pos.longitude,
+            label: (vh && (vh.label || vh.id)) || e.id,
+            updatedAt
+          };
+        }
+        if (contentType.includes('json')) {
+          const text = await blob.text();
+          const data = JSON.parse(text);
+          const entities = data.entity || [];
+          const vehicles = entities
+            .filter(e => e.vehicle && e.vehicle.position)
+            .map(toVehicle);
+          return { vehicles, rawEntities: entities };
+        }
+
+        const decoded = decodeGtfsRealtime(buffer);
+        const entities = decoded.entity || [];
+        const vehicles = entities
+          .filter(e => e.vehicle && e.vehicle.position)
+          .map(toVehicle);
+        return { vehicles, rawEntities: entities };
+      }
+
+      async function init() {
+        initMap();
+        const [busStops, tramStops, trainStops, busRoutes, tramRoutes, trainRoutes, stopTimesTram, stopTimesBus] = await Promise.all([
+          loadStops('bus'),
+          loadStops('tram'),
+          loadStops('train'),
+          loadRoutes('bus'),
+          loadRoutes('tram'),
+          loadRoutes('train'),
+          loadStopTimes('tram'),
+          loadStopTimes('bus')
+        ]);
+        window.__routesByMode = { bus: busRoutes, tram: tramRoutes, train: trainRoutes };
+        window.__routesAtStopStatic = { tram: stopTimesTram.byStop, bus: stopTimesBus.byStop };
+        window.__routeToOrderedStops = { tram: stopTimesTram.routeToOrderedStops, bus: stopTimesBus.routeToOrderedStops };
+        window.__stopsByMode = { bus: busStops, tram: tramStops, train: trainStops };
+        addStopsLayer('bus', busStops);
+        addStopsLayer('tram', tramStops);
+        addStopsLayer('train', trainStops);
+        setupSearch();
+        setupLocation();
+      }
+
+      function searchStopsAndRoutes(q) {
+        const term = (q || '').trim().toLowerCase();
+        if (term.length < 2) return { stops: [], routes: [] };
+        const stops = [];
+        const routes = [];
+        const stopsByMode = window.__stopsByMode || {};
+        const routesByMode = window.__routesByMode || {};
+        ['bus', 'tram', 'train'].forEach(mode => {
+          (stopsByMode[mode] || []).forEach(s => {
+            const name = (s.name || '').toLowerCase();
+            const id = String(s.id || '').toLowerCase();
+            if (name.includes(term) || id.includes(term)) stops.push({ type: 'stop', stop: s, mode });
+          });
+          (routesByMode[mode] || []).forEach(r => {
+            const shortName = (r.shortName || '').toLowerCase();
+            const longName = (r.longName || '').toLowerCase();
+            if (shortName.includes(term) || longName.includes(term)) routes.push({ type: 'route', route: r, mode });
+          });
+        });
+        return { stops: stops.slice(0, 30), routes: routes.slice(0, 20) };
+      }
+
+      function resetToDefaultView() {
+        stopRouteTracking();
+        window.__selectedStop = null;
+        window.__selectedRoute = null;
+        document.getElementById('sidebarPlaceholder').style.display = 'block';
+        document.getElementById('sidebarPlaceholder').textContent = 'Click a stop on the map to see routes and live vehicles.';
+        document.getElementById('sidebarContent').style.display = 'none';
+        document.getElementById('sidebarContent').innerHTML = '';
+        const input = document.getElementById('searchInput');
+        const resultsEl = document.getElementById('searchResults');
+        if (input) input.value = '';
+        if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
+        const nearYouSection = document.getElementById('nearYouSection');
+        const nearYouError = document.getElementById('nearYouError');
+        if (nearYouSection) nearYouSection.style.display = 'none';
+        if (nearYouError) { nearYouError.style.display = 'none'; nearYouError.textContent = ''; }
+        if (userLocationMarker && map) map.removeLayer(userLocationMarker);
+        userLocationMarker = null;
+      }
+
+      function setupSearch() {
+        const input = document.getElementById('searchInput');
+        const resultsEl = document.getElementById('searchResults');
+        const cancelBtn = document.getElementById('searchCancelBtn');
+        if (cancelBtn) cancelBtn.addEventListener('click', resetToDefaultView);
+        let debounceTimer = null;
+        input.addEventListener('input', () => {
+          clearTimeout(debounceTimer);
+          const q = input.value.trim();
+          debounceTimer = setTimeout(() => {
+            const { stops, routes } = searchStopsAndRoutes(q);
+            if (q.length < 2 || (stops.length === 0 && routes.length === 0)) {
+              resultsEl.style.display = 'none';
+              return;
+            }
+            const html = [];
+            routes.forEach(({ route, mode }) => {
+              const label = (route.shortName || '') + (route.longName ? ' – ' + route.longName : '');
+              html.push('<div class="search-result-item" data-type="route" data-mode="' + escapeHtml(mode) + '" data-short="' + escapeHtml(route.shortName || '') + '" data-long="' + escapeHtml(route.longName || '') + '" data-id="' + escapeHtml(route.id || '') + '">' +
+                '<span class="result-type">' + escapeHtml(MODES[mode].label) + ' route</span><br/><span class="result-label">' + escapeHtml(route.shortName || route.id) + '</span> <span class="result-meta">' + escapeHtml(route.longName || '') + '</span></div>');
+            });
+            stops.forEach(({ stop, mode }) => {
+              html.push('<div class="search-result-item" data-type="stop" data-mode="' + escapeHtml(mode) + '" data-id="' + escapeHtml(stop.id) + '" data-name="' + escapeHtml(stop.name) + '" data-lat="' + stop.lat + '" data-lon="' + stop.lon + '">' +
+                '<span class="result-type">' + escapeHtml(MODES[mode].label) + ' stop</span><br/><span class="result-label">' + escapeHtml(stop.name || stop.id) + '</span> <span class="result-meta">ID: ' + escapeHtml(String(stop.id)) + '</span></div>');
+            });
+            resultsEl.innerHTML = html.join('');
+            resultsEl.style.display = 'block';
+          }, 200);
+        });
+        input.addEventListener('focus', () => { if (resultsEl.innerHTML) resultsEl.style.display = 'block'; });
+        resultsEl.addEventListener('click', (e) => {
+          const item = e.target.closest('.search-result-item');
+          if (!item) return;
+          const type = item.dataset.type;
+          resultsEl.style.display = 'none';
+          input.value = '';
+          if (type === 'stop') {
+            const stop = { id: item.dataset.id, name: item.dataset.name, lat: parseFloat(item.dataset.lat), lon: parseFloat(item.dataset.lon), mode: item.dataset.mode };
+            onStopClick(stop);
+            if (map && stop.lat != null && stop.lon != null) map.setView([stop.lat, stop.lon], 15);
+          } else if (type === 'route') {
+            const route = { id: item.dataset.id, shortName: item.dataset.short, longName: item.dataset.long, mode: item.dataset.mode };
+            stopRouteTracking();
+            applyRouteFilter(route);
+            window.__selectedRoute = route;
+            window.__selectedStop = null;
+            document.getElementById('sidebarPlaceholder').style.display = 'none';
+            const content = document.getElementById('sidebarContent');
+            content.style.display = 'block';
+            content.innerHTML = '<div class="stop-card"><span class="stop-type ' + escapeHtml(route.mode) + '">' + escapeHtml(MODES[route.mode].label) + '</span><div class="stop-header"><h3>Route ' + escapeHtml(route.shortName || route.id) + '</h3></div><p style="color:var(--muted);font-size:0.9rem;margin-top:8px;">' + escapeHtml(route.longName || '') + '</p><p style="color:var(--muted);font-size:0.85rem;margin-top:12px;">Click a stop on the map to see live times.</p></div>';
+          }
+        });
+        document.addEventListener('click', (e) => {
+          if (!input.contains(e.target) && !resultsEl.contains(e.target)) resultsEl.style.display = 'none';
+        });
+      }
+
+      function formatDist(m) {
+        if (m < 1000) return Math.round(m) + ' m';
+        return (m / 1000).toFixed(1) + ' km';
+      }
+
+      function setupLocation() {
+        const btn = document.getElementById('locationBtn');
+        const nearYouSection = document.getElementById('nearYouSection');
+        const nearYouList = document.getElementById('nearYouList');
+        const nearYouError = document.getElementById('nearYouError');
+        if (!btn || !nearYouSection || !nearYouList) return;
+        btn.addEventListener('click', () => {
+          nearYouError.style.display = 'none';
+          nearYouError.textContent = '';
+          btn.disabled = true;
+          if (!navigator.geolocation) {
+            nearYouError.textContent = 'Geolocation is not supported by your browser.';
+            nearYouError.style.display = 'block';
+            nearYouSection.style.display = 'block';
+            nearYouList.innerHTML = '';
+            btn.disabled = false;
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              if (userLocationMarker && map) map.removeLayer(userLocationMarker);
+              userLocationMarker = L.circleMarker([lat, lon], {
+                radius: 10,
+                fillColor: '#4285f4',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.9
+              }).addTo(map);
+              map.setView([lat, lon], 15);
+              const stopsByMode = window.__stopsByMode || {};
+              const all = [];
+              ['bus', 'tram', 'train'].forEach(mode => {
+                (stopsByMode[mode] || []).forEach(s => {
+                  const d = distMeters(lat, lon, s.lat, s.lon);
+                  all.push({ stop: s, mode, dist: d });
+                });
+              });
+              all.sort((a, b) => a.dist - b.dist);
+              const top = all.slice(0, 10);
+              nearYouList.innerHTML = top.map(({ stop, mode, dist }) =>
+                '<div class="near-you-item" data-id="' + escapeHtml(stop.id) + '" data-name="' + escapeHtml(stop.name || '') + '" data-lat="' + stop.lat + '" data-lon="' + stop.lon + '" data-mode="' + escapeHtml(mode) + '">' +
+                '<span class="near-you-name">' + escapeHtml(stop.name || stop.id) + '</span>' +
+                '<span class="near-you-meta"><span class="near-you-mode" style="background:' + MODES[mode].color + '">' + escapeHtml(MODES[mode].label) + '</span><span class="near-you-dist">' + escapeHtml(formatDist(dist)) + '</span></span></div>'
+              ).join('');
+              nearYouList.querySelectorAll('.near-you-item').forEach(el => {
+                el.addEventListener('click', () => {
+                  const stop = { id: el.dataset.id, name: el.dataset.name, lat: parseFloat(el.dataset.lat), lon: parseFloat(el.dataset.lon), mode: el.dataset.mode };
+                  onStopClick(stop);
+                  if (map && stop.lat != null && stop.lon != null) map.setView([stop.lat, stop.lon], 16);
+                });
+              });
+              nearYouSection.style.display = 'block';
+              btn.disabled = false;
+            },
+            (err) => {
+              let msg = 'Could not get your location.';
+              if (err.code === 1) msg = 'Location permission denied.';
+              else if (err.code === 2) msg = 'Location unavailable.';
+              else if (err.code === 3) msg = 'Location request timed out.';
+              nearYouError.textContent = msg;
+              nearYouError.style.display = 'block';
+              nearYouSection.style.display = 'block';
+              nearYouList.innerHTML = '';
+              btn.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+          );
+        });
+      }
+
+      init().catch(err => {
+        console.error(err);
+        document.getElementById('sidebarPlaceholder').textContent = 'Error loading data: ' + (err.message || err);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs and temp
+*.log
+*.tmp
+.cache/
+
+# Optional: uncomment if you add Node/npm later
+# node_modules/
+# npm-debug.log*
+
+# Optional: uncomment if you add env or secrets
+# .env
+# .env.local
