@@ -872,8 +872,13 @@ message Alert { }</script>
                 const shortNames = staticByStop[sid];
                 if (shortNames) {
                   shortNames.forEach(sn => {
-                    const route = routeList.find(r => (r.shortName || '').trim() === String(sn).trim());
-                    if (route && route.id) allowed.add(norm(route.id));
+                    const snTrim = String(sn).trim();
+                    routeList.forEach(r => {
+                      if ((r.shortName || '').trim() === snTrim && r.id) {
+                        allowed.add(norm(r.id));
+                        if (snTrim) allowed.add(snTrim);
+                      }
+                    });
                   });
                 }
               });
@@ -892,7 +897,19 @@ message Alert { }</script>
                 }
               });
             }
-            const onRoute = (vehicles || []).filter(v => allowed.has(norm(v.route_id)));
+            function routeIdMatchesAllowed(routeId, allowedSet) {
+              const n = norm(routeId);
+              if (allowedSet.has(n)) return true;
+              return Array.from(allowedSet).some(a => n === a || n.endsWith(a) || n.endsWith(':' + a) || a.endsWith(n));
+            }
+            const allowed302 = Array.from(allowed).filter(rn => String(rn).includes('302'));
+            if (allowed302.length) console.log('[302 match] allowed set contains route(s) with 302:', allowed302, 'full allowed:', Array.from(allowed));
+            const vehicles302 = (vehicles || []).filter(v => String(v.route_id || '').includes('302'));
+            if (vehicles302.length) console.log('[302 match] vehicles with route_id containing 302:', vehicles302);
+            const onRoute = (vehicles || []).filter(v => routeIdMatchesAllowed(v.route_id, allowed));
+            const onRoute302 = onRoute.filter(v => String(v.route_id || '').includes('302'));
+            if (onRoute302.length) console.log('[302 match] onRoute (shown at stop) for 302:', onRoute302);
+            if (vehicles302.length && !onRoute302.length) console.log('[302 match] 302 vehicles NOT in onRoute – allowed has norm(route_id)?', vehicles302.map(v => ({ route_id: v.route_id, norm: norm(v.route_id), inAllowed: allowed.has(norm(v.route_id)) })));
             const predictedByTrip = predictedArrivalsByTrip(rawEntities);
             const routeToStops = (window.__routeToOrderedStops && window.__routeToOrderedStops[stop.mode]) || {};
             const stopsByMode = window.__stopsByMode || {};
@@ -914,8 +931,15 @@ message Alert { }</script>
             }
 
             onRoute.forEach(v => {
-              const rn = norm(v.route_id);
-              const routeMeta = routeList.find(r => norm(r.id) === rn);
+              let rn = norm(v.route_id);
+              let routeMeta = routeList.find(r => {
+                const rid = norm(r.id);
+                return rid === rn || rn.endsWith(rid) || rn.endsWith(':' + rid);
+              });
+              if (!routeMeta && rn) {
+                routeMeta = routeList.find(r => (r.shortName || '').trim() === rn);
+              }
+              if (routeMeta && routeMeta.id) rn = norm(routeMeta.id);
               const shortName = (routeMeta && routeMeta.shortName) ? routeMeta.shortName.trim() : '';
               const orderedIds = routeToStops[shortName] || [];
               let etaMs = null;
@@ -1141,6 +1165,14 @@ message Alert { }</script>
           const vehicles = entities
             .filter(e => e.vehicle && e.vehicle.position)
             .map(toVehicle);
+          console.log('[Open Data API vehicle-positions]', mode, { vehicles, rawEntities: entities });
+          const debug302 = vehicles.filter(v => String(v.route_id || '').includes('302'));
+          if (debug302.length) console.log('[302 match] vehicles with route_id containing 302:', debug302);
+          const raw302 = entities.filter(e => {
+            const rid = e.vehicle && e.vehicle.trip && (e.vehicle.trip.route_id || e.vehicle.trip.routeId);
+            return String(rid || '').includes('302');
+          });
+          if (raw302.length) console.log('[302 match] rawEntities with route 302:', raw302);
           return { vehicles, rawEntities: entities };
         }
 
@@ -1149,6 +1181,14 @@ message Alert { }</script>
         const vehicles = entities
           .filter(e => e.vehicle && e.vehicle.position)
           .map(toVehicle);
+        console.log('[Open Data API vehicle-positions]', mode, { vehicles, rawEntities: entities });
+        const debug302 = vehicles.filter(v => String(v.route_id || '').includes('302'));
+        if (debug302.length) console.log('[302 match] vehicles with route_id containing 302:', debug302);
+        const raw302 = entities.filter(e => {
+          const rid = e.vehicle && e.vehicle.trip && (e.vehicle.trip.route_id || e.vehicle.trip.routeId);
+          return String(rid || '').includes('302');
+        });
+        if (raw302.length) console.log('[302 match] rawEntities with route 302:', raw302);
         return { vehicles, rawEntities: entities };
       }
 

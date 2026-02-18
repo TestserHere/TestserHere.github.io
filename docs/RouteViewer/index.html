@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Route Viewer — Plan, View & Export Routes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Route Viewer</h1>
+      <p class="tagline">Plan routes, see walking & driving times, export as video or JSON</p>
+    </header>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Add places</h2>
+        <div class="input-row">
+          <input type="text" id="place-input" placeholder="Address or place name" autocomplete="off" />
+          <button type="button" id="add-place" title="Add place">+ Add</button>
+        </div>
+        <p class="hint">Search then click the map, or type an address and add.</p>
+      </section>
+
+      <section class="panel waypoints-panel">
+        <h2>Waypoints</h2>
+        <ul id="waypoints-list"></ul>
+        <div class="waypoint-actions">
+          <button type="button" id="clear-waypoints">Clear all</button>
+          <button type="button" id="reverse-waypoints">Reverse</button>
+        </div>
+      </section>
+
+      <section class="panel" id="route-panel">
+        <h2>Route</h2>
+        <div class="mode-tabs">
+          <button type="button" class="mode-tab active" data-mode="driving">Driving</button>
+          <button type="button" class="mode-tab" data-mode="walking">Walking</button>
+        </div>
+        <div id="route-stats">
+          <div class="stat"><span class="stat-label">Distance</span><span id="stat-distance">—</span></div>
+          <div class="stat"><span class="stat-label">Duration</span><span id="stat-duration">—</span></div>
+        </div>
+        <div id="both-stats" class="both-stats hidden">
+          <div class="stat-row"><span class="stat-mode">Driving</span><span id="stat-driving">—</span></div>
+          <div class="stat-row"><span class="stat-mode">Walking</span><span id="stat-walking">—</span></div>
+        </div>
+        <button type="button" id="compute-route" disabled>Compute route</button>
+      </section>
+
+      <section class="panel export-panel">
+        <h2>Export</h2>
+        <div class="export-options">
+          <div class="export-row video-speed-row">
+            <label for="video-speed" class="video-speed-label">
+              <span>Video speed</span>
+              <span id="video-speed-value">1×</span>
+            </label>
+            <input type="range" id="video-speed" min="0.1" max="2" step="0.1" value="1" />
+          </div>
+          <label class="export-row">
+            <span>3D fly-through video</span>
+            <button type="button" id="export-video">Record video</button>
+          </label>
+          <label class="export-row">
+            <span>Custom format (re-import later)</span>
+            <button type="button" id="export-json">Download JSON</button>
+          </label>
+          <label class="export-row">
+            <input type="file" id="import-file" accept=".json,application/json" hidden />
+            <span>Import saved route</span>
+            <button type="button" id="import-json">Import JSON</button>
+          </label>
+        </div>
+      </section>
+    </aside>
+
+    <main class="map-container">
+      <div id="map"></div>
+      <div id="map-loading" class="map-loading">
+        <span class="map-loading-spinner"></span>
+        <span class="map-loading-text">Loading map…</span>
+      </div>
+      <div id="map-overlay">
+        <span id="recording-indicator" class="hidden">Recording…</span>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
