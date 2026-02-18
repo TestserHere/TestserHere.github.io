@@ -25,6 +25,8 @@
   let routeColor = '#16a34a';
   let waypointColor = '#16a34a';
   let savedMarkersData = null;
+  let animationCancelled = false;
+  let recordingCancelled = false;
 
   const $ = (id) => document.getElementById(id);
   const placeInput = $('place-input');
@@ -43,7 +45,10 @@
   const exportJsonBtn = $('export-json');
   const importJsonBtn = $('import-json');
   const importFileInput = $('import-file');
-  const recordingIndicator = $('recording-indicator');
+  const previewRecordOverlay = $('preview-record-overlay');
+  const previewRecordStatus = $('preview-record-status');
+  const cancelPreviewRecordBtn = $('cancel-preview-record');
+  const previewVideoBtn = $('preview-video');
   const videoSpeedInput = $('video-speed');
   const videoSpeedValue = $('video-speed-value');
   const videoFormatSelect = $('video-format');
@@ -179,11 +184,35 @@
     fitMapToWaypoints();
   }
 
+  function moveWaypointUp(i) {
+    if (i <= 0) return;
+    [waypoints[i - 1], waypoints[i]] = [waypoints[i], waypoints[i - 1]];
+    updateWaypointsList();
+    updateWaypointsVideoList();
+    updateMarkersSource();
+    updateComputeButton();
+    clearRoute();
+  }
+
+  function moveWaypointDown(i) {
+    if (i >= waypoints.length - 1) return;
+    [waypoints[i], waypoints[i + 1]] = [waypoints[i + 1], waypoints[i]];
+    updateWaypointsList();
+    updateWaypointsVideoList();
+    updateMarkersSource();
+    updateComputeButton();
+    clearRoute();
+  }
+
   function updateWaypointsList() {
     waypointsList.innerHTML = waypoints
       .map((w, i) => `
         <li class="waypoint-item" data-index="${i}">
           <span class="waypoint-num">${i + 1}</span>
+          <div class="waypoint-reorder">
+            <button type="button" class="waypoint-move-up" data-index="${i}" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
+            <button type="button" class="waypoint-move-down" data-index="${i}" title="Move down" ${i === waypoints.length - 1 ? 'disabled' : ''}>↓</button>
+          </div>
           <span class="waypoint-label" title="${escapeHtml(w.label)}">${escapeHtml(w.label)}</span>
           <button type="button" class="waypoint-remove" data-index="${i}">Remove</button>
         </li>
@@ -199,6 +228,16 @@
         updateMarkersSource();
         updateComputeButton();
         clearRoute();
+      });
+    });
+    waypointsList.querySelectorAll('.waypoint-move-up').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        moveWaypointUp(parseInt(e.target.dataset.index, 10));
+      });
+    });
+    waypointsList.querySelectorAll('.waypoint-move-down').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        moveWaypointDown(parseInt(e.target.dataset.index, 10));
       });
     });
     updateWaypointsVideoList();
@@ -612,7 +651,16 @@
     return [a[0] + (b[0] - a[0]) * frac, a[1] + (b[1] - a[1]) * frac];
   }
 
-  function animateCameraAlongRoute(durationMs, onProgress, onFrame) {
+  function showPreviewRecordOverlay(statusText) {
+    if (previewRecordStatus) previewRecordStatus.textContent = statusText;
+    if (previewRecordOverlay) previewRecordOverlay.classList.remove('hidden');
+  }
+
+  function hidePreviewRecordOverlay() {
+    if (previewRecordOverlay) previewRecordOverlay.classList.add('hidden');
+  }
+
+  function animateCameraAlongRoute(durationMs, onProgress, onFrame, isCancelled) {
     const coords = getRouteCoordinates();
     if (coords.length < 2) return Promise.resolve();
 
@@ -638,6 +686,11 @@
       setUserLocationPoint(firstPos[0], firstPos[1], firstBearing);
 
       function tick(now) {
+        if (isCancelled && isCancelled()) {
+          clearUserLocationPoint();
+          resolve({ cancelled: true });
+          return;
+        }
         const elapsed = now - start;
         const t = Math.min(elapsed / durationMs, 1);
         const eased = 1 - Math.pow(1 - t, 1.8);
@@ -685,6 +738,41 @@
         }
       }
       requestAnimationFrame(tick);
+    });
+  }
+
+  function runPreview() {
+    const coords = getRouteCoordinates();
+    if (coords.length < 2) {
+      alert('Compute a route first, then preview.');
+      return;
+    }
+    animationCancelled = false;
+    const speed = videoSpeedInput && !isNaN(parseFloat(videoSpeedInput.value))
+      ? Math.max(0.1, Math.min(2, parseFloat(videoSpeedInput.value)))
+      : 1;
+    const baseDurationMs = 15000;
+    const durationMs = Math.round(baseDurationMs / speed);
+    showPreviewRecordOverlay('Previewing…');
+    if (previewVideoBtn) {
+      previewVideoBtn.disabled = true;
+      previewVideoBtn.textContent = 'Playing…';
+    }
+    animateCameraAlongRoute(durationMs, null, null, () => animationCancelled).then((result) => {
+      if (result && result.cancelled) {
+        hidePreviewRecordOverlay();
+        if (previewVideoBtn) {
+          previewVideoBtn.disabled = false;
+          previewVideoBtn.textContent = 'Preview';
+        }
+        return;
+      }
+      hidePreviewRecordOverlay();
+      showEndScreen();
+      if (previewVideoBtn) {
+        previewVideoBtn.disabled = false;
+        previewVideoBtn.textContent = 'Preview';
+      }
     });
   }
 
@@ -750,9 +838,13 @@
     };
     mediaRecorder.onstop = () => {
       recording = false;
-      recordingIndicator.classList.add('hidden');
+      hidePreviewRecordOverlay();
       exportVideoBtn.disabled = false;
       exportVideoBtn.textContent = 'Record video';
+      if (recordingCancelled) {
+        restoreMarkersSource();
+        return;
+      }
       const blob = new Blob(recordedChunks, { type: mime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -762,8 +854,10 @@
       URL.revokeObjectURL(url);
     };
 
+    recordingCancelled = false;
+    animationCancelled = false;
     recording = true;
-    recordingIndicator.classList.remove('hidden');
+    showPreviewRecordOverlay('Recording…');
     exportVideoBtn.disabled = true;
     exportVideoBtn.textContent = 'Recording…';
 
@@ -787,7 +881,14 @@
     captureFrameTo16x9();
     mediaRecorder.start(100);
 
-    animateCameraAlongRoute(durationMs, null, (now) => captureFrameThrottled(now)).then(() => {
+    animateCameraAlongRoute(durationMs, null, (now) => captureFrameThrottled(now), () => animationCancelled).then((result) => {
+      if (result && result.cancelled) {
+        restoreMarkersSource();
+        hidePreviewRecordOverlay();
+        exportVideoBtn.disabled = false;
+        exportVideoBtn.textContent = 'Record video';
+        return;
+      }
       showEndScreen();
       const { driving, walking } = getEndScreenText();
       const endScreenStart = performance.now();
@@ -944,6 +1045,16 @@
       });
     });
     computeRouteBtn.addEventListener('click', computeRoute);
+    if (previewVideoBtn) previewVideoBtn.addEventListener('click', runPreview);
+    if (cancelPreviewRecordBtn) {
+      cancelPreviewRecordBtn.addEventListener('click', () => {
+        animationCancelled = true;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          recordingCancelled = true;
+          mediaRecorder.stop();
+        }
+      });
+    }
     exportVideoBtn.addEventListener('click', startVideoRecording);
     exportJsonBtn.addEventListener('click', exportJson);
     importJsonBtn.addEventListener('click', importJson);

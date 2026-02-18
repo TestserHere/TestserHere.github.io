@@ -173,6 +173,32 @@ button:disabled {
   font-weight: 600;
 }
 
+.waypoint-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.waypoint-reorder button {
+  padding: 0.15rem 0.35rem;
+  font-size: 0.7rem;
+  line-height: 1;
+  min-width: 1.5rem;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.waypoint-reorder button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--accent);
+}
+
+.waypoint-reorder button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .waypoint-label {
   flex: 1;
   min-width: 0;
@@ -420,6 +446,12 @@ button:disabled {
   flex-shrink: 0;
 }
 
+.export-video-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .video-speed-row {
   flex-wrap: wrap;
 }
@@ -531,18 +563,40 @@ button:disabled {
   pointer-events: none;
 }
 
-#recording-indicator {
-  display: inline-block;
+.preview-record-overlay {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
   padding: 0.5rem 1rem;
-  background: var(--danger);
-  color: #fff;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  box-shadow: var(--shadow);
+  pointer-events: auto;
 }
 
-#recording-indicator.hidden {
+.preview-record-overlay.hidden {
   display: none;
+}
+
+#preview-record-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.cancel-preview-record {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-preview-record:hover {
+  background: #da3633;
 }
 
 .end-screen {
