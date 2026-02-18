@@ -371,7 +371,22 @@
     return R * c;
   }
 
-  /** Total distance (m) and duration (s) from waypoints using Haversine + assumed speeds (walk 5 km/h, drive 50 km/h). */
+  const ROUTE_SPEEDS_KMH = { walking: 5, driving: 60 };
+
+  function estimateDistance(timeMinutes, type = 'walking') {
+    const speed = ROUTE_SPEEDS_KMH[type] || ROUTE_SPEEDS_KMH.walking;
+    const timeHours = timeMinutes / 60;
+    return speed * timeHours; // distance in km
+  }
+
+  function estimateTimeMinutes(distanceKm, type = 'walking') {
+    const speed = ROUTE_SPEEDS_KMH[type] || ROUTE_SPEEDS_KMH.walking;
+    if (speed <= 0) return 0;
+    const timeHours = distanceKm / speed;
+    return timeHours * 60; // time in minutes
+  }
+
+  /** Total distance (m) and duration (s) from waypoints using Haversine + ROUTE_SPEEDS_KMH (walk 5 km/h, drive 60 km/h). */
   function getRouteStatsFromWaypoints(mode) {
     if (waypoints.length < 2) return { distance: 0, duration: 0 };
     let totalKm = 0;
@@ -381,8 +396,9 @@
       totalKm += getDistanceFromLatLonInKm(a.lat, a.lng, b.lat, b.lng);
     }
     const distanceMeters = Math.round(totalKm * 1000);
-    const speedKmh = mode === 'walking' ? 5 : 50;
-    const durationSeconds = Math.round((totalKm / speedKmh) * 3600);
+    const type = mode === 'walking' ? 'walking' : 'driving';
+    const timeMinutes = estimateTimeMinutes(totalKm, type);
+    const durationSeconds = Math.round(timeMinutes * 60);
     return { distance: distanceMeters, duration: durationSeconds };
   }
 
