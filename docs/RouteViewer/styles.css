@@ -214,6 +214,24 @@ button:disabled {
   accent-color: var(--accent);
 }
 
+.waypoints-video-quick {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.waypoints-video-quick button {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.8rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.waypoints-video-quick button:hover {
+  background: var(--surface-hover);
+}
+
 .waypoints-video-list {
   display: flex;
   flex-direction: column;

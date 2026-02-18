@@ -230,6 +230,19 @@
     });
   }
 
+  function setAllWaypointsInVideo(show) {
+    waypoints.forEach((w) => { w.showInVideo = show; });
+    updateWaypointsVideoList();
+  }
+
+  function setStartFinishOnlyInVideo() {
+    if (waypoints.length === 0) return;
+    waypoints.forEach((w, i) => {
+      w.showInVideo = i === 0 || i === waypoints.length - 1;
+    });
+    updateWaypointsVideoList();
+  }
+
   function escapeHtml(s) {
     const div = document.createElement('div');
     div.textContent = s;
@@ -920,6 +933,10 @@
     importJsonBtn.addEventListener('click', importJson);
     importFileInput.addEventListener('change', handleFileImport);
     if (endScreenCloseBtn) endScreenCloseBtn.addEventListener('click', hideEndScreen);
+    const selectAllVideoBtn = $('waypoints-video-select-all');
+    const startFinishVideoBtn = $('waypoints-video-start-finish');
+    if (selectAllVideoBtn) selectAllVideoBtn.addEventListener('click', () => setAllWaypointsInVideo(true));
+    if (startFinishVideoBtn) startFinishVideoBtn.addEventListener('click', setStartFinishOnlyInVideo);
     if (routeColorInput) {
       routeColorInput.addEventListener('input', () => {
         routeColor = routeColorInput.value;
