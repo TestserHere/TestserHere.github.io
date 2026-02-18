@@ -36,6 +36,16 @@
         </div>
       </section>
 
+      <section class="panel waypoints-video-panel">
+        <h2>Waypoints in video</h2>
+        <p class="hint">Choose which waypoints appear in the recorded video.</p>
+        <label class="waypoints-video-toggle">
+          <input type="checkbox" id="show-waypoints-in-video" checked />
+          <span>Show waypoints in video</span>
+        </label>
+        <div id="waypoints-video-list" class="waypoints-video-list"></div>
+      </section>
+
       <section class="panel" id="route-panel">
         <h2>Route</h2>
         <div class="mode-tabs">
@@ -53,6 +63,13 @@
         <button type="button" id="compute-route" disabled>Compute route</button>
       </section>
 
+      <section class="panel colors-panel">
+        <h2>Route & waypoint color</h2>
+        <div class="color-row">
+          <label><span>Route</span> <input type="color" id="route-color" value="#16a34a" /></label>
+          <label><span>Waypoints</span> <input type="color" id="waypoint-color" value="#16a34a" /></label>
+        </div>
+      </section>
       <section class="panel export-panel">
         <h2>Export</h2>
         <div class="export-options">
@@ -88,6 +105,22 @@
       </div>
       <div id="map-overlay">
         <span id="recording-indicator" class="hidden">Recording…</span>
+      </div>
+      <div id="end-screen" class="end-screen hidden">
+        <div class="end-screen-card">
+          <h2 class="end-screen-title">Route complete</h2>
+          <div class="end-screen-stats">
+            <div class="end-screen-row">
+              <span class="end-screen-label">Driving</span>
+              <span id="end-screen-driving">—</span>
+            </div>
+            <div class="end-screen-row">
+              <span class="end-screen-label">Walking</span>
+              <span id="end-screen-walking">—</span>
+            </div>
+          </div>
+          <button type="button" id="end-screen-close" class="end-screen-close">Close</button>
+        </div>
       </div>
     </main>
   </div>

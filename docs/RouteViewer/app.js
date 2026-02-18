@@ -22,6 +22,9 @@
   let recording = false;
   let mediaRecorder = null;
   let recordedChunks = [];
+  let routeColor = '#16a34a';
+  let waypointColor = '#16a34a';
+  let savedMarkersData = null;
 
   const $ = (id) => document.getElementById(id);
   const placeInput = $('place-input');
@@ -44,6 +47,21 @@
   const videoSpeedInput = $('video-speed');
   const videoSpeedValue = $('video-speed-value');
   const mapLoadingEl = $('map-loading');
+  const endScreenEl = $('end-screen');
+  const endScreenDriving = $('end-screen-driving');
+  const endScreenWalking = $('end-screen-walking');
+  const endScreenCloseBtn = $('end-screen-close');
+  const showWaypointsInVideoCb = $('show-waypoints-in-video');
+  const routeColorInput = $('route-color');
+  const waypointColorInput = $('waypoint-color');
+
+  function applyRouteAndWaypointColors() {
+    if (!map) return;
+    try {
+      if (map.getLayer(routeLayerId)) map.setPaintProperty(routeLayerId, 'line-color', routeColor);
+      if (map.getLayer('waypoints-circles')) map.setPaintProperty('waypoints-circles', 'circle-color', waypointColor);
+    } catch (e) {}
+  }
 
   function initMap() {
     map = new maplibregl.Map({
@@ -69,7 +87,7 @@
         source: markersSourceId,
         paint: {
           'circle-radius': 10,
-          'circle-color': '#58a6ff',
+          'circle-color': waypointColor,
           'circle-stroke-width': 2,
           'circle-stroke-color': '#fff'
         }
@@ -96,13 +114,45 @@
         source: routeSourceId,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': '#58a6ff',
+          'line-color': routeColor,
           'line-width': 5,
           'line-opacity': 0.9
         }
       });
 
+      // User location point (moves with camera during fly-through, like Google Maps driving)
+      map.addSource('user-location', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      });
+      map.addLayer({
+        id: 'user-location-dot',
+        type: 'circle',
+        source: 'user-location',
+        paint: {
+          'circle-radius': 12,
+          'circle-color': '#4285F4',
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#fff'
+        }
+      });
+      map.addLayer({
+        id: 'user-location-heading',
+        type: 'symbol',
+        source: 'user-location',
+        layout: {
+          'text-field': '▶',
+          'text-size': 14,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+          'symbol-placement': 'point',
+          'text-rotate': ['get', 'bearing']
+        },
+        paint: { 'text-color': '#fff' }
+      });
+
       map.on('click', onMapClick);
+      applyRouteAndWaypointColors();
 
       // Hide loading once map has painted and tiles are ready
       const hideLoading = () => {
@@ -121,7 +171,7 @@
   }
 
   function addWaypoint(lng, lat, label = null) {
-    waypoints.push({ lng, lat, label: label || `Waypoint ${waypoints.length + 1}` });
+    waypoints.push({ lng, lat, label: label || `Waypoint ${waypoints.length + 1}`, showInVideo: true });
     updateWaypointsList();
     updateMarkersSource();
     updateComputeButton();
@@ -144,9 +194,37 @@
         const i = parseInt(e.target.dataset.index, 10);
         waypoints.splice(i, 1);
         updateWaypointsList();
+        updateWaypointsVideoList();
         updateMarkersSource();
         updateComputeButton();
         clearRoute();
+      });
+    });
+    updateWaypointsVideoList();
+  }
+
+  function updateWaypointsVideoList() {
+    const container = $('waypoints-video-list');
+    if (!container) return;
+    if (waypoints.length === 0) {
+      container.innerHTML = '<p class="waypoints-video-empty">Add waypoints above, then tick which to show in the video.</p>';
+      return;
+    }
+    container.innerHTML = waypoints
+      .map((w, i) => {
+        const shortLabel = (w.label || `Waypoint ${i + 1}`).slice(0, 50);
+        return `
+          <label class="waypoint-video-row">
+            <input type="checkbox" class="waypoint-in-video-cb" data-index="${i}" ${w.showInVideo !== false ? 'checked' : ''} />
+            <span class="waypoint-video-row-label">${escapeHtml(shortLabel)}${(w.label && w.label.length > 50) ? '…' : ''}</span>
+          </label>
+        `;
+      })
+      .join('');
+    container.querySelectorAll('.waypoint-in-video-cb').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const i = parseInt(e.target.dataset.index, 10);
+        if (waypoints[i]) waypoints[i].showInVideo = e.target.checked;
       });
     });
   }
@@ -170,6 +248,34 @@
     });
   }
 
+  function updateMarkersSourceForVideo() {
+    if (!map || !map.getSource(markersSourceId)) return;
+    const showAll = showWaypointsInVideoCb && showWaypointsInVideoCb.checked;
+    const features = showAll
+      ? waypoints
+          .filter((w) => w.showInVideo !== false)
+          .map((w, idx) => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [w.lng, w.lat] },
+            properties: { number: String(idx + 1) }
+          }))
+      : [];
+    map.getSource(markersSourceId).setData({
+      type: 'FeatureCollection',
+      features
+    });
+  }
+
+  function restoreMarkersSource() {
+    if (!map || !map.getSource(markersSourceId)) return;
+    if (savedMarkersData) {
+      map.getSource(markersSourceId).setData(savedMarkersData);
+      savedMarkersData = null;
+    } else {
+      updateMarkersSource();
+    }
+  }
+
   function updateComputeButton() {
     computeRouteBtn.disabled = waypoints.length < 2;
   }
@@ -191,7 +297,10 @@
       limit: '1'
     });
     const res = await fetch(`${NOMINATIM_BASE}?${params}`, {
-      headers: { Accept: 'application/json' }
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'RouteViewer/1.0 (https://github.com; geocoding for route planning)'
+      }
     });
     const data = await res.json();
     if (!data || data.length === 0) return null;
@@ -349,6 +458,100 @@
     return routeGeoJSON.geometry.coordinates;
   }
 
+  function setUserLocationPoint(lng, lat, bearing) {
+    if (!map || !map.getSource('user-location')) return;
+    map.getSource('user-location').setData({
+      type: 'FeatureCollection',
+      features: [{
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [lng, lat] },
+        properties: { bearing: bearing ?? 0 }
+      }]
+    });
+  }
+
+  function clearUserLocationPoint() {
+    if (!map || !map.getSource('user-location')) return;
+    map.getSource('user-location').setData({ type: 'FeatureCollection', features: [] });
+  }
+
+  function showEndScreen() {
+    if (endScreenDriving) {
+      endScreenDriving.textContent = drivingStats
+        ? `${formatDuration(drivingStats.duration)} · ${formatDistance(drivingStats.distance)}`
+        : '—';
+    }
+    if (endScreenWalking) {
+      endScreenWalking.textContent = walkingStats
+        ? `${formatDuration(walkingStats.duration)} · ${formatDistance(walkingStats.distance)}`
+        : '—';
+    }
+    if (endScreenEl) endScreenEl.classList.remove('hidden');
+  }
+
+  function hideEndScreen() {
+    if (endScreenEl) endScreenEl.classList.add('hidden');
+  }
+
+  function getEndScreenText() {
+    const driving = drivingStats
+      ? `${formatDuration(drivingStats.duration)} · ${formatDistance(drivingStats.distance)}`
+      : '—';
+    const walking = walkingStats
+      ? `${formatDuration(walkingStats.duration)} · ${formatDistance(walkingStats.distance)}`
+      : '—';
+    return { driving, walking };
+  }
+
+  function drawEndScreenOnCanvas(ctx, w, h, drivingText, walkingText) {
+    const pad = 40;
+    const cardW = Math.min(400, w - pad * 2);
+    const cardH = 180;
+    const cardX = (w - cardW) / 2;
+    const cardY = (h - cardH) / 2;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#1a2332';
+    ctx.strokeStyle = '#2d3a4d';
+    ctx.lineWidth = 1;
+    roundRect(ctx, cardX, cardY, cardW, cardH, 10);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#e6edf3';
+    ctx.font = '600 22px "DM Sans", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Route complete', w / 2, cardY + 36);
+    ctx.font = '400 16px "DM Sans", system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    const labelX = cardX + 24;
+    const row1Y = cardY + 72;
+    const row2Y = cardY + 102;
+    ctx.fillStyle = '#8b9cb3';
+    ctx.fillText('Driving', labelX, row1Y);
+    ctx.fillStyle = '#e6edf3';
+    const drivingLabelW = ctx.measureText('Driving').width;
+    ctx.fillText(drivingText, labelX + drivingLabelW + 10, row1Y);
+    ctx.fillStyle = '#8b9cb3';
+    ctx.fillText('Walking', labelX, row2Y);
+    ctx.fillStyle = '#e6edf3';
+    const walkingLabelW = ctx.measureText('Walking').width;
+    ctx.fillText(walkingText, labelX + walkingLabelW + 10, row2Y);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
   function segmentLengthMeters(a, b) {
     if (!Array.isArray(a) || !Array.isArray(b) || a.length < 2 || b.length < 2) return 0;
     return getDistanceFromLatLonInKm(a[1], a[0], b[1], b[0]) * 1000;
@@ -395,6 +598,14 @@
 
     return new Promise((resolve) => {
       const start = performance.now();
+      const firstPos = positionAtDistance(coords, cumDist, 0);
+      const firstBearing = totalDistM > 0
+        ? (Math.atan2(
+            (coords[1][0] - firstPos[0]) * Math.cos((firstPos[1] * Math.PI) / 180),
+            coords[1][1] - firstPos[1]
+          ) * 180) / Math.PI
+        : 0;
+      setUserLocationPoint(firstPos[0], firstPos[1], firstBearing);
 
       function tick(now) {
         const elapsed = now - start;
@@ -423,6 +634,8 @@
         }
         lastBearing = bearing;
 
+        setUserLocationPoint(lngCur, latCur, bearing);
+
         map.easeTo({
           center: [lngCur, latCur],
           bearing,
@@ -437,6 +650,7 @@
         if (t < 1) {
           requestAnimationFrame(tick);
         } else {
+          clearUserLocationPoint();
           resolve();
         }
       }
@@ -511,21 +725,42 @@
     exportVideoBtn.disabled = true;
     exportVideoBtn.textContent = 'Recording…';
 
+    savedMarkersData = {
+      type: 'FeatureCollection',
+      features: waypoints.map((w, i) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [w.lng, w.lat] },
+        properties: { number: String(i + 1) }
+      }))
+    };
+    updateMarkersSourceForVideo();
+
     const speed = videoSpeedInput && !isNaN(parseFloat(videoSpeedInput.value))
       ? Math.max(0.1, Math.min(2, parseFloat(videoSpeedInput.value)))
       : 1;
     const baseDurationMs = 15000;
     const durationMs = Math.round(baseDurationMs / speed);
+    const END_SCREEN_DURATION_MS = 4000;
     lastCaptureTime = 0;
-    captureFrameTo16x9(); // one frame so first captured frame is not black
+    captureFrameTo16x9();
     mediaRecorder.start(100);
 
     animateCameraAlongRoute(durationMs, null, (now) => captureFrameThrottled(now)).then(() => {
-      setTimeout(() => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
+      showEndScreen();
+      const { driving, walking } = getEndScreenText();
+      const endScreenStart = performance.now();
+      function captureEndScreenFrames(now) {
+        const elapsed = now - endScreenStart;
+        if (elapsed >= END_SCREEN_DURATION_MS) {
+          restoreMarkersSource();
+          if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+          return;
         }
-      }, 500);
+        captureFrameTo16x9();
+        drawEndScreenOnCanvas(outCtx, OUT_W, OUT_H, driving, walking);
+        requestAnimationFrame(captureEndScreenFrames);
+      }
+      requestAnimationFrame(captureEndScreenFrames);
     });
   }
 
@@ -573,7 +808,8 @@
         waypoints = data.waypoints.map(w => ({
           lng: w.lng,
           lat: w.lat,
-          label: w.label || `Waypoint`
+          label: w.label || `Waypoint`,
+          showInVideo: w.showInVideo !== false
         }));
         updateWaypointsList();
         updateMarkersSource();
@@ -670,6 +906,27 @@
     exportJsonBtn.addEventListener('click', exportJson);
     importJsonBtn.addEventListener('click', importJson);
     importFileInput.addEventListener('change', handleFileImport);
+    if (endScreenCloseBtn) endScreenCloseBtn.addEventListener('click', hideEndScreen);
+    if (routeColorInput) {
+      routeColorInput.addEventListener('input', () => {
+        routeColor = routeColorInput.value;
+        applyRouteAndWaypointColors();
+      });
+      routeColorInput.addEventListener('change', () => {
+        routeColor = routeColorInput.value;
+        applyRouteAndWaypointColors();
+      });
+    }
+    if (waypointColorInput) {
+      waypointColorInput.addEventListener('input', () => {
+        waypointColor = waypointColorInput.value;
+        applyRouteAndWaypointColors();
+      });
+      waypointColorInput.addEventListener('change', () => {
+        waypointColor = waypointColorInput.value;
+        applyRouteAndWaypointColors();
+      });
+    }
   }
 
   function main() {

@@ -193,6 +193,73 @@ button:disabled {
   color: #fff;
 }
 
+  .waypoints-video-panel .hint {
+  margin-bottom: 0.75rem;
+}
+
+.waypoints-video-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.waypoints-video-toggle input {
+  cursor: pointer;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent);
+}
+
+.waypoints-video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.waypoints-video-empty {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.waypoint-video-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+
+.waypoint-video-row:last-child {
+  border-bottom: none;
+}
+
+.waypoint-video-row input {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.waypoint-video-row-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
+}
+
 .waypoint-actions {
   display: flex;
   gap: 0.5rem;
@@ -284,6 +351,32 @@ button:disabled {
 
 .stat-mode {
   color: var(--text-muted);
+}
+
+.colors-panel .color-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.colors-panel .color-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.colors-panel .color-row input[type="color"] {
+  width: 36px;
+  height: 28px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  cursor: pointer;
 }
 
 #compute-route {
@@ -407,6 +500,64 @@ button:disabled {
 
 #recording-indicator.hidden {
   display: none;
+}
+
+.end-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 15;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.end-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.end-screen-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  min-width: 280px;
+  box-shadow: var(--shadow);
+}
+
+.end-screen-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.end-screen-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.end-screen-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.end-screen-label {
+  color: var(--text-muted);
+}
+
+.end-screen-close {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
 }
 
 /* MapLibre overrides */
