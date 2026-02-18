@@ -46,6 +46,7 @@
   const recordingIndicator = $('recording-indicator');
   const videoSpeedInput = $('video-speed');
   const videoSpeedValue = $('video-speed-value');
+  const videoFormatSelect = $('video-format');
   const mapLoadingEl = $('map-loading');
   const endScreenEl = $('end-screen');
   const endScreenDriving = $('end-screen-driving');
@@ -698,9 +699,21 @@
     }
 
     const stream = outCanvas.captureStream(CAPTURE_FPS);
-    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-      ? 'video/webm;codecs=vp9'
-      : 'video/webm';
+    const wantMp4 = videoFormatSelect && videoFormatSelect.value === 'mp4';
+    const mp4Types = ['video/mp4; codecs=avc1', 'video/mp4'];
+    const webmTypes = ['video/webm;codecs=vp9', 'video/webm'];
+    let mime = 'video/webm';
+    let ext = 'webm';
+    if (wantMp4) {
+      const supported = mp4Types.find((t) => MediaRecorder.isTypeSupported(t));
+      if (supported) {
+        mime = supported;
+        ext = 'mp4';
+      }
+    }
+    if (ext === 'webm') {
+      mime = webmTypes.find((t) => MediaRecorder.isTypeSupported(t)) || webmTypes[1];
+    }
     mediaRecorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4000000 });
     recordedChunks = [];
     mediaRecorder.ondataavailable = (e) => {
@@ -715,7 +728,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `route-${Date.now()}.webm`;
+      a.download = `route-${Date.now()}.${ext}`;
       a.click();
       URL.revokeObjectURL(url);
     };
