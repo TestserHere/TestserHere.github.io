@@ -92,7 +92,7 @@
     { label: 'Tools', href: 'tools/file_transfer.html', color: '#475569', icon: 'fa-screwdriver-wrench' },
     { label: 'Symbol Searcher', href: 'tools/symbol_searcher.html', color: '#64748b', icon: 'fa-magnifying-glass' },
     { label: 'Clipboard Tool', href: 'tools/clipboard_tool.html', color: '#94a3b8', icon: 'fa-paste' },
-    { label: 'System Settings', href: 'system-settings', color: '#6366f1', icon: 'fa-gear' },
+    { label: 'Settings', href: 'settings', color: '#6366f1', icon: 'fa-gear' },
   ];
 
   const MAX_RECENTS = 15;
@@ -270,7 +270,7 @@
   }
   if (spotlightBox) spotlightBox.addEventListener('click', (e) => e.stopPropagation());
 
-  if (settingsBtn) settingsBtn.addEventListener('click', () => openSystemSettingsWindow());
+  if (settingsBtn) settingsBtn.addEventListener('click', () => openSettingsWindow());
 
   function getProjectByHref(href) {
     return PROJECTS.find((p) => p.href === href);
@@ -377,8 +377,8 @@
     updateMenuAppName(titleEl ? titleEl.textContent : 'App');
   }
 
-  function openSystemSettingsWindow() {
-    const title = 'System Settings';
+  function openSettingsWindow() {
+    const title = 'Settings';
     const rect = appWindowsContainer.getBoundingClientRect();
     const w = Math.max(380, Math.min(rect.width - 48, 440));
     const h = Math.max(380, Math.min(rect.height - 24, 480));
@@ -404,7 +404,7 @@
         <span class="app-window-title">${escapeHtml(title)}</span>
       </div>
       <div class="app-window-body settings-body">
-        <form class="settings-form" id="system-settings-form">
+        <form class="settings-form" id="settings-form">
           <div class="settings-form-group">
             <label>Desktop wallpaper</label>
             <div class="wallpaper-picker" id="settings-wallpaper-picker">
@@ -481,8 +481,8 @@
 
   function openInWindow(href, title) {
     if (!href || href === '#') return;
-    if (href === 'system-settings') {
-      openSystemSettingsWindow();
+    if (href === 'settings') {
+      openSettingsWindow();
       return;
     }
     addToRecents(href, title);
@@ -699,7 +699,7 @@
       btn.addEventListener('click', () => {
         const href = btn.getAttribute('data-href');
         const label = btn.getAttribute('data-label');
-        if (href === 'system-settings') openSystemSettingsWindow();
+        if (href === 'settings') openSettingsWindow();
         else openInWindow(href, label);
       });
     });

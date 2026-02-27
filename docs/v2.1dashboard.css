@@ -264,7 +264,7 @@ html, body {
   text-align: center;
 }
 
-/* ——— System Settings ——— */
+/* ——— Settings ——— */
 .settings-overlay {
   position: fixed;
   inset: 0;
@@ -335,7 +335,7 @@ html, body {
   margin: 0;
 }
 
-/* System Settings app window form */
+/* Settings app window form */
 .app-window-body.settings-body {
   padding: 20px;
   overflow: auto;
