@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Home"> -->
+  <title>Home</title>
+  <link rel="icon" type="image/jpg" href="./home_things/home/icons/website1.jpg">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      cursor: url('./cursors/default.png'), auto !important;
+    }
+
+    input[type="text"], textarea {
+      cursor: url('./cursors/textcursor.png'), text !important;
+    }
+
+    a, button {
+      cursor: url('./cursors/handpointing.png'), pointer !important;
+    }
+
+    .help {
+      cursor: url('./cursors/help.png'), help !important;
+    }
+
+    .wait, .loading {
+      cursor: url('./cursors/beachball.png'), wait !important;
+    }
+
+    .progress {
+      cursor: url('./cursors/busy.png'), progress !important;
+    }
+
+    .crosshair {
+      cursor: url('./cursors/cross.png'), crosshair !important;
+    }
+
+    .move {
+      cursor: url('./cursors/move.png'), move !important;
+    }
+
+    .not-allowed, .disabled {
+      cursor: url('./cursors/notallowed.png'), not-allowed !important;
+    }
+
+    .grab {
+      cursor: url('./cursors/handopen.png'), grab !important;
+    }
+
+    .grabbing {
+      cursor: url('./cursors/handgrabbing.png'), grabbing !important;
+    }
+
+    .resize-horizontal {
+      cursor: url('./cursors/resizewesteast.png'), ew-resize !important;
+    }
+
+    .resize-vertical {
+      cursor: url('./cursors/resizenorthsouth.png'), ns-resize !important;
+    }
+
+    .resize-diagonal-1 {
+      cursor: url('./cursors/resizenorthwestsoutheast.png'), nesw-resize !important;
+    }
+
+    .resize-diagonal-2 {
+      cursor: url('./cursors/resizenortheastsouthwest.png'), nwse-resize !important;
+    }
+    
+    #embed-preview-iframe {
+      height:600px;
+    }
+
+
+    /* Button Style */
+    #popupButton {
+      width:80px;
+      height:80px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+    }
+
+    /* Popup Message Style */
+    .popup {
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        color: white;
+        border-radius: 5px;
+        display: none;  /* Hidden by default */
+        font-size: 16px;
+    }
+
+    .popup.show {
+        display: block;  /* Show the popup */
+    }
+
+    svg {
+      display: none;
+    }
+
+    svg.show {
+      display: block;
+    }
+
+  </style>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    tr {
+      height: 65px;
+    }
+
+    td {
+      border: 1;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      font-weight: 400;
+      font-style: normal;
+    }
+
+    iframe {
+    width: 100%;
+    height: calc(100vh - 100px); /* Subtract 100px from the viewport height */
+    border: none;
+    margin-top: 0;
+  }
+  </style>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
+  <script>
+    // Disable right-click
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    function ctrlShiftKey(e, keyCode) {
+      return e.ctrlKey && e.shiftKey && e.keyCode === keyCode.charCodeAt(0);
+    }
+
+    document.onkeydown = (e) => {
+      // Disable F12, Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + U
+      if (
+        event.keyCode === 123 ||
+        ctrlShiftKey(e, 'I') ||
+        ctrlShiftKey(e, 'J') ||
+        ctrlShiftKey(e, 'C') ||
+        (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0))
+      )
+        return false;
+    };
+
+    function changeTheme(theme) {
+      const navbar = document.getElementById('navbar');
+
+      // Reset classes on navbar
+      navbar.className = 'navbar navbar-expand-lg';
+
+      // Apply the selected theme
+      if (theme === 'light') {
+          navbar.classList.add('navbar-light');
+          navbar.setAttribute('data-bs-theme', 'light');
+          document.getElementById("navbar").style.backgroundColor = "white";
+          document.getElementById("image").src = "home_things/home/icons/icon3.png";
+          document.getElementById("popupButton").style.backgroundColor = "#007bff";
+          const iframe = document.getElementById('contentIframe');
+          iframe.contentWindow.postMessage('toggle-white-theme', '*');
+
+
+      } else if (theme === 'dark') {
+          navbar.classList.add('navbar-dark');
+          navbar.setAttribute('data-bs-theme', 'dark');
+          document.getElementById("navbar").style.backgroundColor = "black";
+          document.getElementById("image").src = "home_things/home/icons/icon1.png";
+          document.getElementById("popupButton").style.backgroundColor = "black";
+          
+          const iframe = document.getElementById('contentIframe');
+          iframe.contentWindow.postMessage('toggle-dark-mode', '*');
+
+        
+      } else if (theme === 'blue') {
+          navbar.classList.add('navbar-dark');
+          navbar.setAttribute('data-bs-theme', 'light');
+          document.getElementById("navbar").style.backgroundColor = "rgba(56,136,203,255)";
+          document.getElementById("image").src = "home_things/home/icons/icon2.png";
+          document.getElementById("popupButton").style.backgroundColor = "rgba(56,136,203,255)";
+          const iframe = document.getElementById('contentIframe');
+          iframe.contentWindow.postMessage('toggle-blue-theme', '*');
+
+      }
+    }
+    
+    function search() {
+      console.log("searching!");
+      let keyword = document.getElementById("keyword").value;
+      sessionStorage.setItem("keyword", keyword);
+      document.getElementById("keyword").vaule = "";
+      window.open("/Search/Search.html", "_blank");
+      
+    }
+
+    // Function to extract background from iframe and set it to the navbar
+    function setNavbarBackgroundFromIframe() {
+      const iframe = document.getElementById('contentIframe');
+      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document; // Get iframe document
+      
+      // Ensure iframe document is ready
+      if (iframeDocument) {
+        // Get the background color of the body in the iframe
+        const iframeBackground = getComputedStyle(iframeDocument.body).backgroundColor;
+
+        // Apply this background to the navbar
+        const navbar = document.getElementById('navbar');
+        navbar.style.backgroundColor = iframeBackground;
+      }
+    }
+
+    // Function to extract the background from the iframe and set it as the page background
+    function setPageBackgroundFromIframe() {
+      const iframe = document.getElementById('contentIframe');
+      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document; // Get iframe document
+
+      // Ensure iframe document is ready
+      if (iframeDocument) {
+        // Get the background color or background image from the iframe's body
+        const iframeBackground = getComputedStyle(iframeDocument.body).backgroundColor;
+        const iframeBackgroundImage = getComputedStyle(iframeDocument.body).backgroundImage;
+
+        // Apply the iframe's background color to the body of the parent page
+        document.body.style.backgroundColor = iframeBackground;
+
+        // Apply the iframe's background image to the body of the parent page (if it exists)
+        if (iframeBackgroundImage !== 'none') {
+          document.body.style.backgroundImage = iframeBackgroundImage;
+          document.body.style.backgroundSize = 'cover'; // Optional, for full-size background
+        } else {
+          // If there's no background image in the iframe, remove it from the parent body
+          document.body.style.backgroundImage = '';
+        }
+      }
+    }
+
+  </script>
+<script src="/cursor.js"></script>
+<script>
+  const firebaseConfig = {
+      apiKey: "AIzaSyBJf97-B28IflQfLB3Z3GP09NwFhq00vZI",
+      authDomain: "website-12bdc.firebaseapp.com",
+      projectId: "website-12bdc",
+      storageBucket: "website-12bdc.firebasestorage.app",
+      messagingSenderId: "312912129925",
+      appId: "1:312912129925:web:aab9b997db866bb3e01eec",
+      measurementId: "G-9GT4E8Z0EL"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const analytics = firebase.analytics();
+
+  analytics.logEvent('project_switched', {
+      from: 'Index',
+      to: 'Home'
+  });
+
+  // Generate or get visitor ID
+  const visitorId = localStorage.getItem('visitorId') || crypto.randomUUID();
+  localStorage.setItem('visitorId', visitorId);
+
+  // Log visit start
+  const sessionRef = db.collection("visits").doc(visitorId + "_" + Date.now());
+
+  const sessionData = {
+    visitorId: visitorId,
+    startedAt: new Date().toISOString(),
+    actions: []
+  };
+
+  sessionRef.set(sessionData);
+
+  // Log actions
+  function logAction(action) {
+    sessionRef.update({
+      actions: firebase.firestore.FieldValue.arrayUnion({
+        action: action,
+        time: new Date().toISOString()
+      })
+    });
+  }
+
+  document.getElementById("About").addEventListener("click", () => {
+    logAction("Clicked About");
+  });
+
+  document.getElementById("Home").addEventListener("click", () => {
+    logAction("Clicked Home");
+  });
+
+  document.getElementById("Contact").addEventListener("click", () => {
+    logAction("Clicked Contact");
+  });
+
+  document.getElementById("Projects").addEventListener("click", () => {
+    logAction("Clicked Projects");
+  });
+
+
+  // Track when user leaves
+  window.addEventListener("beforeunload", () => {
+    sessionRef.update({
+      endedAt: new Date().toISOString()
+    });
+  });
+
+
+</script>
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" data-bs-theme="light" id="navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#" data-cursor="block"></a>
+            <img src="home_things/home/icons/icon3.png" alt="logo" width="150" style="margin-left: -30px;" id="image">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item" id="Home" data-cursor="block">
+                    <a class="nav-link active" aria-current="page" href="https://testserhere.github.io">Home</a>
+                </li>
+                <li class="nav-item" id="About" data-cursor="block">
+                    <a class="nav-link active" aria-current="page" onclick="loadPage('about.html')">About</a>
+                </li>
+                <!-- <li class="nav-item" id="Services">
+                    <a class="nav-link active" aria-current="page" href="#">Services</a>
+                </li> -->
+                <li class="nav-item" id="Contact" data-cursor="block">
+                    <a class="nav-link active" aria-current="page" onclick="loadPage('contact.html')">Contact</a>
+                </li>
+
+                <!-- <li class="nav-item" id="AI" data-cursor="block">
+                  <a class="nav-link active" aria-current="page" onclick="loadPage('pickaxe.html')">Testser's Chatbot</a>
+                </li> -->
+
+                <li class="nav-item dropdown" id="projects" data-cursor="block">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Projects
+                    </a>
+                    <ul class="dropdown-menu">
+                    <li><a class="dropdown-item disabled">Projects</a></li>
+                    <li><hr class="dropdown-divider"></li>
+    
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/countingGame.html')">Counting Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/10_seconds.html')">ㅤ10 seconds</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/20_seconds.html')">ㅤ20 seconds</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/30_seconds.html')">ㅤ30 seconds</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('counting_game/1_minute.html')">ㅤ1 minute</a></li>
+                    <li><hr class="dropdown-divider"></li>
+    
+                    <li><a class="dropdown-item disabled" onclick="loadPage('Calculator.html')">Calculator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Elevator.html')">Elevator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Stopwatch.html')">Stopwatch</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Timer.html')">Timer</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Metronome%20(Youtube)/index.html')">Metronome</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('CodingNepal/Translator%20(Youtube)/index.html')">Translator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('CodingNepal/GTN/index.html')">Guess The Number</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('CodingNepal/Text-To-Speech/index.html')">Text to Speech</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('MorseCodeTranslator(AI)/index.html')">Morse Code Translator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Tic_Tac_Toe(Youtube)/index.html')">Tic Tac Toe</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('piano/index.html')">Piano</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('2048/index.html')">2048</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Keyboard_Test/index.html')">Keyboard Test</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('snake_game/index.html')">Snake Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('memory_game/index.html')">Memory Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('pong_game/index.html')">Pong Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('breakout/index.html')">Breakout Game</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('flappy_bird/index.html')">Flappy Bird</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('candy_crush/index.html')">Candy Crush (Computer Only)</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('to-do_list.html')">To-Do List</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('Song_Lyrics/index.html')">Lyrics Searcher</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('qr-code-generator.html')">QR Code Generator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('math_tools/math_tools.html')">Math Tools</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('CodingNepal/analog_clock/index.html')">Analog Clock</a></li>
+                    <li><a class="dropdown-item" onclick="window.open('navigation.html', '_blank')">Testser Map</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('dad_jokes/index.html')">Dad Jokes Generator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('drawing_app/index.html')">Drawing App</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('AppleImageViewer.html')">Apple 360° image viewer (180°)</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('3DImageViewer.html')">3D image Viewer</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('vr_video_player.html')">VR video player</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('music.html')">Music Player</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('weather.html')">Weather App</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('typing_test.html')">Typing Test</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('notes.html')">Notes App</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('password_generator.html')">Password Generator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('pomodoro.html')">Pomodoro Timer</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('unit_converter.html')">Unit Converter</a></li>
+                    <li><a class="dropdown-item" onclick="window.open('/flip_clock/')">Flip Clock</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('/knowledge.html')">Knowledge Explorer</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('webcam_text_detector.html')">Webcam Text Detector</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('tram_tracker.html')">Tram Tracker</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('tag/index.html')">Tag</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('dichotomous_key.html')">Dichotomouse Key Creator</a></li>
+                    <li><a class="dropdown-item" onclick="loadPage('spinner.html')">Spinner <span class="badge bg-warning">NEW!</span></a></li>
+                    <li><a class="dropdown-item disabled" onclick="loadPage('table_assigner.html')">Table Assigner (WIP) <span class="badge bg-warning">NEW!</span></a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" onclick="loadPage('promocode/index.html')">Promo Code</a></li>
+
+                    <!--  <span class="badge bg-warning">NEW!</span>  this adds new sign! -->
+    
+                    </ul>
+                </li>
+    
+                <li class="nav-item dropdown" id="Themes" data-cursor="block">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Change Themes
+                    </a>
+                    <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="changeTheme('light');">Light Theme</a></li>
+                    <li><a class="dropdown-item" onclick="changeTheme('dark');">Dark Theme</a></li>
+                    <li><a class="dropdown-item" onclick="changeTheme('blue');">Blue Theme</a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item dropdown" id="Cursor" data-cursor="block">
+                  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Cursors
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="setCursor('macOS')">macOS Cursor</a></li>
+                    <li><a class="dropdown-item" onclick="setCursor('ipadOS')">ipadOS Cursor</a></li>
+                    <li><a class="dropdown-item" onclick="setCursor('system')">System Cursor</a></li>
+                  </ul>
+                </li>
+    
+                </ul>
+                <form class="d-flex" role="search" onsubmit="event.preventDefault()">
+                <input class="form-control me-2" type="search" placeholder="Search On Google..." aria-label="Search" id="keyword" autocomplete="off" data-cursor="text">
+                <button class="btn btn-success" onclick="search();" id="Search" data-cursor="block">Search</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- <div id="chatbot-container">
+      <iframe
+        src="https://www.chatbase.co/chatbot-iframe/4W5mAo_yZTVK2Dz_UDiXE"
+        id="chatbot-iframe"
+        frameborder="0">
+      </iframe>
+    </div>
+    
+    <style>
+      /* Container for the chatbot iframe */
+      #chatbot-container {
+        position: fixed; /* Makes the window stay in place while scrolling */
+        bottom: 20px;    /* Distance from the bottom of the page */
+        right: 20px;     /* Distance from the right of the page */
+        width: 350px;    /* Width of the floating window */
+        height: 500px;   /* Height of the floating window */
+        z-index: 1000;   /* Ensures it appears above other elements */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds shadow for better visibility */
+        border-radius: 10px; /* Rounded corners */
+        overflow: hidden;    /* Prevents content overflow */
+        background-color: white; /* Background color (optional) */
+      }
+    
+      /* Styling the iframe itself */
+      #chatbot-iframe {
+        width: 100%;  /* Full width of the container */
+        height: 100%; /* Full height of the container */
+      }
+    </style>
+     -->
+
+    <!-- <script>
+      window.embeddedChatbotConfig = {
+      chatbotId: "4W5mAo_yZTVK2Dz_UDiXE",
+      domain: "www.chatbase.co"
+      }
+      </script>
+      <script
+      src="https://www.chatbase.co/embed.min.js"
+      chatbotId="4W5mAo_yZTVK2Dz_UDiXE"
+      domain="www.chatbase.co"
+      defer>
+      </script> -->
+  <!-- Iframe to Load Pages Dynamically -->
+
+    
+
+  <iframe id="contentIframe" src="home_things/home.html" title="Content" name="content" style="width:device-width;"></iframe>
+
+  <!-- Button
+  <button id="popupButton">
+    <svg id="chatIcon" class="show" width="40" height="40" viewBox="0 0 1120 1120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M252 434C252 372.144 302.144 322 364 322H770C831.856 322 882 372.144 882 434V614.459L804.595 585.816C802.551 585.06 800.94 583.449 800.184 581.405L763.003 480.924C760.597 474.424 751.403 474.424 748.997 480.924L711.816 581.405C711.06 583.449 709.449 585.06 707.405 585.816L606.924 622.997C600.424 625.403 600.424 634.597 606.924 637.003L707.405 674.184C709.449 674.94 711.06 676.551 711.816 678.595L740.459 756H629.927C629.648 756.476 629.337 756.945 628.993 757.404L578.197 825.082C572.597 832.543 561.403 832.543 555.803 825.082L505.007 757.404C504.663 756.945 504.352 756.476 504.073 756H364C302.144 756 252 705.856 252 644V434ZM633.501 471.462C632.299 468.212 627.701 468.212 626.499 471.462L619.252 491.046C618.874 492.068 618.068 492.874 617.046 493.252L597.462 500.499C594.212 501.701 594.212 506.299 597.462 507.501L617.046 514.748C618.068 515.126 618.874 515.932 619.252 516.954L626.499 536.538C627.701 539.788 632.299 539.788 633.501 536.538L640.748 516.954C641.126 515.932 641.932 515.126 642.954 514.748L662.538 507.501C665.788 506.299 665.788 501.701 662.538 500.499L642.954 493.252C641.932 492.874 641.126 492.068 640.748 491.046L633.501 471.462Z" fill="white"></path>
+      <path d="M771.545 755.99C832.175 755.17 881.17 706.175 881.99 645.545L804.595 674.184C802.551 674.94 800.94 676.551 800.184 678.595L771.545 755.99Z" fill="white"></path>
+    </svg>
+
+    <svg id="closeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.3" stroke="white" width="40" height="40">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+    </svg>
+  </button> -->
+
+  <!-- <div id="popupMessage" class="popup">
+    <iframe id="embed-preview-iframe" loading="eager" src="https://embed.pickaxeproject.com/axe?id=Testsers_Chatbot_PQ7NP&mode=embed_gold&host=beta&theme=light&opacity=100&font_header=Real+Head+Pro&size_header=30&font_body=Real+Head+Pro&size_body=16&font_labels=Real+Head+Pro&size_labels=14&font_button=Real+Head+Pro&size_button=16&c_fb=FFFFFF&c_ff=FFFFFF&c_fbd=888888&c_rb=FFFFFF&c_bb=228DD7&c_bt=FFFFFF&c_t=000000&s_ffo=100&s_rbo=100&s_bbo=100&s_f=minimalist&s_b=filled&s_t=1&s_to=1&s_r=2" width="100%" height="500px" class="transition hover:translate-y-[-2px] hover:shadow-[0_6px_20px_0px_rgba(0,0,0,0.15)]" style="border:1px solid rgba(0, 0, 0, 1);transition:.3s;border-radius:4px;max-width:900px" frameBorder="0"></iframe>
+  </div> -->
+
+
+  <!-- Bootstrap JS (for dropdown functionality) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function loadPage(page) {
+      // Change the iframe's src attribute to load the selected page
+      document.getElementById('contentIframe').src = page;
+    }
+
+            // Get the button and popup elements
+            const button = document.getElementById('popupButton');
+        const popup = document.getElementById('popupMessage');
+        const chatIcon = document.getElementById('chatIcon');
+        const closeIcon = document.getElementById('closeIcon');
+
+        // Add click event to the button
+        button.addEventListener('click', function() {
+            // Show the popup message
+            popup.classList.toggle('show');
+            chatIcon.classList.toggle('show');
+            closeIcon.classList.toggle('show');
+        });
+  </script>
+
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL'); 
+  </script>
+</body>
+</html>
