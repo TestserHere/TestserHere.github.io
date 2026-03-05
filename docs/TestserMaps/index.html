@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-contrast="" data-text-size="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TestserMaps">
+  <meta name="theme-color" content="#4285f4">
+  <meta name="description" content="Free, open-source navigation app with turn-by-turn directions and voice guidance.">
+  <title>TestserMaps</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+</head>
+<body>
+
+  <!-- Loading bar -->
+  <div id="loading-bar" class="loading-bar" role="progressbar" aria-label="Loading"></div>
+
+  <!-- ====== MAP ====== -->
+  <div id="map" role="application" aria-label="Interactive map"></div>
+
+  <!-- ====== SEARCH BAR ====== -->
+  <div id="search-container" class="search-container" role="search" aria-label="Search places">
+    <div class="search-box">
+      <button id="btn-search" class="btn-icon" aria-label="Search">
+        &#x1F50D;
+      </button>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Search places..."
+        autocomplete="off"
+        aria-label="Search for a place or address"
+      >
+      <button id="btn-clear-search" class="btn-icon" aria-label="Clear search">
+        &#x2715;
+      </button>
+      <button id="btn-settings" class="btn-icon" aria-label="Settings">
+        &#x2699;
+      </button>
+    </div>
+    <div id="search-results" class="search-results" role="listbox" aria-label="Search results"></div>
+  </div>
+
+  <!-- ====== ROUTE PLANNING ====== -->
+  <div id="route-planning" class="route-planning" aria-label="Route planning">
+    <div class="route-inputs">
+      <div class="route-input-row">
+        <div class="dot origin" aria-hidden="true"></div>
+        <input
+          id="input-origin"
+          type="text"
+          placeholder="Starting point (or My Location)"
+          autocomplete="off"
+          aria-label="Starting point"
+        >
+        <button id="btn-pin-origin" class="btn-pin" aria-label="Pick starting point on map" title="Pick on map">
+          &#x1F4CC;
+        </button>
+        <button id="btn-close-route" class="route-close-btn" aria-label="Close route planning">
+          &#x2715;
+        </button>
+      </div>
+      <div class="route-input-divider" aria-hidden="true"></div>
+      <div class="route-input-row">
+        <div class="dot destination" aria-hidden="true"></div>
+        <input
+          id="input-destination"
+          type="text"
+          placeholder="Destination"
+          autocomplete="off"
+          aria-label="Destination"
+        >
+        <button id="btn-pin-destination" class="btn-pin" aria-label="Pick destination on map" title="Pick on map">
+          &#x1F4CC;
+        </button>
+      </div>
+    </div>
+
+    <!-- Travel mode selector -->
+    <div class="travel-modes" role="radiogroup" aria-label="Travel mode">
+      <button class="travel-mode-btn active" data-mode="driving" role="radio" aria-checked="true" aria-label="Driving">
+        <span class="mode-icon">&#x1F697;</span> Drive
+      </button>
+      <button class="travel-mode-btn" data-mode="walking" role="radio" aria-checked="false" aria-label="Walking">
+        <span class="mode-icon">&#x1F6B6;</span> Walk
+      </button>
+      <button class="travel-mode-btn" data-mode="cycling" role="radio" aria-checked="false" aria-label="Cycling">
+        <span class="mode-icon">&#x1F6B2;</span> Bike
+      </button>
+    </div>
+
+    <!-- Route summary (shown after route calculated) -->
+    <div id="route-summary" class="route-summary" aria-label="Route summary">
+      <div>
+        <div id="summary-time" class="summary-time">--</div>
+        <div id="summary-distance" class="summary-distance">--</div>
+      </div>
+      <button id="btn-start-nav" class="btn-start-nav" aria-label="Start navigation">
+        &#x25B6; Start
+      </button>
+    </div>
+  </div>
+
+  <!-- ====== PLACE CARD ====== -->
+  <div id="place-card" class="place-card" aria-label="Place details">
+    <div id="place-name" class="place-name"></div>
+    <div id="place-address" class="place-address"></div>
+    <div class="place-card-actions">
+      <button id="btn-directions" class="btn btn-primary" aria-label="Get directions">
+        &#x27A1;&#xFE0F; Directions
+      </button>
+      <button id="btn-close-place" class="btn btn-secondary" aria-label="Close">
+        &#x2715; Close
+      </button>
+    </div>
+  </div>
+
+  <!-- ====== BOTTOM SHEET (Directions List) ====== -->
+  <div id="bottom-sheet" class="bottom-sheet" role="complementary" aria-label="Directions">
+    <div id="bottom-sheet-handle" class="bottom-sheet-handle" role="button" tabindex="0" aria-label="Toggle directions panel">
+      <span class="handle-bar" aria-hidden="true"></span>
+      <span class="bottom-sheet-toggle-label">&#x25B2; Show Directions</span>
+      <span id="bottom-sheet-toggle-icon" class="bottom-sheet-toggle-icon">&#x25BC;</span>
+    </div>
+    <div class="bottom-sheet-content">
+      <div id="directions-list" role="list" aria-label="Step by step directions"></div>
+    </div>
+  </div>
+
+  <!-- ====== NAVIGATION BANNER ====== -->
+  <div id="nav-banner" class="nav-banner" role="status" aria-live="polite" aria-label="Next maneuver">
+    <div class="nav-banner-top">
+      <span id="nav-dist-to-turn" class="distance-to-turn">--</span>
+      <span id="nav-turn-icon" class="turn-icon" aria-hidden="true"></span>
+    </div>
+    <div id="nav-turn-instruction" class="turn-instruction">--</div>
+    <div id="nav-street-name" class="street-name"></div>
+  </div>
+
+  <!-- ====== NAVIGATION BOTTOM BAR ====== -->
+  <div id="nav-bottom-bar" class="nav-bottom-bar" aria-label="Navigation controls">
+    <div class="nav-eta">
+      <div id="nav-eta-time" class="eta-time">--</div>
+      <div id="nav-eta-distance" class="eta-distance">--</div>
+    </div>
+    <button id="btn-nav-voice" class="nav-voice-btn" aria-label="Toggle voice">
+      &#x1F50A;
+    </button>
+    <button id="btn-end-nav" class="btn-end-nav" aria-label="End navigation">
+      End
+    </button>
+  </div>
+
+  <!-- ====== PIN MODE BANNER ====== -->
+  <div id="pin-mode-banner" class="pin-mode-banner" role="status" aria-live="polite">
+    Tap the map to set your point
+  </div>
+
+  <!-- ====== REROUTING BANNER ====== -->
+  <div id="rerouting-banner" class="rerouting-banner" role="alert">
+    <div class="rerouting-spinner" aria-hidden="true"></div>
+    Recalculating...
+  </div>
+
+  <!-- ====== MAP CONTROLS ====== -->
+  <div class="map-controls">
+    <button id="btn-my-location" class="map-control-btn" aria-label="Go to my location">
+      &#x1F4CD;
+    </button>
+    <button id="btn-zoom-in" class="map-control-btn" aria-label="Zoom in">
+      +
+    </button>
+    <button id="btn-zoom-out" class="map-control-btn" aria-label="Zoom out">
+      &minus;
+    </button>
+  </div>
+
+  <!-- ====== SETTINGS PANEL ====== -->
+  <div id="settings-overlay" class="settings-overlay" role="dialog" aria-modal="true" aria-label="Settings">
+    <div id="settings-panel" class="settings-panel">
+      <div class="settings-title">
+        Settings
+        <button id="btn-close-settings" class="btn-icon" aria-label="Close settings">&#x2715;</button>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-group">
+        <div class="settings-group-title">Appearance</div>
+        <div class="settings-row">
+          <span class="settings-label">Dark Mode</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-dark-mode">
+            <span class="toggle-slider" aria-hidden="true"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Voice -->
+      <div class="settings-group">
+        <div class="settings-group-title">Voice Navigation</div>
+        <div class="settings-row">
+          <span class="settings-label">Voice Enabled</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-voice" checked>
+            <span class="toggle-slider" aria-hidden="true"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Voice</span>
+          <select id="voice-select" class="voice-select" aria-label="Select voice">
+            <option>Default</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Accessibility -->
+      <div class="settings-group">
+        <div class="settings-group-title">Accessibility</div>
+        <div class="settings-row">
+          <span class="settings-label">High Contrast</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-high-contrast">
+            <span class="toggle-slider" aria-hidden="true"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">Large Text</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-large-text">
+            <span class="toggle-slider" aria-hidden="true"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="settings-group">
+        <div class="settings-group-title">About</div>
+        <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="settings-label">TestserMaps v1.0</span>
+          <span style="font-size:var(--font-sm);color:var(--text-muted);">
+            Open-source navigation &middot; No API keys &middot; No tracking
+          </span>
+          <span style="font-size:var(--font-sm);color:var(--text-muted);">
+            Powered by OpenStreetMap, Nominatim &amp; OSRM
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== TOAST CONTAINER ====== -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ====== App Scripts (ES Modules) ====== -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>

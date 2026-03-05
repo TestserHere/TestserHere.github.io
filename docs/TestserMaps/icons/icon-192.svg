@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4285f4"/>
+      <stop offset="100%" stop-color="#2962ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#bg)"/>
+  <!-- Compass rose / navigation arrow -->
+  <g transform="translate(96,90)">
+    <!-- North arrow (white) -->
+    <polygon points="0,-52 18,10 0,-5 -18,10" fill="#ffffff" opacity="0.95"/>
+    <!-- South arrow (light blue) -->
+    <polygon points="0,52 18,-10 0,5 -18,-10" fill="#ffffff" opacity="0.4"/>
+  </g>
+  <!-- Center dot -->
+  <circle cx="96" cy="90" r="8" fill="#ffffff"/>
+  <!-- Small location pin at bottom -->
+  <g transform="translate(96,150)">
+    <circle cx="0" cy="0" r="5" fill="#ffffff" opacity="0.7"/>
+  </g>
+</svg>

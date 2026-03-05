@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4285f4"/>
+      <stop offset="100%" stop-color="#2962ff"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <!-- Compass rose / navigation arrow -->
+  <g transform="translate(256,240)" filter="url(#shadow)">
+    <!-- North arrow (white) -->
+    <polygon points="0,-140 48,28 0,-14 -48,28" fill="#ffffff" opacity="0.95"/>
+    <!-- South arrow (light blue) -->
+    <polygon points="0,140 48,-28 0,14 -48,-28" fill="#ffffff" opacity="0.4"/>
+  </g>
+  <!-- Center dot -->
+  <circle cx="256" cy="240" r="20" fill="#ffffff"/>
+  <!-- Location indicator -->
+  <g transform="translate(256,400)">
+    <circle cx="0" cy="0" r="12" fill="#ffffff" opacity="0.7"/>
+    <circle cx="0" cy="0" r="6" fill="url(#bg)"/>
+  </g>
+</svg>
