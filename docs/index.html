@@ -2,155 +2,239 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Dashboard — Mac</title>
-  <link rel="stylesheet" href="v2.1dashboard.css">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Testser's coding projects, games and tools, all on one page.">
+  <title>Testser</title>
+  <link rel="icon" type="image/jpeg" href="home_things/home/icons/website1.jpg">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3home.css">
 </head>
 <body>
-  <div id="mac-simulator">
-    <!-- Menu bar -->
-    <header class="menu-bar">
-      <div class="menu-bar-left">
-        <button class="apple-logo" aria-label="Apple menu">&#63743;</button>
-        <nav class="menu-items">
-          <span class="menu-app-name" id="menu-app-name">Dashboard</span>
-          <a href="#" class="menu-item" data-menu="file">File</a>
-          <a href="#" class="menu-item" data-menu="edit">Edit</a>
-          <a href="#" class="menu-item" data-menu="view">View</a>
-          <a href="#" class="menu-item" data-menu="go">Go</a>
-          <a href="#" class="menu-item" data-menu="window">Window</a>
-          <a href="#" class="menu-item" data-menu="help">Help</a>
-        </nav>
+  <nav class="nav" aria-label="Main">
+    <div class="wrap nav-inner">
+      <a class="nav-brand" href="#top">Testser</a>
+      <div class="nav-links">
+        <a href="#projects">Projects</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="version_history.html">History</a>
       </div>
-      <div class="menu-bar-right">
-        <button type="button" class="menu-bar-icon spotlight-btn" id="spotlight-btn" aria-label="Spotlight Search"><i class="fa-solid fa-magnifying-glass"></i></button>
-        <span class="menu-weather" id="menu-weather" title="Weather"><i class="fa-solid fa-cloud-sun"></i> <span id="menu-weather-text">—°</span></span>
-        <button type="button" class="menu-bar-icon settings-btn" id="settings-btn" aria-label="Settings"><i class="fa-solid fa-gear"></i></button>
-        <span class="menu-date" id="menu-date">—</span>
-        <span class="menu-time" id="menu-time">--:--</span>
+    </div>
+  </nav>
+
+  <main id="top">
+    <header class="hero" id="hero">
+      <div class="wrap hero-inner">
+        <p class="hero-version">Version 3</p>
+        <h1>Welcome to the world of coding.</h1>
+        <p class="hero-sub">This is testserhere.github.io, where I will have updates and cool projects presented to you.</p>
+        <div class="hero-cta">
+          <a class="pill pill-primary" href="dont_say_it_out/index.html" data-open="dont_say_it_out/index.html" data-label="Don't Say It Out">Play Don't Say It Out</a>
+          <a class="link-more link-on-dark" href="#about">Find out more <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+        <p class="hero-status">
+          <span id="status-date">—</span>
+          <span id="status-time">--:--</span>
+          <span id="status-weather"><i class="fa-solid fa-cloud-sun"></i> <span id="status-weather-text">—°</span></span>
+        </p>
       </div>
     </header>
 
-    <!-- Spotlight overlay -->
-    <div class="spotlight-overlay" id="spotlight-overlay" aria-hidden="true">
-      <div class="spotlight-box" id="spotlight-box">
-        <div class="spotlight-input-wrap">
-          <i class="fa-solid fa-magnifying-glass spotlight-input-icon"></i>
-          <input type="text" class="spotlight-input" id="spotlight-input" placeholder="Search apps and pages..." autocomplete="off" />
+    <section class="section" id="projects" aria-labelledby="notable-title">
+      <div class="wrap">
+        <h2 class="section-title" id="notable-title">Projects.</h2>
+        <div class="bento">
+          <a class="bento-tile bento-main" style="--c:#ef4444" href="dont_say_it_out/index.html" data-open="dont_say_it_out/index.html" data-label="Don't Say It Out">
+            <span class="bento-tag">New game</span>
+            <strong>Don't Say It Out</strong>
+            <span class="bento-text">Describe the word. Just don't say the forbidden ones.</span>
+            <i class="fa-solid fa-comment-slash bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile bento-wide" style="--c:#2563eb" href="toolkit/index.html" data-open="toolkit/index.html" data-label="Toolkit">
+            <span class="bento-tag">Tools</span>
+            <strong>Toolkit</strong>
+            <span class="bento-text">Clock, stopwatch, timer and calculator.</span>
+            <i class="fa-solid fa-toolbox bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile bento-wide" style="--c:#16a34a" href="class_toolkit/index.html" data-open="class_toolkit/index.html" data-label="Class Toolkit">
+            <span class="bento-tag">For teachers</span>
+            <strong>Class Toolkit</strong>
+            <span class="bento-text">Pick names, make groups and plan seats.</span>
+            <i class="fa-solid fa-chalkboard-user bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#ea580c" href="make_24/index.html" data-open="make_24/index.html" data-label="Make 24">
+            <span class="bento-tag">Number game</span>
+            <strong>Make 24</strong>
+            <i class="fa-solid fa-hashtag bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#7c3aed" href="perfect_second/index.html" data-open="perfect_second/index.html" data-label="Perfect Second">
+            <span class="bento-tag">Timing game</span>
+            <strong>Perfect Second</strong>
+            <i class="fa-solid fa-stopwatch bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#0d9488" href="zones/index.html" data-open="zones/index.html" data-label="Zones">
+            <span class="bento-tag">Logic game</span>
+            <strong>Zones</strong>
+            <i class="fa-solid fa-border-all bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#4f46e5" href="sudoku/index.html" data-open="sudoku/index.html" data-label="Sudoku">
+            <span class="bento-tag">Logic game</span>
+            <strong>Sudoku</strong>
+            <i class="fa-solid fa-table-cells bento-art" aria-hidden="true"></i>
+          </a>
+          <a hidden class="bento-tile" style="--c:#16a34a" href="RouteViewer/index.html" data-open="RouteViewer/index.html" data-label="Route Viewer">
+            <span class="bento-tag">Maps</span>
+            <strong>Route Viewer</strong>
+            <i class="fa-solid fa-route bento-art" aria-hidden="true"></i>
+          </a>
+          <a hidden class="bento-tile" style="--c:#2563eb" href="navigation.html" data-open="navigation.html" data-label="Testser Map">
+            <span class="bento-tag">Maps</span>
+            <strong>Testser Map</strong>
+            <i class="fa-solid fa-map-location-dot bento-art" aria-hidden="true"></i>
+          </a>
+          <a hidden class="bento-tile" style="--c:#8b5cf6" href="video_call/index.html" data-open="video_call/index.html" data-label="Video Call">
+            <span class="bento-tag">Video</span>
+            <strong>Video Call</strong>
+            <i class="fa-solid fa-video bento-art" aria-hidden="true"></i>
+          </a>
+          <a hidden class="bento-tile" style="--c:#f43f5e" href="speedometer/index.html" data-open="speedometer/index.html" data-label="Speedometer">
+            <span class="bento-tag">Tools</span>
+            <strong>Speedometer</strong>
+            <i class="fa-solid fa-gauge-high bento-art" aria-hidden="true"></i>
+          </a>
         </div>
-        <div class="spotlight-results" id="spotlight-results"></div>
       </div>
+    </section>
+
+    <section class="section section-alt" id="recents" aria-labelledby="recents-title" hidden>
+      <div class="wrap">
+        <div class="section-head">
+          <h2 class="section-title" id="recents-title">Recents.</h2>
+          <button type="button" class="text-btn" id="recents-clear">Clear</button>
+        </div>
+        <div class="tiles" id="recents-grid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="all-projects" aria-labelledby="projects-title" hidden>
+      <div class="wrap">
+        <h2 class="section-title" id="projects-title">Every project. One page.</h2>
+        <p class="section-sub"><span id="project-count">All</span> games, tools and experiments. Pick one and it opens right here.</p>
+        <div class="filters" id="filters" role="group" aria-label="Filter projects"></div>
+        <div class="tiles" id="projects-grid"></div>
+      </div>
+    </section>
+
+    <section class="section section-alt" aria-labelledby="highlights-title" hidden>
+      <div class="wrap">
+        <h2 class="section-title" id="highlights-title">A closer look.</h2>
+      </div>
+      <div class="gallery">
+        <a class="shot" href="counting_game/1_minute.html" data-open="counting_game/1_minute.html" data-label="1 Minute Challenge">
+          <img src="home_things/home/img/1_Minute_Challenge.png" alt="Screenshot of 1 Minute Challenge" loading="lazy">
+          <span><small>Games</small>1 Minute Challenge</span>
+        </a>
+        <a class="shot" href="Stopwatch.html" data-open="Stopwatch.html" data-label="Stopwatch">
+          <img src="home_things/home/img/Stopwatch.png" alt="Screenshot of Stopwatch" loading="lazy">
+          <span><small>Tools</small>Stopwatch</span>
+        </a>
+        <a class="shot" href="Elevator.html" data-open="Elevator.html" data-label="Elevator">
+          <img src="home_things/home/img/Elevator.png" alt="Screenshot of Elevator" loading="lazy">
+          <span><small>Games</small>Elevator</span>
+        </a>
+        <a class="shot" href="Keyboard_Test/index.html" data-open="Keyboard_Test/index.html" data-label="Keyboard Test">
+          <img src="home_things/home/img/Keyboard_Test.png" alt="Screenshot of Keyboard Test" loading="lazy">
+          <span><small>Tools</small>Keyboard Test</span>
+        </a>
+        <a class="shot" href="Timer.html" data-open="Timer.html" data-label="Timer">
+          <img src="home_things/home/img/Timer.png" alt="Screenshot of Timer" loading="lazy">
+          <span><small>Tools</small>Timer</span>
+        </a>
+        <a class="shot" href="Calculator.html" data-open="Calculator.html" data-label="Calculator">
+          <img src="home_things/home/img/Calculator.png" alt="Screenshot of Calculator" loading="lazy">
+          <span><small>Tools</small>Calculator</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section section-center" id="about" aria-labelledby="about-title">
+      <div class="wrap">
+        <h2 class="section-title" id="about-title">I make coding projects.</h2>
+        <p class="section-sub">I can make Javascript, Html, Css, Python, C++ language projects, so please, feel free to make suggestions and feedbacks.</p>
+        <div class="cards">
+          <article class="card">
+            <i class="fa-solid fa-gem" aria-hidden="true"></i>
+            <h3>Sturdy Themes</h3>
+            <p>Themes are from bootstrap and I will try my best to make it look good.</p>
+          </article>
+          <article class="card">
+            <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+            <h3>Up to Date</h3>
+            <p>All projects will be published as soon as possible.</p>
+          </article>
+          <article class="card">
+            <i class="fa-solid fa-globe" aria-hidden="true"></i>
+            <h3>Ready to Publish</h3>
+            <p>When projects are ready, they will be published. So be patient!</p>
+          </article>
+          <article class="card">
+            <i class="fa-solid fa-heart" aria-hidden="true"></i>
+            <h3>Made with Efforts</h3>
+            <p>It's really hard to make a big project in short time!</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-dark section-center" id="contact" aria-labelledby="contact-title">
+      <div class="wrap">
+        <h2 class="section-title" id="contact-title">Let's get in touch.</h2>
+        <p class="section-sub">Do you want some help? Send a message and I will get back to you as soon as possible!</p>
+        <div class="hero-cta">
+          <a class="pill pill-primary" href="contact.html">Contact</a>
+          <a class="link-more link-on-dark" href="about.html">About Us <i class="fa-solid fa-chevron-right"></i></a>
+          <a class="link-more link-on-dark" href="https://github.com/TestserHere/TestserHere.github.io" target="_blank" rel="noopener">Visit my GitHub <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>Copyright &copy; <span id="year">2026</span> testserhere.github.io</span>
+      <a href="version_history.html">Version 3</a>
     </div>
+  </footer>
 
-    <!-- Settings overlay -->
-    <div class="settings-overlay" id="settings-overlay" aria-hidden="true">
-      <div class="settings-panel" id="settings-panel">
-        <div class="settings-titlebar">
-          <h2 class="settings-title">Settings</h2>
-          <button type="button" class="settings-close" id="settings-close" aria-label="Close"><i class="fa-solid fa-times"></i></button>
-        </div>
-        <div class="settings-content">
-          <p class="settings-placeholder">Dashboard preferences and system options.</p>
-        </div>
-      </div>
+  <!-- Project sheet -->
+  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+    <header class="sheet-bar">
+      <a class="sheet-side" id="sheet-newtab" target="_blank" rel="noopener" aria-label="Open in new tab"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+      <h2 id="sheet-title"></h2>
+      <button type="button" class="sheet-side sheet-done" id="sheet-done" autofocus>Done</button>
+    </header>
+    <div class="sheet-frame" id="sheet-frame"></div>
+  </dialog>
+
+  <!-- Version 3 welcome: shown once per visitor -->
+  <dialog class="panel welcome" id="welcome" aria-labelledby="welcome-title">
+    <div class="panel-box">
+      <p class="hero-version">Version 3</p>
+      <h2 id="welcome-title">Testser has a new home.</h2>
+      <ul class="welcome-list">
+        <li><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><div><strong>One simple page</strong><span>The desktop is gone. Everything now lives right here.</span></div></li>
+        <li><i class="fa-solid fa-broom" aria-hidden="true"></i><div><strong>A fresh start</strong><span>The older projects have been tucked away.</span></div></li>
+        <li><i class="fa-solid fa-comment-slash" aria-hidden="true"></i><div><strong>A new party game</strong><span>Try Don't Say It Out with your friends.</span></div></li>
+      </ul>
+      <button type="button" class="pill pill-primary pill-wide" id="welcome-ok" autofocus>Continue</button>
     </div>
+  </dialog>
 
-    <!-- Desktop -->
-    <main class="desktop" id="desktop">
-      <div class="app-windows" id="app-windows" aria-live="polite">
-        <!-- Finder lives here so it shares z-order with app windows -->
-        <!-- Finder-style Projects window -->
-        <div class="finder-window" id="finder-projects" aria-hidden="true">
-          <div class="finder-titlebar">
-            <div class="finder-buttons">
-              <span class="finder-btn close" aria-label="Close"><i class="fa-solid fa-times finder-btn-icon"></i></span>
-              <span class="finder-btn minimize" aria-label="Minimize"><i class="fa-solid fa-minus finder-btn-icon"></i></span>
-              <span class="finder-btn maximize" aria-label="Maximize"><i class="fa-solid fa-expand finder-btn-icon"></i></span>
-            </div>
-            <div class="finder-title">
-              <i class="fa-solid fa-folder finder-icon"></i>
-              Projects
-            </div>
-          </div>
-          <div class="finder-toolbar">
-            <button type="button" class="finder-tool-btn back" disabled>‹</button>
-            <button type="button" class="finder-tool-btn forward" disabled>›</button>
-            <div class="finder-breadcrumb" id="finder-breadcrumb">Projects</div>
-          </div>
-          <div class="finder-content" id="finder-projects-content">
-            <div class="finder-sidebar">
-              <div class="sidebar-section">
-                <div class="sidebar-item sidebar-item-projects selected" data-view="projects"><i class="fa-solid fa-folder sidebar-icon"></i> Projects</div>
-              </div>
-              <div class="sidebar-section">
-                <div class="sidebar-item sidebar-item-recents" data-view="recents"><i class="fa-solid fa-clock-rotate-left sidebar-icon"></i> Recents</div>
-              </div>
-            </div>
-            <div class="finder-main">
-              <div class="finder-grid" id="projects-grid">
-                <!-- Filled by JS -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="desktop-icons" id="desktop-icons">
-        <div class="desktop-icon" data-href="oldindex.html" data-label="Home" data-icon="home">
-          <div class="icon-image"><i class="fa-solid fa-house"></i></div>
-          <span class="icon-label">Home</span>
-        </div>
-        <div class="desktop-icon" data-href="about.html" data-label="About Us" data-icon="about">
-          <div class="icon-image"><i class="fa-solid fa-circle-info"></i></div>
-          <span class="icon-label">About Us</span>
-        </div>
-        <div class="desktop-icon" data-href="contact.html" data-label="Contact" data-icon="contact">
-          <div class="icon-image"><i class="fa-solid fa-envelope"></i></div>
-          <span class="icon-label">Contact</span>
-        </div>
-        <div class="desktop-icon desktop-icon-folder" data-folder="projects" data-label="Projects" data-icon="folder">
-          <div class="icon-image"><i class="fa-solid fa-folder"></i></div>
-          <span class="icon-label">Projects</span>
-        </div>
-        <div class="desktop-icon" data-href="settings" data-label="Settings" data-icon="settings">
-          <div class="icon-image"><i class="fa-solid fa-gear"></i></div>
-          <span class="icon-label">Settings</span>
-        </div>
-      </div>
-    </main>
-
-    <!-- Dock (overlays bottom so windows can extend to screen edge) -->
-    <footer class="dock-wrap">
-      <div class="dock-minimized" id="dock-minimized" aria-label="Minimized windows"></div>
-      <div class="dock" id="dock">
-        <div class="dock-item" data-href="oldindex.html" data-label="Home" data-icon="home">
-          <div class="dock-icon"><i class="fa-solid fa-house"></i></div>
-        </div>
-        <div class="dock-item" data-href="about.html" data-label="About Us" data-icon="about">
-          <div class="dock-icon"><i class="fa-solid fa-circle-info"></i></div>
-        </div>
-        <div class="dock-item" data-href="contact.html" data-label="Contact" data-icon="contact">
-          <div class="dock-icon"><i class="fa-solid fa-envelope"></i></div>
-        </div>
-        <div class="dock-divider"></div>
-        <div class="dock-item dock-item-folder" data-folder="projects" data-label="Projects" data-icon="folder">
-          <div class="dock-icon"><i class="fa-solid fa-folder"></i></div>
-        </div>
-        <div class="dock-item" data-href="settings" data-label="Settings" data-icon="settings">
-          <div class="dock-icon"><i class="fa-solid fa-gear"></i></div>
-        </div>
-        <div class="dock-divider"></div>
-        <div class="dock-item dock-trash" data-label="Trash" data-icon="trash">
-          <div class="dock-icon"><i class="fa-solid fa-trash"></i></div>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <script src="v2.1dashboard.js"></script>
+  <script src="v3home.js"></script>
 </body>
 </html>

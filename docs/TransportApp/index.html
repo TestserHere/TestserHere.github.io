@@ -398,7 +398,7 @@ message Alert { }</script>
     (function () {
       const MODES = { bus: { color: '#FF8200', label: 'Bus' }, tram: { color: '#00A651', label: 'Tram' }, train: { color: '#1E88E5', label: 'Train' } };
       const BASE = 'https://api.opendata.transport.vic.gov.au/opendata/public-transport/gtfs/realtime/v1';
-      const DEFAULT_API_KEY = '94033096-c9ab-47dd-96aa-4da658c40e13';
+      const DEFAULT_API_KEY = ''; // Removed: live vehicle data needs a key kept off the public site.
       const FEED_URLS = {
         bus: [BASE + '/bus/vehicle-positions'],
         tram: [BASE + '/tram/vehicle-positions'],

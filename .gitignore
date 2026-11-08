@@ -21,9 +21,9 @@ Desktop.ini
 *.tmp
 .cache/
 
-# Optional: uncomment if you add Node/npm later
-# node_modules/
-# npm-debug.log*
+# Node/npm
+node_modules/
+npm-debug.log*
 
 # Optional: uncomment if you add env or secrets
 # .env

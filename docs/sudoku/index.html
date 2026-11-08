@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Sudoku</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Sudoku</h1>
+    </header>
+
+    <div class="panel">
+      <div class="segmented" id="level" role="group" aria-label="Difficulty">
+        <button type="button" data-level="easy">Easy</button>
+        <button type="button" data-level="medium">Medium</button>
+        <button type="button" data-level="hard">Hard</button>
+      </div>
+
+      <div class="game-bar">
+        <span class="game-time" id="time" role="timer">0:00</span>
+        <button type="button" class="text-button" id="new-game">New game</button>
+      </div>
+
+      <div class="result-banner" id="win" hidden>
+        <h2>Solved!</h2>
+        <p id="win-text"></p>
+        <button type="button" class="primary" id="win-new">New game</button>
+      </div>
+
+      <div class="board-frame">
+        <div class="sudoku" id="board" role="grid" aria-label="Sudoku board"></div>
+      </div>
+
+      <div class="digit-pad" id="digits" role="group" aria-label="Numbers"></div>
+
+      <div class="tool-row">
+        <button type="button" id="undo">Undo</button>
+        <button type="button" id="erase">Erase</button>
+        <button type="button" id="notes" aria-pressed="false">Notes</button>
+        <button type="button" id="hint">Hint</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="engine.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

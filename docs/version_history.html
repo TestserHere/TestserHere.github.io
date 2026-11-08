@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Version History</title>
+  <link rel="icon" type="image/jpeg" href="home_things/home/icons/website1.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3home.css">
+</head>
+<body>
+  <nav class="nav" aria-label="Main">
+    <div class="wrap nav-inner">
+      <a class="nav-brand" href="index.html">Testser</a>
+      <div class="nav-links">
+        <a href="index.html#projects">Projects</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="version_history.html" aria-current="page">History</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <header class="hero hero-page">
+      <div class="wrap hero-inner">
+        <h1>Version history.</h1>
+        <p class="hero-sub">From one page of buttons to the site you're looking at.</p>
+      </div>
+    </header>
+
+    <section class="section">
+      <ol class="wrap releases">
+        <li class="release">
+          <div class="release-meta">
+            <p class="hero-version">Version 3</p>
+            <time datetime="2026-11">November 2026</time>
+          </div>
+          <div class="release-body">
+            <h2>A fresh start.</h2>
+            <ul>
+              <li>A clean, simple home page replaced the desktop.</li>
+              <li>Older projects were tucked away.</li>
+              <li>A new party game, Don't Say It Out, in English and Chinese.</li>
+              <li>Toolkit, with a clock, stopwatch, timer and calculator.</li>
+              <li>Class Toolkit, for picking names, making groups and planning seats.</li>
+              <li>Four games for one player: Make 24, Perfect Second, Zones and Sudoku.</li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="release">
+          <div class="release-meta">
+            <p class="release-version">Version 2.1</p>
+            <time datetime="2026-02">February 2026</time>
+          </div>
+          <div class="release-body">
+            <h2>The desktop.</h2>
+            <ul>
+              <li>The whole site became a desktop you could use in your browser.</li>
+              <li>A menu bar, a Dock, draggable windows and wallpapers.</li>
+            </ul>
+            <img src="home_things/home/img/mac-gui.png" alt="The Version 2.1 desktop, with a Projects window open above a Dock" loading="lazy">
+          </div>
+        </li>
+
+        <li class="release">
+          <div class="release-meta">
+            <p class="release-version">Version 2</p>
+            <time datetime="2024-11">November 2024</time>
+          </div>
+          <div class="release-body">
+            <h2>A real website.</h2>
+            <ul>
+              <li>A new look with a navigation bar and a welcome page.</li>
+              <li>Improved performance and bug fixes.</li>
+            </ul>
+            <img src="home_things/home/img/new-gui.png" alt="The Version 2 home page, with a navigation bar and a large welcome message" loading="lazy">
+          </div>
+        </li>
+
+        <li class="release">
+          <div class="release-meta">
+            <p class="release-version">Version 1</p>
+            <time datetime="2024-06">June 2024</time>
+          </div>
+          <div class="release-body">
+            <h2>Hello, here are my coding!</h2>
+            <ul>
+              <li>Where it all began: one simple page with a button for each project.</li>
+            </ul>
+            <img src="home_things/home/img/old-gui.png" alt="The Version 1 page, a plain list of project buttons" loading="lazy">
+          </div>
+        </li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>Copyright &copy; <span id="year">2026</span> testserhere.github.io</span>
+      <span>Version 3</span>
+    </div>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+</body>
+</html>

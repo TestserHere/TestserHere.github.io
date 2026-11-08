@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Toolkit</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧰</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Toolkit</h1>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Tools">
+      <button type="button" role="tab" id="tab-clock" data-tab="clock" aria-controls="panel-clock">Clock</button>
+      <button type="button" role="tab" id="tab-stopwatch" data-tab="stopwatch" aria-controls="panel-stopwatch">Stopwatch</button>
+      <button type="button" role="tab" id="tab-timer" data-tab="timer" aria-controls="panel-timer">Timer</button>
+      <button type="button" role="tab" id="tab-calculator" data-tab="calculator" aria-controls="panel-calculator">Calculator</button>
+    </div>
+
+    <section class="panel" id="panel-clock" role="tabpanel" aria-labelledby="tab-clock">
+      <svg class="clock-face" viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="clock-rim" cx="100" cy="100" r="98"></circle>
+        <g id="clock-ticks"></g>
+        <line class="hand hand-hour" id="hand-hour" x1="100" y1="108" x2="100" y2="54"></line>
+        <line class="hand hand-minute" id="hand-minute" x1="100" y1="110" x2="100" y2="32"></line>
+        <line class="hand hand-second" id="hand-second" x1="100" y1="116" x2="100" y2="22"></line>
+        <circle class="clock-pin" cx="100" cy="100" r="4"></circle>
+      </svg>
+      <div class="clock-digital">
+        <div class="clock-time" role="timer"><span id="clock-time">--:--</span><span class="clock-period" id="clock-period"></span></div>
+        <p class="clock-date" id="clock-date"></p>
+      </div>
+      <div class="segmented clock-format" role="group" aria-label="Time format">
+        <button type="button" data-format="12">12-hour</button>
+        <button type="button" data-format="24">24-hour</button>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-stopwatch" role="tabpanel" aria-labelledby="tab-stopwatch" hidden>
+      <div class="big-time" id="sw-time" role="timer">00:00.00</div>
+      <div class="button-row">
+        <button type="button" class="secondary" id="sw-left" disabled>Lap</button>
+        <button type="button" class="primary" id="sw-right">Start</button>
+      </div>
+      <ol class="laps" id="sw-laps" hidden></ol>
+    </section>
+
+    <section class="panel" id="panel-timer" role="tabpanel" aria-labelledby="tab-timer" hidden>
+      <div id="timer-setup" class="panel">
+        <div class="group">
+          <div class="time-inputs">
+            <label><input id="timer-h" type="number" inputmode="numeric" min="0" max="23" placeholder="0">Hours</label>
+            <label><input id="timer-m" type="number" inputmode="numeric" min="0" placeholder="0" value="5">Minutes</label>
+            <label><input id="timer-s" type="number" inputmode="numeric" min="0" placeholder="0">Seconds</label>
+          </div>
+        </div>
+        <button type="button" class="primary" id="timer-start">Start</button>
+        <div class="group">
+          <span class="row-label">Quick start</span>
+          <div class="presets" id="timer-presets">
+            <button type="button" data-minutes="1">1 min</button>
+            <button type="button" data-minutes="3">3 min</button>
+            <button type="button" data-minutes="5">5 min</button>
+            <button type="button" data-minutes="10">10 min</button>
+            <button type="button" data-minutes="15">15 min</button>
+            <button type="button" data-minutes="30">30 min</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="timer-run" class="panel" hidden>
+        <div class="ring" id="timer-ring">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="ring-track" cx="100" cy="100" r="92"></circle>
+            <circle class="ring-bar" id="timer-bar" cx="100" cy="100" r="92"></circle>
+          </svg>
+          <div class="ring-text" id="timer-text" role="timer">0:00</div>
+        </div>
+        <div class="button-row">
+          <button type="button" class="secondary" id="timer-cancel">Cancel</button>
+          <button type="button" class="secondary" id="timer-add">+1 min</button>
+          <button type="button" class="primary" id="timer-pause">Pause</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-calculator" role="tabpanel" aria-labelledby="tab-calculator" hidden>
+      <div class="calc">
+        <div class="calc-screen">
+          <div class="calc-expr" id="calc-expr"></div>
+          <output class="calc-value" id="calc-value">0</output>
+        </div>
+        <div class="calc-keys" id="calc-keys">
+          <button type="button" class="key-fn" data-key="clear">AC</button>
+          <button type="button" class="key-fn" data-key="negate" aria-label="Plus or minus">&plusmn;</button>
+          <button type="button" class="key-fn" data-key="percent" aria-label="Percent">%</button>
+          <button type="button" class="key-op" data-key="÷" aria-label="Divide">÷</button>
+          <button type="button" data-key="7">7</button>
+          <button type="button" data-key="8">8</button>
+          <button type="button" data-key="9">9</button>
+          <button type="button" class="key-op" data-key="×" aria-label="Multiply">×</button>
+          <button type="button" data-key="4">4</button>
+          <button type="button" data-key="5">5</button>
+          <button type="button" data-key="6">6</button>
+          <button type="button" class="key-op" data-key="−" aria-label="Subtract">−</button>
+          <button type="button" data-key="1">1</button>
+          <button type="button" data-key="2">2</button>
+          <button type="button" data-key="3">3</button>
+          <button type="button" class="key-op" data-key="+" aria-label="Add">+</button>
+          <button type="button" data-key="0">0</button>
+          <button type="button" data-key="." aria-label="Decimal point">.</button>
+          <button type="button" class="key-fn" data-key="back" aria-label="Delete last digit">⌫</button>
+          <button type="button" class="key-op" data-key="equals" aria-label="Equals">=</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="toolkit.js"></script>
+</body>
+</html>

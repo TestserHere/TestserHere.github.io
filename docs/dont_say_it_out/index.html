@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Don't Say It Out</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤐</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Setup -->
+  <main class="screen" id="screen-setup">
+    <a class="back-home" id="back-home" href="../index.html" hidden>&lsaquo; Home</a>
+    <header class="title-block">
+      <h1>Don't Say It Out</h1>
+      <p>Describe the word so your team can guess it, without saying any of the forbidden words.</p>
+    </header>
+
+    <form class="setup" id="setup-form">
+      <section class="group">
+        <div class="row">
+          <span class="row-label" id="teams-label">Teams</span>
+          <div class="stepper" role="group" aria-labelledby="teams-label">
+            <button type="button" id="teams-minus" aria-label="Fewer teams">&minus;</button>
+            <output id="teams-value">2</output>
+            <button type="button" id="teams-plus" aria-label="More teams">+</button>
+          </div>
+        </div>
+        <div class="team-names" id="team-names"></div>
+      </section>
+
+      <section class="group">
+        <span class="row-label" id="pack-label">Word pack</span>
+        <div class="segmented" id="pack-options" role="group" aria-labelledby="pack-label"></div>
+      </section>
+
+      <section class="group">
+        <span class="row-label" id="length-label">Round length</span>
+        <div class="segmented" id="length-options" role="group" aria-labelledby="length-label"></div>
+      </section>
+
+      <section class="group">
+        <div class="row">
+          <span class="row-label" id="rounds-label">Number of rounds</span>
+          <div class="stepper" role="group" aria-labelledby="rounds-label">
+            <button type="button" id="rounds-minus" aria-label="Fewer rounds">&minus;</button>
+            <output id="rounds-value">3</output>
+            <button type="button" id="rounds-plus" aria-label="More rounds">+</button>
+          </div>
+        </div>
+      </section>
+
+      <button type="submit" class="primary">Start game</button>
+    </form>
+  </main>
+
+  <!-- Pass the device -->
+  <main class="screen screen-center" id="screen-ready" hidden>
+    <p class="eyebrow" id="ready-round"></p>
+    <h2 class="big" id="ready-team"></h2>
+    <p class="muted">Speaker, take the device. Keep the screen away from your team.</p>
+    <button type="button" class="primary" id="ready-start">Start turn</button>
+  </main>
+
+  <!-- Play -->
+  <main class="screen screen-play" id="screen-play" hidden>
+    <header class="play-head">
+      <div>
+        <div class="play-team" id="play-team"></div>
+        <div class="muted small" id="play-round"></div>
+      </div>
+      <div class="play-time" id="play-time" role="timer">0</div>
+      <div class="play-score">
+        <div class="play-score-value" id="play-score">0</div>
+        <div class="muted small">points</div>
+      </div>
+    </header>
+    <div class="progress"><div class="progress-bar" id="play-bar"></div></div>
+
+    <button type="button" class="word-card" id="word-card" aria-pressed="false">
+      <span class="word-hidden" id="word-hidden">
+        <span class="word-hidden-icon" aria-hidden="true">🤐</span>
+        <strong>Tap to show the word</strong>
+        <span class="muted">Speaker only</span>
+      </span>
+      <span class="word-shown" id="word-shown" hidden>
+        <strong class="word" id="word"></strong>
+        <span class="forbidden-label">Don't say</span>
+        <span class="forbidden" id="forbidden"></span>
+        <span class="muted small">Tap to hide</span>
+      </span>
+    </button>
+
+    <div class="actions">
+      <button type="button" class="act act-pass" id="act-pass" disabled>Pass<small>0</small></button>
+      <button type="button" class="act act-forbidden" id="act-forbidden" disabled>Forbidden<small>&minus;1</small></button>
+      <button type="button" class="act act-correct" id="act-correct" disabled>Correct<small>+1</small></button>
+    </div>
+  </main>
+
+  <!-- Turn recap -->
+  <main class="screen" id="screen-turn" hidden>
+    <header class="title-block">
+      <p class="eyebrow">Time's up!</p>
+      <h2 class="big" id="turn-title"></h2>
+    </header>
+    <ul class="results" id="turn-results"></ul>
+    <button type="button" class="primary" id="turn-next"></button>
+  </main>
+
+  <!-- Summary -->
+  <main class="screen" id="screen-summary" hidden>
+    <header class="title-block">
+      <p class="eyebrow">Summary</p>
+      <h2 class="big" id="summary-title"></h2>
+    </header>
+    <section class="group" id="summary-scores"></section>
+    <h3 class="section-label">Every word</h3>
+    <div id="summary-words"></div>
+    <div class="button-row">
+      <button type="button" class="secondary" id="summary-new">New game</button>
+      <button type="button" class="primary" id="summary-again">Play again</button>
+    </div>
+  </main>
+
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

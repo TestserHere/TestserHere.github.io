@@ -1,5 +1,4 @@
-const API_KEY = 'AIzaSyCPIjZWQkpsSazxahqNUDPAMD8c7FCJlmI'; // Replace with your API key
-const SEARCH_ENGINE_ID = 'f584625ca9f8a43db'; // Replace with your Search Engine ID
+// Retired: the Google search key was removed from the site.
 
 // Retrieve the saved keyword from session storage
 const result = sessionStorage.getItem("keyword");
@@ -17,12 +16,7 @@ document.getElementById('search-form').addEventListener('submit', function (e) {
 });
 
 function searchQuery(query) {
-    const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => displayResults(data))
-        .catch(error => console.error('Error:', error));
+    document.getElementById('results').innerHTML = '<p>Search is no longer available.</p>';
 }
 
 function displayResults(data) {

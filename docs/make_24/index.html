@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Make 24</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔢</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Make 24</h1>
+    </header>
+
+    <div class="panel" id="play">
+      <div class="segmented" id="level" role="group" aria-label="Difficulty">
+        <button type="button" data-level="easy">Easy</button>
+        <button type="button" data-level="hard">Hard</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><strong id="stat-1">0</strong><span id="stat-1-label">Solved</span></div>
+        <div class="stat"><strong id="stat-2">0</strong><span id="stat-2-label">Streak</span></div>
+        <div class="stat"><strong id="stat-3">0</strong><span id="stat-3-label">Best streak</span></div>
+      </div>
+
+      <div class="number-tiles" id="tiles"></div>
+      <p class="message" id="message" role="status"></p>
+
+      <div class="operators" id="operators" role="group" aria-label="Operators">
+        <button type="button" data-op="+" aria-label="Add">+</button>
+        <button type="button" data-op="−" aria-label="Subtract">−</button>
+        <button type="button" data-op="×" aria-label="Multiply">×</button>
+        <button type="button" data-op="÷" aria-label="Divide">÷</button>
+      </div>
+
+      <div class="tool-row">
+        <button type="button" id="undo">Undo</button>
+        <button type="button" id="reset">Reset</button>
+        <button type="button" id="hint">Hint</button>
+        <button type="button" id="skip">Skip</button>
+      </div>
+
+      <button type="button" class="secondary" id="sprint">Start 2-minute sprint</button>
+    </div>
+
+    <div class="game-over" id="sprint-end" hidden>
+      <h2>Puzzles solved</h2>
+      <div class="final-score" id="sprint-score">0</div>
+      <p class="muted" id="sprint-best"></p>
+      <div class="button-row">
+        <button type="button" class="secondary" id="sprint-done">Done</button>
+        <button type="button" class="primary" id="sprint-again">Sprint again</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="engine.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

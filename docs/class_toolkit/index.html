@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Class Toolkit</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+</head>
+<body>
+  <main class="app app-wide">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Class Toolkit</h1>
+    </header>
+
+    <div class="class-bar no-print">
+      <label class="sr-only" for="class-select">Current class</label>
+      <select id="class-select"></select>
+      <button type="button" class="secondary" id="class-new">New class</button>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Class tools">
+      <button type="button" role="tab" id="tab-class" data-tab="class" aria-controls="panel-class">Students</button>
+      <button type="button" role="tab" id="tab-picker" data-tab="picker" aria-controls="panel-picker">Picker</button>
+      <button type="button" role="tab" id="tab-groups" data-tab="groups" aria-controls="panel-groups">Groups</button>
+      <button type="button" role="tab" id="tab-seating" data-tab="seating" aria-controls="panel-seating">Seating</button>
+    </div>
+
+    <section class="panel" id="panel-class" role="tabpanel" aria-labelledby="tab-class">
+      <div class="group">
+        <label class="row-label" for="class-name">Class name</label>
+        <input class="field" id="class-name" maxlength="40" autocomplete="off">
+      </div>
+      <div class="group">
+        <div class="row">
+          <label class="row-label" for="class-students">Students</label>
+          <span class="muted small" id="student-count"></span>
+        </div>
+        <textarea class="field" id="class-students" spellcheck="false" placeholder="One name per line, or paste a list separated by commas"></textarea>
+        <p class="warning" id="duplicate-note" hidden></p>
+        <p class="note">Names are saved only in this browser and are never uploaded.</p>
+      </div>
+      <div class="group" id="absent-group" hidden>
+        <span class="row-label">Away today</span>
+        <div class="chips" id="absent-chips"></div>
+        <p class="note">Tap anyone who's away. They're skipped by the picker and new groups, and everyone is back tomorrow.</p>
+      </div>
+      <button type="button" class="text-button is-danger" id="class-delete">Delete this class</button>
+    </section>
+
+    <section class="panel" id="panel-picker" role="tabpanel" aria-labelledby="tab-picker" hidden>
+      <div class="empty" id="picker-empty" hidden>
+        <h2>No students here yet</h2>
+        <p>Add your class list, or check that not everyone is marked away.</p>
+        <button type="button" class="primary" data-go="class">Go to Students</button>
+      </div>
+      <div class="panel" id="picker-body">
+        <div class="pick-card">
+          <div class="pick-name is-idle" id="pick-name"></div>
+        </div>
+        <button type="button" class="primary" id="pick-button">Pick a name</button>
+        <label class="group check">
+          <span class="row-label">Give everyone a turn before repeating</span>
+          <input type="checkbox" id="pick-no-repeat">
+        </label>
+        <div class="group" id="picked-group" hidden>
+          <div class="section-head">
+            <h2>Picked so far</h2>
+            <button type="button" class="text-button" id="pick-reset">Start over</button>
+          </div>
+          <div class="chips" id="picked-chips"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-groups" role="tabpanel" aria-labelledby="tab-groups" hidden>
+      <div class="empty" id="groups-empty" hidden>
+        <h2>You need at least 2 students</h2>
+        <p>Add your class list, or check who is marked away.</p>
+        <button type="button" class="primary" data-go="class">Go to Students</button>
+      </div>
+      <div class="panel" id="groups-body">
+        <div class="group no-print">
+          <div class="segmented" id="group-mode" role="group" aria-label="How to split the class">
+            <button type="button" data-mode="count">Number of groups</button>
+            <button type="button" data-mode="size">People per group</button>
+          </div>
+          <div class="row">
+            <span class="row-label" id="group-size-label"></span>
+            <div class="stepper" id="group-stepper" role="group" aria-labelledby="group-size-label">
+              <button type="button" aria-label="Fewer">&minus;</button>
+              <output>2</output>
+              <button type="button" aria-label="More">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="button-row no-print">
+          <button type="button" class="primary" id="groups-make">Make groups</button>
+          <button type="button" class="secondary" id="groups-copy" disabled>Copy</button>
+        </div>
+        <div class="group-cards" id="group-cards"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-seating" role="tabpanel" aria-labelledby="tab-seating" hidden>
+      <div class="empty" id="seating-empty" hidden>
+        <h2>No students here yet</h2>
+        <p>Add your class list first, then build a seating plan.</p>
+        <button type="button" class="primary" data-go="class">Go to Students</button>
+      </div>
+      <div class="panel" id="seating-body">
+        <div class="group no-print">
+          <div class="row">
+            <span class="row-label" id="rows-label">Rows</span>
+            <div class="stepper" id="rows-stepper" role="group" aria-labelledby="rows-label">
+              <button type="button" aria-label="Fewer rows">&minus;</button>
+              <output>5</output>
+              <button type="button" aria-label="More rows">+</button>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-label" id="cols-label">Columns</span>
+            <div class="stepper" id="cols-stepper" role="group" aria-labelledby="cols-label">
+              <button type="button" aria-label="Fewer columns">&minus;</button>
+              <output>6</output>
+              <button type="button" aria-label="More columns">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="button-row no-print">
+          <button type="button" class="primary" id="seats-shuffle">Shuffle</button>
+          <button type="button" class="secondary" id="seats-undo" disabled>Undo</button>
+          <button type="button" class="secondary" id="seats-clear">Clear</button>
+          <button type="button" class="secondary" id="seats-print">Print</button>
+        </div>
+        <p class="warning no-print" id="seats-warning" hidden></p>
+        <div class="room">
+          <div class="room-front">Front of the room</div>
+          <div class="room-scroll">
+            <div class="seats" id="seats"></div>
+          </div>
+        </div>
+        <p class="note no-print">To move someone, tap their seat and then tap another seat. If it's taken, they swap.</p>
+        <div class="group no-print" id="unseated-group" hidden>
+          <span class="row-label">Without a seat</span>
+          <div class="chips" id="unseated-chips"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="class.js"></script>
+</body>
+</html>

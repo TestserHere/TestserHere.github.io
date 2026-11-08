@@ -1,180 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Me</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom Styles (Optional) -->
-    <style>
-        body {
-            cursor: url('./cursors/default.png'), auto !important;
-        }
-
-        input[type="text"], textarea {
-            cursor: url('./cursors/textcursor.png'), text !important;
-        }
-
-        a, button {
-            cursor: url('./cursors/handpointing.png'), pointer !important;
-        }
-
-        .help {
-            cursor: url('./cursors/help.png'), help !important;
-        }
-
-        .wait, .loading {
-            cursor: url('./cursors/beachball.png'), wait !important;
-        }
-
-        .progress {
-            cursor: url('./cursors/busy.png'), progress !important;
-        }
-
-        .crosshair {
-            cursor: url('./cursors/cross.png'), crosshair !important;
-        }
-
-        .move {
-            cursor: url('./cursors/move.png'), move !important;
-        }
-
-        .not-allowed, .disabled {
-            cursor: url('./cursors/notallowed.png'), not-allowed !important;
-        }
-
-        .grab {
-            cursor: url('./cursors/handopen.png'), grab !important;
-        }
-
-        .grabbing {
-            cursor: url('./cursors/handgrabbing.png'), grabbing !important;
-        }
-
-        .resize-horizontal {
-            cursor: url('./cursors/resizewesteast.png'), ew-resize !important;
-        }
-
-        .resize-vertical {
-            cursor: url('./cursors/resizenorthsouth.png'), ns-resize !important;
-        }
-
-        .resize-diagonal-1 {
-            cursor: url('./cursors/resizenorthwestsoutheast.png'), nesw-resize !important;
-        }
-
-        .resize-diagonal-2 {
-            cursor: url('./cursors/resizenortheastsouthwest.png'), nwse-resize !important;
-        }
-
-        .about-image {
-            width: 100%;
-            height: auto;
-            border-radius: 15px;
-        }
-        .section-title {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        .team-photo {
-            border-radius: 50%;
-            width: 150px;
-            height: 150px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>About Testser</title>
+  <link rel="icon" type="image/jpeg" href="home_things/home/icons/website1.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3home.css">
 </head>
 <body>
+  <nav class="nav" aria-label="Main">
+    <div class="wrap nav-inner">
+      <a class="nav-brand" href="index.html">Testser</a>
+      <div class="nav-links">
+        <a href="index.html#projects">Projects</a>
+        <a href="about.html" aria-current="page">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="version_history.html">History</a>
+      </div>
+    </div>
+  </nav>
 
-    <!-- About Section -->
-    <div class="container my-5">
-        <div class="row">
-            <div class="col-md-6">
-                <h2 class="section-title">Hi, I'm Testser.</h2>
-                <p>Welcome to my little corner of the internet! This website is a fun space where I share my thoughts, interests, and random things I enjoy.</p>
-                <p>Whether you're here because you're curious or stumbled upon my site by accident, I hope you find something that makes you smile. Here, you'll find all kinds of things, from creative projects to personal stories, and maybe even some weird facts!</p>
-            </div>
-            <div class="col-md-6">
-                <img src="./aboutimages/desktop.png" alt="Fun Image" class="about-image">
-            </div>
+  <main>
+    <header class="hero hero-page">
+      <div class="wrap hero-inner">
+        <img class="avatar" src="home_things/home/icons/website1.jpg" alt="">
+        <h1>Hi, I'm Testser.</h1>
+        <p class="hero-sub">Welcome to my little corner of the internet! This website is a fun space where I share my thoughts, interests, and random things I enjoy.</p>
+      </div>
+    </header>
+
+    <section class="section" aria-labelledby="why-title">
+      <div class="wrap split">
+        <div>
+          <h2 class="section-title" id="why-title">Why I created this website.</h2>
+          <p class="section-sub">Well, I've always had a thing for building websites and sharing stuff that I find interesting. This site is a bit of a mix of my hobbies, thoughts, and things I find cool.</p>
+          <p class="section-sub">It all started as a personal project, but over time, I've decided to make it public and share it with the world. Who knows? Maybe you'll find something here that you like too!</p>
         </div>
-    </div>
+        <img class="split-image" src="aboutimages/desktop.png" alt="A dark abstract desktop wallpaper showing the date and time">
+      </div>
+    </section>
 
-    <!-- My Story Section -->
-    <div class="container my-5">
-        <h2 class="section-title">Why I Created This Website</h2>
-        <p>Well, I’ve always had a thing for building websites and sharing stuff that I find interesting. This site is a bit of a mix of my hobbies, thoughts, and things I find cool. There’s no major goal here—just a fun space to express myself and connect with like-minded people!</p>
-        <p>It all started as a personal project, but over time, I’ve decided to make it public and share it with the world. Who knows? Maybe you’ll find something here that you like too!</p>
-    </div>
-
-    <!-- My Interests Section -->
-    <div class="container my-5">
-        <h2 class="section-title">A Few Things I Love</h2>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="./aboutimages/game.png" class="card-img-top" alt="Interest 1">
-                    <div class="card-body">
-                        <h5 class="card-title">Gaming</h5>
-                        <p class="card-text">I’m a huge fan of gaming, whether it’s console, PC, or mobile games. You’ll probably find some game reviews or just random gaming-related musings here!</p>
-                    </div>
-                </div>
+    <section class="section section-alt" aria-labelledby="love-title">
+      <div class="wrap">
+        <h2 class="section-title" id="love-title">A few things I love.</h2>
+        <div class="photo-cards">
+          <article class="photo-card">
+            <img src="aboutimages/game.png" alt="" loading="lazy">
+            <div>
+              <h3>Gaming</h3>
+              <p>I'm a huge fan of gaming, whether it's console, PC, or mobile games.</p>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="./aboutimages/coding.png" class="card-img-top" alt="Interest 2">
-                    <div class="card-body">
-                        <h5 class="card-title">Coding</h5>
-                        <p class="card-text">I love coding, whether it's on my laptop or PC. You might see some of my project around the site, just to share the progress I did.</p>
-                    </div>
-                </div>
+          </article>
+          <article class="photo-card">
+            <img src="aboutimages/coding.png" alt="" loading="lazy">
+            <div>
+              <h3>Coding</h3>
+              <p>I love coding, whether it's on my laptop or PC. You might see some of my projects around the site.</p>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="./aboutimages/book.jpg" class="card-img-top" alt="Interest 3">
-                    <div class="card-body">
-                        <h5 class="card-title">Reading</h5>
-                        <p class="card-text">Reading is one of my favorite things to do. I read about everything from personal experiences to fiction.</p>
-                    </div>
-                </div>
+          </article>
+          <article class="photo-card">
+            <img src="aboutimages/book.jpg" alt="" loading="lazy">
+            <div>
+              <h3>Reading</h3>
+              <p>Reading is one of my favorite things to do. I read about everything from personal experiences to fiction.</p>
             </div>
+          </article>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <!-- Meet Me Section -->
-    <div class="container my-5">
-        <h2 class="section-title">About Me</h2>
-        <div class="row">
-            <div class="col-md-4 text-center">
-                <img src="./home_things/home/icons/website1.jpg" alt="Your Photo" class="team-photo mb-3">
-                <h5>Testser</h5>
-                <p>Just a person who enjoys the little things in life, like gaming, coding, and reading random books on the internet!</p>
-            </div>
+    <section class="section section-dark section-center" aria-labelledby="connect-title">
+      <div class="wrap">
+        <h2 class="section-title" id="connect-title">Let's connect.</h2>
+        <p class="section-sub">If you enjoy what you see here, feel free to reach out to me. I am always up to chat with people!</p>
+        <div class="hero-cta">
+          <a class="pill pill-primary" href="contact.html">Get in touch</a>
         </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>Copyright &copy; <span id="year">2026</span> testserhere.github.io</span>
+      <a href="version_history.html">Version 3</a>
     </div>
+  </footer>
 
-    <!-- Call to Action Section -->
-    <div class="container text-center my-5">
-        <h3>Let's Connect!</h3>
-        <p>If you enjoy what you see here, feel free to reach out to me by completing this form! I am always up to chat with people!</p>
-        <a href="contact.html" class="btn btn-primary">Get in Touch</a>
-    </div>
-        <!-- Footer-->
-        <footer class="bg-light py-5">
-            <div class="container px-4 px-lg-5"><div class="small text-center text-muted">Copyright &copy; 2025 - testserhere.github.io</div></div>
-        </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 
-    <!-- Bootstrap JS & Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-
-    <!-- GA4 tracking -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-9GT4E8Z0EL'); 
-    </script>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
 </body>
 </html>

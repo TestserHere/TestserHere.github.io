@@ -1,0 +1,100 @@
+/* Styles for the one-player games. Loaded after v3tools.css. */
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { padding: 10px 6px; border-radius: 14px; background: var(--card); text-align: center; }
+.stat strong { display: block; font-size: 24px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; color: var(--muted); }
+
+.game-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.game-time { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.game-bar .text-button { padding: 4px; }
+
+.result-banner { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 16px; background: var(--card); text-align: center; }
+.result-banner h2 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+.result-banner p { margin: 0; color: var(--muted); }
+
+.game-over { display: flex; flex-direction: column; justify-content: center; gap: 16px; flex: 1; text-align: center; }
+.game-over h2 { margin: 0; font-size: 22px; font-weight: 600; color: var(--muted); }
+.final-score { font-size: clamp(72px, 22vw, 112px); font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+
+.message { min-height: 2.8em; margin: 0; color: var(--muted); text-align: center; }
+.message.is-good { color: var(--good); font-weight: 600; }
+.message.is-bad { color: var(--bad); }
+
+.rules { margin: 0; padding-left: 20px; font-size: 15px; color: var(--muted); }
+.rules li { margin-top: 3px; }
+
+/* Make 24 */
+.number-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 380px; margin-inline: auto; }
+.number-tile { height: clamp(84px, 17dvh, 140px); border: 0; border-radius: 22px; background: var(--card); box-shadow: var(--shadow); font-size: clamp(40px, 11vw, 58px); font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; transition: transform 0.12s, background 0.15s; }
+.number-tile:active:not(:disabled) { transform: scale(0.96); }
+.number-tile[aria-pressed="true"] { background: var(--blue); color: #fff; }
+.number-tile.is-fraction { font-size: clamp(28px, 8vw, 40px); }
+.number-tile.is-win { background: var(--good); color: #fff; }
+.number-tile.is-empty { visibility: hidden; }
+
+.operators { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 380px; margin-inline: auto; }
+.operators button { height: 60px; border: 0; border-radius: 16px; background: var(--fill-strong); font-size: 30px; }
+.operators button:disabled { opacity: 0.45; cursor: default; }
+.operators button[aria-pressed="true"] { background: var(--blue); color: #fff; }
+
+/* Perfect Second */
+.round-info { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lives { display: flex; gap: 6px; }
+.life { width: 14px; height: 14px; border-radius: 50%; background: var(--red); }
+.life.is-lost { background: var(--fill-strong); }
+
+.pad { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; flex: 1; min-height: 300px; padding: 24px; border: 0; border-radius: 28px; background: var(--card); box-shadow: var(--shadow); touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.pad-main { font-size: clamp(68px, 22vw, 124px); font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.pad-sub { max-width: 22em; color: var(--muted); }
+.pad.is-running { background: var(--blue); color: #fff; }
+.pad.is-running .pad-sub { color: rgba(255, 255, 255, 0.86); }
+.pad.is-hit .pad-main { color: var(--good); }
+.pad.is-miss .pad-main { color: var(--bad); }
+
+.round-table { margin: 0; padding: 4px 16px; border-radius: 16px; background: var(--card); list-style: none; text-align: left; font-variant-numeric: tabular-nums; }
+.round-table-head { display: grid; grid-template-columns: 1fr 64px 64px; gap: 14px; margin-bottom: -10px; padding-inline: 16px; font-size: 13px; color: var(--muted); text-align: right; }
+.round-table li { display: grid; grid-template-columns: 1fr 64px 64px; gap: 14px; padding-block: 9px; border-bottom: 1px solid var(--line); text-align: right; }
+.round-table li span:first-child { text-align: left; }
+.round-table li:last-child { border-bottom: 0; }
+.round-table .is-miss { color: var(--bad); }
+
+/* Sudoku */
+.board-frame { width: min(100%, 58dvh, 520px); margin-inline: auto; }
+.sudoku { display: grid; grid-template-columns: repeat(9, 1fr); aspect-ratio: 1; overflow: hidden; border: 2px solid var(--text); border-radius: 10px; background: var(--card); }
+.sudoku-cell { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: 0; border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; background: none; color: var(--text); font-size: clamp(19px, 5.6vw, 31px); font-variant-numeric: tabular-nums; }
+.sudoku-cell:focus-visible { outline-offset: -2px; }
+.sudoku-cell.box-right { border-right: 2px solid var(--text); }
+.sudoku-cell.box-bottom { border-bottom: 2px solid var(--text); }
+.sudoku-cell.is-given { font-weight: 700; }
+.sudoku-cell.is-entered { color: var(--link); font-weight: 500; }
+.sudoku-cell.is-peer { background: rgba(0, 113, 227, 0.09); }
+.sudoku-cell.is-same { background: rgba(0, 113, 227, 0.26); }
+.sudoku-cell.is-selected { background: rgba(0, 113, 227, 0.42); }
+.sudoku-cell.is-conflict { color: var(--bad); background: rgba(215, 0, 21, 0.2); }
+.sudoku-notes { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; height: 100%; padding: 1px; color: var(--muted); font-size: clamp(8px, 2.3vw, 12px); font-weight: 500; line-height: 1; }
+.sudoku-notes span { display: grid; place-items: center; }
+
+.digit-pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; width: min(100%, 520px); margin-inline: auto; }
+.digit-pad button { min-width: 0; height: 54px; padding: 0; border: 0; border-radius: 10px; background: var(--card); font-size: 24px; font-weight: 500; }
+.digit-pad button.is-used-up { opacity: 0.3; }
+.tool-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: min(100%, 520px); margin-inline: auto; }
+.tool-row button { padding: 11px 2px; border: 0; border-radius: 12px; background: var(--fill); font-size: 15px; font-weight: 600; }
+.tool-row button:disabled { opacity: 0.4; cursor: default; }
+.tool-row button[aria-pressed="true"] { background: var(--blue); color: #fff; }
+
+/* Zones: the board keeps the same pale colours in light and dark mode, so its contents stay readable */
+.zones { display: grid; grid-template-columns: repeat(var(--size), 1fr); aspect-ratio: 1; overflow: hidden; border: 3px solid #1d1d1f; border-radius: 10px; background: #1d1d1f; }
+.zone-cell { position: relative; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 0; box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.22); color: #1d1d1f; }
+.zone-cell:focus-visible { z-index: 1; outline: 3px solid #0071e3; outline-offset: -3px; }
+.zone-cell.edge-top { border-top: 2.5px solid #1d1d1f; }
+.zone-cell.edge-left { border-left: 2.5px solid #1d1d1f; }
+.zone-cell::after { position: absolute; inset: 0; display: grid; place-items: center; }
+.zone-cell.is-blocked::after { content: ""; inset: 41%; border-radius: 50%; background: rgba(0, 0, 0, 0.4); }
+.zone-cell.is-cross::after { content: "×"; font-size: clamp(16px, 5vw, 26px); line-height: 1; color: rgba(0, 0, 0, 0.62); }
+.zone-cell.is-marker::before { content: ""; position: absolute; inset: 20%; border-radius: 50%; background: #1d1d1f; }
+.zone-cell.is-conflict::before { background: #c00012; box-shadow: 0 0 0 2px #fff; }
+.zone-cell.is-hint { animation: hint 0.8s ease 2; }
+@keyframes hint { 50% { filter: brightness(0.72); } }
+
+.is-locked { pointer-events: none; }

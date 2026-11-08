@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Perfect Second</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Perfect Second</h1>
+    </header>
+
+    <div class="panel" id="play">
+      <div class="round-info">
+        <span id="round">Round 1</span>
+        <span id="score">0 points</span>
+        <div class="lives" id="lives" role="img"></div>
+      </div>
+      <button type="button" class="pad" id="pad">
+        <span class="pad-main" id="pad-main"></span>
+        <span class="pad-sub" id="pad-sub"></span>
+      </button>
+      <p class="note">The clock vanishes after one second. Stop it as close to the target as you can. Each round is less forgiving.</p>
+    </div>
+
+    <div class="game-over" id="over" hidden>
+      <h2>Final score</h2>
+      <div class="final-score" id="final-score">0</div>
+      <p class="muted" id="final-best"></p>
+      <div class="round-table-head" aria-hidden="true"><span></span><span>Target</span><span>You</span></div>
+      <ol class="round-table" id="round-table"></ol>
+      <button type="button" class="primary" id="again">Play again</button>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

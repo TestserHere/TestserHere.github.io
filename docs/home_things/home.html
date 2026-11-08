@@ -484,40 +484,6 @@
 
         <!--<script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>-->
 
-         <!-- Firebase App (the core Firebase SDK) -->
-        <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
-        <!-- Firebase Analytics -->
-        <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics-compat.js"></script>
-
-        <script>
-            // Wait for Firebase to load before initializing
-            window.addEventListener('load', function() {
-                if (typeof firebase !== 'undefined') {
-                    const firebaseConfig = {
-                        apiKey: "AIzaSyBJf97-B28IflQfLB3Z3GP09NwFhq00vZI",
-                        authDomain: "website-12bdc.firebaseapp.com",
-                        projectId: "website-12bdc",
-                        storageBucket: "website-12bdc.firebasestorage.app",
-                        messagingSenderId: "312912129925",
-                        appId: "1:312912129925:web:aab9b997db866bb3e01eec",
-                        measurementId: "G-9GT4E8Z0EL"
-                    };
-            
-                    // Initialize Firebase
-                    firebase.initializeApp(firebaseConfig);
-                    window.analytics = firebase.analytics();
-
-                    // Log event only if cookies are accepted
-                    const consent = localStorage.getItem('cookieConsent');
-                    if (consent === 'accepted' || !consent) {
-                        window.analytics.logEvent('project_switched', {
-                            from: 'Home',
-                            to: 'About'
-                        });
-                    }
-                }
-            });
-        </script>
 
         <!-- GA4 tracking -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
