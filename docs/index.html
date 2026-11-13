@@ -13,6 +13,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="v3home.css">
+  <script src="swarm.js" data-auto data-ask></script>
+  
 </head>
 <body>
   <nav class="nav" aria-label="Main">
@@ -34,7 +36,7 @@
         <h1>Welcome to the world of coding.</h1>
         <p class="hero-sub">This is testserhere.github.io, where I will have updates and cool projects presented to you.</p>
         <div class="hero-cta">
-          <a class="pill pill-primary" href="dont_say_it_out/index.html" data-open="dont_say_it_out/index.html" data-label="Don't Say It Out">Play Don't Say It Out</a>
+          <a class="pill pill-primary" href="#projects">Explore projects</a>
           <a class="link-more link-on-dark" href="#about">Find out more <i class="fa-solid fa-chevron-right"></i></a>
         </div>
         <p class="hero-status">
@@ -212,7 +214,7 @@
   </footer>
 
   <!-- Project sheet -->
-  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+  <dialog class="sheet" id="sheet" aria-labelledby="sheet-title" data-swarm-skip>
     <header class="sheet-bar">
       <a class="sheet-side" id="sheet-newtab" target="_blank" rel="noopener" aria-label="Open in new tab"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
       <h2 id="sheet-title"></h2>
@@ -222,7 +224,7 @@
   </dialog>
 
   <!-- Version 3 welcome: shown once per visitor -->
-  <dialog class="panel welcome" id="welcome" aria-labelledby="welcome-title">
+  <dialog class="panel welcome" id="welcome" aria-labelledby="welcome-title" data-swarm-skip>
     <div class="panel-box">
       <p class="hero-version">Version 3</p>
       <h2 id="welcome-title">Testser has a new home.</h2>
