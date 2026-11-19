@@ -16,6 +16,7 @@
     { label: "Don't Say It Out", href: 'dont_say_it_out/index.html', color: '#ef4444', icon: 'fa-comment-slash', cat: GAMES },
     { label: 'Toolkit', href: 'toolkit/index.html', color: '#2563eb', icon: 'fa-toolbox', cat: TOOLS },
     { label: 'Class Toolkit', href: 'class_toolkit/index.html', color: '#16a34a', icon: 'fa-chalkboard-user', cat: LEARN },
+    { label: 'Music Finder', href: 'music_finder/index.html', color: '#db2777', icon: 'fa-headphones', cat: MEDIA },
     { label: 'Make 24', href: 'make_24/index.html', color: '#ea580c', icon: 'fa-hashtag', cat: GAMES },
     { label: 'Perfect Second', href: 'perfect_second/index.html', color: '#7c3aed', icon: 'fa-stopwatch', cat: GAMES },
     { label: 'Zones', href: 'zones/index.html', color: '#0d9488', icon: 'fa-border-all', cat: GAMES },
@@ -85,7 +86,7 @@
   ];
 
   // Older projects are hidden from the site. Add a project's href here to show it again.
-  const SHOWN_PROJECTS = new Set(['dont_say_it_out/index.html', 'toolkit/index.html', 'class_toolkit/index.html', 'make_24/index.html', 'perfect_second/index.html', 'zones/index.html', 'sudoku/index.html']);
+  const SHOWN_PROJECTS = new Set(['dont_say_it_out/index.html', 'toolkit/index.html', 'class_toolkit/index.html', 'music_finder/index.html', 'make_24/index.html', 'perfect_second/index.html', 'zones/index.html', 'sudoku/index.html']);
   const PROJECTS = ALL_PROJECTS.filter((project) => SHOWN_PROJECTS.has(project.href));
 
   const CITY = { name: 'Sydney', lat: -33.87, lon: 151.21, tz: 'Australia/Sydney' };
