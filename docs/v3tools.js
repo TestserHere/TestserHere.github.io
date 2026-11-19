@@ -1,4 +1,4 @@
-/* Shared helpers for Toolkit and Class Toolkit */
+/* Shared helpers for the Version 3 apps */
 
 window.V3Tools = (function () {
   'use strict';
@@ -90,5 +90,18 @@ window.V3Tools = (function () {
     return hours ? hours + ':' + String(minutes).padStart(2, '0') + ':' + seconds : minutes + ':' + seconds;
   }
 
-  return { $, read, write, el, setupTabs, setupStepper, formatDuration };
+  /* Fetches JSON, giving up after a while so a slow service can't hang the page. */
+  async function getJson(url, ms = 15000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return await response.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  return { $, read, write, el, setupTabs, setupStepper, formatDuration, getJson };
 })();

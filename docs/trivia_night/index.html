@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Trivia Night</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❓</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Trivia Night</h1>
+    </header>
+
+    <!-- Setup -->
+    <section class="panel" id="setup">
+      <div class="group">
+        <div class="row">
+          <span class="row-label">Teams</span>
+          <div class="stepper" id="team-count">
+            <button type="button" aria-label="Fewer teams">−</button>
+            <output aria-live="polite"></output>
+            <button type="button" aria-label="More teams">+</button>
+          </div>
+        </div>
+        <div class="team-names" id="team-names"></div>
+      </div>
+
+      <div class="group">
+        <div class="row">
+          <span class="row-label">Questions per team</span>
+          <div class="stepper" id="per-team">
+            <button type="button" aria-label="Fewer questions">−</button>
+            <output aria-live="polite"></output>
+            <button type="button" aria-label="More questions">+</button>
+          </div>
+        </div>
+        <label class="row-label" for="category">Category</label>
+        <select class="field" id="category">
+          <option value="">Anything</option>
+        </select>
+        <span class="row-label">Difficulty</span>
+        <div class="segmented" id="difficulty" role="group" aria-label="Difficulty">
+          <button type="button" data-level="">Mixed</button>
+          <button type="button" data-level="easy">Easy</button>
+          <button type="button" data-level="medium">Medium</button>
+          <button type="button" data-level="hard">Hard</button>
+        </div>
+        <label class="row check">
+          <span>20-second timer</span>
+          <input type="checkbox" id="use-timer">
+        </label>
+      </div>
+
+      <p class="status" id="setup-status" role="status" aria-live="polite"></p>
+      <button type="button" class="primary" id="start">Start the quiz</button>
+      <p class="note">Points: easy 1, medium 2, hard 3. Pass the device to whoever's turn it is.</p>
+    </section>
+
+    <!-- Playing -->
+    <section class="panel" id="play" hidden>
+      <div class="scoreboard" id="scoreboard"></div>
+      <div class="turn">
+        <span class="round-info" id="turn-round"></span>
+        <h2 class="turn-team" id="turn-team"></h2>
+      </div>
+      <div class="progress timer-bar" id="timer-bar" aria-hidden="true"><span id="timer-fill"></span></div>
+      <div class="quiz-card">
+        <span class="question-meta" id="question-meta"></span>
+        <p class="quiz-question" id="question"></p>
+      </div>
+      <div class="answers" id="answers"></div>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+      <button type="button" class="primary" id="next" hidden>Next</button>
+      <button type="button" class="text-button is-danger" id="end-early">End the game</button>
+    </section>
+
+    <!-- Results -->
+    <section class="panel" id="results" hidden>
+      <div class="result-banner">
+        <h2 id="winner"></h2>
+        <p id="winner-text"></p>
+      </div>
+      <ol class="ranking" id="ranking"></ol>
+      <div class="button-row">
+        <button type="button" class="secondary" id="change">Change setup</button>
+        <button type="button" class="primary" id="again">Play again</button>
+      </div>
+    </section>
+
+    <p class="note credits">Questions from the Open Trivia Database (opentdb.com), shared under CC BY-SA 4.0.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="trivia.js"></script>
+</body>
+</html>

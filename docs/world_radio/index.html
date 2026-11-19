@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>World Radio</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>World Radio</h1>
+      <p class="lede">Live radio from all over the world.</p>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="World Radio">
+      <button type="button" role="tab" id="tab-browse" data-tab="browse" aria-controls="panel-browse">Browse</button>
+      <button type="button" role="tab" id="tab-saved" data-tab="saved" aria-controls="panel-saved">Favourites</button>
+    </div>
+
+    <section class="panel" id="panel-browse" role="tabpanel" aria-labelledby="tab-browse">
+      <div class="group">
+        <input class="field" id="name" type="search" placeholder="Search stations by name" autocomplete="off" aria-label="Search stations by name">
+        <span class="row-label" id="genre-label">Genre</span>
+        <div class="chips" id="genres" role="group" aria-labelledby="genre-label"></div>
+        <label class="row-label" for="country">Country</label>
+        <select class="field" id="country">
+          <option value="">Anywhere</option>
+        </select>
+        <button type="button" class="secondary" id="surprise">Surprise me</button>
+      </div>
+
+      <section class="results" aria-labelledby="results-title">
+        <div class="section-head">
+          <h2 id="results-title">Stations</h2>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <ol class="items" id="stations"></ol>
+      </section>
+    </section>
+
+    <section class="panel" id="panel-saved" role="tabpanel" aria-labelledby="tab-saved" hidden>
+      <ol class="items" id="saved"></ol>
+      <div class="empty" id="saved-empty">
+        <h2>No favourites yet</h2>
+        <p>Tap the heart on a station to keep it here.</p>
+      </div>
+    </section>
+
+    <p class="note credits">Station list from Radio Browser, a free community directory. Streams come straight from each station.</p>
+  </main>
+
+  <div class="now-playing" id="now" hidden>
+    <span class="now-art" id="now-art"></span>
+    <span class="now-text">
+      <strong id="now-name"></strong>
+      <span id="now-state" aria-live="polite"></span>
+    </span>
+    <button type="button" class="now-button" id="now-toggle" aria-label="Pause"></button>
+    <button type="button" class="now-close" id="now-close" aria-label="Stop">&times;</button>
+  </div>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="radio.js"></script>
+</body>
+</html>

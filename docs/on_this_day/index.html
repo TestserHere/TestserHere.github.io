@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Day in History</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Day in History</h1>
+      <p class="lede">What happened on your birthday, or any day of the year.</p>
+    </header>
+
+    <div class="group">
+      <div class="date-pick">
+        <label>
+          <span class="row-label">Day</span>
+          <select class="field" id="day"></select>
+        </label>
+        <label>
+          <span class="row-label">Month</span>
+          <select class="field" id="month"></select>
+        </label>
+        <label>
+          <span class="row-label">Year <span class="muted">(optional)</span></span>
+          <input class="field" id="year" type="number" inputmode="numeric" min="1" max="2100" placeholder="e.g. 2010">
+        </label>
+      </div>
+      <button type="button" class="text-button" id="today">Today</button>
+    </div>
+
+    <section class="results" aria-labelledby="day-title">
+      <h2 class="day-title" id="day-title"></h2>
+      <div class="your-year" id="your-year" hidden></div>
+      <div class="tabs" role="tablist" aria-label="What to show" id="kinds">
+        <button type="button" role="tab" id="tab-selected" data-tab="selected" aria-controls="panel-list">Highlights</button>
+        <button type="button" role="tab" id="tab-events" data-tab="events" aria-controls="panel-list">Events</button>
+        <button type="button" role="tab" id="tab-births" data-tab="births" aria-controls="panel-list">Births</button>
+        <button type="button" role="tab" id="tab-deaths" data-tab="deaths" aria-controls="panel-list">Deaths</button>
+      </div>
+      <div class="filter-row">
+        <input class="field" id="filter" type="search" placeholder="Filter, like “space” or “music”" aria-label="Filter">
+        <button type="button" class="secondary" id="order" aria-pressed="false">Newest first</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <ol class="items history" id="panel-list" role="tabpanel"></ol>
+    </section>
+
+    <p class="note credits">From Wikipedia’s “On this day”, shared under CC BY-SA.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>

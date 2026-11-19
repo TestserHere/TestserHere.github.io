@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Stargazing Tonight</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔭</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body class="sky-page">
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Stargazing Tonight</h1>
+      <p class="lede">Is tonight a good night to look at the stars?</p>
+    </header>
+
+    <div class="group">
+      <div class="search-wrap">
+        <input class="field" id="place-search" type="search" placeholder="Search for a town or city" autocomplete="off" spellcheck="false"
+               role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="place-list" aria-label="Search for a town or city">
+        <ul class="suggestions" id="place-list" role="listbox" aria-label="Places" hidden></ul>
+      </div>
+      <button type="button" class="secondary" id="locate">Use my location</button>
+    </div>
+
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <section class="sky" id="sky" hidden aria-labelledby="verdict">
+      <div class="sky-card" id="sky-card">
+        <span class="sky-place" id="place"></span>
+        <div class="sky-score">
+          <strong id="score"></strong>
+          <span>/ 100</span>
+        </div>
+        <h2 class="sky-verdict" id="verdict"></h2>
+        <p class="sky-summary" id="summary"></p>
+      </div>
+
+      <div class="sky-facts">
+        <div class="sky-fact"><span>Dark from</span><strong id="dark"></strong></div>
+        <div class="sky-fact"><span>Best time</span><strong id="best"></strong></div>
+        <div class="sky-fact"><span>Clouds</span><strong id="clouds"></strong></div>
+        <div class="sky-fact sky-moon">
+          <svg viewBox="0 0 40 40" class="moon-art" aria-hidden="true"><circle cx="20" cy="20" r="17" class="moon-dark"/><path id="moon-lit" class="moon-lit"/></svg>
+          <span id="moon-name"></span><strong id="moon-lit-text"></strong>
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="row-label">Hour by hour</span>
+        <div class="hours" id="hours" role="list"></div>
+        <p class="note">Taller bars are better. Darker sky, fewer clouds and less moonlight all help.</p>
+      </div>
+
+      <div class="group">
+        <span class="row-label">Coming nights</span>
+        <div class="nights" id="nights"></div>
+      </div>
+
+      <div class="group">
+        <span class="row-label">Tips</span>
+        <ul class="rules" id="tips"></ul>
+      </div>
+    </section>
+
+    <p class="note credits">Weather from Open-Meteo. Sun and moon worked out on your device.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="sky.js"></script>
+  <script src="stars.js"></script>
+</body>
+</html>

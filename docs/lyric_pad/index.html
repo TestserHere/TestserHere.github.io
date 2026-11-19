@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Lyric Pad</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✍️</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body>
+  <main class="app app-wide">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Lyric Pad</h1>
+      <p class="lede">Write songs and poems with rhymes at your fingertips.</p>
+    </header>
+
+    <div class="class-bar">
+      <select id="songs" aria-label="Your songs"></select>
+      <button type="button" class="secondary" id="new-song">New</button>
+      <button type="button" class="secondary" id="delete-song">Delete</button>
+    </div>
+
+    <div class="lyric-layout">
+      <div class="lyric-editor">
+        <input class="lyric-title" id="title" type="text" placeholder="Untitled song" maxlength="80" aria-label="Song title">
+        <div class="lyric-sheet">
+          <div class="lyric-gutter" id="gutter" aria-hidden="true"></div>
+          <textarea id="lyrics" spellcheck="true" placeholder="Start writing here…&#10;&#10;Tap a word to see rhymes for it." aria-label="Lyrics"></textarea>
+        </div>
+        <p class="note" id="save-note">Numbers on the left count syllables in each line. Everything saves in this browser.</p>
+      </div>
+
+      <aside class="lyric-helper group" aria-label="Word helper">
+        <label class="row-label" for="word">Find words for</label>
+        <input class="field" id="word" type="search" placeholder="Type or tap a word" autocomplete="off" spellcheck="false">
+        <div class="chips" id="kinds" role="group" aria-label="Kind of word"></div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div class="word-groups" id="words"></div>
+      </aside>
+    </div>
+
+    <p class="note credits">Word ideas from the Datamuse API.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="lyrics.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Geo Quiz</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Geo Quiz</h1>
+    </header>
+
+    <div class="segmented" id="mode" role="group" aria-label="Game">
+      <button type="button" data-mode="flags">Flags</button>
+      <button type="button" data-mode="capitals">Capitals</button>
+      <button type="button" data-mode="mystery">Mystery</button>
+    </div>
+    <div class="chips region-chips" id="regions" role="group" aria-label="Region"></div>
+
+    <!-- Flags and capitals -->
+    <section class="panel" id="quiz" hidden>
+      <div class="game-bar">
+        <span class="round-info" id="quiz-round">Question 1 of 10</span>
+        <span class="round-info"><strong id="quiz-score">0</strong> right</span>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="quiz-progress"></span></div>
+
+      <div class="result-banner" id="quiz-end" hidden>
+        <h2 id="quiz-end-title"></h2>
+        <p id="quiz-end-text"></p>
+        <button type="button" class="primary" id="quiz-again">Play again</button>
+      </div>
+
+      <div class="quiz-card" id="quiz-card">
+        <img class="flag-big" id="quiz-flag" alt="" width="320" height="213">
+        <p class="quiz-question" id="quiz-question"></p>
+      </div>
+      <div class="answers" id="quiz-answers"></div>
+      <p class="message" id="quiz-message" role="status" aria-live="polite"></p>
+      <button type="button" class="primary" id="quiz-next" hidden>Next</button>
+    </section>
+
+    <!-- Mystery country -->
+    <section class="panel" id="mystery" hidden>
+      <p class="note">Guess the mystery country. Each guess tells you how far away it is and which way to go.</p>
+      <div class="search-wrap">
+        <input class="field" id="guess" type="text" placeholder="Type a country" autocomplete="off" spellcheck="false"
+               role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="guess-list" aria-label="Your guess">
+        <ul class="suggestions" id="guess-list" role="listbox" aria-label="Countries" hidden></ul>
+      </div>
+      <p class="message" id="mystery-message" role="status" aria-live="polite"></p>
+      <ul class="hints" id="hints"></ul>
+      <ol class="guesses" id="guesses"></ol>
+
+      <div class="result-banner" id="mystery-end" hidden>
+        <img class="flag-big" id="mystery-flag" alt="" width="320" height="213">
+        <h2 id="mystery-end-title"></h2>
+        <p id="mystery-end-text"></p>
+        <button type="button" class="primary" id="mystery-again">New country</button>
+      </div>
+      <button type="button" class="text-button is-danger" id="mystery-give-up">Give up</button>
+    </section>
+
+    <p class="note credits">Country data from the world-countries project (ODbL). Flags from flagcdn.com.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="countries.js"></script>
+  <script src="geo.js"></script>
+</body>
+</html>

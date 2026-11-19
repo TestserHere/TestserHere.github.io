@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Wiki Race</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏁</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="../v3apps.css">
+</head>
+<body>
+  <main class="app app-wide">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Wiki Race</h1>
+      <p class="lede">Get from one Wikipedia page to another using only the links.</p>
+    </header>
+
+    <!-- Setup -->
+    <section class="panel" id="setup">
+      <div class="segmented" id="level" role="group" aria-label="Difficulty">
+        <button type="button" data-level="easy">Easy start</button>
+        <button type="button" data-level="hard">Random start</button>
+      </div>
+
+      <div class="race-ends">
+        <div class="end-card">
+          <span class="end-label">Start</span>
+          <strong class="end-title" id="start-title">…</strong>
+          <span class="end-desc" id="start-desc"></span>
+          <div class="search-wrap">
+            <input class="field" id="start-search" type="search" placeholder="Pick your own start" autocomplete="off"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="start-list" aria-label="Pick your own start">
+            <ul class="suggestions" id="start-list" role="listbox" aria-label="Pages" hidden></ul>
+          </div>
+          <button type="button" class="text-button" id="start-new">Shuffle start</button>
+        </div>
+        <div class="end-arrow" aria-hidden="true">→</div>
+        <div class="end-card">
+          <span class="end-label">Target</span>
+          <strong class="end-title" id="target-title">…</strong>
+          <span class="end-desc" id="target-desc"></span>
+          <div class="search-wrap">
+            <input class="field" id="target-search" type="search" placeholder="Pick your own target" autocomplete="off"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="target-list" aria-label="Pick your own target">
+            <ul class="suggestions" id="target-list" role="listbox" aria-label="Pages" hidden></ul>
+          </div>
+          <button type="button" class="text-button" id="target-new">Shuffle target</button>
+        </div>
+      </div>
+
+      <p class="status" id="setup-status" role="status"></p>
+      <button type="button" class="primary" id="go" disabled>Start race</button>
+
+      <div class="group">
+        <span class="row-label">How to play</span>
+        <ul class="rules">
+          <li>You start on one page. Reach the target by tapping links in the article.</li>
+          <li>Fewer clicks is better. Going back counts as a click.</li>
+          <li>No search, no typing, just links.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Racing -->
+    <section class="panel" id="race" hidden>
+      <div class="race-bar" id="race-bar">
+        <div class="race-goal">
+          <span class="end-label">Target</span>
+          <strong id="race-target"></strong>
+        </div>
+        <div class="race-stats">
+          <span><strong id="clicks">0</strong> clicks</span>
+          <span class="game-time" id="time" role="timer">0:00</span>
+        </div>
+        <div class="race-actions">
+          <button type="button" class="text-button" id="back" disabled>Back</button>
+          <button type="button" class="text-button is-danger" id="quit">Give up</button>
+        </div>
+      </div>
+
+      <div class="result-banner" id="win" hidden>
+        <h2 id="win-title">You made it!</h2>
+        <p id="win-text"></p>
+        <ol class="race-path" id="win-path"></ol>
+        <button type="button" class="primary" id="again">New race</button>
+      </div>
+
+      <p class="status" id="race-status" role="status" aria-live="polite"></p>
+      <article class="wiki" id="article" aria-live="off"></article>
+    </section>
+
+    <p class="note credits">Articles from Wikipedia, shared under CC BY-SA. Each page links to its original.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3apps.js"></script>
+  <script src="race.js"></script>
+</body>
+</html>
