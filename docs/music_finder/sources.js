@@ -121,10 +121,10 @@ window.MusicSources = (function () {
 
   /* Picks a varied list: the best scores first, a little shuffled, at most two songs per artist. */
   function choose(candidates, options) {
-    const { seeds = [], exclude = new Set(), count = 20, perArtist = 2 } = options || {};
+    const { seeds = [], exclude = new Set(), avoidArtists = new Set(), count = 20, perArtist = 2 } = options || {};
     const seedKeys = new Set(seeds.map(keyOf));
     const ranked = candidates
-      .filter((song) => !seedKeys.has(keyOf(song)) && !exclude.has(keyOf(song)))
+      .filter((song) => !seedKeys.has(keyOf(song)) && !exclude.has(keyOf(song)) && !avoidArtists.has(norm(song.artist)))
       .map((song) => ({ song, rank: song.score * (0.7 + Math.random() * 0.6) }))
       .sort((a, b) => b.rank - a.rank);
     const perArtistCount = new Map();

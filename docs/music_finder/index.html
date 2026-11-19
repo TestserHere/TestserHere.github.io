@@ -80,9 +80,18 @@
         <h2>Nothing saved yet</h2>
         <p>Tap the heart on a song to keep it here.</p>
       </div>
+      <div class="group" id="hidden-box" hidden>
+        <div class="section-head">
+          <span class="row-label">Less like this</span>
+          <button type="button" class="text-button" id="hidden-clear">Clear all</button>
+        </div>
+        <p class="note">These artists are left out of your results. Tap one to bring it back.</p>
+        <div class="chips" id="hidden-artists"></div>
+      </div>
     </section>
 
-    <p class="note credits">Song data from Deezer, ListenBrainz, MusicBrainz, YouTube (through Invidious) and Apple Music. Nothing is sent anywhere except the searches you make.</p>
+    <p class="note credits">Song data from Deezer, ListenBrainz, MusicBrainz, YouTube (through Invidious) and Apple Music. Nothing is sent anywhere except the searches you make.
+      <a href="api.html">Use Music Finder in your own app</a></p>
   </main>
 
   <div class="player" id="player" hidden>

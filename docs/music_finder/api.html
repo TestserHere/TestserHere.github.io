@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Music Finder API</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="music.css">
+  <style>
+    .doc h2 { margin: 12px 0 0; font-size: 22px; letter-spacing: -0.01em; }
+    .doc p, .doc li { line-height: 1.5; }
+    .doc pre { margin: 0; padding: 14px 16px; overflow-x: auto; border-radius: 12px; background: var(--card); font-size: 14px; line-height: 1.5; }
+    .doc code { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+    .doc :not(pre) > code { padding: 1px 5px; border-radius: 5px; background: var(--fill); font-size: 0.9em; }
+    .doc table { width: 100%; border-collapse: collapse; font-size: 15px; }
+    .doc td, .doc th { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .doc .table-wrap { overflow-x: auto; }
+    .try-out { white-space: pre-wrap; max-height: 320px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <main class="app app-wide doc">
+    <header class="app-head">
+      <a class="back-home" href="index.html">&lsaquo; Music Finder</a>
+      <h1>Music Finder API</h1>
+      <p class="lede">Use Music Finder’s song suggestions in your own app.</p>
+    </header>
+
+    <p>Music Finder runs entirely in the browser, so its “API” is a script your web app loads. Your app then asks the same free music services directly. There are no keys, no accounts and no limits beyond those services’ own.</p>
+
+    <h2>1. Add the script</h2>
+    <pre><code>&lt;script src="https://testserhere.github.io/music_finder/api.js"&gt;&lt;/script&gt;</code></pre>
+
+    <h2>2. Ask for songs</h2>
+    <pre><code>const result = await MusicFinder.recommend({
+  songs: [
+    { title: 'Yellow', artist: 'Coldplay' },
+    { title: 'Creep', artist: 'Radiohead' },
+  ],
+  count: 20,
+});
+
+result.source;   // 'deezer', the source that answered
+result.songs;    // [{ title, artist, art, preview, youtube, link, reason, source }, ...]</code></pre>
+    <p>Or ask by genre: <code>MusicFinder.recommend({ genre: 'jazz' })</code>.</p>
+
+    <h2>Options for recommend()</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Option</th><th>What it does</th></tr>
+        <tr><td><code>songs</code></td><td>1 to 3 songs you like, each <code>{ title, artist }</code>.</td></tr>
+        <tr><td><code>genre</code></td><td>Instead of songs, any genre, like <code>'rock'</code> or <code>'shoegaze'</code>.</td></tr>
+        <tr><td><code>source</code></td><td><code>'auto'</code> (default) tries Deezer, ListenBrainz, YouTube then Apple Music until one works. Or name one.</td></tr>
+        <tr><td><code>count</code></td><td>How many songs, 1 to 50. Default 20.</td></tr>
+        <tr><td><code>exclude</code></td><td>Songs to leave out, like ones already in your library. Each <code>{ title, artist }</code>.</td></tr>
+        <tr><td><code>avoidArtists</code></td><td>Artist names to leave out. This is how your app can do “less like this”.</td></tr>
+      </table>
+    </div>
+
+    <h2>What each song has</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Field</th><th>Meaning</th></tr>
+        <tr><td><code>title</code>, <code>artist</code></td><td>The song.</td></tr>
+        <tr><td><code>art</code></td><td>Cover art address, or empty.</td></tr>
+        <tr><td><code>preview</code></td><td>A 30-second audio clip you can play with <code>new Audio(song.preview)</code>, or empty.</td></tr>
+        <tr><td><code>youtube</code></td><td>A YouTube video id when the song came from YouTube, or empty.</td></tr>
+        <tr><td><code>link</code></td><td>The song’s page on the source.</td></tr>
+        <tr><td><code>reason</code></td><td>Why it was picked, like “Similar to Coldplay”.</td></tr>
+      </table>
+    </div>
+
+    <h2>Other helpers</h2>
+    <pre><code>await MusicFinder.search('yellow coldplay');           // songs matching typed words
+await MusicFinder.preview({ title, artist });        // a preview address for any song, or ''
+await MusicFinder.sources();                         // [{ id, name, about }]
+await MusicFinder.genres();                          // ['Pop', 'Rock', ...]
+MusicFinder.link({ songs: [{ title, artist }] });    // a link that opens Music Finder with that search</code></pre>
+
+    <h2>Not a web app?</h2>
+    <p>Apps that aren’t web pages can open Music Finder with a link instead, for example:</p>
+    <pre><code>https://testserhere.github.io/music_finder/?song=Coldplay%20-%20Yellow&amp;song=Radiohead%20-%20Creep&amp;source=deezer
+https://testserhere.github.io/music_finder/?genre=jazz</code></pre>
+    <p>A server or phone app that wants plain JSON would need a small server of its own to run this code, because GitHub Pages can only serve files.</p>
+
+    <h2>Try it</h2>
+    <div class="group">
+      <input class="field" id="try-songs" value="Coldplay - Yellow, Radiohead - Creep" aria-label="Songs, as Artist - Title, separated by commas">
+      <button type="button" class="primary" id="try-go">Run recommend()</button>
+      <pre class="try-out" id="try-out" aria-live="polite">Results appear here.</pre>
+    </div>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    document.getElementById('try-go').addEventListener('click', async () => {
+      const out = document.getElementById('try-out');
+      const songs = document.getElementById('try-songs').value.split(',')
+        .map((text) => text.split(' - '))
+        .filter((parts) => parts.length >= 2)
+        .map((parts) => ({ artist: parts[0].trim(), title: parts.slice(1).join(' - ').trim() }));
+      out.textContent = 'Asking…';
+      try {
+        const result = await MusicFinder.recommend({ songs, count: 5 });
+        out.textContent = JSON.stringify(result, null, 2);
+      } catch (error) {
+        out.textContent = 'Error: ' + error.message;
+      }
+    });
+  </script>
+</body>
+</html>

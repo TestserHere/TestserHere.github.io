@@ -8,6 +8,7 @@
 
   const STATE_KEY = 'v3-music-state';
   const SAVED_KEY = 'v3-music-saved';
+  const HIDDEN_KEY = 'v3-music-hidden';
   const MAX_SEEDS = 3;
   const PAGE = 20;
 
@@ -20,6 +21,15 @@
   };
   let savedSongs = read(SAVED_KEY, []);
   if (!Array.isArray(savedSongs)) savedSongs = [];
+
+  /* "Less like this": songs and artists to leave out of results. */
+  const hidden0 = read(HIDDEN_KEY, {});
+  const hidden = {
+    songs: Array.isArray(hidden0.songs) ? hidden0.songs.filter((key) => typeof key === 'string') : [],
+    artists: Array.isArray(hidden0.artists) ? hidden0.artists.filter((artist) => artist && artist.key && artist.name) : [],
+  };
+  const saveHidden = () => write(HIDDEN_KEY, hidden);
+  const hiddenArtists = () => new Set(hidden.artists.map((artist) => artist.key));
 
   function remember() {
     write(STATE_KEY, state);
@@ -36,6 +46,7 @@
     video: 'M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5zM10 8.8v6.4l5.2-3.2z',
     heart: 'M12 20.3l-1.3-1.2C6 14.9 3 12.2 3 8.8 3 6.1 5.1 4 7.8 4c1.5 0 3 .7 4.2 1.9C13.2 4.7 14.7 4 16.2 4 18.9 4 21 6.1 21 8.8c0 3.4-3 6.1-7.7 10.3z',
     note: 'M9 18.5V6.2L19 4v11.3M9 18.5A2.5 2.5 0 1 1 6.5 16 2.5 2.5 0 0 1 9 18.5zM19 15.3a2.5 2.5 0 1 1-2.5-2.5 2.5 2.5 0 0 1 2.5 2.5z',
+    thumb: 'M7.5 10.5v9h-3a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1zM7.5 10.5l3.8-6.6a1.9 1.9 0 0 1 3.5 1.2l-.6 4.4h5a2 2 0 0 1 2 2.4l-1.3 6.4a2 2 0 0 1-2 1.7H7.5',
   };
 
   function icon(name) {
@@ -327,11 +338,17 @@
 
   function showPage() {
     const { entry, source } = current;
-    let picked = Music.choose(entry.songs, { seeds: state.mode === 'songs' ? state.seeds : [], exclude: entry.shown, count: PAGE });
+    const options = () => ({
+      seeds: state.mode === 'songs' ? state.seeds : [],
+      exclude: new Set([...entry.shown, ...hidden.songs]),
+      avoidArtists: hiddenArtists(),
+      count: PAGE,
+    });
+    let picked = Music.choose(entry.songs, options());
     if (picked.length < 6 && entry.shown.size) {
       // Seen them all: start again from the top.
       entry.shown.clear();
-      picked = Music.choose(entry.songs, { seeds: state.mode === 'songs' ? state.seeds : [], count: PAGE });
+      picked = Music.choose(entry.songs, options());
     }
     picked.forEach((song) => entry.shown.add(Music.keyOf(song)));
     renderSongs($('results'), picked, true);
@@ -401,6 +418,7 @@
     songs.forEach((song) => {
       const row = el('li', 'song');
       row.dataset.key = Music.keyOf(song);
+      row.dataset.artist = Music.norm(song.artist);
 
       const play = el('button', 'song-art');
       play.type = 'button';
@@ -414,15 +432,24 @@
       if (showReason && song.reason) meta.appendChild(el('span', 'song-why', song.reason));
 
       const links = el('div', 'song-links');
-      const similar = el('button', 'link-button', 'More like this');
-      similar.type = 'button';
-      similar.addEventListener('click', () => moreLike(song));
+      const up = el('button', 'thumb');
+      up.type = 'button';
+      up.title = 'More like this';
+      up.setAttribute('aria-label', 'More like ' + song.title);
+      up.appendChild(icon('thumb'));
+      up.addEventListener('click', () => moreLike(song));
+      const down = el('button', 'thumb is-down');
+      down.type = 'button';
+      down.title = 'Less like this';
+      down.setAttribute('aria-label', 'Less like ' + song.title);
+      down.appendChild(icon('thumb'));
+      down.addEventListener('click', () => lessLike(song, row));
       const youtube = el('a', '', 'YouTube');
       youtube.href = song.youtube ? 'https://www.youtube.com/watch?v=' + song.youtube : searchLink('https://www.youtube.com/results?search_query=', song);
       const spotify = el('a', '', 'Spotify');
       spotify.href = searchLink('https://open.spotify.com/search/', song);
       [youtube, spotify].forEach((link) => { link.target = '_blank'; link.rel = 'noopener'; });
-      links.append(similar, youtube, spotify);
+      links.append(up, down, youtube, spotify);
       meta.appendChild(links);
 
       const heart = el('button', 'song-save');
@@ -442,6 +469,70 @@
     $('saved-empty').hidden = savedSongs.length > 0;
     $('tab-saved').textContent = savedSongs.length ? 'Saved (' + savedSongs.length + ')' : 'Saved';
   }
+
+  /* Hides the song and leaves its artist out of future results, with a way to undo. */
+  function lessLike(song, row) {
+    const songKey = Music.keyOf(song);
+    const artistKey = Music.norm(song.artist);
+    if (!hidden.songs.includes(songKey)) hidden.songs = hidden.songs.concat(songKey).slice(-500);
+    if (!hidden.artists.some((artist) => artist.key === artistKey)) hidden.artists = hidden.artists.concat({ key: artistKey, name: song.artist }).slice(-200);
+    saveHidden();
+    renderHidden();
+    if (playingRow && playingRow.dataset.artist === artistKey) stopAudio();
+
+    // Other songs by the same artist go too.
+    const removed = [];
+    row.parentNode.querySelectorAll('.song').forEach((other) => {
+      if (other !== row && other.dataset.artist === artistKey) {
+        removed.push([other, other.nextSibling]);
+        other.remove();
+      }
+    });
+    const note = el('li', 'song-hidden');
+    note.setAttribute('role', 'status');
+    note.appendChild(el('span', '', 'Got it. You’ll see less from ' + song.artist + '.'));
+    const undo = el('button', 'link-button', 'Undo');
+    undo.type = 'button';
+    undo.addEventListener('click', () => {
+      unhide(artistKey, songKey);
+      note.replaceWith(row);
+      removed.forEach(([other, next]) => {
+        if (next && next.parentNode) next.parentNode.insertBefore(other, next);
+        else row.parentNode.appendChild(other);
+      });
+    });
+    note.appendChild(undo);
+    row.replaceWith(note);
+  }
+
+  function unhide(artistKey, songKey) {
+    hidden.artists = hidden.artists.filter((artist) => artist.key !== artistKey);
+    if (songKey) hidden.songs = hidden.songs.filter((key) => key !== songKey);
+    else hidden.songs = hidden.songs.filter((key) => key.split('|')[0] !== artistKey);
+    saveHidden();
+    renderHidden();
+  }
+
+  function renderHidden() {
+    const box = $('hidden-artists');
+    box.replaceChildren();
+    hidden.artists.slice().reverse().forEach((artist) => {
+      const chip = el('button', 'chip hidden-chip');
+      chip.type = 'button';
+      chip.setAttribute('aria-label', 'Show ' + artist.name + ' again');
+      chip.append(artist.name, el('span', '', '×'));
+      chip.addEventListener('click', () => unhide(artist.key));
+      box.appendChild(chip);
+    });
+    $('hidden-box').hidden = !hidden.artists.length;
+  }
+
+  $('hidden-clear').addEventListener('click', () => {
+    hidden.songs = [];
+    hidden.artists = [];
+    saveHidden();
+    renderHidden();
+  });
 
   function moreLike(song) {
     state.mode = 'songs';
@@ -539,6 +630,42 @@
 
   $('player-close').addEventListener('click', closePlayer);
 
+  /* ---------- Links from other apps ----------
+     ?song=Coldplay - Yellow&song=Radiohead - Creep&source=listenbrainz  or  ?genre=jazz&source=apple
+     fills in the search and runs it straight away. */
+
+  function startFromLink() {
+    const params = new URLSearchParams(location.search);
+    const source = params.get('source');
+    if (source && sourceById(source)) {
+      state.source = source;
+      renderSources();
+    }
+    const songs = params.getAll('song')
+      .map((text) => text.split(/\s+[-–—]\s+/))
+      .filter((parts) => parts.length >= 2 && parts[0].trim() && parts.slice(1).join(' - ').trim())
+      .slice(0, MAX_SEEDS)
+      .map((parts) => ({ artist: parts[0].trim(), title: parts.slice(1).join(' - ').trim(), art: '' }));
+    const genre = (params.get('genre') || '').trim().slice(0, 60);
+    if (songs.length) {
+      state.mode = 'songs';
+      state.seeds = songs;
+    } else if (genre) {
+      state.mode = 'genre';
+      state.genre = genre;
+      const known = Music.GENRES.some((item) => item.name === genre);
+      $('genre-other').value = known ? '' : genre;
+      renderGenres();
+    } else {
+      return;
+    }
+    remember();
+    tabs.show('find');
+    showMode();
+    renderSeeds();
+    run();
+  }
+
   /* ---------- Start ---------- */
 
   const tabs = setupTabs('v3-music-tab', () => { stopAudio(); });
@@ -547,4 +674,6 @@
   renderGenres();
   renderSources();
   renderSaved();
+  renderHidden();
+  startFromLink();
 })();
