@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Picker</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3apps.css">
+  <link rel="stylesheet" href="picker.css">
+</head>
+<body>
+  <main class="app app-wide">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Picker</h1>
+    </header>
+
+    <div class="picker-layout">
+      <section class="picker-stage" aria-label="Pick">
+        <div class="segmented" id="mode" role="group" aria-label="How to pick">
+          <button type="button" data-mode="wheel">Wheel</button>
+          <button type="button" data-mode="instant">Instant</button>
+        </div>
+
+        <!-- Wheel -->
+        <div class="wheel-wrap" id="wheel-view" hidden>
+          <div class="wheel-box">
+            <canvas id="wheel" role="img" aria-label="Wheel of entries"></canvas>
+            <span class="wheel-pointer" aria-hidden="true"></span>
+            <button type="button" class="wheel-hub" id="spin">Spin</button>
+          </div>
+          <p class="note wheel-hint">Tap the wheel or press Space to spin.</p>
+        </div>
+
+        <!-- Instant -->
+        <div class="instant" id="instant-view">
+          <div class="pick-card instant-card" id="instant-card" aria-live="polite">
+            <span class="pick-name is-idle" id="instant-name">Tap Pick</span>
+          </div>
+          <div class="button-row">
+            <button type="button" class="secondary" id="instant-remove" disabled>Remove it</button>
+            <button type="button" class="primary" id="instant-pick">Pick</button>
+          </div>
+        </div>
+
+        <label class="row check">
+          <span>Remove the winner after each pick</span>
+          <input type="checkbox" id="auto-remove">
+        </label>
+        <label class="row check">
+          <span>Sound</span>
+          <input type="checkbox" id="sound">
+        </label>
+      </section>
+
+      <aside class="picker-side">
+        <div class="group">
+          <div class="section-head">
+            <label class="row-label" for="entries">Entries</label>
+            <span class="muted small" id="count">0</span>
+          </div>
+          <textarea class="field entries" id="entries" spellcheck="false" placeholder="One per line"></textarea>
+          <div class="button-row">
+            <button type="button" class="secondary" id="shuffle">Shuffle</button>
+            <button type="button" class="secondary" id="sort">Sort</button>
+            <button type="button" class="secondary" id="restore" disabled>Undo</button>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="section-head">
+            <span class="row-label">Results</span>
+            <button type="button" class="text-button" id="clear-history">Clear</button>
+          </div>
+          <ol class="history" id="history"></ol>
+          <p class="note" id="history-empty">Winners show up here.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <dialog class="winner" id="winner" aria-labelledby="winner-name">
+    <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+    <p class="winner-label">The winner is</p>
+    <h2 class="winner-name" id="winner-name"></h2>
+    <div class="button-row">
+      <button type="button" class="secondary" id="winner-remove">Remove</button>
+      <button type="button" class="primary" id="winner-close">Close</button>
+    </div>
+  </dialog>
+
+  <script src="../v3tools.js"></script>
+  <script src="picker.js"></script>
+</body>
+</html>
