@@ -8,6 +8,9 @@
   const MIN_ROUNDS = 1;
   const MAX_ROUNDS = 10;
   const LENGTHS = [30, 60, 90, 120];
+  const QUESTION_COUNTS = [5, 10, 15, 20];
+  const SEEN_KEY = 'v3-dsio-seen';
+  const SETUP_KEY = 'v3-dsio-setup';
   const POINTS = { correct: 1, pass: 0, forbidden: -1 };
   const RESULT_NAMES = { correct: 'Correct', pass: 'Passed', forbidden: 'Forbidden' };
   const LOW_TIME = 10;
@@ -17,7 +20,44 @@
     zh: { label: '中文', lang: 'zh-CN', cards: CHINESE_WORD_CARDS },
   };
 
-  const setup = { teams: 2, names: [], seconds: 60, rounds: 3, pack: 'en' };
+  /* Saved data is read inside try/catch: private windows can block storage. */
+  function load(key, fallback) {
+    try {
+      const value = JSON.parse(localStorage.getItem(key));
+      return value && typeof value === 'object' ? value : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+  function store(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) { /* not saved */ }
+  }
+
+  const savedSetup = load(SETUP_KEY, {});
+  const setup = {
+    teams: 2, names: [], rounds: 3,
+    seconds: LENGTHS.includes(savedSetup.seconds) ? savedSetup.seconds : 60,
+    lengthMode: savedSetup.lengthMode === 'questions' ? 'questions' : 'time',
+    questions: QUESTION_COUNTS.includes(savedSetup.questions) ? savedSetup.questions : 10,
+    pack: PACKS[savedSetup.pack] ? savedSetup.pack : 'en',
+  };
+  const saveSetup = () => store(SETUP_KEY, { seconds: setup.seconds, lengthMode: setup.lengthMode, questions: setup.questions, pack: setup.pack });
+
+  /* Cards already played in this browser, per pack, so no card comes back until the whole pack has been seen. */
+  const seenStore = load(SEEN_KEY, {});
+  function seenSet(packKey) {
+    return new Set(Array.isArray(seenStore[packKey]) ? seenStore[packKey].filter((w) => typeof w === 'string') : []);
+  }
+  function markSeen(packKey, word) {
+    const list = Array.isArray(seenStore[packKey]) ? seenStore[packKey] : (seenStore[packKey] = []);
+    if (!list.includes(word)) list.push(word);
+    store(SEEN_KEY, seenStore);
+  }
+  function forgetSeen(packKey) {
+    seenStore[packKey] = [];
+    store(SEEN_KEY, seenStore);
+  }
+
   let game = null;
   let turn = null;
   let audio = null;
@@ -73,19 +113,31 @@
   }
 
   function renderLengths() {
+    $('length-mode').querySelectorAll('button').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.mode === setup.lengthMode));
+    });
+    const byTime = setup.lengthMode === 'time';
+    $('length-label').textContent = byTime ? 'Time per turn' : 'Questions per turn';
     const box = $('length-options');
     box.replaceChildren();
-    LENGTHS.forEach((seconds) => {
-      const button = el('button', '', seconds + 's');
+    (byTime ? LENGTHS : QUESTION_COUNTS).forEach((value) => {
+      const button = el('button', '', byTime ? value + 's' : String(value));
       button.type = 'button';
-      button.setAttribute('aria-pressed', String(seconds === setup.seconds));
+      button.setAttribute('aria-pressed', String(value === (byTime ? setup.seconds : setup.questions)));
       button.addEventListener('click', () => {
-        setup.seconds = seconds;
+        if (byTime) setup.seconds = value; else setup.questions = value;
+        saveSetup();
         renderLengths();
       });
       box.appendChild(button);
     });
   }
+
+  $('length-mode').querySelectorAll('button').forEach((button) => button.addEventListener('click', () => {
+    setup.lengthMode = button.dataset.mode;
+    saveSetup();
+    renderLengths();
+  }));
 
   function renderPacks() {
     const box = $('pack-options');
@@ -96,10 +148,25 @@
       button.setAttribute('aria-pressed', String(key === setup.pack));
       button.addEventListener('click', () => {
         setup.pack = key;
+        saveSetup();
         renderPacks();
       });
       box.appendChild(button);
     });
+    renderPackNote();
+  }
+
+  function renderPackNote() {
+    const pack = PACKS[setup.pack];
+    const note = $('pack-note');
+    const seen = seenSet(setup.pack);
+    const fresh = pack.cards.filter((card) => !seen.has(card[0])).length;
+    const total = pack.cards.length;
+    if (setup.pack === 'zh') {
+      note.textContent = fresh === total ? '共 ' + total + ' 张卡片。' : '共 ' + total + ' 张卡片，还有 ' + fresh + ' 张没玩过。';
+    } else {
+      note.textContent = fresh === total ? total + ' cards.' : total + ' cards, ' + fresh + " you haven't played yet.";
+    }
   }
 
   $('teams-minus').addEventListener('click', () => { setup.teams--; renderTeamNames(); });
@@ -111,6 +178,7 @@
     startGame();
   });
 
+
   /* Game flow */
   function startGame() {
     const pack = PACKS[setup.pack];
@@ -120,11 +188,14 @@
         name: teamName(i), score: 0, correct: 0, pass: 0, forbidden: 0,
       })),
       seconds: setup.seconds,
+      lengthMode: setup.lengthMode,
+      questions: setup.questions,
+      packKey: setup.pack,
       rounds: setup.rounds,
       round: 1,
       teamIndex: 0,
       cards: pack.cards,
-      deck: shuffled(pack.cards),
+      deck: freshDeck(setup.pack, pack.cards),
       log: [],
     };
     showReady();
@@ -144,9 +215,23 @@
     show('screen-ready');
   }
 
+  /* Unplayed cards first. Once every card has been played, the pack starts over. */
+  function freshDeck(packKey, cards) {
+    const seen = seenSet(packKey);
+    let fresh = cards.filter((card) => !seen.has(card[0]));
+    if (!fresh.length) {
+      forgetSeen(packKey);
+      fresh = cards;
+    }
+    return shuffled(fresh);
+  }
+
   function drawCard() {
-    if (!game.deck.length) game.deck = shuffled(game.cards);
-    return game.deck.pop();
+    const packKey = game.packKey;
+    if (!game.deck.length) game.deck = freshDeck(packKey, game.cards);
+    const card = game.deck.pop();
+    markSeen(packKey, card[0]);
+    return card;
   }
 
   function setRevealed(revealed) {
@@ -182,10 +267,24 @@
     $('play-team').textContent = currentTeam().name;
     $('play-round').textContent = roundText();
     $('play-score').textContent = currentTeam().score;
+    $('play-time').setAttribute('role', game.lengthMode === 'time' ? 'timer' : 'status');
+    $('play-time').classList.toggle('is-count', game.lengthMode === 'questions');
     nextCard();
     show('screen-play');
+    if (game.lengthMode === 'questions') {
+      showQuestionCount();
+      return;
+    }
     tick();
     turn.timer = setInterval(tick, 100);
+  }
+
+  /* Questions mode: shows which card this is, like 4/10, and fills the bar as cards are played. */
+  function showQuestionCount() {
+    const done = turn.results.length;
+    $('play-time').textContent = Math.min(done + 1, game.questions) + '/' + game.questions;
+    $('play-time').classList.remove('low');
+    $('play-bar').style.transform = 'scaleX(' + (1 - done / game.questions) + ')';
   }
 
   function tick() {
@@ -206,6 +305,13 @@
     turn.results.push(entry);
     game.log.push(entry);
     $('play-score').textContent = team.score;
+    if (game.lengthMode === 'questions') {
+      showQuestionCount();
+      if (turn.results.length >= game.questions) {
+        endTurn();
+        return;
+      }
+    }
     nextCard();
   }
 
@@ -243,6 +349,7 @@
   function showTurnRecap() {
     const teamCount = game.teams.length;
     $('turn-title').textContent = (teamCount > 1 ? currentTeam().name + ': ' : '') + pointsText(turn.points);
+    $('turn-eyebrow').textContent = game.lengthMode === 'questions' ? 'Turn over!' : "Time's up!";
     $('turn-results').replaceWith(Object.assign(resultList(turn.results), { id: 'turn-results' }));
     $('turn-next').textContent = isLastTurn() ? 'See summary' : 'Next turn';
     show('screen-turn');
@@ -328,7 +435,10 @@
   $('ready-start').addEventListener('click', startTurn);
   $('turn-next').addEventListener('click', advance);
   $('summary-again').addEventListener('click', startGame);
-  $('summary-new').addEventListener('click', () => show('screen-setup'));
+  $('summary-new').addEventListener('click', () => {
+    renderPackNote();
+    show('screen-setup');
+  });
 
   // The home page shows its own Done button when the game opens inside it.
   $('back-home').hidden = window.top !== window.self;
@@ -338,3 +448,12 @@
   renderLengths();
   renderPacks();
 })();
+
+/* Keyboard shortcuts */
+window.V3Keys.add([
+  { keys: [' '], label: 'Space', does: 'Show or hide the word', press: '#word-card' },
+  { keys: ['c', 'ArrowRight'], label: 'C or →', does: 'Correct', press: '#act-correct' },
+  { keys: ['p', 'ArrowDown'], label: 'P or ↓', does: 'Pass', press: '#act-pass' },
+  { keys: ['x', 'ArrowLeft'], label: 'X or ←', does: 'Forbidden word said', press: '#act-forbidden' },
+  { keys: ['Enter'], label: 'Enter', does: 'Start, next turn or play again', press: ['#ready-start', '#turn-next', '#summary-again', '#setup-form button[type="submit"]'] },
+], { hintIn: document.getElementById('screen-setup') });

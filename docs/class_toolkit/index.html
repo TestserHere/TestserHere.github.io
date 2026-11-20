@@ -15,6 +15,7 @@
   </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>">
   <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3wheel.css">
 </head>
 <body>
   <main class="app app-wide">
@@ -65,13 +66,31 @@
         <button type="button" class="primary" data-go="class">Go to Students</button>
       </div>
       <div class="panel" id="picker-body">
-        <div class="pick-card">
-          <div class="pick-name is-idle" id="pick-name"></div>
+        <div class="segmented" id="pick-mode" role="group" aria-label="How to pick">
+          <button type="button" data-mode="wheel">Wheel</button>
+          <button type="button" data-mode="instant">Instant</button>
         </div>
-        <button type="button" class="primary" id="pick-button">Pick a name</button>
+        <div class="panel" id="pick-instant">
+          <div class="pick-card">
+            <div class="pick-name is-idle" id="pick-name" aria-live="polite"></div>
+          </div>
+          <button type="button" class="primary" id="pick-button">Pick a name</button>
+        </div>
+        <div class="wheel-wrap" id="pick-wheel" hidden>
+          <div class="wheel-box">
+            <canvas id="wheel" role="img" aria-label="Wheel of students"></canvas>
+            <span class="wheel-pointer" aria-hidden="true"></span>
+            <button type="button" class="wheel-hub" id="spin">Spin</button>
+          </div>
+          <p class="note wheel-hint" id="wheel-hint">Tap the wheel or press Space to spin.</p>
+        </div>
         <label class="group check">
           <span class="row-label">Give everyone a turn before repeating</span>
           <input type="checkbox" id="pick-no-repeat">
+        </label>
+        <label class="group check">
+          <span class="row-label">Sound</span>
+          <input type="checkbox" id="pick-sound">
         </label>
         <div class="group" id="picked-group" hidden>
           <div class="section-head">
@@ -159,7 +178,17 @@
     </section>
   </main>
 
+  <dialog class="winner" id="winner" aria-labelledby="winner-name">
+    <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+    <p class="winner-label">It's your turn</p>
+    <h2 class="winner-name" id="winner-name"></h2>
+    <div class="button-row">
+      <button type="button" class="primary" id="winner-close">Close</button>
+    </div>
+  </dialog>
+
   <script src="../v3tools.js"></script>
+  <script src="../v3wheel.js"></script>
   <script src="class.js"></script>
 </body>
 </html>

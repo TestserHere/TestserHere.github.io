@@ -223,3 +223,7 @@ body.has-now .app { padding-bottom: 110px; }
 .night[data-level="excellent"] strong { color: #10b981; }
 .night[data-level="good"] strong { color: #3b82f6; }
 .night[data-level="fair"] strong { color: #8b5cf6; }
+
+/* Geo Quiz hint switch */
+.hint-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hint-modes { flex: 0 1 240px; }

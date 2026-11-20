@@ -63,8 +63,17 @@
                role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="guess-list" aria-label="Your guess">
         <ul class="suggestions" id="guess-list" role="listbox" aria-label="Countries" hidden></ul>
       </div>
+      <div class="hint-bar">
+        <span class="row-label" id="hint-label">Hints</span>
+        <div class="segmented hint-modes" id="hint-modes" role="group" aria-labelledby="hint-label">
+          <button type="button" data-hints="auto">Auto</button>
+          <button type="button" data-hints="ask">Ask</button>
+          <button type="button" data-hints="off">Off</button>
+        </div>
+      </div>
       <p class="message" id="mystery-message" role="status" aria-live="polite"></p>
-      <ul class="hints" id="hints"></ul>
+      <ul class="hints" id="hints" aria-live="polite"></ul>
+      <button type="button" class="secondary" id="hint-ask" hidden>Get a hint</button>
       <ol class="guesses" id="guesses"></ol>
 
       <div class="result-banner" id="mystery-end" hidden>
@@ -82,6 +91,7 @@
   <script src="../v3tools.js"></script>
   <script src="../v3apps.js"></script>
   <script src="countries.js"></script>
+  <script src="../v3keys.js"></script>
   <script src="geo.js"></script>
 </body>
 </html>

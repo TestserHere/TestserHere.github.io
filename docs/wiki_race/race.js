@@ -307,3 +307,11 @@
   newStart();
   newTarget();
 })();
+
+/* Keyboard shortcuts */
+window.V3Keys.add([
+  { keys: ['b', 'Backspace'], label: 'B or Backspace', does: 'Go back a page', press: '#back' },
+  { keys: ['Enter'], label: 'Enter', does: 'Start the race or a new one', press: ['#go', '#again'] },
+  { keys: ['s'], label: 'S', does: 'Shuffle the start page', press: '#start-new' },
+  { keys: ['t'], label: 'T', does: 'Shuffle the target page', press: '#target-new' },
+]);

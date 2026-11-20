@@ -41,10 +41,16 @@
       <section class="group">
         <span class="row-label" id="pack-label">Word pack</span>
         <div class="segmented" id="pack-options" role="group" aria-labelledby="pack-label"></div>
+        <p class="muted small pack-note" id="pack-note"></p>
       </section>
 
       <section class="group">
-        <span class="row-label" id="length-label">Round length</span>
+        <span class="row-label" id="length-mode-label">Turn length</span>
+        <div class="segmented" id="length-mode" role="group" aria-labelledby="length-mode-label">
+          <button type="button" data-mode="time">Timed</button>
+          <button type="button" data-mode="questions">Questions</button>
+        </div>
+        <span class="row-label small muted" id="length-label">Time per turn</span>
         <div class="segmented" id="length-options" role="group" aria-labelledby="length-label"></div>
       </section>
 
@@ -110,7 +116,7 @@
   <!-- Turn recap -->
   <main class="screen" id="screen-turn" hidden>
     <header class="title-block">
-      <p class="eyebrow">Time's up!</p>
+      <p class="eyebrow" id="turn-eyebrow">Time's up!</p>
       <h2 class="big" id="turn-title"></h2>
     </header>
     <ul class="results" id="turn-results"></ul>
@@ -133,6 +139,7 @@
   </main>
 
   <script src="words.js"></script>
+  <script src="../v3keys.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

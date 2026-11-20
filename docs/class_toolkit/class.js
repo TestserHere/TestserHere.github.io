@@ -8,7 +8,6 @@
   const STORE_KEY = 'v3-class-toolkit';
   const MAX_SEAT_LINES = 10;
   const MAX_PICK_HISTORY = 200;
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   const stringList = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === 'string') : []);
@@ -81,7 +80,11 @@
       ? saved.classes.map(cleanClass)
       : [blankClass('My class')];
     const current = saved && classes.some((item) => item.id === saved.current) ? saved.current : classes[0].id;
-    return { current, classes, noRepeat: !saved || saved.noRepeat !== false };
+    return {
+      current, classes, noRepeat: !saved || saved.noRepeat !== false,
+      pickMode: saved && saved.pickMode === 'wheel' ? 'wheel' : 'instant',
+      sound: !saved || saved.sound !== false,
+    };
   }
 
   const data = load();
@@ -223,8 +226,8 @@
     button.addEventListener('click', () => tabs.show(button.dataset.go));
   });
 
-  /* Name picker */
-  let picking = false;
+  /* Name picker: instant, or a spinning wheel */
+  const Wheel = window.V3Wheel;
 
   function pickPool() {
     const people = present();
@@ -232,6 +235,18 @@
     const picked = current().picked;
     return people.filter((name) => !picked.includes(name));
   }
+
+  const wheel = Wheel.create({
+    canvas: $('wheel'),
+    entries: pickPool,
+    onTick: () => { if (data.sound) Wheel.tick(); },
+    onDone: (name) => {
+      commitPick(name);
+      $('winner-name').textContent = name;
+      Wheel.openDialog($('winner'));
+      Wheel.confetti($('confetti'), () => $('winner').open);
+    },
+  });
 
   function setPickName(text, idle) {
     $('pick-name').textContent = text;
@@ -246,12 +261,23 @@
     if (none) return;
 
     const finished = pickPool().length === 0;
+    const spinning = wheel.isSpinning();
     $('pick-no-repeat').checked = data.noRepeat;
+    $('pick-sound').checked = data.sound;
+    $('pick-mode').querySelectorAll('button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === data.pickMode)));
+    $('pick-instant').hidden = data.pickMode !== 'instant';
+    $('pick-wheel').hidden = data.pickMode !== 'wheel';
+
     $('pick-button').textContent = finished ? 'Start over' : 'Pick a name';
-    if (!picking) {
-      if (finished) setPickName("Everyone's had a turn", true);
-      else if (item.lastPick) setPickName(item.lastPick, false);
-      else setPickName('Who will it be?', true);
+    if (finished) setPickName("Everyone's had a turn", true);
+    else if (item.lastPick) setPickName(item.lastPick, false);
+    else setPickName('Who will it be?', true);
+
+    $('spin').textContent = finished ? 'Reset' : 'Spin';
+    $('spin').disabled = spinning;
+    $('wheel-hint').textContent = finished ? "Everyone's had a turn. Tap Reset to start again." : 'Tap the wheel or press Space to spin.';
+    if (data.pickMode === 'wheel') {
+      if (!spinning) wheel.resize();
     }
 
     $('picked-group').hidden = item.picked.length === 0;
@@ -270,11 +296,11 @@
     item.picked = item.picked.concat(name).slice(-MAX_PICK_HISTORY);
     item.lastPick = name;
     save();
-    picking = false;
-    $('pick-name').removeAttribute('aria-busy');
+    if (data.sound) Wheel.chime();
     renderPicker();
   }
 
+  /* Never the same person twice in a row, unless they're the only one left. */
   function choosePick() {
     const pool = pickPool();
     const last = current().lastPick;
@@ -282,38 +308,64 @@
     return options[Math.floor(Math.random() * options.length)];
   }
 
-  $('pick-button').addEventListener('click', () => {
-    if (picking) return;
+  function pickInstant() {
     if (pickPool().length === 0) {
       resetPicks();
       return;
     }
-    const winner = choosePick();
-    if (reducedMotion) {
-      commitPick(winner);
+    commitPick(choosePick());
+    const name = $('pick-name');
+    name.classList.remove('pick-pop');
+    void name.offsetWidth; // restart the little pop
+    name.classList.add('pick-pop');
+  }
+
+  function spinWheel() {
+    if (wheel.isSpinning()) return;
+    const pool = pickPool();
+    if (!pool.length) {
+      resetPicks();
       return;
     }
-    picking = true;
-    $('pick-name').setAttribute('aria-busy', 'true');
-    const faces = shuffled(present());
-    let step = 0;
-    const roll = setInterval(() => {
-      setPickName(faces[step % faces.length], false);
-      step += 1;
-      if (step < 14) return;
-      clearInterval(roll);
-      commitPick(winner);
-    }, 65);
+    if (wheel.spin(pool.indexOf(choosePick()))) renderPicker();
+  }
+
+  $('pick-button').addEventListener('click', pickInstant);
+  $('spin').addEventListener('click', spinWheel);
+  $('wheel').addEventListener('click', spinWheel);
+
+  $('pick-mode').querySelectorAll('button').forEach((button) => button.addEventListener('click', () => {
+    if (wheel.isSpinning()) return;
+    data.pickMode = button.dataset.mode;
+    save();
+    renderPicker();
+  }));
+
+  document.addEventListener('keydown', (event) => {
+    if (event.code !== 'Space' || event.repeat || $('winner').open) return;
+    if ($('panel-picker').hidden || $('picker-body').hidden) return;
+    if (/^(TEXTAREA|INPUT|BUTTON|SELECT)$/.test(document.activeElement.tagName)) return;
+    event.preventDefault();
+    if (data.pickMode === 'wheel') spinWheel(); else pickInstant();
   });
+  window.addEventListener('resize', () => { if (data.pickMode === 'wheel' && !wheel.isSpinning()) wheel.resize(); });
+
+  $('winner-close').addEventListener('click', () => Wheel.closeDialog($('winner')));
+  $('winner').addEventListener('click', (event) => { if (event.target === $('winner')) Wheel.closeDialog($('winner')); });
 
   $('pick-reset').addEventListener('click', () => {
-    if (!picking) resetPicks();
+    if (!wheel.isSpinning()) resetPicks();
   });
 
   $('pick-no-repeat').addEventListener('change', (event) => {
     data.noRepeat = event.target.checked;
     save();
     renderPicker();
+  });
+
+  $('pick-sound').addEventListener('change', (event) => {
+    data.sound = event.target.checked;
+    save();
   });
 
   /* Groups */

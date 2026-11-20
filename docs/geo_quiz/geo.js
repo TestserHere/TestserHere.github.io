@@ -17,6 +17,7 @@
   const state = {
     mode: ['flags', 'capitals', 'mystery'].includes(saved0.mode) ? saved0.mode : 'flags',
     region: REGIONS.includes(saved0.region) ? saved0.region : 'World',
+    hints: ['auto', 'ask', 'off'].includes(saved0.hints) ? saved0.hints : 'auto',
   };
   const remember = () => write(STATE_KEY, state);
 
@@ -205,9 +206,9 @@
 
   function startMystery() {
     const pool = inRegion();
-    mystery = { answer: pool[Math.floor(Math.random() * pool.length)], guesses: [], done: false };
+    mystery = { answer: pool[Math.floor(Math.random() * pool.length)], guesses: [], done: false, asked: 0 };
     $('guesses').replaceChildren();
-    $('hints').replaceChildren();
+    showHints();
     $('mystery-end').hidden = true;
     $('mystery-give-up').hidden = false;
     $('guess').disabled = false;
@@ -265,20 +266,51 @@
     showHints();
   }
 
-  function showHints() {
-    const target = mystery.answer;
+  /* Every hint for the mystery country, from vague to strong. */
+  function allHints(target) {
+    const hints = ['It’s in ' + (target.sub || target.region) + '.'];
+    hints.push((target.landlocked ? 'It has no coast.' : 'It has a coastline.') + (target.languages.length ? ' People speak ' + target.languages[0] + '.' : ''));
+    if (target.capital) hints.push('Its capital starts with “' + target.capital[0] + '”.');
+    hints.push('Its name starts with “' + target.name[0] + '” and has ' + target.name.replace(/[^A-Za-z]/g, '').length + ' letters.');
+    return hints;
+  }
+
+  /* Auto: a hint after 2, 4, 6 and 7 guesses. Ask: only when the player taps Get a hint. Off: none. */
+  function hintsShown() {
+    if (!mystery || state.hints === 'off') return 0;
+    if (state.hints === 'ask') return mystery.asked;
     const count = mystery.guesses.length;
-    const hints = [];
-    if (count >= 2) hints.push('It’s in ' + (target.sub || target.region) + '.');
-    if (count >= 4) hints.push((target.landlocked ? 'It has no coast.' : 'It has a coastline.') + (target.languages.length ? ' People speak ' + target.languages[0] + '.' : ''));
-    if (count >= 6 && target.capital) hints.push('Its capital starts with “' + target.capital[0] + '”.');
+    return [2, 4, 6, 7].filter((needed) => count >= needed).length;
+  }
+
+  function showHints() {
     const box = $('hints');
     box.replaceChildren();
-    hints.forEach((text) => box.appendChild(el('li', '', text)));
+    $('hint-modes').querySelectorAll('button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.hints === state.hints)));
+    if (!mystery) return;
+    const hints = allHints(mystery.answer);
+    hints.slice(0, hintsShown()).forEach((text) => box.appendChild(el('li', '', text)));
+    const ask = $('hint-ask');
+    ask.hidden = state.hints !== 'ask' || mystery.done;
+    ask.disabled = mystery.asked >= hints.length;
+    ask.textContent = mystery.asked >= hints.length ? 'No more hints' : 'Get a hint (' + (hints.length - mystery.asked) + ' left)';
   }
+
+  $('hint-ask').addEventListener('click', () => {
+    if (!mystery || mystery.done) return;
+    mystery.asked = Math.min(mystery.asked + 1, allHints(mystery.answer).length);
+    showHints();
+  });
+
+  $('hint-modes').querySelectorAll('button').forEach((button) => button.addEventListener('click', () => {
+    state.hints = button.dataset.hints;
+    remember();
+    showHints();
+  }));
 
   function endMystery(won) {
     mystery.done = true;
+    showHints();
     $('guess').disabled = true;
     $('mystery-give-up').hidden = true;
     const target = mystery.answer;
@@ -288,7 +320,7 @@
     $('mystery-end-title').textContent = won ? target.name + '!' : 'It was ' + target.name;
     const facts = [target.capital ? 'Capital: ' + target.capital : '', target.languages.length ? 'Language: ' + target.languages.join(', ') : '',
       target.currency.length ? 'Money: ' + target.currency[0] : ''].filter(Boolean).join(' · ');
-    $('mystery-end-text').textContent = (won ? 'Found in ' + count + (count === 1 ? ' guess. ' : ' guesses. ') : '') + facts;
+    $('mystery-end-text').textContent = (won ? 'Found in ' + count + (count === 1 ? ' guess' : ' guesses') + (hintsShown() ? ' with ' + hintsShown() + (hintsShown() === 1 ? ' hint. ' : ' hints. ') : '. ') : '') + facts;
     $('mystery-end').hidden = false;
     setMessage(won ? 'You got it!' : 'Out of guesses.', won ? 'good' : 'bad');
     if (won) {
@@ -373,3 +405,14 @@
   showChoices();
   startGame();
 })();
+
+/* Keyboard shortcuts */
+window.V3Keys.add([
+  { keys: ['1', '2', '3', '4'], label: '1 to 4', does: 'Choose an answer', press: (key) => '#quiz-answers > button:nth-child(' + key + ')' },
+  { keys: ['Enter'], label: 'Enter', does: 'Next question, or play again', press: ['#quiz-next', '#quiz-again', '#mystery-again'] },
+  { keys: ['/'], label: '/', does: 'Type a guess (Mystery)', focus: '#guess' },
+  { keys: ['h'], label: 'H', does: 'Get a hint (Mystery, Ask mode)', press: '#hint-ask' },
+  { keys: ['f'], label: 'F', does: 'Flags', press: '#mode [data-mode="flags"]' },
+  { keys: ['c'], label: 'C', does: 'Capitals', press: '#mode [data-mode="capitals"]' },
+  { keys: ['m'], label: 'M', does: 'Mystery country', press: '#mode [data-mode="mystery"]' },
+]);

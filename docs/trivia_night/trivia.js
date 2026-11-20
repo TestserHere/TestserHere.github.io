@@ -311,3 +311,9 @@
   showLevel();
   loadCategories();
 })();
+
+/* Keyboard shortcuts */
+window.V3Keys.add([
+  { keys: ['1', '2', '3', '4'], label: '1 to 4', does: 'Choose an answer', press: (key) => '#answers > button:nth-child(' + key + ')' },
+  { keys: ['Enter'], label: 'Enter', does: 'Start, next question or play again', press: ['#next', '#start', '#again'] },
+]);

@@ -188,3 +188,6 @@ h1 { margin: 12px 0 8px; font-size: clamp(36px, 10vw, 48px); font-weight: 700; l
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+.pack-note { margin: 0; }
+.play-time.is-count { font-variant-numeric: tabular-nums; }
