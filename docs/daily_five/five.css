@@ -1,0 +1,24 @@
+/* Daily Five */
+
+.dots { display: flex; justify-content: center; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.dot { width: 18px; height: 18px; border-radius: 50%; background: var(--fill); }
+.dot.is-now { box-shadow: 0 0 0 3px var(--blue); }
+.dot.is-right { background: var(--good); }
+.dot.is-wrong { background: var(--bad); }
+
+.eyebrow { margin: 0; color: var(--muted); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.q-text { margin: 0; font-size: clamp(20px, 5vw, 24px); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
+.q-media:empty { display: none; }
+.q-media { display: flex; justify-content: center; }
+.q-flag { width: min(100%, 300px); border-radius: 10px; box-shadow: var(--shadow); }
+.q-scramble { margin: 0; font-size: clamp(30px, 9vw, 44px); font-weight: 800; letter-spacing: 0.08em; }
+.q-play { padding-inline: 24px; }
+.q-type { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.q-type .field { font-size: 20px; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; font-weight: 700; }
+.q-type .primary { padding-inline: 22px; }
+
+.done-dots { font-size: 28px; letter-spacing: 0.1em; color: var(--text) !important; }
+.recap { margin: 0; padding: 0; list-style: none; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.recap li { padding: 8px 12px; border-radius: 10px; border-left: 4px solid var(--fill-strong); background: var(--fill); font-size: 15px; }
+.recap li.is-right { border-left-color: var(--good); }
+.recap li.is-wrong { border-left-color: var(--bad); }

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Party Buzzer</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔴</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="buzzer.css">
+</head>
+<body>
+  <main class="app app-wide buzz-app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Party Buzzer</h1>
+    </header>
+
+    <div class="buzz-bar">
+      <div class="row">
+        <span class="row-label" id="teams-label">Teams</span>
+        <div class="stepper" id="teams" role="group" aria-labelledby="teams-label">
+          <button type="button" aria-label="Fewer teams">&minus;</button>
+          <output>2</output>
+          <button type="button" aria-label="More teams">+</button>
+        </div>
+      </div>
+      <label class="row check">
+        <span>Lock out early presses</span>
+        <input type="checkbox" id="lockout">
+      </label>
+    </div>
+
+    <p class="buzz-status" id="status" role="status" aria-live="assertive"></p>
+    <div class="pads" id="pads"></div>
+
+    <div class="button-row">
+      <button type="button" class="secondary" id="reset-scores">Reset scores</button>
+      <button type="button" class="primary" id="arm">Next question</button>
+    </div>
+    <p class="note" id="hint"></p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="buzzer.js"></script>
+  <script>window.V3Keys.howTo({"id": "buzzer", "title": "Party Buzzer", "steps": ["Use it for a quiz with friends: 2 to 4 teams share one device or keyboard.", "The quizmaster asks a question and presses “Next question” to get the buzzers ready.", "The first team to tap their buzzer (or press their key) gets to answer.", "If they’re right, tap +1 point. Then ready the buzzers for the next question.", "Lock out early presses: buzzers only work after “Go”. Press too early and you’re out for that question."], "tip": "On a keyboard, each team has two keys, shown on its buzzer."});</script>
+</body>
+</html>

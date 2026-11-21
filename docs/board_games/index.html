@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Board Games</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⭕</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="board.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Board Games</h1>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Games">
+      <button type="button" role="tab" id="tab-ttt" data-tab="ttt" aria-controls="panel-ttt">Tic-tac-toe</button>
+      <button type="button" role="tab" id="tab-four" data-tab="four" aria-controls="panel-four">Four in a Row</button>
+      <button type="button" role="tab" id="tab-dots" data-tab="dots" aria-controls="panel-dots">Dots and Boxes</button>
+    </div>
+
+    <div class="group setup">
+      <div class="segmented" id="vs" role="group" aria-label="Play against">
+        <button type="button" data-value="friend">A friend</button>
+        <button type="button" data-value="cpu">The computer</button>
+      </div>
+      <div class="segmented" id="level" role="group" aria-label="Computer level">
+        <button type="button" data-value="easy">Easy</button>
+        <button type="button" data-value="hard">Hard</button>
+      </div>
+    </div>
+
+    <div class="scoreboard" aria-live="polite">
+      <div class="side side-1" id="side-1"><span class="side-name" id="name-1"></span><strong id="score-1">0</strong></div>
+      <div class="side side-draw"><span class="side-name" id="draw-label">Draws</span><strong id="score-draw">0</strong></div>
+      <div class="side side-2" id="side-2"><span class="side-name" id="name-2"></span><strong id="score-2">0</strong></div>
+    </div>
+
+    <p class="turn" id="turn" role="status" aria-live="polite"></p>
+
+    <!-- Tic-tac-toe -->
+    <section class="panel board-panel" id="panel-ttt" role="tabpanel" aria-labelledby="tab-ttt">
+      <div class="segmented ttt-mode" id="ttt-mode" role="group" aria-label="Tic-tac-toe version">
+        <button type="button" data-value="classic">Classic</button>
+        <button type="button" data-value="big">Big board</button>
+      </div>
+      <div class="ttt" id="ttt" role="grid" aria-label="Tic-tac-toe board"></div>
+      <div class="big-wrap" id="big-wrap" hidden>
+        <div class="big" id="big" aria-label="Big Tic-tac-toe board"></div>
+        <p class="note big-note" id="big-note" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- Four in a Row -->
+    <section class="panel board-panel" id="panel-four" role="tabpanel" aria-labelledby="tab-four" hidden>
+      <div class="four" id="four" aria-label="Four in a Row board"></div>
+      <p class="note">Tap a column to drop a disc. Get four in a line: across, down or diagonally.</p>
+    </section>
+
+    <!-- Dots and Boxes -->
+    <section class="panel board-panel" id="panel-dots" role="tabpanel" aria-labelledby="tab-dots" hidden>
+      <div class="segmented dots-size" id="dots-size" role="group" aria-label="Board size">
+        <button type="button" data-value="3">3 × 3</button>
+        <button type="button" data-value="4">4 × 4</button>
+        <button type="button" data-value="5">5 × 5</button>
+      </div>
+      <div class="dots" id="dots" aria-label="Dots and Boxes board"></div>
+      <p class="note">Draw a line between two dots. Finish a box to claim it and go again.</p>
+    </section>
+
+    <div class="button-row">
+      <button type="button" class="secondary" id="reset">Reset scores</button>
+      <button type="button" class="primary" id="new">New game</button>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="board.js"></script>
+</body>
+</html>

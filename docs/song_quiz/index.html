@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Song Snippet Quiz</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="../v3apps.css">
+  <link rel="stylesheet" href="snippet.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Song Snippet Quiz</h1>
+      <p class="note">Hear a tiny bit of a song and name it. Need more? Each extra listen is worth fewer points.</p>
+    </header>
+
+    <!-- Setup -->
+    <section class="panel" id="setup">
+      <div class="group">
+        <span class="row-label" id="mix-label">Music</span>
+        <div class="chips mixes" id="mixes" role="group" aria-labelledby="mix-label"></div>
+      </div>
+      <button type="button" class="primary" id="start">Start</button>
+      <p class="status" id="setup-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- Play -->
+    <section class="panel" id="play" hidden>
+      <div class="game-bar">
+        <span class="round-info" id="round"></span>
+        <span class="round-info"><strong id="score">0</strong> points</span>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+
+      <div class="listen">
+        <button type="button" class="listen-button" id="listen" aria-label="Play the snippet">
+          <span class="listen-art" id="art"></span>
+          <span class="listen-ring" id="ring"></span>
+        </button>
+        <div class="listen-info">
+          <p class="listen-length" id="length"></p>
+          <button type="button" class="secondary" id="more">Hear more</button>
+        </div>
+      </div>
+
+      <div class="answers is-long" id="answers"></div>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+      <button type="button" class="primary" id="next" hidden>Next</button>
+    </section>
+
+    <div class="result-banner" id="over" hidden>
+      <h2 id="over-title"></h2>
+      <p id="over-text"></p>
+      <div class="button-row">
+        <button type="button" class="secondary" id="change">Change music</button>
+        <button type="button" class="primary" id="again">Play again</button>
+      </div>
+    </div>
+
+    <p class="note credits">30-second previews from Deezer.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../music_finder/sources.js"></script>
+  <script src="snippet.js"></script>
+  <script>window.V3Keys.howTo({"id": "snippet", "title": "Song Snippet Quiz", "steps": ["Choose a music mix, like top hits, the 90s or Disney, and press Start.", "You hear just 2 seconds of a song. Pick the right title from the four choices.", "Need more? Hear 5 seconds, then 12, but each extra listen is worth fewer points (3, then 2, then 1).", "There are ten songs a game. After you answer, the song keeps playing so you can enjoy it."]});</script>
+</body>
+</html>

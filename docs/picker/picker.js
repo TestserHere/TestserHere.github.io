@@ -15,6 +15,8 @@
     autoRemove: !!saved.autoRemove,
     sound: saved.sound !== false,
     history: Array.isArray(saved.history) ? saved.history.filter((item) => typeof item === 'string').slice(0, 50) : [],
+    lists: saved.lists && typeof saved.lists === 'object' && !Array.isArray(saved.lists) ? saved.lists : {}, // name -> entries text
+    list: typeof saved.list === 'string' ? saved.list : '', // the saved list last loaded
   };
   const remember = () => write(STATE_KEY, state);
 
@@ -71,6 +73,67 @@
     $('restore').disabled = true;
     setText(text, true);
   });
+
+  /* ---------- Saved lists ---------- */
+
+  const listNames = () => Object.keys(state.lists).filter((name) => typeof state.lists[name] === 'string')
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+
+  function showLists() {
+    const names = listNames();
+    if (!state.lists[state.list]) state.list = '';
+    const first = document.createElement('option');
+    first.value = '';
+    first.textContent = names.length ? 'Choose a saved list (' + names.length + ')' : 'No saved lists yet';
+    $('lists').replaceChildren(first, ...names.map((name) => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name + ' (' + state.lists[name].split('\n').filter((l) => l.trim()).length + ')';
+      return option;
+    }));
+    $('lists').value = state.list;
+    $('lists').disabled = !names.length;
+    $('list-delete').disabled = !state.list;
+  }
+
+  const listNote = (text) => { $('list-note').textContent = text; };
+
+  $('lists').addEventListener('change', () => {
+    const name = $('lists').value;
+    state.list = name;
+    if (name) {
+      setText(state.lists[name]);
+      $('list-name').value = name;
+      listNote('Loaded “' + name + '”. Changes here don’t change the saved list until you save again.');
+    }
+    remember();
+    showLists();
+  });
+
+  $('list-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const name = $('list-name').value.trim();
+    if (!name) return listNote('Type a name for this list first.');
+    if (!entries().length) return listNote('Add some entries before saving.');
+    const replacing = Object.prototype.hasOwnProperty.call(state.lists, name);
+    state.lists[name] = entries().join('\n');
+    state.list = name;
+    remember();
+    showLists();
+    listNote((replacing ? 'Updated “' : 'Saved “') + name + '”.');
+  });
+
+  $('list-delete').addEventListener('click', () => {
+    const name = state.list;
+    if (!name || !window.confirm('Delete the saved list “' + name + '”? The entries above stay.')) return;
+    delete state.lists[name];
+    state.list = '';
+    remember();
+    showLists();
+    listNote('Deleted “' + name + '”.');
+  });
+
+  showLists();
 
   /* Removes one copy of the winner from the list. */
   function removeEntry(name) {

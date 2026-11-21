@@ -211,6 +211,8 @@
     const tips = $('tips');
     tips.replaceChildren();
     tipsFor(night).forEach((tip) => tips.appendChild(el('li', '', tip)));
+
+    if (window.IssPasses) window.IssPasses.show(place, timeZone, $('iss'), $('iss-note'));
   }
 
   function sentence(night, clock) {

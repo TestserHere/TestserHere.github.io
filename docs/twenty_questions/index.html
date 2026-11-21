@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>20 Questions</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤔</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="tq.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>20 Questions</h1>
+    </header>
+
+    <section class="panel tq-intro" id="intro">
+      <p class="tq-big">Think of an animal, a food, an everyday object, a vehicle, or something in nature.</p>
+      <p class="note" id="known"></p>
+      <button type="button" class="primary" id="start">I’ve got one</button>
+    </section>
+
+    <section class="panel" id="ask" hidden>
+      <div class="game-bar">
+        <span class="round-info" id="count"></span>
+        <button type="button" class="text-button" id="restart">Start over</button>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+      <h2 class="tq-question" id="question" aria-live="polite"></h2>
+      <div class="tq-answers" id="answers">
+        <button type="button" class="tq-a is-yes" data-a="yes">Yes</button>
+        <button type="button" class="tq-a is-no" data-a="no">No</button>
+        <button type="button" class="tq-a" data-a="probably">Probably</button>
+        <button type="button" class="tq-a" data-a="probablynot">Probably not</button>
+        <button type="button" class="tq-a" data-a="unknown">Don’t know</button>
+      </div>
+      <button type="button" class="text-button" id="undo" disabled>Undo last answer</button>
+    </section>
+
+    <section class="panel tq-guess" id="guess" hidden>
+      <p class="tq-eyebrow">I think it’s…</p>
+      <h2 class="tq-guess-name" id="guess-name" aria-live="polite"></h2>
+      <div class="button-row">
+        <button type="button" class="secondary" id="wrong">No, keep going</button>
+        <button type="button" class="primary" id="right">Yes, that’s it!</button>
+      </div>
+    </section>
+
+    <section class="panel" id="teach" hidden>
+      <h2 class="tq-title">You win! What was it?</h2>
+      <p class="note">Tell me and I’ll remember it on this device for next time.</p>
+      <form class="tq-teach" id="teach-form" autocomplete="off">
+        <label class="sr-only" for="teach-name">What you were thinking of</label>
+        <input class="field" id="teach-name" maxlength="40" placeholder="It was a…">
+        <button type="submit" class="primary">Teach me</button>
+      </form>
+      <button type="button" class="text-button" id="teach-skip">Skip</button>
+    </section>
+
+    <div class="result-banner" id="over" hidden>
+      <h2 id="over-title"></h2>
+      <p id="over-text"></p>
+      <button type="button" class="primary" id="again">Play again</button>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="things.js"></script>
+  <script src="tq.js"></script>
+</body>
+</html>

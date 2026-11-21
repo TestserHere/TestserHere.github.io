@@ -1,0 +1,85 @@
+/* Board Games */
+
+:root { --p1: #0a84ff; --p2: #ff9f0a; }
+
+.setup { gap: 8px; }
+.setup .segmented[hidden] { display: none; }
+
+.scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; }
+.side { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px; border-radius: 14px; background: var(--card);
+  border: 2px solid transparent; transition: border-color 0.2s; min-width: 0; }
+.side strong { font-size: 26px; font-variant-numeric: tabular-nums; }
+.side-name { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; text-align: center; }
+.side-1 strong { color: var(--p1); }
+.side-2 strong { color: var(--p2); }
+.side-draw { padding-inline: 14px; }
+.side-1.is-turn { border-color: var(--p1); }
+.side-2.is-turn { border-color: var(--p2); }
+
+.turn { margin: 0; min-height: 1.4em; text-align: center; font-weight: 600; font-size: 18px; }
+.board-panel { align-items: center; }
+.board-panel button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+/* Tic-tac-toe */
+.ttt { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(100%, 360px); aspect-ratio: 1; }
+.ttt[hidden], .big-wrap[hidden] { display: none; }
+.ttt-mode { width: min(100%, 360px); }
+.ttt-cell { position: relative; min-width: 0; min-height: 0; overflow: hidden; border: 0; border-radius: 16px; background: var(--fill); font-size: clamp(44px, 16vw, 72px); font-weight: 800; line-height: 1; padding: 0; }
+.ttt-cell.is-x { color: var(--p1); }
+.ttt-cell.is-o { color: var(--p2); }
+.ttt-cell.is-win { background: var(--fill-strong); box-shadow: inset 0 0 0 3px currentColor; }
+.cell-num { position: absolute; top: 6px; left: 9px; font-size: 13px; font-weight: 600; color: var(--muted); opacity: 0; }
+@media (hover: hover) and (pointer: fine) { .cell-num { opacity: 0.6; } }
+
+/* Big Tic-tac-toe */
+.big-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(100%, 460px); }
+.big { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; aspect-ratio: 1; }
+.big-board { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 3px;
+  min-width: 0; min-height: 0; padding: 4px; border-radius: 12px; background: var(--card); box-shadow: inset 0 0 0 2px transparent; transition: box-shadow 0.2s, opacity 0.2s; }
+.big-board.is-open.is-p1 { box-shadow: inset 0 0 0 2px var(--p1); }
+.big-board.is-open.is-p2 { box-shadow: inset 0 0 0 2px var(--p2); }
+.big-board.is-picked { background: var(--fill-strong); }
+.big-cell { min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 6px; background: var(--fill); font-size: clamp(13px, 4.6vw, 24px); font-weight: 800; line-height: 1; }
+.big-cell.is-x { color: var(--p1); }
+.big-cell.is-o { color: var(--p2); }
+.big-cell.is-last { box-shadow: inset 0 0 0 2px currentColor; }
+.big-board.is-open .big-cell:not(:disabled):hover { background: var(--fill-strong); }
+.big-owner { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 12px; font-weight: 800; font-size: clamp(56px, 22vw, 118px); line-height: 1; pointer-events: none; }
+.big-board.is-x .big-owner, .big-board.is-o .big-owner { background: color-mix(in srgb, var(--card) 72%, transparent); }
+.big-board.is-x .big-owner { color: var(--p1); }
+.big-board.is-o .big-owner { color: var(--p2); }
+.big-board.is-full { opacity: 0.45; }
+.big-board.is-win { box-shadow: inset 0 0 0 3px #fff; }
+.big-note { min-height: 1.4em; margin: 0; text-align: center; }
+
+/* Four in a Row */
+.four { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: min(100%, 470px); padding: 8px; border-radius: 18px; background: #1d4ed8; }
+.four-col { display: grid; grid-template-rows: auto repeat(6, 1fr); gap: 4px; padding: 0; border: 0; border-radius: 10px; background: none; }
+.four-col:hover:not(:disabled), .four-col:focus-visible { background: rgba(255, 255, 255, 0.14); }
+.four-num { font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.75); padding-top: 2px; }
+.four-slot { aspect-ratio: 1; border-radius: 50%; background: var(--bg); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35); }
+.four-slot.is-1 { background: var(--p1); }
+.four-slot.is-2 { background: var(--p2); }
+.four-slot.is-new { animation: drop 0.28s ease-in; }
+.four-slot.is-win { box-shadow: 0 0 0 3px #fff, inset 0 0 0 4px rgba(0, 0, 0, 0.25); }
+@keyframes drop { from { transform: translateY(-260%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .four-slot.is-new { animation: none; } }
+
+/* Dots and Boxes */
+.dots-size { width: min(100%, 300px); }
+.dots { --n: 4; display: grid; width: min(100%, 420px); aspect-ratio: 1; padding: 4px;
+  grid-template-columns: repeat(var(--n), 12px 1fr) 12px; grid-template-rows: repeat(var(--n), 12px 1fr) 12px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--text); z-index: 1; }
+.line { position: relative; border: 0; padding: 0; background: none; border-radius: 6px; }
+.line::before { content: ''; position: absolute; border-radius: 3px; background: var(--fill-strong); }
+.line.is-h::before { left: -2px; right: -2px; top: 50%; height: 6px; transform: translateY(-50%); }
+.line.is-v::before { top: -2px; bottom: -2px; left: 50%; width: 6px; transform: translateX(-50%); }
+.line.is-h { min-height: 12px; margin: -8px 0; }
+.line.is-v { min-width: 12px; margin: 0 -8px; }
+.line:hover:not(:disabled)::before, .line:focus-visible::before { background: var(--muted); }
+.line.is-1::before { background: var(--p1); }
+.line.is-2::before { background: var(--p2); }
+.line.is-last::before { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px currentColor; }
+.box { display: grid; place-items: center; margin: 3px; border-radius: 6px; font-weight: 800; font-size: clamp(14px, 5vw, 22px); color: #fff; }
+.box.is-1 { background: color-mix(in srgb, var(--p1) 75%, transparent); }
+.box.is-2 { background: color-mix(in srgb, var(--p2) 80%, transparent); }

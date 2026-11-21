@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Dice and Coins</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="dice.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Dice and Coins</h1>
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Tools">
+      <button type="button" role="tab" id="tab-dice" data-tab="dice" aria-controls="panel-dice">Dice</button>
+      <button type="button" role="tab" id="tab-coin" data-tab="coin" aria-controls="panel-coin">Coin</button>
+      <button type="button" role="tab" id="tab-order" data-tab="order" aria-controls="panel-order">Turn order</button>
+    </div>
+
+    <!-- Dice -->
+    <section class="panel" id="panel-dice" role="tabpanel" aria-labelledby="tab-dice">
+      <div class="group">
+        <span class="row-label" id="add-label">Add a die</span>
+        <div class="die-kinds" id="kinds" role="group" aria-labelledby="add-label"></div>
+        <div class="tray" id="tray" aria-live="polite"></div>
+        <p class="note" id="tray-note">Tap a die to remove it.</p>
+      </div>
+      <div class="total" id="total" aria-live="polite"></div>
+      <div class="button-row">
+        <button type="button" class="secondary" id="clear">Clear</button>
+        <button type="button" class="primary" id="roll">Roll</button>
+      </div>
+      <div class="group" id="history-group" hidden>
+        <div class="section-head">
+          <span class="row-label">Last rolls</span>
+          <button type="button" class="text-button" id="history-clear">Clear</button>
+        </div>
+        <ol class="roll-history" id="history"></ol>
+      </div>
+    </section>
+
+    <!-- Coin -->
+    <section class="panel" id="panel-coin" role="tabpanel" aria-labelledby="tab-coin" hidden>
+      <div class="coin-stage">
+        <button type="button" class="coin" id="coin" aria-label="Flip the coin">
+          <span class="coin-face coin-heads">Heads</span>
+          <span class="coin-face coin-tails">Tails</span>
+        </button>
+      </div>
+      <p class="coin-result" id="coin-result" aria-live="polite">Tap the coin to flip it</p>
+      <button type="button" class="primary" id="flip">Flip</button>
+      <p class="note coin-count" id="coin-count"></p>
+    </section>
+
+    <!-- Turn order -->
+    <section class="panel" id="panel-order" role="tabpanel" aria-labelledby="tab-order" hidden>
+      <div class="group">
+        <label class="row-label" for="players">Players</label>
+        <textarea class="field" id="players" rows="5" spellcheck="false" placeholder="One name per line"></textarea>
+      </div>
+      <button type="button" class="primary" id="shuffle-order">Who goes first?</button>
+      <ol class="order-list" id="order" aria-live="polite"></ol>
+    </section>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="dice.js"></script>
+  <script>window.V3Keys.howTo({"id": "dice", "title": "Dice and Coins", "steps": ["Dice: add any mix of dice (4 to 100 sides), then press Roll. The total and your last rolls are shown.", "Tap a die in the tray to remove it.", "Coin: flip a coin and keep count of heads and tails.", "Turn order: type the players’ names and shuffle them to decide who goes first."], "tip": "Every roll is truly random, using your device’s secure random numbers."});</script>
+</body>
+</html>

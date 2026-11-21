@@ -29,7 +29,10 @@
       maxSeconds: 40,      // always show the finished page after this long
       storageKey: 'swarm-played',
       hiddenKey: 'swarm-hidden', // set when a visitor answers "no"
+      mobileKey: 'swarm-mobile-on', // set when a visitor on a phone answers "yes"
     };
+    // Phones and tablets: touch screens or narrow windows.
+    const isMobile = () => matchMedia('(pointer: coarse)').matches || innerWidth < 768;
   
     const COLORS = ['#ffe27a', '#8ff0b0', '#ffb37a', '#d9b8ff', '#7fe3e0', '#ff9ab0', '#a9c6ff', '#f2f2f2'];
     const SPEEDS = [1, 2, 4];
@@ -61,7 +64,7 @@
     .sw-cursor svg { position: absolute; display: none; overflow: visible; }
     .sw-cursor[data-mode=arrow] .sw-i-arrow, .sw-cursor[data-mode=cross] .sw-i-cross, .sw-cursor[data-mode=text] .sw-i-text, .sw-cursor[data-mode=pen] .sw-i-pen { display: block; }
     .sw-i-arrow { left: 0; top: 0; } .sw-i-cross { left: -9px; top: -9px; } .sw-i-text { left: -5px; top: -10px; } .sw-i-pen { left: 0; top: -18px; }
-    .sw-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 2147483001; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 7px 8px 7px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(20,21,26,.92); color: #e9e9ec; box-shadow: 0 8px 30px rgba(0,0,0,.4); font: 500 12px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; white-space: nowrap; transition: opacity .3s; }
+    .sw-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 2147483001; display: flex; align-items: center; gap: 10px; width: max-content; max-width: calc(100vw - 32px); padding: 7px 8px 7px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(20,21,26,.92); color: #e9e9ec; box-shadow: 0 8px 30px rgba(0,0,0,.4); font: 500 12px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; white-space: nowrap; transition: opacity .3s; }
     .sw-bar.sw-out { opacity: 0; pointer-events: none; }
     .sw-dots { display: flex; }
     .sw-dots i { width: 11px; height: 11px; margin-left: -3px; border-radius: 50%; border: 1.5px solid #14151a; }
@@ -71,14 +74,16 @@
     .sw-count span { color: #a1a3ab; }
     .sw-track { width: 64px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.18); overflow: hidden; }
     .sw-track i { display: block; height: 100%; width: 100%; background: #5b93ff; transform-origin: left; transform: scaleX(0); }
-    .sw-btn { all: unset; box-sizing: border-box; min-width: 28px; height: 26px; padding: 0 8px; border-radius: 7px; background: rgba(255,255,255,.1); color: inherit; font: inherit; text-align: center; line-height: 26px; cursor: pointer; }
+    .sw-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; flex: none; min-width: 28px; height: 26px; padding: 0 8px; border-radius: 7px; background: rgba(255,255,255,.1); color: inherit; font: inherit; text-align: center; line-height: 26px; cursor: pointer; }
     .sw-btn:hover { background: rgba(255,255,255,.2); }
     .sw-btn:focus-visible { outline: 2px solid #5b93ff; outline-offset: 1px; }
     .sw-btn[aria-pressed=false] { color: #8d8f98; background: transparent; }
-    .sw-pause svg { display: block; margin: 7.5px auto 0; }
+    .sw-pause { width: 28px; padding: 0; }
+    .sw-pause svg { display: block; margin: 0; }
     .sw-replay { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 2147483001; height: 34px; padding: 0 14px; line-height: 34px; background: rgba(20,21,26,.92); border: 1px solid rgba(255,255,255,.14); color: #e9e9ec; font: 500 12px/34px ui-sans-serif, system-ui, sans-serif; }
     .sw-ask { white-space: normal; }
-    .sw-ask span { padding-right: 4px; line-height: 1.3; }
+    .sw-ask span { padding-right: 4px; line-height: 1.3; white-space: nowrap; }
+    @media (max-width: 340px) { .sw-ask span { white-space: normal; } }
     @media (max-width: 560px) { .sw-track, .sw-dots { display: none; } .sw-bar { gap: 7px; } }
     `;
   
@@ -139,6 +144,12 @@
     function isMedia(node) {
       return MEDIA.has(node.tagName.toUpperCase()) || node.getAttribute('data-swarm') === 'media';
     }
+
+    // Icon fonts draw their picture with CSS, so they have no text to type: they're drawn instead.
+    function isIcon(node) {
+      if (node.getAttribute('data-swarm') === 'icon') return true;
+      return node.tagName === 'I' && /(^|\s)(fa-|bi-|material-icons)/.test(node.className) && !node.textContent.trim();
+    }
   
     function inlineOnly(node) {
       for (const child of node.children) {
@@ -170,6 +181,10 @@
         if (cs.display === 'none' || cs.visibility === 'hidden') return;
         if (node !== root && parseFloat(cs.opacity) === 0) return;
         const rect = node.getBoundingClientRect();
+        if (isIcon(node)) {
+          if (rect.width > 1 && rect.height > 1) layers.push({ type: 'icon', el: node, d: clamp(Math.max(rect.width, rect.height) / 90, 0.5, 1.2) });
+          return;
+        }
         if (isMedia(node)) {
           if (rect.width > 1 && rect.height > 1) layers.push({ type: 'media', el: node, d: 1.25 });
           return;
@@ -199,10 +214,12 @@
       layers.forEach((l) => {
         if (l.type !== 'text' || !l.leaf) return;
         const size = l.textNodes.reduce((n, t) => n + t.data.trim().length, 0);
-        if (size > 28 || l.el.children.length) return;
+        if (size > 28 || l.el.children.length || l.el.closest('[data-swarm-nocopy]')) return;
         const scope = l.el.parentElement && l.el.parentElement.parentElement;
         if (!scope) return;
-        const key = l.el.tagName + '|' + l.el.className;
+        // Copying a big heading onto a small one looks wrong, so only text of the same style is grouped.
+        const cs = getComputedStyle(l.el);
+        const key = l.el.tagName + '|' + l.el.className + '|' + cs.fontSize + '|' + cs.fontWeight;
         if (!groups.has(scope)) groups.set(scope, new Map());
         const byKey = groups.get(scope);
         if (!byKey.has(key)) byKey.set(key, []);
@@ -217,7 +234,7 @@
     /* ---------- Hiding and restoring layer content ---------- */
   
     function prepare(l) {
-      if (l.type === 'media') l.el.classList.add('sw-hide');
+      if (l.type === 'media' || l.type === 'icon') l.el.classList.add('sw-hide');
       else if (l.type === 'box' || l.type === 'rule') l.el.classList.add('sw-nopaint');
       else {
         l.parts = l.textNodes.map((n) => {
@@ -262,7 +279,7 @@
     function commit(l) {
       if (l.committed) return;
       l.committed = true;
-      if (l.type === 'media') {
+      if (l.type === 'media' || l.type === 'icon') {
         l.el.classList.remove('sw-hide');
         l.el.style.clipPath = '';
       } else if (l.type === 'box' || l.type === 'rule') {
@@ -398,9 +415,18 @@
       const onKey = (e) => {
         if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) onUser();
       };
+      const onLink = (e) => {
+        const a = e.target.closest && e.target.closest('a[href^="#"]');
+        if (!a || a.closest('.sw-bar')) return;
+        onUser();
+        stop(); // the browser then follows the link to the finished page
+      };
+      const onHash = () => { onUser(); };
       addEventListener('wheel', onUser, { passive: true });
       addEventListener('touchmove', onUser, { passive: true });
       addEventListener('keydown', onKey);
+      document.addEventListener('click', onLink, true);
+      addEventListener('hashchange', onHash);
   
       /* ---------- Chrome (selection boxes and fills) ---------- */
   
@@ -490,7 +516,7 @@
         l.state = 'active';
         l.p = 0;
         agent.working = true;
-        agent.node.dataset.mode = l.type === 'rule' ? 'pen' : l.type === 'text' ? (l.dupOf ? 'arrow' : 'text') : 'cross';
+        agent.node.dataset.mode = l.type === 'rule' || l.type === 'icon' ? 'pen' : l.type === 'text' ? (l.dupOf ? 'arrow' : 'text') : 'cross';
         const r = l.rect;
         if (l.type === 'box' || l.type === 'media') {
           l.fill = el('sw-fill sw-abs', layer);
@@ -498,6 +524,10 @@
           maybeGuide(r);
         } else if (l.type === 'rule') {
           l.line = el('sw-line sw-abs', layer);
+        } else if (l.type === 'icon') {
+          makeSelection(l);
+          l.el.style.clipPath = 'inset(0 100% 0 0)';
+          l.el.classList.remove('sw-hide');
         } else {
           makeSelection(l);
           if (l.dupOf) {
@@ -535,6 +565,9 @@
           setTyped(l, Math.round(q * l.chars));
         } else if ((l.type === 'box') && l.p > 0.55) {
           l.el.classList.remove('sw-nopaint');
+        } else if (l.type === 'icon') {
+          // Revealed from left to right as the pen sweeps up and down across it.
+          l.el.style.clipPath = `inset(0 ${(1 - ease(l.p)) * 100}% 0 0)`;
         } else if (l.type === 'media' && l.p > 0.33) {
           l.el.classList.remove('sw-hide');
           const q = ease((l.p - 0.33) / 0.67);
@@ -604,6 +637,11 @@
           placeSelection(l, r.left, r.top, w, h);
           agent.tx = r.left + w;
           agent.ty = r.top + h;
+        } else if (l.type === 'icon') {
+          const q = ease(p);
+          placeSelection(l, r.left - 2, r.top - 2, r.width + 4, r.height + 4);
+          agent.tx = r.left + r.width * q;
+          agent.ty = r.top + r.height * (0.5 + 0.42 * Math.sin(p * Math.PI * 7));
         } else if (l.type === 'media') {
           const q = ease(Math.min(1, p / 0.33));
           const w = r.width * q;
@@ -771,7 +809,7 @@
   
         if (!ending && done === total) beginEnding(now);
         if (ending) {
-          const moved = opt.returnToTop && !userScrolled && now - lastUser > 1500;
+          const moved = opt.returnToTop && !opt.jumpTo && !userScrolled && now - lastUser > 1500;
           if (moved && camY > 0) {
             camY *= Math.exp(-3.6 * real);
             if (camY < 6) camY = 0;
@@ -804,10 +842,16 @@
         removeEventListener('wheel', onUser);
         removeEventListener('touchmove', onUser);
         removeEventListener('keydown', onKey);
+        document.removeEventListener('click', onLink, true);
+        removeEventListener('hashchange', onHash);
         layer.remove();
         bar.remove();
         if (current === api) current = null;
         if (opt.once) { try { localStorage.setItem(opt.storageKey, '1'); } catch (e) { /* storage blocked */ } }
+        if (opt.jumpTo && !userScrolled) {
+          const target = document.getElementById(opt.jumpTo);
+          if (target) target.scrollIntoView({ block: 'start' });
+        }
         if (opt.replayButton) showReplay(opt);
         else if (opt.ask) showAsk(opt);
       }
@@ -818,7 +862,7 @@
         deadline = performance.now() + ms;
         watchdog = setTimeout(() => {
           stop();
-          if (opt.returnToTop && !userScrolled) scrollTo({ top: 0, behavior: 'instant' });
+          if (opt.returnToTop && !opt.jumpTo && !userScrolled) scrollTo({ top: 0, behavior: 'instant' });
         }, ms);
       }
       armWatchdog(opt.maxSeconds * 1000);
@@ -857,9 +901,18 @@
         fadeOut(box, 320);
       };
       const timer = setTimeout(close, opt.askSeconds * 1000);
-      yes.onclick = close;
+      yes.onclick = () => {
+        try {
+          localStorage.removeItem(opt.hiddenKey);
+          if (isMobile()) localStorage.setItem(opt.mobileKey, '1');
+        } catch (e) { /* storage blocked */ }
+        close();
+      };
       no.onclick = () => {
-        try { localStorage.setItem(opt.hiddenKey, '1'); } catch (e) { /* storage blocked */ }
+        try {
+          localStorage.setItem(opt.hiddenKey, '1');
+          localStorage.removeItem(opt.mobileKey);
+        } catch (e) { /* storage blocked */ }
         close();
       };
     }
@@ -889,6 +942,12 @@
       state: () => (current ? current.state() : null),
       // Undoes a visitor's "no", so the animation plays on their next visit.
       showAgain: () => { try { localStorage.removeItem(DEFAULTS.hiddenKey); } catch (e) { /* storage blocked */ } },
+      // Plays it now from the top, then asks whether to play it on future visits.
+      play: () => {
+        scrollTo({ top: 0, behavior: 'instant' });
+        return run({ ask: true });
+      },
+      isMobile,
     };
   
     /* ---------- Auto start ---------- */
@@ -906,9 +965,17 @@
     let played = false;
     try {
       played = (auto.once && localStorage.getItem(DEFAULTS.storageKey) === '1') ||
-        localStorage.getItem(DEFAULTS.hiddenKey) === '1';
-    } catch (e) { /* storage blocked */ }
+        localStorage.getItem(DEFAULTS.hiddenKey) === '1' ||
+        // On phones it's off unless the visitor turned it on.
+        (isMobile() && localStorage.getItem(DEFAULTS.mobileKey) !== '1');
+    } catch (e) { played = isMobile(); }
     if (prefersStill() || played) return;
+    // Opened with an address like #projects: build the page, then go there.
+    // (Checked when it starts, because this script runs before the page body exists.)
+    const hashTarget = () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      return id && document.getElementById(id) ? id : null;
+    };
   
     injectStyles();
     const docEl = document.documentElement;
@@ -922,7 +989,7 @@
           await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 800))]);
         }
         scrollTo({ top: 0, behavior: 'instant' });
-        run(auto);
+        run(Object.assign({}, auto, { jumpTo: hashTarget() }));
       } catch (e) {
         console.error('swarm.js could not start', e);
       } finally {

@@ -4,10 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Testser">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="Testser's coding projects, games and tools, all on one page.">
   <title>Testser</title>
   <link rel="icon" type="image/jpeg" href="home_things/home/icons/website1.jpg">
+  <link rel="apple-touch-icon" sizes="180x180" href="home_things/home/icons/app-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,7 +57,7 @@
     <section class="section" id="projects" aria-labelledby="notable-title">
       <div class="wrap">
         <h2 class="section-title" id="notable-title">Projects.</h2>
-        <div class="bento">
+        <div class="bento" data-swarm-nocopy>
           <a class="bento-tile bento-main" style="--c:#ef4444" href="dont_say_it_out/index.html" data-open="dont_say_it_out/index.html" data-label="Don't Say It Out">
             <span class="bento-tag">New game</span>
             <strong>Don't Say It Out</strong>
@@ -119,6 +126,81 @@
             <span class="bento-tag">Party quiz</span>
             <strong>Trivia Night</strong>
             <i class="fa-solid fa-circle-question bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#f97316" href="daily_five/index.html" data-open="daily_five/index.html" data-label="Daily Five">
+            <span class="bento-tag">Daily quiz</span>
+            <strong>Daily Five</strong>
+            <i class="fa-solid fa-calendar-check bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#0f766e" href="word_ladder/index.html" data-open="word_ladder/index.html" data-label="Word Ladder">
+            <span class="bento-tag">Word puzzle</span>
+            <strong>Word Ladder</strong>
+            <i class="fa-solid fa-stairs bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#2563eb" href="higher_lower/index.html" data-open="higher_lower/index.html" data-label="Higher or Lower">
+            <span class="bento-tag">Guessing game</span>
+            <strong>Higher or Lower</strong>
+            <i class="fa-solid fa-arrow-up-wide-short bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#a16207" href="guess_year/index.html" data-open="guess_year/index.html" data-label="Guess the Year">
+            <span class="bento-tag">History game</span>
+            <strong>Guess the Year</strong>
+            <i class="fa-solid fa-hourglass-half bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#be185d" href="song_quiz/index.html" data-open="song_quiz/index.html" data-label="Song Snippet Quiz">
+            <span class="bento-tag">Music quiz</span>
+            <strong>Song Snippet Quiz</strong>
+            <i class="fa-solid fa-music bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#dc2626" href="buzzer/index.html" data-open="buzzer/index.html" data-label="Party Buzzer">
+            <span class="bento-tag">Party tool</span>
+            <strong>Party Buzzer</strong>
+            <i class="fa-solid fa-bell bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#7c3aed" href="dice/index.html" data-open="dice/index.html" data-label="Dice and Coins">
+            <span class="bento-tag">Party tool</span>
+            <strong>Dice and Coins</strong>
+            <i class="fa-solid fa-dice bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#0369a1" href="board_games/index.html" data-open="board_games/index.html" data-label="Board Games">
+            <span class="bento-tag">Two players</span>
+            <strong>Board Games</strong>
+            <i class="fa-solid fa-chess-board bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#16a34a" href="copy_cat/index.html" data-open="copy_cat/index.html" data-label="Copy Cat">
+            <span class="bento-tag">Memory game</span>
+            <strong>Copy Cat</strong>
+            <i class="fa-solid fa-shapes bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#e11d48" href="reaction_duel/index.html" data-open="reaction_duel/index.html" data-label="Reaction Duel">
+            <span class="bento-tag">Party game</span>
+            <strong>Reaction Duel</strong>
+            <i class="fa-solid fa-bolt bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#4f46e5" href="code_breaker/index.html" data-open="code_breaker/index.html" data-label="Code Breaker">
+            <span class="bento-tag">Logic game</span>
+            <strong>Code Breaker</strong>
+            <i class="fa-solid fa-lock bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#d97706" href="categories/index.html" data-open="categories/index.html" data-label="Categories">
+            <span class="bento-tag">Word game</span>
+            <strong>Categories</strong>
+            <i class="fa-solid fa-list-ol bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#9333ea" href="truth_or_dare/index.html" data-open="truth_or_dare/index.html" data-label="Truth or Dare">
+            <span class="bento-tag">Party game</span>
+            <strong>Truth or Dare</strong>
+            <i class="fa-solid fa-masks-theater bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#0d9488" href="word_chain/index.html" data-open="word_chain/index.html" data-label="Word Chain">
+            <span class="bento-tag">Word game</span>
+            <strong>Word Chain</strong>
+            <i class="fa-solid fa-link bento-art" aria-hidden="true"></i>
+          </a>
+          <a class="bento-tile" style="--c:#2563eb" href="twenty_questions/index.html" data-open="twenty_questions/index.html" data-label="20 Questions">
+            <span class="bento-tag">Guessing game</span>
+            <strong>20 Questions</strong>
+            <i class="fa-solid fa-question bento-art" aria-hidden="true"></i>
           </a>
           <a class="bento-tile" style="--c:#e11d48" href="lyric_pad/index.html" data-open="lyric_pad/index.html" data-label="Lyric Pad">
             <span class="bento-tag">Songwriting</span>
@@ -255,7 +337,8 @@
   <footer class="footer">
     <div class="wrap footer-inner">
       <span>Copyright &copy; <span id="year">2026</span> testserhere.github.io</span>
-      <a href="version_history.html">Version 3</a>
+      <span class="footer-links"><button type="button" class="text-btn footer-anim" id="play-anim">Play the build animation</button>
+      <a href="version_history.html">Version 3</a></span>
     </div>
   </footer>
 

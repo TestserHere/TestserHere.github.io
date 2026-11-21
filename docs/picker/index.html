@@ -79,6 +79,20 @@
         </div>
 
         <div class="group">
+          <label class="row-label" for="lists">Saved lists</label>
+          <select class="field" id="lists"></select>
+          <form class="list-save" id="list-form" autocomplete="off">
+            <label class="sr-only" for="list-name">Name for this list</label>
+            <input class="field" id="list-name" maxlength="60" placeholder="Name this list, like Class 5B">
+            <button type="submit" class="secondary" id="list-save">Save</button>
+          </form>
+          <div class="button-row">
+            <button type="button" class="text-button is-danger" id="list-delete" disabled>Delete this saved list</button>
+          </div>
+          <p class="note" id="list-note" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="group">
           <div class="section-head">
             <span class="row-label">Results</span>
             <button type="button" class="text-button" id="clear-history">Clear</button>

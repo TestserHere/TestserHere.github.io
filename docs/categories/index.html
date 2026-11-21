@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Categories</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="cat.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Categories</h1>
+    </header>
+
+    <details class="group cat-settings" id="settings">
+      <summary class="row-label">Settings</summary>
+      <span class="row-label">Time</span>
+      <div class="segmented" id="time" role="group" aria-label="Time">
+        <button type="button" data-value="60">1 min</button>
+        <button type="button" data-value="120">2 min</button>
+        <button type="button" data-value="180">3 min</button>
+        <button type="button" data-value="240">4 min</button>
+      </div>
+      <span class="row-label">Categories per round</span>
+      <div class="segmented" id="count" role="group" aria-label="Categories per round">
+        <button type="button" data-value="6">6</button>
+        <button type="button" data-value="10">10</button>
+        <button type="button" data-value="12">12</button>
+      </div>
+      <label class="row check">
+        <span>Include hard letters (Q, U, V, X, Y, Z)</span>
+        <input type="checkbox" id="hard">
+      </label>
+      <label class="row check">
+        <span>Type answers on this device</span>
+        <input type="checkbox" id="typing">
+      </label>
+    </details>
+
+    <section class="cat-top">
+      <div class="cat-letter" id="letter" aria-live="polite">?</div>
+      <div class="cat-clock">
+        <span class="game-time" id="clock" role="timer">2:00</span>
+        <div class="button-row">
+          <button type="button" class="primary" id="go">Start</button>
+          <button type="button" class="secondary" id="new-letter">New letter</button>
+        </div>
+      </div>
+    </section>
+
+    <ol class="cat-list" id="list"></ol>
+
+    <div class="result-banner" id="times-up" hidden>
+      <h2>Time’s up!</h2>
+      <p id="times-up-text">Pens down. Read your answers out, one category at a time.</p>
+    </div>
+
+    <div class="button-row">
+      <button type="button" class="secondary" id="new-list">New categories</button>
+      <button type="button" class="primary" id="new-round">New round</button>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="lists.js"></script>
+  <script src="cat.js"></script>
+</body>
+</html>

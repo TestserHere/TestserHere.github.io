@@ -1,0 +1,37 @@
+/* Truth or Dare */
+
+.tod-setup summary, .tod-own summary { cursor: pointer; }
+.tod-setup { gap: 10px; }
+.tod-own { display: flex; flex-direction: column; gap: 8px; }
+.tod-own[open] summary { margin-bottom: 8px; }
+.tod-text { font-size: 16px; line-height: 1.45; resize: vertical; }
+.tod-sets { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.tod-set-chip { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border: 0; border-radius: 14px;
+  background: var(--fill); color: var(--text); text-align: left; }
+.tod-set-chip strong { font-size: 16px; }
+.tod-set-chip span { font-size: 13px; color: var(--muted); }
+.tod-set-chip[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.tod-set-chip[aria-pressed="true"] span { color: inherit; opacity: 0.75; }
+
+.tod-stage { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.tod-turn { margin: 0; font-size: clamp(22px, 6vw, 28px); font-weight: 800; text-align: center; overflow-wrap: anywhere; }
+.tod-choose { width: 100%; }
+.tod-pick { min-height: 84px; border: 0; border-radius: 20px; font-size: clamp(22px, 6vw, 28px); font-weight: 800; color: #fff; touch-action: manipulation; }
+.tod-pick.is-truth { background: #0a84ff; }
+.tod-pick.is-dare { background: #ff375f; }
+.tod-random { font-size: 16px; }
+
+.tod-card { width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 22px 20px; border-radius: 22px; background: var(--card);
+  box-shadow: var(--shadow); border-top: 6px solid #0a84ff; animation: pop 0.25s ease-out; }
+.tod-card.is-dare { border-top-color: #ff375f; }
+@keyframes pop { from { transform: scale(0.95); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .tod-card { animation: none; } }
+.tod-kind { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #0a84ff; }
+.tod-card.is-dare .tod-kind { color: #ff375f; }
+.tod-prompt { margin: 0; font-size: clamp(20px, 5.4vw, 26px); font-weight: 700; line-height: 1.35; }
+.tod-set { font-size: 13px; color: var(--muted); }
+#after { width: 100%; }
+
+.tod-scores-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.tod-scores-list li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 10px; border-radius: 10px; background: var(--fill); }
+.tod-scores-list li.is-turn { box-shadow: inset 0 0 0 2px var(--blue); }

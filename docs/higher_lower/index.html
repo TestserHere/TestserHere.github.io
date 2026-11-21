@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Higher or Lower</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="higher.css">
+</head>
+<body>
+  <main class="app app-wide">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Higher or Lower</h1>
+      <p class="note">Which one did more people look up on Wikipedia in the last 30 days?</p>
+    </header>
+
+    <div class="game-bar">
+      <span class="round-info">Score <strong id="score">0</strong></span>
+      <span class="round-info">Best <strong id="best">0</strong></span>
+    </div>
+
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <div class="versus" id="versus" hidden>
+      <article class="topic" id="left">
+        <div class="topic-art"></div>
+        <div class="topic-body">
+          <h2 class="topic-name"></h2>
+          <p class="topic-desc"></p>
+          <p class="topic-views"></p>
+        </div>
+      </article>
+      <div class="vs" aria-hidden="true">vs</div>
+      <article class="topic" id="right">
+        <div class="topic-art"></div>
+        <div class="topic-body">
+          <h2 class="topic-name"></h2>
+          <p class="topic-desc"></p>
+          <p class="topic-views" aria-live="polite"></p>
+          <div class="button-row choose" id="choose">
+            <button type="button" class="primary" id="higher">Higher</button>
+            <button type="button" class="secondary" id="lower">Lower</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="result-banner" id="over" hidden>
+      <h2 id="over-title"></h2>
+      <p id="over-text"></p>
+      <button type="button" class="primary" id="again">Play again</button>
+    </div>
+
+    <p class="note credits">Page views from Wikipedia (people, not bots), over the last 30 days. Pictures from Wikipedia.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="topics.js"></script>
+  <script src="higher.js"></script>
+  <script>window.V3Keys.howTo({"id": "higher", "title": "Higher or Lower", "steps": ["You see two things. The left one shows how many people looked it up on Wikipedia in the last 30 days.", "Guess whether the right one had more views or fewer.", "Get it right and the right one moves over, with a new one to guess against.", "One wrong guess and the game ends. Try to beat your best streak."]});</script>
+</body>
+</html>

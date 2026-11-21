@@ -593,5 +593,5 @@ window.MusicSources = (function () {
     { id: 'apple', name: 'Apple Music', blurb: 'Chart hits in the same genre as your songs.', like: appleLike, genre: appleGenreSongs },
   ];
 
-  return { SOURCES, GENRES, SourceError, findGenre, choose, keyOf, norm, searchSongs, findPreview };
+  return { SOURCES, GENRES, SourceError, findGenre, choose, keyOf, norm, searchSongs, findPreview, deezer };
 })();

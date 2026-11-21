@@ -1,0 +1,17 @@
+/* 20 Questions */
+
+.tq-intro { align-items: center; text-align: center; }
+.tq-big { margin: 0; font-size: clamp(20px, 5.4vw, 24px); font-weight: 700; line-height: 1.35; }
+.progress { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.progress span { display: block; height: 100%; width: 0; background: var(--blue); transition: width 0.3s; }
+.tq-question { margin: 8px 0; min-height: 2.6em; font-size: clamp(22px, 6vw, 28px); font-weight: 800; line-height: 1.3; text-align: center; }
+.tq-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tq-a { min-height: 52px; border: 0; border-radius: 14px; background: var(--fill); font-size: 17px; font-weight: 600; touch-action: manipulation; }
+.tq-a.is-yes { background: var(--good); color: #fff; }
+.tq-a.is-no { background: var(--bad); color: #fff; }
+.tq-a[data-a="unknown"] { grid-column: span 2; }
+.tq-guess { align-items: center; text-align: center; }
+.tq-eyebrow { margin: 0; color: var(--muted); font-weight: 600; }
+.tq-guess-name { margin: 0; font-size: clamp(34px, 10vw, 48px); font-weight: 800; letter-spacing: -0.02em; }
+.tq-title { margin: 0; font-size: 22px; }
+.tq-teach { display: grid; grid-template-columns: 1fr auto; gap: 8px; }

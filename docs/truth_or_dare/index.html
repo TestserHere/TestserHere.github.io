@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Truth or Dare</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="tod.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Truth or Dare</h1>
+    </header>
+
+    <details class="group tod-setup" id="setup" open>
+      <summary class="row-label">Set up</summary>
+      <span class="row-label" id="sets-label">Card sets (pick one or more)</span>
+      <div class="tod-sets" id="sets" role="group" aria-labelledby="sets-label"></div>
+      <label class="row-label" for="players">Players (one per line, optional)</label>
+      <textarea class="field tod-text" id="players" rows="4" placeholder="Alex&#10;Sam&#10;Jordan"></textarea>
+      <details class="tod-own">
+        <summary>Add your own truths and dares</summary>
+        <label class="row-label" for="own-truths">Your truths (one per line)</label>
+        <textarea class="field tod-text" id="own-truths" rows="3"></textarea>
+        <label class="row-label" for="own-dares">Your dares (one per line)</label>
+        <textarea class="field tod-text" id="own-dares" rows="3"></textarea>
+      </details>
+      <p class="note" id="deck-note"></p>
+    </details>
+
+    <section class="tod-stage">
+      <p class="tod-turn" id="turn" aria-live="polite"></p>
+      <div class="button-row tod-choose" id="choose">
+        <button type="button" class="tod-pick is-truth" id="truth">Truth</button>
+        <button type="button" class="tod-pick is-dare" id="dare">Dare</button>
+      </div>
+      <button type="button" class="text-button tod-random" id="random">Random</button>
+
+      <article class="tod-card" id="card" hidden aria-live="polite">
+        <span class="tod-kind" id="kind"></span>
+        <p class="tod-prompt" id="prompt"></p>
+        <span class="tod-set" id="set-name"></span>
+      </article>
+
+      <div class="button-row" id="after" hidden>
+        <button type="button" class="secondary" id="skip">Skip</button>
+        <button type="button" class="primary" id="done">Done, next player</button>
+      </div>
+    </section>
+
+    <div class="group tod-scores" id="scores-group" hidden>
+      <div class="section-head">
+        <span class="row-label">Scores (done / skipped)</span>
+        <button type="button" class="text-button" id="reset-scores">Reset</button>
+      </div>
+      <ol class="tod-scores-list" id="scores"></ol>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="cards.js"></script>
+  <script src="tod.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Copy Cat</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="copycat.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Copy Cat</h1>
+    </header>
+
+    <div class="group" id="setup">
+      <div class="segmented" id="mode" role="group" aria-label="Mode">
+        <button type="button" data-value="classic">Classic</button>
+        <button type="button" data-value="reverse">Backwards</button>
+        <button type="button" data-value="party">Party</button>
+      </div>
+      <div class="segmented" id="speed" role="group" aria-label="Speed">
+        <button type="button" data-value="slow">Relaxed</button>
+        <button type="button" data-value="normal">Normal</button>
+        <button type="button" data-value="fast">Fast</button>
+      </div>
+      <div class="row" id="players-row" hidden>
+        <span class="row-label" id="players-label">Players</span>
+        <div class="stepper" id="players" role="group" aria-labelledby="players-label">
+          <button type="button" aria-label="Fewer players">&minus;</button>
+          <output>2</output>
+          <button type="button" aria-label="More players">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-bar">
+      <span class="round-info" id="round">Ready</span>
+      <span class="round-info">Best <strong id="best">0</strong></span>
+    </div>
+
+    <p class="cc-status" id="status" role="status" aria-live="polite">Press Start, watch the pattern, then copy it.</p>
+
+    <div class="cc-board" id="board">
+      <button type="button" class="cc-pad" data-i="0" aria-label="Green, key 1"><span>1</span></button>
+      <button type="button" class="cc-pad" data-i="1" aria-label="Red, key 2"><span>2</span></button>
+      <button type="button" class="cc-pad" data-i="2" aria-label="Yellow, key 3"><span>3</span></button>
+      <button type="button" class="cc-pad" data-i="3" aria-label="Blue, key 4"><span>4</span></button>
+      <button type="button" class="cc-start" id="start">Start</button>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="copycat.js"></script>
+</body>
+</html>

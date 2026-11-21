@@ -1,0 +1,19 @@
+/* Song Snippet Quiz */
+
+.mixes .chip { font-size: 15px; }
+
+.listen { display: flex; align-items: center; gap: 18px; padding: 16px; border-radius: 20px; background: var(--card); }
+.listen-button { position: relative; flex: none; width: 108px; height: 108px; padding: 0; border: 0; border-radius: 50%; background: var(--blue); }
+.listen-art { position: absolute; inset: 8px; border-radius: 50%; background: var(--blue) center / cover no-repeat; }
+.listen-button::after { content: ''; position: absolute; top: 50%; left: 54%; width: 0; height: 0; transform: translate(-50%, -50%);
+  border-style: solid; border-width: 18px 0 18px 30px; border-color: transparent transparent transparent #fff; }
+.listen-button.is-playing::after { left: 50%; width: 26px; height: 32px; border: 0; border-left: 9px solid #fff; border-right: 9px solid #fff; }
+.listen-button.is-revealed::after { filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6)); }
+.listen-ring { position: absolute; inset: 0; border-radius: 50%; --done: 0;
+  background: conic-gradient(var(--text) calc(var(--done) * 360deg), transparent 0); -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%); mask: radial-gradient(circle, transparent 60%, #000 61%); opacity: 0.5; }
+.listen-info { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+.listen-length { margin: 0; font-weight: 600; }
+
+.answer { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.answer-title { font-size: 17px; }
+.answer-artist { font-size: 14px; font-weight: 400; color: var(--muted); }

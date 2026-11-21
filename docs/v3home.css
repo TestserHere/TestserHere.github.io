@@ -292,6 +292,8 @@ button { cursor: pointer; }
 .footer { padding-block: 22px; background: var(--bg-alt); color: var(--muted); font-size: 12px; }
 .footer-inner { display: flex; flex-wrap: wrap; gap: 6px 20px; }
 .footer a { color: var(--link); }
+.footer-links { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-left: auto; }
+.footer-anim { padding: 0; font-size: inherit; }
 
 /* Dialogs */
 dialog { border: 0; padding: 0; color: var(--text); }

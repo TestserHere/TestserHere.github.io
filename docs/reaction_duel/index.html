@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Reaction Duel</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="duel.css">
+</head>
+<body>
+  <main class="app app-wide">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Reaction Duel</h1>
+    </header>
+
+    <div class="group duel-setup" id="setup">
+      <div class="segmented" id="players" role="group" aria-label="Players">
+        <button type="button" data-value="1">Solo</button>
+        <button type="button" data-value="2">2 players</button>
+        <button type="button" data-value="4">4 players</button>
+      </div>
+      <div class="segmented" id="target" role="group" aria-label="First to">
+        <button type="button" data-value="3">First to 3</button>
+        <button type="button" data-value="5">First to 5</button>
+        <button type="button" data-value="10">First to 10</button>
+      </div>
+      <label class="row check">
+        <span>Tricks: fake signals you must not tap</span>
+        <input type="checkbox" id="tricks">
+      </label>
+    </div>
+
+    <div class="arena" id="arena" aria-live="polite"></div>
+
+    <div class="button-row">
+      <button type="button" class="secondary" id="reset">Reset</button>
+      <button type="button" class="primary" id="start">Start</button>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="duel.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Code Breaker</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="code.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Code Breaker</h1>
+    </header>
+
+    <div class="group">
+      <div class="segmented" id="mode" role="group" aria-label="Mode">
+        <button type="button" data-value="solo">Solo</button>
+        <button type="button" data-value="daily">Daily</button>
+        <button type="button" data-value="duo">2 players</button>
+      </div>
+      <div class="segmented" id="level" role="group" aria-label="Level">
+        <button type="button" data-value="easy">Easy</button>
+        <button type="button" data-value="normal">Normal</button>
+        <button type="button" data-value="hard">Hard</button>
+      </div>
+      <p class="note" id="level-note"></p>
+    </div>
+
+    <!-- 2 players: the code maker picks a secret code -->
+    <section class="panel" id="maker" hidden>
+      <h2 class="cb-title">Code maker: pick a secret code</h2>
+      <p class="note">The code breaker looks away. Tap colours to make the code, then press Hide code and pass the device.</p>
+      <div class="cb-row cb-secret" id="maker-row"></div>
+      <div class="cb-palette" id="maker-palette"></div>
+      <div class="button-row">
+        <button type="button" class="secondary" id="maker-clear">Clear</button>
+        <button type="button" class="primary" id="maker-done" disabled>Hide code and start</button>
+      </div>
+    </section>
+
+    <section class="panel" id="play">
+      <div class="game-bar">
+        <span class="round-info" id="info"></span>
+        <span class="round-info" id="stats"></span>
+      </div>
+      <ol class="cb-board" id="board"></ol>
+      <div class="cb-palette" id="palette"></div>
+      <div class="button-row">
+        <button type="button" class="secondary" id="undo">Delete</button>
+        <button type="button" class="primary" id="check" disabled>Check</button>
+      </div>
+      <p class="note cb-key"><span class="peg-hint is-exact"></span> right colour, right place &nbsp; <span class="peg-hint is-near"></span> right colour, wrong place</p>
+    </section>
+
+    <div class="result-banner" id="done" hidden>
+      <h2 id="done-title"></h2>
+      <div class="cb-row cb-secret" id="done-code"></div>
+      <p id="done-text"></p>
+      <div class="button-row">
+        <button type="button" class="secondary" id="share" hidden>Copy result</button>
+        <button type="button" class="primary" id="again">New code</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3daily.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="code.js"></script>
+</body>
+</html>

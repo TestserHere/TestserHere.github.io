@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Word Ladder</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪜</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="ladder.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Word Ladder</h1>
+      <p class="note">Change one letter at a time to turn the top word into the bottom word. Every step must be a real word.</p>
+    </header>
+
+    <div class="segmented" id="kind" role="group" aria-label="Puzzle">
+      <button type="button" data-kind="daily">Daily</button>
+      <button type="button" data-kind="practice">Practice</button>
+    </div>
+
+    <div class="game-bar">
+      <span class="round-info" id="info"></span>
+      <span class="round-info" id="par"></span>
+    </div>
+
+    <ol class="ladder" id="ladder" aria-label="Your ladder"></ol>
+
+    <form class="ladder-form" id="form" autocomplete="off">
+      <label class="sr-only" for="next">Next word</label>
+      <input class="field ladder-input" id="next" maxlength="4" autocapitalize="none" spellcheck="false" placeholder="Next word" inputmode="text">
+      <button type="submit" class="primary">Add</button>
+    </form>
+    <p class="message" id="message" role="status" aria-live="polite"></p>
+
+    <div class="button-row" id="tools">
+      <button type="button" class="secondary" id="undo">Undo</button>
+      <button type="button" class="secondary" id="hint">Hint</button>
+      <button type="button" class="secondary" id="new">New puzzle</button>
+    </div>
+
+    <div class="result-banner" id="done" hidden>
+      <h2 id="done-title"></h2>
+      <p id="done-text"></p>
+      <div class="button-row">
+        <button type="button" class="secondary" id="share">Copy result</button>
+        <button type="button" class="primary" id="again">Practice puzzle</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3daily.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="words4.js"></script>
+  <script src="ladder.js"></script>
+  <script>window.V3Keys.howTo({"id": "ladder", "title": "Word Ladder", "steps": ["Get from the top word to the bottom word.", "Change one letter at a time, and every step must be a real four-letter word. COLD → CORD → WORD → WARD → WARM.", "Try to finish in the best possible number of moves (shown at the top).", "Use Undo to go back, or Hint for a nudge.", "The Daily puzzle is the same for everyone. Practice gives you new puzzles whenever you like."], "tip": "It works offline, so it’s great for trips."});</script>
+</body>
+</html>

@@ -17,6 +17,11 @@
   <link rel="stylesheet" href="../v3tools.css">
   <link rel="stylesheet" href="../v3games.css">
   <link rel="stylesheet" href="../v3apps.css">
+  <style>
+    #setup.is-daily .search-wrap, #setup.is-daily #start-new, #setup.is-daily #target-new { display: none; }
+    .route-check { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .route-check .note:empty { display: none; }
+  </style>
 </head>
 <body>
   <main class="app app-wide">
@@ -31,7 +36,10 @@
       <div class="segmented" id="level" role="group" aria-label="Difficulty">
         <button type="button" data-level="easy">Easy start</button>
         <button type="button" data-level="hard">Random start</button>
+        <button type="button" data-level="daily">Daily race</button>
       </div>
+
+      <p class="note daily-note" id="daily-note" hidden></p>
 
       <div class="race-ends">
         <div class="end-card">
@@ -93,7 +101,14 @@
         <h2 id="win-title">You made it!</h2>
         <p id="win-text"></p>
         <ol class="race-path" id="win-path"></ol>
-        <button type="button" class="primary" id="again">New race</button>
+        <div class="route-check">
+          <button type="button" class="secondary" id="route-check">Find the shortest route</button>
+          <p class="note" id="route-result" role="status" aria-live="polite"></p>
+        </div>
+        <div class="button-row">
+          <button type="button" class="secondary" id="share" hidden>Copy result</button>
+          <button type="button" class="primary" id="again">New race</button>
+        </div>
       </div>
 
       <p class="status" id="race-status" role="status" aria-live="polite"></p>
@@ -105,7 +120,9 @@
 
   <script src="../v3tools.js"></script>
   <script src="../v3apps.js"></script>
+  <script src="../v3daily.js"></script>
   <script src="../v3keys.js"></script>
   <script src="race.js"></script>
+  <script>window.V3Keys.howTo({"id": "wikirace", "title": "Wiki Race", "steps": ["You start on one Wikipedia page and need to reach the target page.", "You can only move by tapping links inside the article.", "Try to get there in as few clicks (and as little time) as you can.", "Choose Easy start, Random start, or the Daily race that’s the same for everyone today.", "At the end, press “Find the shortest route” to see how close to perfect you were."], "tip": "Big general pages (countries, years, sciences) link to almost everything, so head for one of those."});</script>
 </body>
 </html>

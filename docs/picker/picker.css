@@ -10,6 +10,8 @@
 .instant { display: flex; flex-direction: column; gap: 12px; }
 .instant-card { min-height: clamp(200px, 36dvh, 340px); }
 
+.list-save { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+#list-note:empty { display: none; }
 .entries { min-height: 240px; font-size: 16px; line-height: 1.5; }
 
 .history { display: flex; flex-direction: column; gap: 4px; max-height: 260px; margin: 0; padding: 0; overflow-y: auto; list-style: none; counter-reset: pick; }

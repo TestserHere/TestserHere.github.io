@@ -27,7 +27,8 @@
   const CUT_SECTIONS = /^(references|external links|notes|further reading|sources|bibliography|citations|footnotes|explanatory notes|works cited|notes and references)$/i;
 
   const saved0 = read(STATE_KEY, {});
-  const state = { level: saved0.level === 'hard' ? 'hard' : 'easy' };
+  const state = { level: ['hard', 'daily'].includes(saved0.level) ? saved0.level : 'easy' };
+  const today = window.V3Daily.today();
   const remember = () => write(STATE_KEY, state);
 
   const clean = (title) => decodeURIComponent(String(title || '')).replace(/_/g, ' ').trim();
@@ -50,11 +51,15 @@
     $('go').disabled = !(start && target) || same(start.title, target.title);
   }
 
+  const asked = { start: 0, target: 0 }; // only the newest request for each end counts
   async function setEnd(which, title) {
+    const mine = ++asked[which];
+    if (which === 'start') start = null; else target = null;
     showEnd(which, null);
     setStatus($('setup-status'), '');
     try {
       const page = await summary(title);
+      if (mine !== asked[which]) return;
       if (which === 'start') start = page; else target = page;
       showEnd(which, page);
       if (start && target && same(start.title, target.title)) setStatus($('setup-status'), 'Start and target are the same page. Shuffle one of them.', 'problem');
@@ -63,28 +68,57 @@
     }
   }
 
+  /* The daily race: the same start and target for everyone today. */
+  function setDaily() {
+    const random = window.V3Daily.rng('wikirace-' + today);
+    const from = window.V3Daily.pick(EASY_STARTS, random);
+    const to = window.V3Daily.pick(TARGETS.filter((t) => !same(t, from)), random);
+    start = null;
+    target = null;
+    setEnd('start', from);
+    setEnd('target', to);
+  }
+
+  function showDaily() {
+    const daily = state.level === 'daily';
+    $('setup').classList.toggle('is-daily', daily);
+    $('daily-note').hidden = !daily;
+    if (daily) {
+      const done = read(BEST_KEY, {})['daily ' + today];
+      $('daily-note').textContent = 'Today’s race, ' + window.V3Daily.label(today) + '. Everyone gets the same one.'
+        + (done ? ' You did it in ' + done.clicks + (done.clicks === 1 ? ' click' : ' clicks') + '. Try to beat it!' : '');
+    }
+  }
+
   async function newStart() {
+    if (state.level === 'daily') return setDaily();
     if (state.level === 'easy') return setEnd('start', pick(EASY_STARTS.filter((title) => !target || !same(title, target.title))));
+    const mine = ++asked.start;
+    start = null;
     showEnd('start', null);
     try {
       const data = await getJson(WIKI + '/api/rest_v1/page/random/summary');
+      if (mine !== asked.start) return;
       start = { title: clean(data.titles ? data.titles.canonical : data.title), desc: data.description || '' };
       showEnd('start', start);
     } catch (_) {
       setStatus($('setup-status'), "Wikipedia isn't answering right now. Try again in a minute.", 'problem');
     }
   }
-  const newTarget = () => setEnd('target', pick(TARGETS.filter((title) => !target || !same(title, target.title))));
+  const newTarget = () => state.level === 'daily' ? null : setEnd('target', pick(TARGETS.filter((title) => !target || !same(title, target.title))));
 
   const levelButtons = Array.from($('level').querySelectorAll('button'));
   function showLevel() {
     levelButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.level === state.level)));
   }
   levelButtons.forEach((button) => button.addEventListener('click', () => {
+    const wasDaily = state.level === 'daily';
     state.level = button.dataset.level;
     remember();
     showLevel();
+    showDaily();
     newStart();
+    if (wasDaily) newTarget(); // leave today's target behind too
   }));
 
   $('start-new').addEventListener('click', newStart);
@@ -177,7 +211,7 @@
   let loadToken = 0;
 
   function begin() {
-    race = { start: start.title, target: target.title, clicks: 0, path: [], startedAt: Date.now(), done: false };
+    race = { start: start.title, target: target.title, clicks: 0, path: [], startedAt: Date.now(), done: false, daily: state.level === 'daily' };
     $('setup').hidden = true;
     $('race').hidden = false;
     $('win').hidden = true;
@@ -261,6 +295,12 @@
       const best = read(BEST_KEY, {});
       const key = race.start.toLowerCase() + '→' + race.target.toLowerCase();
       const old = best[key];
+      if (race.daily) {
+        const day = best['daily ' + today];
+        if (!day || race.clicks < day.clicks || (race.clicks === day.clicks && seconds < day.seconds)) best['daily ' + today] = { clicks: race.clicks, seconds };
+        Object.keys(best).filter((k) => k.startsWith('daily ') && k < 'daily ' + today).sort().slice(0, -30).forEach((k) => delete best[k]);
+        write(BEST_KEY, best);
+      }
       if (!old || race.clicks < old.clicks || (race.clicks === old.clicks && seconds < old.seconds)) {
         best[key] = { clicks: race.clicks, seconds };
         write(BEST_KEY, best);
@@ -273,6 +313,13 @@
     const path = $('win-path');
     path.replaceChildren();
     race.path.forEach((title) => path.appendChild(el('li', '', title)));
+    race.seconds = seconds;
+    race.won = won;
+    $('share').hidden = !(won && race.daily);
+    $('route-check').hidden = false;
+    $('route-check').disabled = false;
+    $('route-result').textContent = '';
+    $('again').textContent = race.daily ? 'Back' : 'New race';
     $('win').hidden = false;
     $('win').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -295,8 +342,112 @@
 
   $('again').addEventListener('click', () => {
     backToSetup();
+    showDaily();
+    if (state.level === 'daily') return;
     newStart();
     newTarget();
+  });
+
+  $('share').addEventListener('click', async () => {
+    if (!race) return;
+    const text = 'Wiki Race daily, ' + window.V3Daily.label(today) + ': ' + race.start + ' to ' + race.target + ' in '
+      + race.clicks + (race.clicks === 1 ? ' click' : ' clicks') + ' (' + formatDuration(race.seconds) + ')\n' + location.href.split('?')[0];
+    $('share').textContent = (await window.V3Daily.share(text)) ? 'Copied!' : 'Couldn’t copy';
+    setTimeout(() => { $('share').textContent = 'Copy result'; }, 2000);
+  });
+
+  /* ---------- Shortest route ----------
+     Every route of 1 or 2 clicks is checked fully. For 3 clicks the middle step is tried through pages the
+     target links to that also link back to it, which is where nearly all short routes go. Wikipedia's API is
+     asked at most MAX_ASKS times. */
+  const API = WIKI + '/w/api.php';
+  const MAX_ASKS = 140;
+
+  async function routeCheck(from, to) {
+    let asks = 0;
+    const ask = async (params) => {
+      if (++asks > MAX_ASKS) throw new Error('too many');
+      const query = new URLSearchParams(Object.assign({ action: 'query', format: 'json', formatversion: '2', origin: '*' }, params));
+      return getJson(API + '?' + query, 15000);
+    };
+    // All article links on a page (up to a few thousand).
+    async function linksOf(title, parts) {
+      const out = [];
+      let more = {};
+      for (let i = 0; i < parts; i++) {
+        const data = await ask(Object.assign({ prop: 'links', titles: title, redirects: '1', plnamespace: '0', pllimit: 'max' }, more));
+        (data.query && data.query.pages || []).forEach((p) => (p.links || []).forEach((l) => out.push(l.title)));
+        if (!data.continue) break;
+        more = data.continue;
+      }
+      return out;
+    }
+    // Which of these pages link to any of those titles? Answers come as [page, linked title].
+    async function linking(pages, titles) {
+      const found = [];
+      const jobs = [];
+      for (let i = 0; i < pages.length; i += 50) {
+        for (let j = 0; j < titles.length; j += 50) jobs.push([pages.slice(i, i + 50), titles.slice(j, j + 50)]);
+      }
+      let next = 0;
+      async function worker() {
+        while (next < jobs.length && !found.length) {
+          const [p, t] = jobs[next++];
+          let more = {};
+          for (let k = 0; k < 4; k++) {
+            const data = await ask(Object.assign({ prop: 'links', titles: p.join('|'), pltitles: t.join('|'), pllimit: 'max', redirects: '1' }, more));
+            (data.query && data.query.pages || []).forEach((page) => (page.links || []).forEach((l) => found.push([page.title, l.title])));
+            if (!data.continue) break;
+            more = data.continue;
+          }
+        }
+      }
+      await Promise.all([1, 2, 3, 4, 5].map(worker));
+      return found;
+    }
+
+    // The target and the names that redirect to it.
+    const named = await ask({ prop: 'redirects', titles: to, redirects: '1', rdnamespace: '0', rdlimit: 'max' });
+    const page = (named.query && named.query.pages || [])[0] || {};
+    const targetNames = [page.title || to].concat((page.redirects || []).map((r) => r.title)).slice(0, 50);
+    const isTarget = (t) => targetNames.some((n) => same(n, t));
+
+    const first = Array.from(new Set(await linksOf(from, 8)));
+    if (first.some(isTarget)) return [from, to];
+    const two = await linking(first, targetNames);
+    if (two.length) return [from, two[0][0], to];
+
+    const back = (await linking(Array.from(new Set(await linksOf(to, 4))).filter((t) => !isTarget(t)), targetNames)).map((f) => f[0]);
+    const middles = Array.from(new Set(back));
+    const three = await linking(first, middles);
+    if (three.length) return [from, three[0][0], three[0][1], to];
+    return null;
+  }
+
+  $('route-check').addEventListener('click', async () => {
+    if (!race) return;
+    const mine = race;
+    $('route-check').disabled = true;
+    $('route-result').textContent = 'Looking for the shortest route…';
+    let text;
+    try {
+      const route = await routeCheck(mine.start, mine.target);
+      if (route) {
+        const clicks = route.length - 1;
+        text = 'Shortest: ' + clicks + (clicks === 1 ? ' click' : ' clicks') + ', ' + route.join(' → ') + '.';
+        if (mine.won) text += mine.clicks <= clicks ? ' You found a shortest route!' : ' You took ' + mine.clicks + '.';
+      } else {
+        text = 'There’s no route in 3 clicks or fewer that we could find, so it takes at least 4.'
+          + (mine.won && mine.clicks <= 4 ? ' Your ' + mine.clicks + ' is excellent!' : '');
+      }
+      text += ' Some links may be in boxes at the bottom of the page.';
+    } catch (_) {
+      text = 'Couldn’t finish checking. This race has a lot of links, or Wikipedia is busy.';
+    }
+    if (race === mine) {
+      $('route-result').textContent = text;
+      $('route-check').hidden = true;
+    }
   });
 
   $('go').addEventListener('click', () => {
@@ -304,6 +455,7 @@
   });
 
   showLevel();
+  showDaily();
   newStart();
   newTarget();
 })();

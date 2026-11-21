@@ -1,0 +1,24 @@
+/* Copy Cat */
+
+.cc-status { margin: 0; min-height: 2.8em; text-align: center; font-size: 18px; font-weight: 600; }
+.cc-status.is-bad { color: var(--bad); }
+
+.cc-board { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 420px, 62vh); margin: 0 auto; aspect-ratio: 1; }
+.cc-pad { --c: #34c759; position: relative; border: 0; padding: 0; background: var(--c); opacity: 0.45; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent; transition: opacity 0.08s, transform 0.08s, filter 0.08s; }
+.cc-pad:nth-child(1) { --c: #30d158; border-radius: 100% 14px 14px 14px; }
+.cc-pad:nth-child(2) { --c: #ff453a; border-radius: 14px 100% 14px 14px; }
+.cc-pad:nth-child(3) { --c: #ffd60a; border-radius: 14px 14px 14px 100%; }
+.cc-pad:nth-child(4) { --c: #0a84ff; border-radius: 14px 14px 100% 14px; }
+.cc-pad span { position: absolute; font-size: 18px; font-weight: 800; color: rgba(0, 0, 0, 0.45); }
+.cc-pad:nth-child(1) span { right: 14px; bottom: 10px; }
+.cc-pad:nth-child(2) span { left: 14px; bottom: 10px; }
+.cc-pad:nth-child(3) span { right: 14px; top: 10px; }
+.cc-pad:nth-child(4) span { left: 14px; top: 10px; }
+.cc-pad.is-lit { opacity: 1; filter: brightness(1.15); transform: scale(0.97); box-shadow: 0 0 28px var(--c); }
+.cc-pad:disabled { cursor: default; }
+.cc-board.is-off .cc-pad { opacity: 0.25; }
+
+.cc-start { position: absolute; left: 50%; top: 50%; width: 31%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 6px solid var(--bg);
+  border-radius: 50%; background: var(--text); color: var(--bg); font-size: clamp(15px, 4.4vw, 20px); font-weight: 800; padding: 0; }
+.cc-start:disabled { opacity: 1; }

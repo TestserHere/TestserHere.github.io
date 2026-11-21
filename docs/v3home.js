@@ -26,6 +26,21 @@
     { label: 'Wiki Race', href: 'wiki_race/index.html', color: '#475569', icon: 'fa-flag-checkered', cat: GAMES },
     { label: 'Geo Quiz', href: 'geo_quiz/index.html', color: '#059669', icon: 'fa-earth-americas', cat: GAMES },
     { label: 'Trivia Night', href: 'trivia_night/index.html', color: '#c026d3', icon: 'fa-circle-question', cat: GAMES },
+    { label: 'Daily Five', href: 'daily_five/index.html', color: '#f97316', icon: 'fa-calendar-check', cat: GAMES },
+    { label: 'Word Ladder', href: 'word_ladder/index.html', color: '#0f766e', icon: 'fa-stairs', cat: GAMES },
+    { label: 'Higher or Lower', href: 'higher_lower/index.html', color: '#2563eb', icon: 'fa-arrow-up-wide-short', cat: GAMES },
+    { label: 'Guess the Year', href: 'guess_year/index.html', color: '#a16207', icon: 'fa-hourglass-half', cat: GAMES },
+    { label: 'Song Snippet Quiz', href: 'song_quiz/index.html', color: '#be185d', icon: 'fa-music', cat: GAMES },
+    { label: 'Party Buzzer', href: 'buzzer/index.html', color: '#dc2626', icon: 'fa-bell', cat: GAMES },
+    { label: 'Dice and Coins', href: 'dice/index.html', color: '#7c3aed', icon: 'fa-dice', cat: TOOLS },
+    { label: 'Board Games', href: 'board_games/index.html', color: '#0369a1', icon: 'fa-chess-board', cat: GAMES },
+    { label: 'Copy Cat', href: 'copy_cat/index.html', color: '#16a34a', icon: 'fa-shapes', cat: GAMES },
+    { label: 'Reaction Duel', href: 'reaction_duel/index.html', color: '#e11d48', icon: 'fa-bolt', cat: GAMES },
+    { label: 'Code Breaker', href: 'code_breaker/index.html', color: '#4f46e5', icon: 'fa-lock', cat: GAMES },
+    { label: 'Categories', href: 'categories/index.html', color: '#d97706', icon: 'fa-list-ol', cat: GAMES },
+    { label: 'Truth or Dare', href: 'truth_or_dare/index.html', color: '#9333ea', icon: 'fa-masks-theater', cat: GAMES },
+    { label: 'Word Chain', href: 'word_chain/index.html', color: '#0d9488', icon: 'fa-link', cat: GAMES },
+    { label: '20 Questions', href: 'twenty_questions/index.html', color: '#2563eb', icon: 'fa-question', cat: GAMES },
     { label: 'Lyric Pad', href: 'lyric_pad/index.html', color: '#e11d48', icon: 'fa-pen-nib', cat: LEARN },
     { label: 'Day in History', href: 'on_this_day/index.html', color: '#ca8a04', icon: 'fa-calendar-day', cat: LEARN },
     { label: 'Stargazing', href: 'stargazing/index.html', color: '#4338ca', icon: 'fa-star', cat: LEARN },
@@ -94,7 +109,7 @@
   ];
 
   // Older projects are hidden from the site. Add a project's href here to show it again.
-  const SHOWN_PROJECTS = new Set(['dont_say_it_out/index.html', 'toolkit/index.html', 'class_toolkit/index.html', 'music_finder/index.html', 'make_24/index.html', 'perfect_second/index.html', 'zones/index.html', 'sudoku/index.html', 'book_finder/index.html', 'world_radio/index.html', 'wiki_race/index.html', 'geo_quiz/index.html', 'trivia_night/index.html', 'lyric_pad/index.html', 'on_this_day/index.html', 'stargazing/index.html']);
+  const SHOWN_PROJECTS = new Set(['dont_say_it_out/index.html', 'toolkit/index.html', 'class_toolkit/index.html', 'music_finder/index.html', 'make_24/index.html', 'perfect_second/index.html', 'zones/index.html', 'sudoku/index.html', 'book_finder/index.html', 'world_radio/index.html', 'wiki_race/index.html', 'geo_quiz/index.html', 'trivia_night/index.html', 'lyric_pad/index.html', 'on_this_day/index.html', 'stargazing/index.html', 'daily_five/index.html', 'word_ladder/index.html', 'higher_lower/index.html', 'guess_year/index.html', 'song_quiz/index.html', 'buzzer/index.html', 'dice/index.html', 'board_games/index.html', 'copy_cat/index.html', 'reaction_duel/index.html', 'code_breaker/index.html', 'categories/index.html', 'truth_or_dare/index.html', 'word_chain/index.html', 'twenty_questions/index.html']);
   const PROJECTS = ALL_PROJECTS.filter((project) => SHOWN_PROJECTS.has(project.href));
 
   const CITY = { name: 'Sydney', lat: -33.87, lon: 151.21, tz: 'Australia/Sydney' };
@@ -278,6 +293,11 @@
   }
   updateWeather();
   setInterval(updateWeather, 600000);
+
+  /* The build animation: plays on computers, and on phones only when asked for. */
+  const playAnim = $('play-anim');
+  if (!window.Swarm || matchMedia('(prefers-reduced-motion: reduce)').matches) playAnim.hidden = true;
+  else playAnim.addEventListener('click', () => window.Swarm.play());
 
   /* Version 3 welcome: marked as seen the moment it appears, so it never returns */
   const welcome = $('welcome');

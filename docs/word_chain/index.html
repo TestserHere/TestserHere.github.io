@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Word Chain</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="chain.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Word Chain</h1>
+    </header>
+
+    <!-- Setup -->
+    <section class="panel" id="setup">
+      <span class="row-label">Words</span>
+      <div class="segmented" id="topic" role="group" aria-label="Words">
+        <button type="button" data-value="any">Any word</button>
+        <button type="button" data-value="animals">Animals</button>
+        <button type="button" data-value="countries">Countries</button>
+        <button type="button" data-value="foods">Foods</button>
+      </div>
+      <p class="note" id="topic-note"></p>
+      <label class="row-label" for="players">Players (one per line)</label>
+      <textarea class="field chain-players" id="players" rows="3" placeholder="Player 1&#10;Player 2"></textarea>
+      <label class="row check">
+        <span>Play against the computer too</span>
+        <input type="checkbox" id="cpu">
+      </label>
+      <span class="row-label">Time for each turn</span>
+      <div class="segmented" id="time" role="group" aria-label="Time for each turn">
+        <button type="button" data-value="10">10 s</button>
+        <button type="button" data-value="15">15 s</button>
+        <button type="button" data-value="30">30 s</button>
+        <button type="button" data-value="0">No limit</button>
+      </div>
+      <span class="row-label">Lives</span>
+      <div class="segmented" id="lives" role="group" aria-label="Lives">
+        <button type="button" data-value="1">1</button>
+        <button type="button" data-value="3">3</button>
+        <button type="button" data-value="5">5</button>
+      </div>
+      <button type="button" class="primary" id="start">Start</button>
+    </section>
+
+    <!-- Play -->
+    <section class="panel" id="play" hidden>
+      <ul class="chain-people" id="people" aria-label="Players"></ul>
+      <ol class="chain" id="chain" aria-label="The chain so far"></ol>
+      <div class="chain-turn">
+        <p class="chain-who" id="who" aria-live="polite"></p>
+        <div class="chain-letter-row">
+          <span class="chain-needs">Starts with</span>
+          <span class="chain-letter" id="letter"></span>
+          <span class="game-time chain-time" id="time-left" role="timer"></span>
+        </div>
+      </div>
+      <form class="chain-form" id="form" autocomplete="off">
+        <label class="sr-only" for="word">Your word</label>
+        <input class="field" id="word" autocapitalize="none" spellcheck="false" enterkeyhint="send">
+        <button type="submit" class="primary">Go</button>
+      </form>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+      <div class="button-row">
+        <button type="button" class="secondary" id="challenge" hidden>Challenge last word</button>
+        <button type="button" class="secondary" id="pass">Give up this turn</button>
+      </div>
+    </section>
+
+    <div class="result-banner" id="over" hidden>
+      <h2 id="over-title"></h2>
+      <p id="over-text"></p>
+      <div class="button-row">
+        <button type="button" class="secondary" id="change">Change settings</button>
+        <button type="button" class="primary" id="again">Play again</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="../geo_quiz/countries.js"></script>
+  <script src="lists.js"></script>
+  <script src="chain.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Daily Five</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>5️⃣</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="../v3apps.css">
+  <link rel="stylesheet" href="five.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Daily Five</h1>
+      <p class="note" id="date"></p>
+    </header>
+
+    <ol class="dots" id="dots" aria-label="Your answers so far"></ol>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <section class="panel" id="question" hidden>
+      <p class="eyebrow q-kind" id="kind"></p>
+      <h2 class="q-text" id="text"></h2>
+      <div class="q-media" id="media"></div>
+      <div class="answers is-long" id="answers"></div>
+      <form class="q-type" id="type-form" hidden autocomplete="off">
+        <label class="sr-only" for="typed">Your answer</label>
+        <input class="field" id="typed" autocapitalize="none" spellcheck="false" placeholder="Type the word">
+        <button type="submit" class="primary">Check</button>
+      </form>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+      <button type="button" class="primary" id="next" hidden>Next</button>
+    </section>
+
+    <div class="result-banner" id="done" hidden>
+      <h2 id="done-title"></h2>
+      <p class="done-dots" id="done-dots" aria-hidden="true"></p>
+      <p id="done-text"></p>
+      <ol class="recap" id="recap"></ol>
+      <button type="button" class="primary" id="share">Copy result</button>
+      <p class="note">A new Daily Five comes out at midnight.</p>
+    </div>
+
+    <p class="note credits">Flags from flagcdn.com. History and most-read articles from Wikipedia (CC BY-SA). Songs from Deezer.</p>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3daily.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../geo_quiz/countries.js"></script>
+  <script src="../dont_say_it_out/words.js"></script>
+  <script src="../music_finder/sources.js"></script>
+  <script src="five.js"></script>
+  <script>window.V3Keys.howTo({"id": "five", "title": "Daily Five", "steps": ["Five quick questions a day, the same for everyone: a flag, a history year, a song, a scrambled word and a “most read on Wikipedia” question.", "You get one go at each question. Words give you three tries.", "At the end, copy your result to share with friends, without giving away the answers.", "A new Daily Five comes out at midnight. Play every day to build your streak."]});</script>
+</body>
+</html>

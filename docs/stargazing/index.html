@@ -16,6 +16,15 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔭</text></svg>">
   <link rel="stylesheet" href="../v3tools.css">
   <link rel="stylesheet" href="../v3apps.css">
+  <style>
+    .iss { display: flex; flex-direction: column; gap: 8px; }
+    .iss:empty { display: none; }
+    .iss-pass { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; background: var(--fill); border-left: 4px solid var(--muted); }
+    .iss-pass[data-level="good"] { border-left-color: var(--good); }
+    .iss-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .iss-text span { color: var(--muted); font-size: 15px; }
+    .iss-high { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  </style>
 </head>
 <body class="sky-page">
   <main class="app">
@@ -69,17 +78,24 @@
       </div>
 
       <div class="group">
+        <span class="row-label">Space station</span>
+        <div class="iss" id="iss"></div>
+        <p class="note" id="iss-note"></p>
+      </div>
+
+      <div class="group">
         <span class="row-label">Tips</span>
         <ul class="rules" id="tips"></ul>
       </div>
     </section>
 
-    <p class="note credits">Weather from Open-Meteo. Sun and moon worked out on your device.</p>
+    <p class="note credits">Weather from Open-Meteo. Space station orbit from CelesTrak. Sun, moon and space station worked out on your device.</p>
   </main>
 
   <script src="../v3tools.js"></script>
   <script src="../v3apps.js"></script>
   <script src="sky.js"></script>
+  <script src="iss.js"></script>
   <script src="stars.js"></script>
 </body>
 </html>
