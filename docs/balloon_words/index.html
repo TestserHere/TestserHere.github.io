@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Balloon Words</title>
+  <!-- GA4 tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9GT4E8Z0EL"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-9GT4E8Z0EL');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎈</text></svg>">
+  <link rel="stylesheet" href="../v3tools.css">
+  <link rel="stylesheet" href="../v3games.css">
+  <link rel="stylesheet" href="balloon.css">
+</head>
+<body>
+  <main class="app">
+    <header class="app-head">
+      <a class="back-home" href="../index.html">&lsaquo; Home</a>
+      <h1>Balloon Words</h1>
+      <p class="note">Guess the hidden word one letter at a time. Every wrong letter pops a balloon.</p>
+    </header>
+
+    <div class="segmented" id="mode" role="group" aria-label="Game">
+      <button type="button" data-value="solo">Solo</button>
+      <button type="button" data-value="daily">Daily</button>
+      <button type="button" data-value="friend">With a friend</button>
+    </div>
+
+    <div class="bw-options" id="options">
+      <div class="segmented" id="topic" role="group" aria-label="Words">
+        <button type="button" data-value="everyday">Everyday</button>
+        <button type="button" data-value="animals">Animals</button>
+        <button type="button" data-value="foods">Foods</button>
+        <button type="button" data-value="countries">Countries</button>
+      </div>
+      <div class="segmented" id="level" role="group" aria-label="Balloons">
+        <button type="button" data-value="8">Easy: 8</button>
+        <button type="button" data-value="6">Normal: 6</button>
+        <button type="button" data-value="4">Hard: 4</button>
+      </div>
+    </div>
+
+    <!-- With a friend: one person hides a word, the other guesses -->
+    <form class="group bw-secret" id="secret-form" autocomplete="off" hidden>
+      <label class="row-label" for="secret">Word to guess (keep it hidden from the guesser)</label>
+      <div class="bw-secret-row">
+        <input class="field" id="secret" type="password" maxlength="30" autocapitalize="none" spellcheck="false" placeholder="Type a word or phrase">
+        <button type="button" class="secondary bw-peek" id="peek" aria-pressed="false">Show</button>
+      </div>
+      <label class="row-label" for="secret-clue">Clue (optional)</label>
+      <input class="field" id="secret-clue" maxlength="60" placeholder="It's something in the kitchen">
+      <p class="note" id="secret-note">Letters, spaces, hyphens and apostrophes only. Then pass the device over.</p>
+      <button type="submit" class="primary">Hide it and start</button>
+    </form>
+
+    <section class="bw-play" id="play">
+      <div class="game-bar">
+        <span class="round-info" id="info"></span>
+        <span class="round-info" id="streak"></span>
+      </div>
+
+      <div class="bw-sky" id="sky" aria-hidden="true"></div>
+      <p class="sr-only" id="left" aria-live="polite"></p>
+
+      <div class="bw-word" id="word" aria-live="polite"></div>
+      <p class="bw-clue" id="clue" hidden></p>
+      <p class="message" id="message" role="status" aria-live="polite"></p>
+
+      <div class="bw-keys" id="keys" aria-label="Letters"></div>
+
+      <div class="button-row" id="tools">
+        <button type="button" class="secondary" id="hint">Hint (pops a balloon)</button>
+        <button type="button" class="secondary" id="new">New word</button>
+      </div>
+
+      <div class="result-banner" id="done" hidden>
+        <h2 id="done-title"></h2>
+        <p id="done-text"></p>
+        <div class="button-row">
+          <button type="button" class="secondary" id="share" hidden>Copy result</button>
+          <button type="button" class="primary" id="again">Next word</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../v3tools.js"></script>
+  <script src="../v3daily.js"></script>
+  <script src="../v3keys.js"></script>
+  <script src="../v3play.js"></script>
+  <script src="../dont_say_it_out/words.js"></script>
+  <script src="../word_chain/lists.js"></script>
+  <script src="../geo_quiz/countries.js"></script>
+  <script src="balloon.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+/* Balloon Words */
+
+.bw-options { display: flex; flex-direction: column; gap: 8px; }
+.bw-options[hidden], .bw-secret[hidden], .bw-play[hidden], .segmented[hidden] { display: none; }
+#topic button, #level button { font-size: 14px; }
+
+.bw-secret-row { display: flex; gap: 8px; }
+.bw-secret-row .field { flex: 1; min-width: 0; }
+.bw-peek { flex: none; padding-inline: 14px; }
+
+.bw-play { display: flex; flex-direction: column; gap: 14px; }
+
+/* The sky: balloons on strings, tied to a basket */
+.bw-sky { position: relative; height: clamp(190px, 30dvh, 250px); overflow: hidden; border-radius: 22px;
+  background: linear-gradient(#7cc4ff, #cfe9ff); }
+@media (prefers-color-scheme: dark) { .bw-sky { background: linear-gradient(#0b1d3a, #1c3d6e); } }
+.bw-sky svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.bw-cloud { fill: rgba(255, 255, 255, 0.75); }
+@media (prefers-color-scheme: dark) { .bw-cloud { fill: rgba(255, 255, 255, 0.12); } }
+.bw-string { stroke: rgba(30, 30, 40, 0.55); stroke-width: 1.4; fill: none; transition: opacity 0.2s; }
+@media (prefers-color-scheme: dark) { .bw-string { stroke: rgba(255, 255, 255, 0.5); } }
+.bw-balloon { transform-box: fill-box; transform-origin: 50% 100%; animation: bw-bob 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.bw-balloon .shine { fill: rgba(255, 255, 255, 0.45); }
+.bw-balloon.is-popped { animation: bw-pop 0.32s ease-out forwards; }
+.bw-string.is-popped { opacity: 0; }
+.bw-basket-group { transition: transform 1s cubic-bezier(0.5, 0, 0.9, 0.4); }
+.bw-sky.is-lost .bw-basket-group { transform: translateY(240px) rotate(8deg); }
+.bw-lift { transition: transform 1.6s cubic-bezier(0.4, 0, 0.6, 1); }
+.bw-sky.is-won .bw-lift { transform: translateY(-300px); }
+@keyframes bw-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-5px) rotate(2deg); } }
+@keyframes bw-pop { 0% { transform: scale(1); opacity: 1; } 60% { transform: scale(1.35); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
+.bw-burst { stroke-width: 2.4; stroke-linecap: round; animation: bw-burst 0.4s ease-out forwards; }
+@keyframes bw-burst { from { opacity: 1; } to { opacity: 0; transform: scale(1.6); } }
+@media (prefers-reduced-motion: reduce) {
+  .bw-balloon { animation: none; }
+  .bw-balloon.is-popped { animation: none; opacity: 0; }
+  .bw-basket-group, .bw-lift { transition: none; }
+}
+
+/* The hidden word */
+.bw-word { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 18px; min-height: 52px; }
+.bw-chunk { display: flex; gap: 5px; }
+.bw-slot { display: grid; place-items: end center; width: clamp(24px, 7.2vw, 36px); height: clamp(36px, 9vw, 46px); padding-bottom: 4px;
+  border-bottom: 3px solid var(--text); font-size: clamp(22px, 6.4vw, 32px); font-weight: 700; line-height: 1; text-transform: uppercase; }
+.bw-slot.is-mark { border-bottom-color: transparent; width: auto; min-width: 10px; }
+.bw-slot.is-new { animation: bw-in 0.3s ease-out; }
+.bw-slot.is-missed { color: var(--red); }
+@keyframes bw-in { from { transform: translateY(-8px); opacity: 0; } }
+.bw-clue { margin: 0; text-align: center; font-size: 16px; color: var(--muted); }
+.bw-clue strong { color: var(--text); }
+
+/* On-screen letters */
+.bw-keys { display: flex; flex-direction: column; gap: 6px; width: min(100%, 560px); margin-inline: auto; }
+.bw-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; }
+.bw-row.is-mid { padding-inline: 5%; grid-template-columns: repeat(9, minmax(0, 1fr)); }
+.bw-row.is-low { padding-inline: 15%; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.bw-key { min-width: 0; height: clamp(42px, 6.4dvh, 54px); padding: 0; border: 0; border-radius: 9px; background: var(--fill);
+  font-size: clamp(16px, 4.4vw, 20px); font-weight: 600; text-transform: uppercase; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.bw-key:not(:disabled):hover { background: var(--fill-strong); }
+.bw-key.is-hit { background: #1f9d55; color: #fff; }
+.bw-key.is-miss { background: transparent; color: var(--muted); opacity: 0.45; box-shadow: inset 0 0 0 1.5px var(--line); }
+.bw-key:disabled { cursor: default; }
+
+/* Keep the whole game on one phone screen */
+.bw-play .message { min-height: 1.4em; }
+.bw-play { gap: 10px; }
+@media (max-width: 600px) {
+  .app-head .note { display: none; }
+  .bw-sky { height: clamp(130px, 22dvh, 200px); }
+  .bw-options { gap: 6px; }
+  #topic button, #level button { padding-block: 6px; }
+  .bw-key { height: clamp(40px, 5.6dvh, 50px); }
+}

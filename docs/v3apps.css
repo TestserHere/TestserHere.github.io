@@ -133,7 +133,12 @@ body.has-now .app { padding-bottom: 110px; }
 .race-goal strong { font-size: 18px; overflow-wrap: anywhere; }
 .race-stats { display: flex; gap: 14px; font-variant-numeric: tabular-nums; }
 .race-actions { display: flex; gap: 4px; }
-.race-actions .text-button:disabled { opacity: 0.4; cursor: default; }
+.race-actions { align-items: center; }
+.race-actions .text-button:disabled, .race-back:disabled { opacity: 0.4; cursor: default; }
+.race-back { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--fill); color: var(--text); touch-action: manipulation; }
+.race-back svg { display: block; transform: translateX(-1px); }
+.race-back:not(:disabled):hover { background: var(--fill-strong); }
+.race-back:focus-visible { outline: 3px solid var(--blue, #0071e3); outline-offset: 2px; }
 .race-path { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
 .race-path li:not(:last-child)::after { content: " →"; color: var(--muted); }
 .wiki { padding: 4px 2px 24px; line-height: 1.6; overflow-wrap: anywhere; transition: opacity 0.2s; }

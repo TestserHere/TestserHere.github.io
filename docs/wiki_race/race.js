@@ -218,6 +218,7 @@
     $('quit').textContent = 'Give up';
     $('race-target').textContent = target.title;
     $('clicks').textContent = '0';
+    $('clicks-word').textContent = 'clicks';
     clearInterval(timer);
     timer = setInterval(tick, 1000);
     tick();
@@ -241,11 +242,14 @@
       if (counts) {
         race.clicks++;
         $('clicks').textContent = String(race.clicks);
+        $('clicks-word').textContent = race.clicks === 1 ? 'click' : 'clicks';
       }
       race.path.push(page.title);
       $('back').disabled = race.path.length < 2 || race.done;
-      showArticle(page);
+      // Clear the loading message first: removing it after scrolling would shift the page.
       setStatus($('race-status'), '');
+      $('article').classList.remove('is-loading');
+      showArticle(page);
       if (same(page.title, race.target)) finish(true);
     } catch (_) {
       if (mine === loadToken) setStatus($('race-status'), "That page didn't load. Try another link.", 'problem');
@@ -264,7 +268,9 @@
     link.rel = 'noopener';
     source.append(link, ' · CC BY-SA');
     article.replaceChildren(heading, page.fragment, source);
-    $('race-bar').scrollIntoView({ block: 'start' });
+    // The race bar sticks to the top of the screen, so scrolling it into view does nothing.
+    // Scroll to the top of the race instead: the bar, then the new page's title right under it.
+    $('race').scrollIntoView({ block: 'start', behavior: 'instant' });
   }
 
   $('article').addEventListener('click', (event) => {

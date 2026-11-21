@@ -41,6 +41,7 @@
     { label: 'Truth or Dare', href: 'truth_or_dare/index.html', color: '#9333ea', icon: 'fa-masks-theater', cat: GAMES },
     { label: 'Word Chain', href: 'word_chain/index.html', color: '#0d9488', icon: 'fa-link', cat: GAMES },
     { label: '20 Questions', href: 'twenty_questions/index.html', color: '#2563eb', icon: 'fa-question', cat: GAMES },
+    { label: 'Balloon Words', href: 'balloon_words/index.html', color: '#0ea5e9', icon: 'fa-spell-check', cat: GAMES },
     { label: 'Lyric Pad', href: 'lyric_pad/index.html', color: '#e11d48', icon: 'fa-pen-nib', cat: LEARN },
     { label: 'Day in History', href: 'on_this_day/index.html', color: '#ca8a04', icon: 'fa-calendar-day', cat: LEARN },
     { label: 'Stargazing', href: 'stargazing/index.html', color: '#4338ca', icon: 'fa-star', cat: LEARN },
@@ -109,7 +110,7 @@
   ];
 
   // Older projects are hidden from the site. Add a project's href here to show it again.
-  const SHOWN_PROJECTS = new Set(['dont_say_it_out/index.html', 'toolkit/index.html', 'class_toolkit/index.html', 'music_finder/index.html', 'make_24/index.html', 'perfect_second/index.html', 'zones/index.html', 'sudoku/index.html', 'book_finder/index.html', 'world_radio/index.html', 'wiki_race/index.html', 'geo_quiz/index.html', 'trivia_night/index.html', 'lyric_pad/index.html', 'on_this_day/index.html', 'stargazing/index.html', 'daily_five/index.html', 'word_ladder/index.html', 'higher_lower/index.html', 'guess_year/index.html', 'song_quiz/index.html', 'buzzer/index.html', 'dice/index.html', 'board_games/index.html', 'copy_cat/index.html', 'reaction_duel/index.html', 'code_breaker/index.html', 'categories/index.html', 'truth_or_dare/index.html', 'word_chain/index.html', 'twenty_questions/index.html']);
+  const SHOWN_PROJECTS = new Set(['dont_say_it_out/index.html', 'toolkit/index.html', 'class_toolkit/index.html', 'music_finder/index.html', 'make_24/index.html', 'perfect_second/index.html', 'zones/index.html', 'sudoku/index.html', 'book_finder/index.html', 'world_radio/index.html', 'wiki_race/index.html', 'geo_quiz/index.html', 'trivia_night/index.html', 'lyric_pad/index.html', 'on_this_day/index.html', 'stargazing/index.html', 'daily_five/index.html', 'word_ladder/index.html', 'higher_lower/index.html', 'guess_year/index.html', 'song_quiz/index.html', 'buzzer/index.html', 'dice/index.html', 'board_games/index.html', 'copy_cat/index.html', 'reaction_duel/index.html', 'code_breaker/index.html', 'categories/index.html', 'truth_or_dare/index.html', 'word_chain/index.html', 'twenty_questions/index.html', 'balloon_words/index.html']);
   const PROJECTS = ALL_PROJECTS.filter((project) => SHOWN_PROJECTS.has(project.href));
 
   const CITY = { name: 'Sydney', lat: -33.87, lon: 151.21, tz: 'Australia/Sydney' };
